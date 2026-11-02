@@ -20,6 +20,7 @@ const apiEnv = {
   QBANK_COOKIE_SECURE: 'false',
   QBANK_TRUST_PROXY: 'true',
   QBANK_LOG_LEVEL: 'warn',
+  QBANK_DEV_OUTBOX: 'true',
 };
 
 export default defineConfig({

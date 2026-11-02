@@ -9,16 +9,16 @@ const AT = new Date('2026-11-02T08:00:00.000Z');
 
 describe('public response contracts', () => {
   it('account response carries exactly the public fields (never a password hash)', () => {
-    const account = {
-      id: ID,
-      email: 'a@b.test',
-      displayName: 'A',
+    const preferences = {
       locale: 'ar',
       theme: 'system',
+      defaultSessionSize: 20,
+      explanationMode: 'after_answer',
     } as const;
+    const account = { id: ID, email: 'a@b.test', displayName: 'A', preferences };
     const response = toAccountResponse({ ...account, passwordHash: 'secret' } as typeof account);
     expect(AccountResponse.parse(response)).toEqual(account);
-    expect(Object.keys(response).sort()).toEqual(['displayName', 'email', 'id', 'locale', 'theme']);
+    expect(Object.keys(response).sort()).toEqual(['displayName', 'email', 'id', 'preferences']);
   });
 
   it('bank response matches its schema with ISO dates and an archived flag', () => {

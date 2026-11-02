@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createClient, registeredBrowser, signUpPayload } from '../support/client.js';
 import { useTestApp } from '../support/test-app.js';
 
-const testApp = useTestApp();
-const app = () => testApp().app;
+const app = useTestApp();
 
 const registered = async () => (await registeredBrowser(app())).payload;
 
@@ -13,7 +12,10 @@ describe('identity: sign-up and session', () => {
     const payload = signUpPayload({ email: '  Mixed@Example.TEST ' });
     const created = await browser.post('/api/auth/sign-up', payload);
     expect(created.statusCode).toBe(201);
-    expect(created.json()).toMatchObject({ email: 'mixed@example.test', locale: 'ar' });
+    expect(created.json()).toMatchObject({
+      email: 'mixed@example.test',
+      preferences: { locale: 'ar', theme: 'system', defaultSessionSize: 20 },
+    });
 
     expect((await browser.get('/api/auth/me')).statusCode).toBe(200);
     expect((await browser.post('/api/auth/sign-out')).statusCode).toBe(204);

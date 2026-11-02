@@ -4,6 +4,8 @@ export interface SessionRepository {
   insert(tokenHash: string, accountId: string, expiresAt: Date): Promise<void>;
   findAccountId(tokenHash: string, now: Date): Promise<string | undefined>;
   delete(tokenHash: string): Promise<void>;
+  /** Revokes every session of an account except the one being kept (if any). */
+  deleteOthers(accountId: string, keepTokenHash: string | null): Promise<void>;
 }
 
 export function createSessionRepository(db: Db): SessionRepository {
@@ -25,6 +27,11 @@ export function createSessionRepository(db: Db): SessionRepository {
     },
     async delete(tokenHash) {
       await db.deleteFrom('auth_session').where('token_hash', '=', tokenHash).execute();
+    },
+    async deleteOthers(accountId, keepTokenHash) {
+      let query = db.deleteFrom('auth_session').where('account_id', '=', accountId);
+      if (keepTokenHash) query = query.where('token_hash', '!=', keepTokenHash);
+      await query.execute();
     },
   };
 }

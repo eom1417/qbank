@@ -9,12 +9,12 @@
 
 | المعرّف | العنوان | الخطوة | الحالة | الدليل |
 |---|---|---|---|---|
-| UI-01 | صفحة تعريف الخدمة | M1.1 | planned | — |
-| UI-02 | التسجيل والدخول | M0.2 | partial | `tests/integration/identity.test.ts` |
-| UI-03 | لوحة المكتبة الفارغة | M1.5 | partial | `tests/e2e/library.spec.ts` |
-| UI-04 | لوحة البنوك | M1.5 | planned | — |
-| UI-05 | إنشاء بنك | M1.5 | partial | `tests/e2e/library.spec.ts` |
-| UI-06 | تفاصيل بنك | M1.7 | planned | — |
+| UI-01 | صفحة تعريف الخدمة | M1.1 | done | `tests/e2e/landing.spec.ts` |
+| UI-02 | التسجيل والدخول | M0.2 | partial | `tests/e2e/account.spec.ts` |
+| UI-03 | لوحة المكتبة الفارغة | M1.5 | done | `tests/e2e/library.spec.ts` |
+| UI-04 | لوحة البنوك | M1.5 | partial | `tests/e2e/bank-management.spec.ts` |
+| UI-05 | إنشاء بنك | M1.5 | done | `tests/e2e/library.spec.ts` |
+| UI-06 | تفاصيل بنك | M1.7 | partial | `tests/e2e/bank-management.spec.ts` |
 | UI-07 | تجهيز رفع | M4.2 | planned | — |
 | UI-08 | تقدم الاستيراد | M4.3 | planned | — |
 | UI-09 | نتيجة استيراد | M4.8 | planned | — |
@@ -33,7 +33,7 @@
 | UI-22 | البحث | M12.11 | planned | — |
 | UI-23 | إدارة المصادر | M4.9 | planned | — |
 | UI-24 | إعدادات المفاتيح | M2.2 | planned | — |
-| UI-25 | إعدادات الدراسة | M1.6 | planned | — |
+| UI-25 | إعدادات الدراسة | M1.6 | partial | `tests/e2e/account.spec.ts` |
 | UI-26 | التصدير | M13.1 | planned | — |
 | UI-27 | الحذف والخصوصية | M13.6 | planned | — |
 | UI-28 | مركز الدعم | M14.5 | planned | — |
@@ -66,10 +66,10 @@
 
 | المعرّف | العنوان | الخطوة | الحالة | الدليل |
 |---|---|---|---|---|
-| UAT-001 | مكتبة جديدة | M1.5 | partial | `tests/e2e/library.spec.ts` |
+| UAT-001 | مكتبة جديدة | M1.5 | done | `tests/e2e/library.spec.ts` |
 | UAT-002 | استقلال حسابين | M0.3 | done | `tests/integration/library.test.ts` |
 | UAT-003 | أسماء بنوك مكررة | M0.3 | done | `tests/integration/library.test.ts` |
-| UAT-004 | أرشفة بنك | M1.3 | planned | — |
+| UAT-004 | أرشفة بنك | M1.3 | done | `tests/integration/bank-editing.test.ts` |
 | UAT-005 | PDF نصي | M4.4 | planned | — |
 | UAT-006 | PDF ممسوح | M4.5 | planned | — |
 | UAT-007 | PDF عربي | M4.4 | planned | — |

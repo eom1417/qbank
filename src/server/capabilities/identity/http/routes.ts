@@ -4,6 +4,7 @@ import { parseInput } from '../../../platform/http/validate.js';
 import { getAccount, signIn, signUp } from '../use-cases/accounts.js';
 import type { IdentityDeps } from '../use-cases/deps.js';
 import { endSession } from '../use-cases/sessions.js';
+import { registerAccountRoutes } from './account-routes.js';
 import { toAccountResponse } from './presenters.js';
 import type { RequireActor } from './require-actor.js';
 import { clearSessionCookie, readSessionToken, setSessionCookie } from './session-cookie.js';
@@ -40,4 +41,6 @@ export function registerIdentityRoutes(app: FastifyInstance, options: IdentityRo
     const actor = await requireActor(request);
     return toAccountResponse(await getAccount(deps, actor));
   });
+
+  registerAccountRoutes(app, options);
 }

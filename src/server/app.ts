@@ -7,6 +7,8 @@ import type { AppConfig } from './platform/config/index.js';
 import type { Db } from './platform/db/index.js';
 import { handleError, handleNotFound } from './platform/http/error-handler.js';
 import { createOriginGuard } from './platform/http/origin-guard.js';
+import { newId } from './platform/ids.js';
+import { createOutboxMailer, registerOutboxRoute } from './platform/mail/index.js';
 
 export interface AppDeps {
   config: AppConfig;
@@ -29,11 +31,13 @@ export function buildApp({ config, db, clock }: AppDeps): FastifyInstance {
   const identity = createIdentity({
     db,
     clock,
+    mailer: createOutboxMailer(db, newId),
     sessionTtlDays: config.sessionTtlDays,
     cookieSecure: config.cookieSecure,
   });
   identity.register(app);
   createLibrary({ db, clock, requireActor: identity.requireActor }).register(app);
+  if (config.devOutbox) registerOutboxRoute(app, db);
   app.get('/api/health', async () => ({ status: 'ok' }));
   return app;
 }

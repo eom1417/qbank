@@ -28,7 +28,7 @@ async function send(method: string, path: string, body?: unknown): Promise<Respo
 
 /** The one HTTP client of the SPA: responses are validated against the shared contracts. */
 export async function apiRequest<S extends z.ZodType>(
-  method: 'GET' | 'POST',
+  method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
   path: string,
   schema: S,
   body?: unknown,

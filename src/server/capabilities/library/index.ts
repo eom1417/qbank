@@ -4,7 +4,11 @@ import type { Db } from '../../platform/db/index.js';
 import { newId } from '../../platform/ids.js';
 import type { RequireActor } from '../identity/index.js';
 import { createBankRepository } from './adapters/bank-repository.js';
-import { registerLibraryRoutes } from './http/routes.js';
+import { createTagRepository } from './adapters/tag-repository.js';
+import { createTaxonomyRepository } from './adapters/taxonomy-repository.js';
+import { registerBankRoutes } from './http/routes.js';
+import { registerTagRoutes } from './http/tag-routes.js';
+import { registerTaxonomyRoutes } from './http/taxonomy-routes.js';
 
 export { toBankResponse } from './http/presenters.js';
 
@@ -15,8 +19,19 @@ interface LibrarySettings {
 }
 
 export function createLibrary(settings: LibrarySettings) {
-  const deps = { banks: createBankRepository(settings.db), clock: settings.clock, newId };
+  const { db, requireActor } = settings;
+  const deps = {
+    banks: createBankRepository(db),
+    taxonomy: createTaxonomyRepository(db),
+    tags: createTagRepository(db),
+    clock: settings.clock,
+    newId,
+  };
   return {
-    register: (app: FastifyInstance) => registerLibraryRoutes(app, deps, settings.requireActor),
+    register: (app: FastifyInstance) => {
+      registerBankRoutes(app, deps, requireActor);
+      registerTaxonomyRoutes(app, deps, requireActor);
+      registerTagRoutes(app, deps, requireActor);
+    },
   };
 }

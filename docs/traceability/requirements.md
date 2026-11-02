@@ -8,7 +8,7 @@
 | المعرّف | المتطلب | المنشأ | الخطوة | الحالة | الدليل |
 |---|---|---|---|---|---|
 | FR-01-001 | مكتبة خاصة لكل مستخدم | سابق | M0.3 | partial | `tests/integration/library.test.ts` |
-| FR-01-002 | محتوى يجلبه المستخدم | سابق | M1.5 | planned | — |
+| FR-01-002 | محتوى يجلبه المستخدم | سابق | M1.5 | done | `tests/e2e/library.spec.ts` |
 | FR-01-003 | أمانة النص العلمي | سابق | M4.6 | planned | — |
 | FR-01-004 | حظر الاختلاق | سابق | M6.4 | planned | — |
 | FR-01-005 | تقليل المراجعة البشرية | سابق | M7.1 | planned | — |
@@ -17,23 +17,23 @@
 | FR-01-008 | حق تعديل المحتوى | مقترح | M7.6 | planned | — |
 | FR-01-009 | وضوح سلوك AI | مقترح | M7.7 | planned | — |
 | FR-01-010 | قياس العمل الحقيقي | مقترح | M12.2 | planned | — |
-| FR-02-001 | زائر غير مسجل | مقترح | M1.1 | planned | — |
+| FR-02-001 | زائر غير مسجل | مقترح | M1.1 | done | `tests/e2e/landing.spec.ts` |
 | FR-02-002 | مالك الحساب | سابق | M0.2 | partial | `tests/integration/identity.test.ts` |
 | FR-02-003 | موظف دعم الخدمة | مقترح | M14.6 | planned | — |
 | FR-02-004 | الخصوصية الافتراضية | مقترح | M14.3 | partial | `tests/integration/library.test.ts` |
-| FR-02-005 | إدارة الحساب | مقترح | M1.6 | planned | — |
+| FR-02-005 | إدارة الحساب | مقترح | M1.6 | partial | `tests/integration/account.test.ts` |
 | FR-02-006 | الفصل بين الدعم والمراجعة | مقترح | M14.6 | planned | — |
 | FR-02-007 | حذف محدد النطاق | مقترح | M13.5 | planned | — |
 | FR-03-001 | بنك أسئلة مستقل | سابق | M0.3 | partial | `tests/integration/library.test.ts` |
 | FR-03-002 | مصادر متعددة | مقترح | M4.9 | planned | — |
-| FR-03-003 | مجلدات وتصنيفات | مقترح | M1.4 | planned | — |
+| FR-03-003 | مجلدات وتصنيفات | مقترح | M1.4 | partial | `tests/integration/taxonomy.test.ts` |
 | FR-03-004 | إسناد المصدر والصفحة | سابق | M4.9 | planned | — |
 | FR-03-005 | البحث داخل المكتبة | مقترح | M12.11 | planned | — |
 | FR-03-006 | فلاتر مركبة | مقترح | M9.2 | planned | — |
-| FR-03-007 | فرز يمكن فهمه | مقترح | M1.5 | planned | — |
-| FR-03-008 | أرشفة بنوك | مقترح | M1.3 | planned | — |
+| FR-03-007 | فرز يمكن فهمه | مقترح | M1.5 | partial | `tests/e2e/bank-management.spec.ts` |
+| FR-03-008 | أرشفة بنوك | مقترح | M1.3 | done | `tests/integration/bank-editing.test.ts` |
 | FR-03-009 | نقل أسئلة مختارة | مقترح | M8.6 | planned | — |
-| FR-03-010 | مكتبة فارغة مفيدة | مقترح | M1.5 | partial | `tests/e2e/library.spec.ts` |
+| FR-03-010 | مكتبة فارغة مفيدة | مقترح | M1.5 | done | `tests/e2e/library.spec.ts` |
 | FR-04-001 | PDF نصي وممسوح | سابق | M4.1 | planned | — |
 | FR-04-002 | رفع متعدد | مقترح | M4.2 | planned | — |
 | FR-04-003 | اختيار الوجهة | مقترح | M4.2 | planned | — |
@@ -106,8 +106,8 @@
 | FR-10-006 | إعادة استيراد بعد تحرير | مقترح | M8.5 | planned | — |
 | FR-11-001 | معيار مكتمل | مقترح | M6.11 | planned | — |
 | FR-11-002 | حالات منتهية ومعلقة | سابق | M6.11 | planned | — |
-| FR-11-003 | التصنيف للفصل والموضوع | سابق | M1.4 | planned | — |
-| FR-11-004 | وسوم متعددة | مقترح | M1.4 | planned | — |
+| FR-11-003 | التصنيف للفصل والموضوع | سابق | M1.4 | partial | `tests/integration/taxonomy.test.ts` |
+| FR-11-004 | وسوم متعددة | مقترح | M1.4 | partial | `tests/integration/taxonomy.test.ts` |
 | FR-11-005 | الصعوبة | مقترح | M6.9 | planned | — |
 | FR-11-006 | سجل تحرير النسخ | مقترح | M6.1 | planned | — |
 | FR-11-007 | استبعاد الأسئلة غير الملائمة | مقترح | M6.11 | planned | — |
@@ -182,14 +182,14 @@
 | FR-19-005 | حذف بنك | مقترح | M13.5 | planned | — |
 | FR-19-006 | حذف الحساب | مقترح | M13.6 | planned | — |
 | FR-19-007 | نتيجة الحذف الفعلية | مقترح | M13.6 | planned | — |
-| FR-19-008 | الفرق بين الأرشفة والحذف | مقترح | M1.3 | planned | — |
+| FR-19-008 | الفرق بين الأرشفة والحذف | مقترح | M1.3 | partial | `tests/integration/bank-editing.test.ts` |
 | FR-20-001 | المحتوى خاص افتراضياً | سابق | M14.3 | partial | `tests/integration/library.test.ts` |
 | FR-20-002 | مفتاح AI لا يُشارك | سابق | M2.2 | planned | — |
 | FR-20-003 | الإفصاح عن معالجة AI | مقترح | M2.6 | planned | — |
 | FR-20-004 | تقليل بيانات الأشخاص | مقترح | M14.1 | planned | — |
-| FR-20-005 | حقوق الكتب | مقترح | M14.2 | planned | — |
-| FR-20-006 | الاستخدام غير التجاري | مقترح | M14.2 | planned | — |
-| FR-20-007 | شفافية الاحتفاظ | مقترح | M14.1 | planned | — |
+| FR-20-005 | حقوق الكتب | مقترح | M14.2 | partial | `tests/e2e/landing.spec.ts` |
+| FR-20-006 | الاستخدام غير التجاري | مقترح | M14.2 | partial | `tests/e2e/landing.spec.ts` |
+| FR-20-007 | شفافية الاحتفاظ | مقترح | M14.1 | partial | `tests/e2e/landing.spec.ts` |
 | FR-20-008 | عدم كشف حسابات | مقترح | M14.3 | partial | `tests/integration/library.test.ts` |
 | FR-20-009 | مراجعة قانونية قبل النشر | مقترح | M17.6 | planned | — |
 | FR-21-001 | عربية وإنجليزية كاملتان | سابق | M15.1 | partial | `tests/e2e/language.spec.ts` |
@@ -201,12 +201,12 @@
 | FR-21-007 | حالات فارغة | مقترح | M15.5 | planned | — |
 | FR-21-008 | تناسق الأرقام | مقترح | M12.1 | planned | — |
 | FR-21-009 | إمكانية الوصول | مقترح | M15.4 | planned | — |
-| FR-21-010 | حفظ التفضيلات | مقترح | M1.6 | partial | `tests/e2e/language.spec.ts` |
-| FR-22-001 | تفضيلات التعلم | مقترح | M1.6 | planned | — |
+| FR-21-010 | حفظ التفضيلات | مقترح | M1.6 | done | `tests/e2e/account.spec.ts` |
+| FR-22-001 | تفضيلات التعلم | مقترح | M1.6 | partial | `tests/integration/account.test.ts` |
 | FR-22-002 | مفاتيح مزود AI | سابق | M2.2 | planned | — |
 | FR-22-003 | تنبيه نجاح الاستيراد | مقترح | M4.8 | planned | — |
 | FR-22-004 | تذكير مراجعة اختياري | مقترح | M14.4 | planned | — |
-| FR-22-005 | تغيير اللغة والمظهر | مقترح | M1.6 | planned | — |
+| FR-22-005 | تغيير اللغة والمظهر | مقترح | M1.6 | done | `tests/e2e/account.spec.ts` |
 | FR-22-006 | مركز مساعدة سياقي | مقترح | M14.5 | planned | — |
 | FR-22-007 | تواصل الدعم | مقترح | M14.6 | planned | — |
 | FR-22-008 | حد الاستخدام والتكلفة | مقترح | M2.5 | planned | — |

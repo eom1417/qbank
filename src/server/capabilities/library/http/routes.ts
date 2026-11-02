@@ -1,18 +1,33 @@
 import type { FastifyInstance } from 'fastify';
-import { CreateBankRequest, type BankListResponse } from '../../../../contracts/library.js';
+import {
+  BankListFilter,
+  CreateBankRequest,
+  UpdateBankRequest,
+  type BankListResponse,
+} from '../../../../contracts/library.js';
 import { parseInput } from '../../../platform/http/validate.js';
 import type { RequireActor } from '../../identity/index.js';
-import { createBank, getBank, listBanks, type LibraryDeps } from '../use-cases/banks.js';
+import {
+  archiveBank,
+  createBank,
+  getBank,
+  listBanks,
+  restoreBank,
+  updateBank,
+  type LibraryDeps,
+} from '../use-cases/banks.js';
 import { toBankResponse } from './presenters.js';
 
-export function registerLibraryRoutes(
+type BankParams = { Params: { bankId: string } };
+
+export function registerBankRoutes(
   app: FastifyInstance,
   deps: LibraryDeps,
   requireActor: RequireActor,
 ) {
   app.get('/api/banks', async (request): Promise<BankListResponse> => {
     const actor = await requireActor(request);
-    const banks = await listBanks(deps, actor);
+    const banks = await listBanks(deps, actor, parseInput(BankListFilter, request.query));
     return { banks: banks.map(toBankResponse) };
   });
 
@@ -22,8 +37,24 @@ export function registerLibraryRoutes(
     return reply.status(201).send(toBankResponse(bank));
   });
 
-  app.get<{ Params: { bankId: string } }>('/api/banks/:bankId', async (request) => {
+  app.get<BankParams>('/api/banks/:bankId', async (request) => {
     const actor = await requireActor(request);
     return toBankResponse(await getBank(deps, actor, request.params.bankId));
+  });
+
+  app.patch<BankParams>('/api/banks/:bankId', async (request) => {
+    const actor = await requireActor(request);
+    const changes = parseInput(UpdateBankRequest, request.body);
+    return toBankResponse(await updateBank(deps, actor, request.params.bankId, changes));
+  });
+
+  app.post<BankParams>('/api/banks/:bankId/archive', async (request) => {
+    const actor = await requireActor(request);
+    return toBankResponse(await archiveBank(deps, actor, request.params.bankId));
+  });
+
+  app.post<BankParams>('/api/banks/:bankId/restore', async (request) => {
+    const actor = await requireActor(request);
+    return toBankResponse(await restoreBank(deps, actor, request.params.bankId));
   });
 }

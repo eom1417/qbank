@@ -1,6 +1,9 @@
 import type { ButtonHTMLAttributes } from 'react';
 
-type Variant = 'primary' | 'secondary' | 'ghost';
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
+
+/** Button look for a router link that acts as a call to action. */
+export const buttonClass = (variant: Variant = 'primary') => `qb-button qb-button--${variant}`;
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -13,7 +16,7 @@ export function Button({ variant = 'primary', busy = false, type, ...rest }: But
     <button
       {...rest}
       type={type ?? 'button'}
-      className={`qb-button qb-button--${variant}`}
+      className={buttonClass(variant)}
       disabled={busy || rest.disabled}
       aria-busy={busy || undefined}
     />

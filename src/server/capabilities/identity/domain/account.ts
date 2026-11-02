@@ -1,12 +1,19 @@
-import type { Locale, Theme } from '../../../../contracts/identity.js';
+import type { AccountPreferences } from '../../../../contracts/identity.js';
 
 export interface Account {
   id: string;
   email: string;
   displayName: string;
-  locale: Locale;
-  theme: Theme;
+  preferences: AccountPreferences;
 }
+
+/** Defaults for a new account; the locale comes from the sign-up screen. */
+export const defaultPreferences = (locale: AccountPreferences['locale']): AccountPreferences => ({
+  locale,
+  theme: 'system',
+  defaultSessionSize: 20,
+  explanationMode: 'after_answer',
+});
 
 /** The authenticated caller. Every owner-scoped query takes its accountId. */
 export interface Actor {

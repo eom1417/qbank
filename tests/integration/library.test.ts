@@ -2,8 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createClient, registeredBrowser } from '../support/client.js';
 import { useTestApp } from '../support/test-app.js';
 
-const testApp = useTestApp();
-const app = () => testApp().app;
+const app = useTestApp();
 
 const signedInBrowser = async () => (await registeredBrowser(app())).browser;
 

@@ -6,6 +6,7 @@ const Env = z.object({
   QBANK_API_PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   QBANK_COOKIE_SECURE: z.enum(['true', 'false']).default('true'),
   QBANK_TRUST_PROXY: z.enum(['true', 'false']).default('false'),
+  QBANK_DEV_OUTBOX: z.enum(['true', 'false']).default('false'),
   QBANK_ALLOWED_ORIGINS: z.string().default(''),
   QBANK_SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
   QBANK_LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'silent']).default('info'),
@@ -18,6 +19,8 @@ export interface AppConfig {
   cookieSecure: boolean;
   /** True only when a local reverse proxy (Vite dev, nginx) sets X-Forwarded-Host. */
   trustProxy: boolean;
+  /** Exposes GET /api/dev/outbox (local mail adapter). Local development and tests only. */
+  devOutbox: boolean;
   /** Extra origins allowed to send mutating requests besides the request's own host. */
   allowedOrigins: readonly string[];
   sessionTtlDays: number;
@@ -33,6 +36,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     port: parsed.QBANK_API_PORT,
     cookieSecure: parsed.QBANK_COOKIE_SECURE === 'true',
     trustProxy: parsed.QBANK_TRUST_PROXY === 'true',
+    devOutbox: parsed.QBANK_DEV_OUTBOX === 'true',
     allowedOrigins: parsed.QBANK_ALLOWED_ORIGINS.split(',')
       .map((origin) => origin.trim())
       .filter(Boolean),

@@ -1,14 +1,24 @@
 import {
   BankListResponse,
   BankResponse,
+  type BankListFilter,
   type CreateBankRequest,
+  type UpdateBankRequest,
 } from '../../../contracts/library.js';
 import { apiRequest } from '../../platform/api/client.js';
 
-export const fetchBanks = () => apiRequest('GET', '/api/banks', BankListResponse);
+export const bankPath = (bankId: string) => `/api/banks/${encodeURIComponent(bankId)}`;
 
-export const fetchBank = (bankId: string) =>
-  apiRequest('GET', `/api/banks/${encodeURIComponent(bankId)}`, BankResponse);
+export const fetchBanks = (archived: BankListFilter['archived'] = 'exclude') =>
+  apiRequest('GET', `/api/banks?archived=${archived}`, BankListResponse);
+
+export const fetchBank = (bankId: string) => apiRequest('GET', bankPath(bankId), BankResponse);
 
 export const createBank = (input: Partial<CreateBankRequest>) =>
   apiRequest('POST', '/api/bank', BankResponse, input);
+
+export const updateBank = (bankId: string, changes: UpdateBankRequest) =>
+  apiRequest('PATCH', bankPath(bankId), BankResponse, changes);
+
+export const setBankArchived = (bankId: string, archived: boolean) =>
+  apiRequest('POST', `${bankPath(bankId)}/${archived ? 'archive' : 'restore'}`, BankResponse);

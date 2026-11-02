@@ -7,6 +7,8 @@ const STATUS: Record<ErrorCode, number> = {
   forbidden_origin: 403,
   not_found: 404,
   email_taken: 409,
+  name_taken: 409,
+  invalid_token: 400,
   payload_too_large: 413,
   internal: 500,
 };

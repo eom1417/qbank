@@ -36,8 +36,12 @@ test("another learner gets the neutral message for someone else's bank", async (
   await expect(stranger.getByText('خاص جداً')).toHaveCount(0);
 });
 
-test('a signed-out visitor is sent to sign-in', async ({ page }) => {
+test('a signed-out visitor sees the service description, and private pages send them to sign-in', async ({
+  page,
+}) => {
   await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'حوّل كتبك إلى بنك أسئلة خاص بك' })).toBeVisible();
+  await page.goto('/settings');
   await expect(page).toHaveURL('/sign-in');
   await expect(page.getByRole('heading', { name: 'تسجيل الدخول' })).toBeVisible();
 });

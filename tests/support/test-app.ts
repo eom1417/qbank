@@ -18,7 +18,7 @@ function testDatabaseUrl(): string {
   return match[1].trim();
 }
 
-export interface TestApp {
+interface TestApp {
   app: FastifyInstance;
   db: Db;
   close(): Promise<void>;
@@ -36,6 +36,7 @@ async function startTestApp(clock: Clock = { now: () => new Date() }): Promise<T
     port: 0,
     cookieSecure: false,
     trustProxy: false,
+    devOutbox: true,
     allowedOrigins: [ORIGIN],
     sessionTtlDays: 30,
     logLevel: 'silent' as const,
@@ -50,7 +51,7 @@ async function startTestApp(clock: Clock = { now: () => new Date() }): Promise<T
 }
 
 /** Starts one test app for the current suite file; call the returned getter inside tests. */
-export function useTestApp(): () => TestApp {
+export function useTestApp(): () => FastifyInstance {
   let current: TestApp | undefined;
   beforeAll(async () => {
     current = await startTestApp();
@@ -58,6 +59,6 @@ export function useTestApp(): () => TestApp {
   afterAll(() => current?.close());
   return () => {
     if (!current) throw new Error('test app not started');
-    return current;
+    return current.app;
   };
 }

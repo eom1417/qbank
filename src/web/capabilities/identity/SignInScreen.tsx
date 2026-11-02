@@ -9,6 +9,7 @@ import {
 } from '../../design-system/index.js';
 import { text, useSubmit } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
+import { EmailField } from './fields.js';
 import { useSession } from './session.js';
 
 export function SignInScreen() {
@@ -23,13 +24,7 @@ export function SignInScreen() {
       <Card>
         <form className="qb-stack" onSubmit={form.onSubmit} noValidate>
           {form.error && <Alert tone="error">{t(form.error)}</Alert>}
-          <TextField
-            name="email"
-            type="email"
-            autoComplete="email"
-            required
-            label={t('auth.field.email')}
-          />
+          <EmailField />
           <TextField
             name="password"
             type="password"
@@ -42,6 +37,7 @@ export function SignInScreen() {
           </Button>
         </form>
       </Card>
+      <Link to="/forgot-password">{t('auth.signIn.forgot')}</Link>
       <Link to="/sign-up">{t('auth.signIn.toSignUp')}</Link>
     </NarrowColumn>
   );

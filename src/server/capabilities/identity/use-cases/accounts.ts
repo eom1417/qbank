@@ -1,6 +1,10 @@
-import type { SignInRequest, SignUpRequest } from '../../../../contracts/identity.js';
+import type {
+  SignInRequest,
+  SignUpRequest,
+  UpdateAccountRequest,
+} from '../../../../contracts/identity.js';
 import { AppError } from '../../../platform/errors/index.js';
-import type { Account, Actor } from '../domain/account.js';
+import { defaultPreferences, type Account, type Actor } from '../domain/account.js';
 import type { IdentityDeps } from './deps.js';
 import { issueSession, type IssuedSession } from './sessions.js';
 
@@ -26,8 +30,7 @@ export async function signUp(deps: IdentityDeps, input: SignUpRequest): Promise<
     id: deps.newId(),
     email: input.email,
     displayName: input.displayName,
-    locale: input.locale,
-    theme: 'system',
+    preferences: defaultPreferences(input.locale),
   };
   const passwordHash = await deps.passwords.hash(input.password);
   const termsAcceptedAt = deps.clock.now();
@@ -47,3 +50,13 @@ export async function signIn(deps: IdentityDeps, input: SignInRequest): Promise<
 
 export const getAccount = (deps: IdentityDeps, actor: Actor): Promise<Account> =>
   loadAccount(deps, actor.accountId);
+
+/** Saves profile and preference changes (FR-02-005, FR-21-010); returns the updated account. */
+export async function updateAccount(
+  deps: IdentityDeps,
+  actor: Actor,
+  changes: UpdateAccountRequest,
+): Promise<Account> {
+  await deps.accounts.update(actor.accountId, changes);
+  return loadAccount(deps, actor.accountId);
+}

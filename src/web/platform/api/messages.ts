@@ -8,8 +8,10 @@ export function errorMessageKey(error: unknown): MessageKey {
 
 const FIELD_MESSAGES: Record<string, MessageKey> = {
   too_small: 'field.tooShort',
+  too_big: 'field.tooLong',
   invalid_value: 'field.required',
-  taken: 'error.email_taken',
+  incorrect: 'field.incorrect',
+  taken: 'field.taken',
 };
 
 /** Field-level message keys from a validation error, keyed by field name. */

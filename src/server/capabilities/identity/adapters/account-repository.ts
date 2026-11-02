@@ -1,4 +1,8 @@
+import type { Selectable, Updateable } from 'kysely';
+import { isUniqueViolation } from '../../../platform/db/errors.js';
 import type { Db } from '../../../platform/db/index.js';
+import type { Database } from '../../../platform/db/schema.js';
+import type { UpdateAccountRequest } from '../../../../contracts/identity.js';
 import type { Account } from '../domain/account.js';
 
 interface NewAccount extends Account {
@@ -9,30 +13,59 @@ interface NewAccount extends Account {
 export interface AccountRepository {
   insert(account: NewAccount): Promise<'created' | 'email_taken'>;
   findCredentials(email: string): Promise<{ id: string; passwordHash: string } | undefined>;
+  findPasswordHash(id: string): Promise<string | undefined>;
   findById(id: string): Promise<Account | undefined>;
+  update(id: string, changes: UpdateAccountRequest): Promise<void>;
+  setPasswordHash(id: string, passwordHash: string): Promise<void>;
 }
 
-const UNIQUE_VIOLATION = '23505';
+type AccountRow = Selectable<Database['account']>;
 
-const isUniqueViolation = (error: unknown): boolean =>
-  typeof error === 'object' && error !== null && 'code' in error && error.code === UNIQUE_VIOLATION;
+const fromRow = (row: AccountRow): Account => ({
+  id: row.id,
+  email: row.email,
+  displayName: row.display_name,
+  preferences: {
+    locale: row.locale,
+    theme: row.theme,
+    defaultSessionSize: row.default_session_size,
+    explanationMode: row.explanation_mode,
+  },
+});
+
+/** Column names for a partial update; undefined fields are left untouched. */
+const toChanges = (changes: UpdateAccountRequest): Updateable<Database['account']> => ({
+  display_name: changes.displayName,
+  locale: changes.locale,
+  theme: changes.theme,
+  default_session_size: changes.defaultSessionSize,
+  explanation_mode: changes.explanationMode,
+});
+
+async function insertAccount(db: Db, account: NewAccount) {
+  const { preferences: p } = account;
+  await db
+    .insertInto('account')
+    .values({
+      id: account.id,
+      email: account.email,
+      password_hash: account.passwordHash,
+      display_name: account.displayName,
+      locale: p.locale,
+      theme: p.theme,
+      default_session_size: p.defaultSessionSize,
+      explanation_mode: p.explanationMode,
+      terms_accepted_at: account.termsAcceptedAt,
+    })
+    .execute();
+}
 
 export function createAccountRepository(db: Db): AccountRepository {
+  const byId = (id: string) => db.selectFrom('account').where('id', '=', id);
   return {
     async insert(account) {
       try {
-        await db
-          .insertInto('account')
-          .values({
-            id: account.id,
-            email: account.email,
-            password_hash: account.passwordHash,
-            display_name: account.displayName,
-            locale: account.locale,
-            theme: account.theme,
-            terms_accepted_at: account.termsAcceptedAt,
-          })
-          .execute();
+        await insertAccount(db, account);
         return 'created';
       } catch (error) {
         if (isUniqueViolation(error)) return 'email_taken';
@@ -47,13 +80,22 @@ export function createAccountRepository(db: Db): AccountRepository {
         .executeTakeFirst();
       return row && { id: row.id, passwordHash: row.password_hash };
     },
+    async findPasswordHash(id) {
+      return (await byId(id).select('password_hash').executeTakeFirst())?.password_hash;
+    },
     async findById(id) {
-      const row = await db
-        .selectFrom('account')
-        .select(['id', 'email', 'display_name', 'locale', 'theme'])
+      const row = await byId(id).selectAll().executeTakeFirst();
+      return row && fromRow(row);
+    },
+    async update(id, changes) {
+      await db.updateTable('account').set(toChanges(changes)).where('id', '=', id).execute();
+    },
+    async setPasswordHash(id, passwordHash) {
+      await db
+        .updateTable('account')
+        .set({ password_hash: passwordHash })
         .where('id', '=', id)
-        .executeTakeFirst();
-      return row && { ...row, displayName: row.display_name };
+        .execute();
     },
   };
 }

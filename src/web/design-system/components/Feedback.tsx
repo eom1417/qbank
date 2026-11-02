@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 interface AlertProps {
-  tone: 'error' | 'info';
+  tone: 'error' | 'info' | 'success';
   children: ReactNode;
 }
 

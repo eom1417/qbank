@@ -1,4 +1,8 @@
 .qb-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
   min-block-size: var(--size-touch-target);
   padding-block: var(--space-sm);
   padding-inline: var(--space-control-inline);
@@ -24,6 +28,10 @@
 .qb-button--ghost {
   background: transparent;
   color: var(--color-accent);
+}
+.qb-button--danger {
+  background: var(--color-danger);
+  color: var(--color-on-accent);
 }
 .qb-button:disabled {
   cursor: not-allowed;
@@ -132,7 +140,14 @@
 .qb-shell__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
+  align-items: center;
+}
+.qb-shell__actions > a {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: var(--size-touch-target);
+  padding-inline: var(--space-sm);
 }
 .qb-shell__main {
   display: grid;
@@ -168,4 +183,47 @@
   background: var(--color-warning-soft);
   color: var(--color-warning);
   font-size: var(--text-small);
+}
+.qb-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: end;
+}
+.qb-row > .qb-field {
+  flex: 1 1 var(--size-card-min);
+}
+.qb-subtitle {
+  font-size: var(--text-body);
+  font-weight: var(--weight-strong);
+}
+.qb-list {
+  display: grid;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.qb-list__item {
+  display: grid;
+  gap: var(--space-sm);
+  padding-block: var(--space-sm);
+  border-block-end: var(--border-width) solid var(--color-border);
+}
+.qb-alert--success {
+  background: var(--color-success-soft);
+  color: var(--color-text);
+}
+.qb-pre {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+}
+.qb-grow {
+  flex: 1 1 auto;
+  align-self: center;
+}
+.qb-indent {
+  padding-inline-start: var(--space-lg);
 }

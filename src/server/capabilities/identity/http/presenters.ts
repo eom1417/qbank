@@ -5,6 +5,10 @@ export const toAccountResponse = (account: Account): AccountResponse => ({
   id: account.id,
   email: account.email,
   displayName: account.displayName,
-  locale: account.locale,
-  theme: account.theme,
+  preferences: {
+    locale: account.preferences.locale,
+    theme: account.preferences.theme,
+    defaultSessionSize: account.preferences.defaultSessionSize,
+    explanationMode: account.preferences.explanationMode,
+  },
 });

@@ -1,7 +1,9 @@
 import './tokens/base.css';
 import './components/components.css';
 
-export { Button } from './components/Button.js';
+export { Button, buttonClass } from './components/Button.js';
+export { ConfirmButton } from './components/ConfirmButton.js';
+export { SelectField } from './components/SelectField.js';
 export { Checkbox } from './components/Checkbox.js';
 export { Alert, EmptyState } from './components/Feedback.js';
 export {
@@ -11,7 +13,9 @@ export {
   Heading,
   MutedText,
   NarrowColumn,
+  Row,
   Stack,
+  Subtitle,
   Title,
 } from './components/Layout.js';
 export { PageShell } from './components/PageShell.js';

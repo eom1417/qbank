@@ -8,10 +8,12 @@ import {
   Heading,
   MutedText,
   NarrowColumn,
+  Row,
   TextField,
 } from '../../design-system/index.js';
 import { text, useSubmit } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
+import { EmailField } from './fields.js';
 import { useSession } from './session.js';
 
 function SignUpFields({ fieldError }: { fieldError(name: string): string | undefined }) {
@@ -25,14 +27,7 @@ function SignUpFields({ fieldError }: { fieldError(name: string): string | undef
         label={t('auth.field.displayName')}
         error={fieldError('displayName')}
       />
-      <TextField
-        name="email"
-        type="email"
-        autoComplete="email"
-        required
-        label={t('auth.field.email')}
-        error={fieldError('email')}
-      />
+      <EmailField error={fieldError('email')} />
       <TextField
         name="password"
         type="password"
@@ -81,6 +76,10 @@ export function SignUpScreen() {
           </Button>
         </form>
       </Card>
+      <Row>
+        <Link to="/terms">{t('auth.signUp.readTerms')}</Link>
+        <Link to="/privacy">{t('auth.signUp.readPrivacy')}</Link>
+      </Row>
       <Link to="/sign-in">{t('auth.signUp.toSignIn')}</Link>
     </NarrowColumn>
   );

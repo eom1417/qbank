@@ -4,8 +4,11 @@ import {
   AccountResponse,
   type SignInRequest,
   type SignUpRequest,
+  type UpdateAccountRequest,
 } from '../../../contracts/identity.js';
+import { useTheme } from '../../design-system/index.js';
 import { ApiError, apiRequest } from '../../platform/api/client.js';
+import { useI18n } from '../../platform/i18n/i18n.js';
 
 type SessionState =
   | { status: 'loading' }
@@ -17,6 +20,8 @@ interface Session {
   signIn(input: SignInRequest): Promise<void>;
   signUp(input: SignUpRequest): Promise<void>;
   signOut(): Promise<void>;
+  /** Saves profile/preferences on the server and applies the returned account. */
+  updateAccount(changes: UpdateAccountRequest): Promise<void>;
 }
 
 const SessionContext = createContext<Session | null>(null);
@@ -34,22 +39,36 @@ async function loadAccount(): Promise<SessionState> {
   }
 }
 
+/** The account's saved language and theme win over this browser's local choice. */
+function useApplySavedPreferences(state: SessionState) {
+  const { setLocale } = useI18n();
+  const { setTheme } = useTheme();
+  const preferences = state.status === 'signed-in' ? state.account.preferences : null;
+  useEffect(() => {
+    if (!preferences) return;
+    setLocale(preferences.locale);
+    setTheme(preferences.theme);
+  }, [preferences, setLocale, setTheme]);
+}
+
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<SessionState>({ status: 'loading' });
+  useApplySavedPreferences(state);
   useEffect(() => {
     loadAccount().then(setState, () => setState({ status: 'signed-out' }));
   }, []);
   const signedIn = (account: AccountResponse) => setState({ status: 'signed-in', account });
+  const post = (path: string, body: unknown) => apiRequest('POST', path, AccountResponse, body);
   const session: Session = {
     state,
-    signIn: async (input) =>
-      signedIn(await apiRequest('POST', '/api/auth/sign-in', AccountResponse, input)),
-    signUp: async (input) =>
-      signedIn(await apiRequest('POST', '/api/auth/sign-up', AccountResponse, input)),
+    signIn: async (input) => signedIn(await post('/api/auth/sign-in', input)),
+    signUp: async (input) => signedIn(await post('/api/auth/sign-up', input)),
     signOut: async () => {
       await apiRequest('POST', '/api/auth/sign-out', z.null());
       setState({ status: 'signed-out' });
     },
+    updateAccount: async (changes) =>
+      signedIn(await apiRequest('PATCH', '/api/account', AccountResponse, changes)),
   };
   return <SessionContext.Provider value={session}>{children}</SessionContext.Provider>;
 }

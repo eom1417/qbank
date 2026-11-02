@@ -9,33 +9,62 @@ const NEXT_THEME: Record<ThemePreference, ThemePreference> = {
   dark: 'system',
 };
 
-export function AppShell() {
+/** Language and theme switches: applied at once, and saved to the account when signed in. */
+function PreferenceSwitches() {
   const { t, locale, setLocale } = useI18n();
   const { theme, setTheme } = useTheme();
-  const { state, signOut } = useSession();
-  const actions = (
+  const { state, updateAccount } = useSession();
+  const save = (changes: Parameters<typeof updateAccount>[0]) => {
+    if (state.status === 'signed-in') void updateAccount(changes).catch(() => undefined);
+  };
+  const nextLocale = locale === 'ar' ? 'en' : 'ar';
+  const nextTheme = NEXT_THEME[theme];
+  return (
     <>
       <Button
         variant="ghost"
-        lang={locale === 'ar' ? 'en' : 'ar'}
-        onClick={() => setLocale(locale === 'ar' ? 'en' : 'ar')}
+        lang={nextLocale}
+        onClick={() => (setLocale(nextLocale), save({ locale: nextLocale }))}
       >
         {t('shell.language')}
       </Button>
-      <Button variant="ghost" onClick={() => setTheme(NEXT_THEME[theme])}>
+      <Button variant="ghost" onClick={() => (setTheme(nextTheme), save({ theme: nextTheme }))}>
         {t(`shell.theme.${theme}`)}
       </Button>
-      {state.status === 'signed-in' && (
-        <Button variant="secondary" onClick={() => void signOut()}>
-          {t('shell.signOut')}
-        </Button>
-      )}
     </>
   );
+}
+
+function AccountLinks() {
+  const { t } = useI18n();
+  const { state, signOut } = useSession();
+  if (state.status === 'loading') return null;
+  if (state.status === 'signed-out') {
+    return <Link to="/sign-in">{t('shell.nav.signIn')}</Link>;
+  }
+  return (
+    <>
+      <Link to="/">{t('shell.nav.library')}</Link>
+      <Link to="/settings">{t('shell.nav.settings')}</Link>
+      <Button variant="secondary" onClick={() => void signOut()}>
+        {t('shell.signOut')}
+      </Button>
+    </>
+  );
+}
+
+export function AppShell() {
+  const { t } = useI18n();
   const brand = (
     <Link className="qb-shell__brand" to="/">
       {t('app.name')}
     </Link>
+  );
+  const actions = (
+    <>
+      <AccountLinks />
+      <PreferenceSwitches />
+    </>
   );
   return (
     <PageShell brand={brand} actions={actions}>

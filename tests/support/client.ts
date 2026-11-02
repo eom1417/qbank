@@ -1,7 +1,7 @@
 import type { FastifyInstance, InjectOptions } from 'fastify';
 import { ORIGIN } from './test-app.js';
 
-type Method = 'GET' | 'POST';
+type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
 
 /** A cookie-carrying API client, like one browser profile. */
 export function createClient(app: FastifyInstance) {
@@ -17,6 +17,8 @@ export function createClient(app: FastifyInstance) {
   return {
     get: (url: string) => request('GET', url),
     post: (url: string, payload?: object, origin?: string) => request('POST', url, payload, origin),
+    patch: (url: string, payload: object) => request('PATCH', url, payload),
+    delete: (url: string) => request('DELETE', url),
   };
 }
 
@@ -40,4 +42,11 @@ export async function registeredBrowser(app: FastifyInstance) {
   const browser = createClient(app);
   await browser.post('/api/auth/sign-up', payload);
   return { browser, payload };
+}
+
+/** A signed-in owner and one bank they created. */
+export async function ownerWithBank(app: FastifyInstance, name = 'Medicine') {
+  const { browser } = await registeredBrowser(app);
+  const bank = (await browser.post('/api/banks', { name })).json();
+  return { owner: browser, bank, bankId: bank.id as string };
 }
