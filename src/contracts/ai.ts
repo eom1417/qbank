@@ -82,7 +82,8 @@ export type ProviderResponse = z.infer<typeof ProviderResponse>;
 export const ProviderListResponse = z
   .object({
     providers: z.array(ProviderResponse),
-    local: z.object({ available: z.boolean(), baseUrl: z.string().nullable() }).strict(),
+    /** Whether the operator runs a local server; its internal address is never sent. */
+    local: z.object({ available: z.boolean() }).strict(),
   })
   .strict();
 export type ProviderListResponse = z.infer<typeof ProviderListResponse>;

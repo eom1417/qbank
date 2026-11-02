@@ -9,7 +9,7 @@ describe('no local AI server and no key (FR-08-013)', () => {
   it('reports the local server as unavailable and refuses to connect to it', async () => {
     const { browser: owner } = await registeredBrowser(app());
     const list = (await owner.get('/api/ai/providers')).json();
-    expect(list.local).toEqual({ available: false, baseUrl: null });
+    expect(list.local).toEqual({ available: false });
     const local = await owner.post('/api/ai/providers', { kind: 'local', label: 'L', model: 'm' });
     expect(local.statusCode).toBe(400);
     expect(local.json().error.fields).toEqual({ kind: 'unavailable' });

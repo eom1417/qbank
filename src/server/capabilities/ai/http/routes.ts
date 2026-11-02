@@ -30,7 +30,7 @@ export function registerProviderRoutes(
   app.get('/api/ai/providers', async (request): Promise<ProviderListResponse> => {
     const actor = await requireActor(request);
     const providers = (await listProviders(deps, actor)).map(toProviderResponse);
-    return { providers, local: { available: deps.localUrl !== null, baseUrl: deps.localUrl } };
+    return { providers, local: { available: deps.localUrl !== null } };
   });
 
   app.post('/api/ai/providers', async (request, reply) => {

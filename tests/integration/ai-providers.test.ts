@@ -26,7 +26,7 @@ describe('local provider (M2.3, DEC-28)', () => {
   it('connects to the operator server without a key, checks it and reads a sample question', async () => {
     const { browser: owner } = await registeredBrowser(app());
     const list = (await owner.get('/api/ai/providers')).json();
-    expect(list).toEqual({ providers: [], local: { available: true, baseUrl: fake().url } });
+    expect(list).toEqual({ providers: [], local: { available: true } });
 
     const created = await owner.post('/api/ai/providers', {
       kind: 'local',
