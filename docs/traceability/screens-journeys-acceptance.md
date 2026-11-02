@@ -32,7 +32,7 @@
 | UI-21 | تحليلات الطالب | M12.10 | planned | — |
 | UI-22 | البحث | M12.11 | planned | — |
 | UI-23 | إدارة المصادر | M4.9 | planned | — |
-| UI-24 | إعدادات المفاتيح | M2.2 | planned | — |
+| UI-24 | إعدادات المفاتيح | M2.2 | done | `tests/e2e/ai-settings.spec.ts` |
 | UI-25 | إعدادات الدراسة | M1.6 | partial | `tests/e2e/account.spec.ts` |
 | UI-26 | التصدير | M13.1 | planned | — |
 | UI-27 | الحذف والخصوصية | M13.6 | planned | — |
@@ -142,13 +142,13 @@
 | UAT-074 | حذف بنك A | M13.5 | planned | — |
 | UAT-075 | حذف حساب | M13.6 | planned | — |
 | UAT-076 | رابط غير مصرح | M0.3 | partial | `tests/integration/library.test.ts` |
-| UAT-077 | مزود AI خارجي | M2.6 | planned | — |
+| UAT-077 | مزود AI خارجي | M2.6 | partial | `tests/e2e/ai-settings.spec.ts` |
 | UAT-078 | صورة مريض معرف | M14.1 | planned | — |
 | UAT-079 | واجهة RTL | M15.1 | partial | `tests/e2e/library.spec.ts` |
 | UAT-080 | واجهة LTR | M15.1 | partial | `tests/e2e/language.spec.ts` |
 | UAT-081 | Dark mode | M15.2 | partial | `tests/e2e/language.spec.ts` |
 | UAT-082 | هاتف صغير | M15.3 | partial | `tests/e2e/library.spec.ts` |
 | UAT-083 | ألوان الملاحظات | M15.2 | planned | — |
-| UAT-084 | مفتاح منتهي | M2.4 | planned | — |
+| UAT-084 | مفتاح منتهي | M2.4 | partial | `tests/integration/ai-providers.test.ts` |
 | UAT-085 | تكرار مهمة فاشلة | M4.7 | planned | — |
 | UAT-086 | تعديل سؤال في جلسة | M10.9 | planned | — |

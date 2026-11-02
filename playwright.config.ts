@@ -21,6 +21,11 @@ const apiEnv = {
   QBANK_TRUST_PROXY: 'true',
   QBANK_LOG_LEVEL: 'warn',
   QBANK_DEV_OUTBOX: 'true',
+  // Test-only master key (32 bytes of 0x07); never used outside the E2E database.
+  QBANK_MASTER_KEY: Buffer.alloc(32, 7).toString('base64'),
+  // tests/e2e/ai-settings.spec.ts runs a fake OpenAI-compatible server on this port.
+  QBANK_LOCAL_AI_URL: 'http://127.0.0.1:3199/v1',
+  QBANK_AI_ALLOW_PRIVATE_URLS: 'true',
 };
 
 export default defineConfig({

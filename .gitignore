@@ -45,3 +45,7 @@ venv/
 /.agents/skills/browser/
 /.agents/skills/remote-application/
 /.agents/browser-auth.json
+# Design lab prototypes (single-file HTML, not product code; the chosen direction becomes tokens + components)
+/design-lab/
+# Remote platform editor state (code-server), not project files
+/.remote/

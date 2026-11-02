@@ -82,11 +82,11 @@
 | FR-08-006 | مناقشة الخيارات | مقترح | M9.4 | planned | — |
 | FR-08-007 | مراجعة بشرية للجماعي | مقترح | M7.5 | planned | — |
 | FR-08-008 | سجل المنشأ والتعديل | مقترح | M7.7 | planned | — |
-| FR-08-009 | مفتاح مزود لكل مستخدم | سابق | M2.2 | planned | — |
-| FR-08-010 | اختيار مزود AI | سابق | M2.3 | planned | — |
-| FR-08-011 | تحقق جاهزية المفتاح | مقترح | M2.4 | planned | — |
-| FR-08-012 | إظهار حدود التكلفة | مقترح | M2.5 | planned | — |
-| FR-08-013 | العمل دون مفتاح | مقترح | M2.7 | planned | — |
+| FR-08-009 | مفتاح مزود لكل مستخدم | سابق | M2.2 | done | `tests/integration/ai-providers.test.ts` |
+| FR-08-010 | اختيار مزود AI | سابق | M2.3 | done | `tests/integration/ai-limits-isolation.test.ts` |
+| FR-08-011 | تحقق جاهزية المفتاح | مقترح | M2.4 | done | `tests/integration/ai-providers.test.ts` |
+| FR-08-012 | إظهار حدود التكلفة | مقترح | M2.5 | partial | `tests/integration/ai-limits-isolation.test.ts` |
+| FR-08-013 | العمل دون مفتاح | مقترح | M2.7 | partial | `tests/integration/ai-without-local.test.ts` |
 | FR-08-014 | رفض الاستنتاج غير المدعوم | مقترح | M6.10 | planned | — |
 | FR-09-001 | طابور استثناءات مركز | سابق | M7.1 | planned | — |
 | FR-09-002 | مراجعة سؤال مفرد | مقترح | M7.2 | planned | — |
@@ -184,8 +184,8 @@
 | FR-19-007 | نتيجة الحذف الفعلية | مقترح | M13.6 | planned | — |
 | FR-19-008 | الفرق بين الأرشفة والحذف | مقترح | M1.3 | partial | `tests/integration/bank-editing.test.ts` |
 | FR-20-001 | المحتوى خاص افتراضياً | سابق | M14.3 | partial | `tests/integration/library.test.ts` |
-| FR-20-002 | مفتاح AI لا يُشارك | سابق | M2.2 | planned | — |
-| FR-20-003 | الإفصاح عن معالجة AI | مقترح | M2.6 | planned | — |
+| FR-20-002 | مفتاح AI لا يُشارك | سابق | M2.2 | done | `tests/integration/ai-limits-isolation.test.ts` |
+| FR-20-003 | الإفصاح عن معالجة AI | مقترح | M2.6 | partial | `tests/e2e/ai-settings.spec.ts` |
 | FR-20-004 | تقليل بيانات الأشخاص | مقترح | M14.1 | planned | — |
 | FR-20-005 | حقوق الكتب | مقترح | M14.2 | partial | `tests/e2e/landing.spec.ts` |
 | FR-20-006 | الاستخدام غير التجاري | مقترح | M14.2 | partial | `tests/e2e/landing.spec.ts` |
@@ -203,13 +203,13 @@
 | FR-21-009 | إمكانية الوصول | مقترح | M15.4 | planned | — |
 | FR-21-010 | حفظ التفضيلات | مقترح | M1.6 | done | `tests/e2e/account.spec.ts` |
 | FR-22-001 | تفضيلات التعلم | مقترح | M1.6 | partial | `tests/integration/account.test.ts` |
-| FR-22-002 | مفاتيح مزود AI | سابق | M2.2 | planned | — |
+| FR-22-002 | مفاتيح مزود AI | سابق | M2.2 | done | `tests/e2e/ai-settings.spec.ts` |
 | FR-22-003 | تنبيه نجاح الاستيراد | مقترح | M4.8 | planned | — |
 | FR-22-004 | تذكير مراجعة اختياري | مقترح | M14.4 | planned | — |
 | FR-22-005 | تغيير اللغة والمظهر | مقترح | M1.6 | done | `tests/e2e/account.spec.ts` |
 | FR-22-006 | مركز مساعدة سياقي | مقترح | M14.5 | planned | — |
 | FR-22-007 | تواصل الدعم | مقترح | M14.6 | planned | — |
-| FR-22-008 | حد الاستخدام والتكلفة | مقترح | M2.5 | planned | — |
+| FR-22-008 | حد الاستخدام والتكلفة | مقترح | M2.5 | partial | `tests/integration/ai-limits-isolation.test.ts` |
 | FR-23-001 | ملف فاسد أو محمي | مقترح | M4.1 | planned | — |
 | FR-23-002 | صفحة غير مقروءة | مقترح | M4.5 | planned | — |
 | FR-23-003 | انقطاع AI | مقترح | M4.7 | planned | — |

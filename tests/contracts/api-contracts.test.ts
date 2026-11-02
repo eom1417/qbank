@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { ProviderResponse } from '../../src/contracts/ai.js';
 import { AccountResponse } from '../../src/contracts/identity.js';
 import { BankResponse } from '../../src/contracts/library.js';
+import { toProviderResponse } from '../../src/server/capabilities/ai/index.js';
 import { toAccountResponse } from '../../src/server/capabilities/identity/index.js';
 import { toBankResponse } from '../../src/server/capabilities/library/index.js';
 
@@ -41,5 +43,31 @@ describe('public response contracts', () => {
       createdAt: '2026-11-02T08:00:00.000Z',
       updatedAt: '2026-11-02T08:00:00.000Z',
     });
+  });
+});
+
+describe('AI provider contract', () => {
+  it('carries a key hint but never the sealed or clear key', () => {
+    const response = toProviderResponse({
+      id: ID,
+      ownerId: ID,
+      kind: 'openai_compatible',
+      label: 'Cloud',
+      baseUrl: 'https://ai.example/v1',
+      model: 'm',
+      keyCiphertext: 'v1:sealed',
+      keyHint: '3f9a',
+      inputPrice: 1,
+      outputPrice: null,
+      isDefault: true,
+      readinessStatus: 'ready',
+      readinessCheckedAt: AT,
+      createdAt: AT,
+      updatedAt: AT,
+    });
+    expect(ProviderResponse.parse(response)).toEqual(response);
+    expect(response.keyHint).toBe('••••3f9a');
+    expect(response.readiness).toEqual({ status: 'ready', checkedAt: '2026-11-02T08:00:00.000Z' });
+    expect(JSON.stringify(response)).not.toContain('sealed');
   });
 });

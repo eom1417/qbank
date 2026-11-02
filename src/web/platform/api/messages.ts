@@ -12,6 +12,8 @@ const FIELD_MESSAGES: Record<string, MessageKey> = {
   invalid_value: 'field.required',
   incorrect: 'field.incorrect',
   taken: 'field.taken',
+  unsafe: 'field.unsafeUrl',
+  unavailable: 'field.unavailable',
 };
 
 /** Field-level message keys from a validation error, keyed by field name. */

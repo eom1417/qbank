@@ -9,6 +9,9 @@ import { createDb, type Db } from '../../src/server/platform/db/index.js';
 
 export const ORIGIN = 'http://qbank.test';
 
+/** A fixed, obviously non-secret master key for the test database only. */
+const TEST_MASTER_KEY = Buffer.alloc(32, 7);
+
 function testDatabaseUrl(): string {
   const fromEnv = process.env['TEST_DATABASE_URL'];
   if (fromEnv) return fromEnv;
@@ -25,7 +28,10 @@ interface TestApp {
 }
 
 /** A real app on the dedicated test database, migrated and emptied before each suite. */
-async function startTestApp(clock: Clock = { now: () => new Date() }): Promise<TestApp> {
+async function startTestApp(
+  clock: Clock = { now: () => new Date() },
+  localUrl: string | null = null,
+): Promise<TestApp> {
   const db = createDb(testDatabaseUrl());
   await migrateToLatest(db);
   // Test database only (TEST_DATABASE_URL); every owned table cascades from account.
@@ -40,6 +46,8 @@ async function startTestApp(clock: Clock = { now: () => new Date() }): Promise<T
     allowedOrigins: [ORIGIN],
     sessionTtlDays: 30,
     logLevel: 'silent' as const,
+    masterKey: TEST_MASTER_KEY,
+    ai: { localUrl, allowPrivateUrls: true },
   };
   const app = buildApp({ config, db, clock });
   await app.ready();
@@ -50,15 +58,21 @@ async function startTestApp(clock: Clock = { now: () => new Date() }): Promise<T
   return { app, db, close };
 }
 
-/** Starts one test app for the current suite file; call the returned getter inside tests. */
-export function useTestApp(): () => FastifyInstance {
+/**
+ * Starts one test app for the current suite file; call the returned getter inside tests.
+ * `localAiUrl` is read when the suite starts (after earlier beforeAll hooks, e.g. a fake server).
+ */
+export function useTestApp(options: { localAiUrl?: () => string } = {}) {
   let current: TestApp | undefined;
   beforeAll(async () => {
-    current = await startTestApp();
+    current = await startTestApp(undefined, options.localAiUrl?.() ?? null);
   });
   afterAll(() => current?.close());
-  return () => {
+  const started = () => {
     if (!current) throw new Error('test app not started');
-    return current.app;
+    return current;
   };
+  /** The test database itself, for checks the API must never expose (e.g. sealed keys). */
+  const db = (): Db => started().db;
+  return Object.assign((): FastifyInstance => started().app, { db });
 }

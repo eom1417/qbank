@@ -1,4 +1,5 @@
 import type { ColumnType, Generated } from 'kysely';
+import type { ReadinessStatus } from '../../../contracts/ai.js';
 
 type CreatedAt = ColumnType<Date, Date | undefined, never>;
 
@@ -73,6 +74,30 @@ interface TagTable {
   created_at: Date;
 }
 
+interface AiProviderTable {
+  id: string;
+  owner_id: string;
+  kind: 'local' | 'openai_compatible';
+  label: string;
+  base_url: string | null;
+  model: string;
+  key_ciphertext: string | null;
+  key_hint: string | null;
+  input_price: number | null;
+  output_price: number | null;
+  is_default: boolean;
+  readiness_status: Generated<ReadinessStatus>;
+  readiness_checked_at: Date | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface AiSettingsTable {
+  owner_id: string;
+  cost_limit_usd: number | null;
+  approval_pages: number;
+}
+
 export interface Database {
   account: AccountTable;
   auth_session: AuthSessionTable;
@@ -82,4 +107,6 @@ export interface Database {
   chapter: ChapterTable;
   topic: TopicTable;
   tag: TagTable;
+  ai_provider: AiProviderTable;
+  ai_settings: AiSettingsTable;
 }
