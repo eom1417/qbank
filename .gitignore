@@ -1,0 +1,47 @@
+# Runtime/editor scratch only. Root-anchored (/build/) so .genesis/proofs/build/ is never ignored.
+# Never ignore authored code to hide it from the guard.
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+/coverage/
+node_modules/
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+/.tmp/
+/tmp/
+/dist/
+/build/
+*.genesis-new
+*.recipe-new
+.claude/settings.local.json
+.genesis/.pylib/
+.genesis/backup/
+.genesis/proof-journal.json
+
+# remote.futrx platform-managed files (host re-provisions them; not project code)
+/.uploads/
+/.browser/
+/scripts/browser.mjs
+/.agents/.browser-mjs.sha256
+/.data/
+/.codex/
+/.minimax/
+/browser-tools/
+/test-results/
+/playwright-report/
+# Platform-provisioned skill files and the .claude/skills symlink (the host recreates them every
+# prompt). Fresh clones rebuild the mirror with `genesis.py skills --sync` (engineering.json setup).
+/.claude/skills
+/.agents/skills/browser/
+/.agents/skills/remote-application/
+/.agents/browser-auth.json

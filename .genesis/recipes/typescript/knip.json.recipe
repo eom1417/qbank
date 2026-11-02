@@ -1,0 +1,5 @@
+{
+  "entry": ["src/index.ts", "tests/**/*.test.ts"],
+  "project": ["src/**/*.ts"],
+  "ignoreDependencies": ["dependency-cruiser", "jscpd", "prettier", "secretlint", "@secretlint/secretlint-rule-preset-recommend"]
+}

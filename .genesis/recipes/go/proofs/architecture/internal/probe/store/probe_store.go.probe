@@ -1,0 +1,5 @@
+// Package store is a proof fixture adapter.
+package store
+
+// NewMemory is referenced by the forbidden import fixture.
+func NewMemory() int { return 0 }

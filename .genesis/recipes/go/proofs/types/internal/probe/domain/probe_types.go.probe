@@ -1,0 +1,4 @@
+package domain
+
+// ProbeTypes returns the wrong type on purpose.
+func ProbeTypes() int { return "x" }

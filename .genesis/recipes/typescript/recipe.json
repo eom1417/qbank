@@ -1,0 +1,125 @@
+{
+  "name": "typescript",
+  "proven": "2026-11-02: 16/16 gate commands red->green on a fresh sample API (Node 22, TypeScript 6)",
+  "dev_dependencies": {
+    "@eslint/js": "10.0.1",
+    "@secretlint/secretlint-rule-preset-recommend": "13.1.0",
+    "@types/node": "26.6.6",
+    "dependency-cruiser": "18.7.1",
+    "eslint": "10.14.0",
+    "jscpd": "5.4.2",
+    "knip": "6.44.1",
+    "prettier": "3.9.10",
+    "secretlint": "13.1.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.1",
+    "vitest": "5.0.5"
+  },
+  "setup": [
+    [
+      "npm",
+      "ci"
+    ]
+  ],
+  "checks": {
+    "architecture": [
+      "npx",
+      "depcruise",
+      "src",
+      "--validate"
+    ],
+    "function_length": [
+      [
+        "python3",
+        ".genesis/tools/guard.py",
+        "--functions"
+      ],
+      [
+        "npx",
+        "eslint",
+        "src"
+      ]
+    ],
+    "complexity": [
+      [
+        "python3",
+        ".genesis/tools/guard.py",
+        "--functions"
+      ],
+      [
+        "npx",
+        "eslint",
+        "src"
+      ]
+    ],
+    "format": [
+      "npx",
+      "prettier",
+      "--check",
+      "src",
+      "tests"
+    ],
+    "lint": [
+      "npx",
+      "eslint",
+      "."
+    ],
+    "types": [
+      "npx",
+      "tsc",
+      "--noEmit"
+    ],
+    "unit": [
+      "npx",
+      "vitest",
+      "run",
+      "tests/unit"
+    ],
+    "contracts": [
+      "npx",
+      "vitest",
+      "run",
+      "tests/contracts"
+    ],
+    "duplication": [
+      [
+        "python3",
+        ".genesis/tools/duplication.py"
+      ],
+      [
+        "npx",
+        "jscpd"
+      ]
+    ],
+    "dead_code": [
+      "npx",
+      "knip"
+    ],
+    "security": [
+      "npx",
+      "secretlint",
+      "src/**/*"
+    ],
+    "dependencies": [
+      "npm",
+      "audit",
+      "--audit-level=high"
+    ],
+    "build": [
+      "npx",
+      "tsc",
+      "-p",
+      "tsconfig.json",
+      "--outDir",
+      "dist"
+    ]
+  },
+  "unverified": [],
+  "notes": [
+    "Install: npm install -D --save-exact <each dev_dependencies entry at its version>; commit package-lock.json.",
+    "Layout: src/<capability>/{domain,adapters,http}; .dependency-cruiser.cjs encodes the direction.",
+    "ESLint runs with noInlineConfig: inline disables are impossible, not just forbidden.",
+    "dependencies proof plants a lockfile with a known-vulnerable package; npm audit must go red.",
+    "contracts proof: replace the placeholder with a fixture that changes a real response shape."
+  ]
+}

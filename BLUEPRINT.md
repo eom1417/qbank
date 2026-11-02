@@ -1,0 +1,105 @@
+# Project blueprint: QBank Engine
+
+`G` = `python3 .genesis/tools/genesis.py`. This file is project data: keep it current with every change.
+Product source of truth: the owner's Arabic spec package (`QBank_Engine_Complete_Product_Blueprint_AR.pdf`, v1.0, 2026-11-02; requirement ids `FR-xx-yyy`, screens `UI-xx`, journeys `JY-xx`, acceptance `UAT-xxx`, open decisions `DEC-xx`). This blueprint maps that spec onto code owners; it never restates it. Execution plan (M0–M17): `docs/PLAN.md` · per-item status: `docs/traceability/` · owner decisions: `docs/DECISIONS.md` (all three are guarded by `tests/unit/docs/traceability.test.ts`).
+
+## 1. Product brief
+
+- **Name / outcome:** QBank Engine (محرك بنك الأسئلة) turns files the user is allowed to use (text or scanned PDFs, page photos) into a private, interactive question bank with honest answer provenance, Tutor/Exam study, mastery, spaced review and analytics. The original PDF is deleted after the extracted content has been verified.
+- **Users and trust:** `visitor` (unauthenticated, sees only the public pages) · `account owner` (the only content role: owns banks, sources, questions, keys, attempts) · `support` (deferred: has no default read access to private content, FR-02-003). There are no schools, teachers, sharing or marketplace in v1 (FR-25-006).
+- **Three critical journeys:**
+  1. **Private library (slice 1):** sign up → empty library with next steps → create bank → see it. Denial: user B requesting user A's bank by id gets the same neutral `404` as a missing bank (UAT-002, UAT-076). Failure: duplicate email or weak password is rejected with a field error and no account.
+  2. **Import (JY-01):** choose bank → upload scanned PDF → confirm usage rights → live per-file stages → questions + images with page provenance → review exceptions → approve → original deleted after verification. Failure: an expired AI key mid-import keeps finished work, shows what is pending, and a retry never duplicates questions (JY-14).
+  3. **Study (JY-07/JY-08):** pick scope and count (eligible count shown) → Tutor (answer revealed only after submit) or Exam (nothing revealed before submit, autosave, flags, timer rules announced up front) → honest report. Denial: an ineligible question (no approved key) never enters a graded exam (UAT-014).
+- **Non-goals (v1):** shared or public banks, marketplace, teacher/classroom roles, native mobile apps (responsive web only, DEC-24), generated flashcards, auto-translation of questions, company-provided AI credit (BYOK only), push notifications by default (DEC-22).
+- **Platforms:** responsive web (phone, tablet, desktop), Arabic RTL and English LTR, light and dark themes. Runs in this container under systemd; public hosting is an owner decision.
+- **Targets (assumptions):** invite-sized trial first (DEC-01 suggestion); ≤ 200 MB per upload and ≤ 1500 pages per file (configurable); p95 API < 300 ms for library and study screens; imports are asynchronous and resumable; WCAG 2.2 AA; no fake numbers anywhere (FR-01-010).
+- **Glossary** (identical in UI, API, DB and tests): **bank** (`bank`, بنك) · **source** (`source`, مصدر) · **import** (`import_job`, استيراد) with stages `queued, reading, extracting, matching, verifying, completed, needs_review, partial_failure, failed` · **question** (`question`, سؤال) · **stem** (`stem`, متن) · **option** (`option`, خيار) · **answer key** (`answer_key`, مفتاح الإجابة) with provenance `source, manual, ai_suggested, conflict, missing` · question status `detected, needs_review, eligible, excluded, archived` · **eligible** (مؤهل: has stem, options, required media and an approved key) · **attempt** (`attempt`, محاولة) · **session** (`session`, جلسة) of kind `tutor, exam, smart_mix, review` · **accuracy** (دقة = correct ÷ (correct + wrong)) vs **exam score** (درجة, per the exam's announced policy) · **mastery** (إتقان) · **due** (مستحق) · **flag** (علامة) · **favorite** (مفضلة) · **note** (ملاحظة) · **BYOK key** (`provider_key`, مفتاح AI).
+
+## 2. Profile and stack (`.genesis/docs/15`)
+
+| Decision | Choice | Why (one sentence) | Rejected alternative |
+|---|---|---|---|
+| Profile(s) | Web application + API + AI product | A multi-user web app whose import pipeline sends user content to the user's own AI provider. | Native mobile app: the spec allows responsive web only (DEC-24). |
+| Language / runtime / pkg manager | TypeScript 6 (strict), Node 22, npm with a committed lockfile | One language for API, worker and UI, so contracts are shared and one proven recipe covers every gate. | Python API + TS UI: two toolchains and duplicated contracts. |
+| Interface | Fastify 5 JSON API (`/api/*`) + React 19 SPA built with Vite 8 | Small, fast and typed, without a server-rendering framework the product does not need. | Next.js: SSR and server components add coupling with no user benefit here. |
+| Storage / transactions | PostgreSQL 16 via Kysely (typed SQL) and authored migrations; files in a `BlobStore` port on local disk under `QBANK_DATA_DIR` | Real transactions, row locks for the durable job queue and full-text search, all in one store. | SQLite: one writer conflicts with background import workers while users study. |
+| Auth / authorization / secrets | Email + password (argon2id), server-side sessions in Postgres with an httpOnly `SameSite=Lax` cookie, an Origin check on mutations; per-account ownership on every row; BYOK keys encrypted with AES-256-GCM under `QBANK_MASTER_KEY` | No third-party identity account or cost, and revocation is a single row delete. | A hosted identity provider (Auth0/Clerk): external account, cost and data egress. |
+| Background work | Durable job table in Postgres (`FOR UPDATE SKIP LOCKED`), run by a worker in the same codebase | Imports survive restarts and resume per page without new infrastructure. | Redis/BullMQ: one more service to run and back up. |
+| AI | `AiProvider` port; the first adapter is chosen in the import slice (DEC-17) | The spec forbids hard-wiring one vendor (FR-08-010). | Calling one SDK directly from use cases. |
+| Hosting / deploy | This container: systemd units, Postgres data in `/workspace/.data/postgres` | It persists across container replacement, and no external platform is needed yet. | Vercel/Fly: not requested; accounts and billing are owner decisions. |
+
+## 3. Ownership map
+
+Layout: `src/server` (API + worker), `src/web` (SPA), `src/contracts` (the single source of request/response schemas), `migrations/`, `tests/{unit,contracts,integration}`. Server capability = `src/server/capabilities/<c>/{domain,use-cases,adapters,http}` + `index.ts` (its only public surface). Web capability = `src/web/capabilities/<c>/` screens.
+
+| Capability | Owner path | Public interface | Data it owns | May import | Tests | Status |
+|---|---|---|---|---|---|---|
+| identity (accounts, sessions, preferences) | `src/server/capabilities/identity` | `index.ts`: `identityRoutes`, `requireActor` | `account`, `auth_session` | platform, contracts | `tests/*/identity` | slice 1 |
+| library (banks; chapters, topics and tags later) | `src/server/capabilities/library` | `index.ts`: `libraryRoutes` | `bank` | platform, contracts, identity/index | `tests/*/library` | slice 1 |
+| sources (upload, import jobs, page reading, reports, original deletion) | `src/server/capabilities/sources` | — | `source`, `import_job`, blobs | platform, contracts, questions/index, ai/index | — | planned |
+| questions (questions, options, keys, provenance, media, versions, review queue, duplicates) | `src/server/capabilities/questions` | — | `question*`, `media` | platform, contracts, library/index | — | planned |
+| ai (BYOK keys, provider adapters, readiness, cost caps) | `src/server/capabilities/ai` | — | `provider_key` | platform, contracts | — | planned |
+| study (Tutor/Exam sessions, attempts, timers, question snapshots) | `src/server/capabilities/study` | — | `session`, `attempt` | platform, contracts, questions/index | — | planned |
+| learning (mastery, spaced review, Smart Mix 50/30/20) | `src/server/capabilities/learning` | — | `mastery_state` | platform, study/index | — | planned |
+| analytics, portability (export, bank/account deletion) | `src/server/capabilities/{analytics,portability}` | — | read models, `deletion_job` | platform, other capabilities' index | — | planned |
+
+**Shared concern owners** (exactly one each): identity/auth `src/server/capabilities/identity` · authentication gate `identity/index.ts` → `requireActor` (session → `Actor`) · authorization: owner-scoped repositories (every query takes `actor.accountId`) · CSRF `src/server/platform/http/origin-guard.ts` · validation `src/contracts` (zod schemas, used by the server and the SPA) · errors `src/server/platform/errors` (`AppError` + codes → HTTP mapping) · config `src/server/platform/config` (validated once at startup) · logging `src/server/platform/logging` (Fastify pino, redacted) · time/IDs `src/server/platform/clock.ts`, `ids.ts` (random UUIDs) · API contracts `src/contracts` · DB access `src/server/platform/db` (Kysely + `withTransaction`); each aggregate is written only by its capability's adapter · design tokens `src/web/design-system/tokens` · UI primitives `src/web/design-system/components` · i18n strings `src/web/platform/i18n` (ar/en catalogs) · HTTP client (web) `src/web/platform/api` (`apiRequest`, `useQuery`) · forms (web) `src/web/platform/forms/use-submit.ts` · theme `src/web/design-system/theme.tsx`.
+
+**Shared functions registry:** `parseInput` → `src/server/platform/http/validate.ts` → contract validation with field errors · `notFound` → `src/server/platform/errors` → the neutral missing-or-foreign error · `useSubmit`/`text` → `src/web/platform/forms/use-submit.ts` → form submission state · `useQuery` → `src/web/platform/api/use-query.ts` → screen data loading · test support: `useTestApp`, `createClient`, `registeredBrowser` → `tests/support/`.
+
+**Forbidden imports** (enforced by `.dependency-cruiser.cjs`): `domain/` → `adapters|http|use-cases`; `adapters/` → `http`; `src/web` ↔ `src/server`; `src/contracts` → anything but `zod`; `platform/` → `capabilities/`; `design-system/` → `capabilities/`; one capability → another's internals (only its `index.ts`); no cycles.
+**Trust/data flow:** browser (untrusted) → `/api` (Fastify: Origin check, cookie session → `Actor`, zod validation) → use case (ownership + invariants) → owner-scoped repository → Postgres. Later: worker → `AiProvider` (sends only the pages of the user's own file, with the user's own key) → results are validated as untrusted model output before they are stored.
+
+## 4. Extension guide
+
+| To add… | Create/modify | Test it in | Register in |
+|---|---|---|---|
+| a feature in an existing capability | `domain/` rule → `use-cases/` → `adapters/` → `http/` routes | `tests/unit/<c>/`, `tests/integration/<c>/` | — |
+| a new capability | `src/server/capabilities/<c>/` + `index.ts`; wire it in `src/server/app.ts` | as above | §3 owner map |
+| an endpoint | the schema in `src/contracts/<c>.ts` first, then `http/routes.ts` | `tests/contracts/<c>/` + an integration denial test | contracts |
+| a screen | `src/web/capabilities/<c>/<Screen>.tsx`, a route in `src/web/app/routes.tsx`, strings in both i18n catalogs | `tests/e2e/<journey>.spec.ts` (Arabic + English, desktop + phone) | traceability row → `partial`/`done` with the test as evidence |
+| a migration | `migrations/<yyyymmddhhmm>_<name>.ts` (immutable once applied) | the integration suite runs every migration | — |
+| a design token / component | `src/web/design-system/tokens/*.css` / `components/<Name>.tsx`, exported from `design-system/index.ts` | `tests/unit/web/design-system/` | catalog (§5) |
+| a shared function | a named `platform/<concept>` module | `tests/unit/platform/` | §3 registry |
+
+## 5. Design system (`.genesis/docs/04`)
+
+Tokens `src/web/design-system/tokens/` (primitives → semantic CSS custom properties; light and dark themes via `[data-theme]`) · components `src/web/design-system/components/` (Button, TextField, Card, Alert, EmptyState, PageShell, …) · catalog: the component tests (a gallery screen comes later) · themes: light/dark, `dir` set from the UI language, logical CSS properties only · a11y: WCAG 2.2 AA, visible focus, 44 px touch targets, and never colour as the only signal (FR-21-002, UAT-083) · enforcement: `G design` (`applies.design=true`).
+
+## 6. Security and privacy (`.genesis/docs/05`)
+
+- **Classification:** *secret*: password hashes, session tokens (stored only as SHA-256), BYOK keys (encrypted, never returned in full after save, never exported). *Private*: everything in a library (banks, sources, questions, images, notes, attempts). *Possibly sensitive*: uploaded medical images: users are warned before upload not to include identifiable patients (FR-20-004).
+- **Role × action × object:** visitor → public pages and sign up/in only. Account owner → create/read/update/delete/export **only rows where `owner_id = actor.accountId`**, enforced in every repository query and by composite foreign keys `(owner_id, id)` so cross-owner links cannot exist. Support → none in v1. Background jobs carry `owner_id` and use the same scoped repositories.
+- **Abuse cases:** id enumeration across accounts (neutral 404 everywhere) · CSRF (SameSite=Lax + Origin check) · credential stuffing (argon2id; rate limit planned before public signup) · malicious PDF (size/type limits, parsing in the worker only, never on the request thread) · prompt injection in book text (model output is untrusted data, schema-validated, never instructions) · key exfiltration (keys are decrypted only inside the AI adapter at call time).
+- **Retention:** the original PDF is deleted after verification (FR-19-001). Policy for failed imports (DEC-13) and post-deletion reports (DEC-20) is open. Export never includes keys or deleted originals.
+- **Verified locally vs later:** cross-account denial and session rules are tested locally against real Postgres. TLS, backups, legal review (FR-20-009) and production secrets are pending in the real environment.
+
+## 7. Agent environment (`.genesis/docs/08`)
+
+- Agents: Claude Code (primary); Codex and MiniMax read the same `.agents/skills`.
+- Installed skills (`G skills --index`): `boundary-review`, `bugfix-protocol`, `engineering-foundation`, `feature-delivery`, `guard-proofs`, `safe-refactor` (kit core, callable by name) + platform skills `browser`, `remote-application` (callable by name). `G skills --check`: PASS (6/6 required). `--evals` not run.
+- Known kit self-test failure: `test_kit_root_holds_only_entry_files` asserts the kit folder holds only kit files, so it fails in any real project (it failed in Phase ZERO too, before any code). Fixing it is a kit-policy change for the owner (see the open item in §8).
+- Hooks: `.claude/settings.json` agent hook active; git hooks active (`G hooks`).
+
+## 8. Gates and evidence
+
+- `engineering.json`: roots `["."]` · extensions trimmed to py/js/jsx/mjs/cjs/ts/tsx/sh/html/css/md/txt/json/yaml/yml/toml/sql · generated: none (lockfile auto-recognised) · `applies`: design, integration, e2e.
+- Setup: `npm ci` (all versions exact in `package.json`; TypeScript 6.0.3, ESLint 10.14.0, Vitest 5.0.5, dependency-cruiser 18.7.1, Knip 6.44.1, jscpd 5.4.2, Prettier 3.9.10, secretlint 13.1.0) · system: PostgreSQL 16 (`setup.sh` rebuilds everything in a fresh container) · `npm audit`: 0 runtime vulnerabilities; 11 moderate in dev lint tooling (minimatch via eslint), below the `high` gate.
+- Recipe: `typescript`, adapted: depcruise rules for the `src/server|web|contracts` layout, Knip/jscpd/Prettier/secretlint cover `tests` and `migrations`, `.tsx` function/complexity fixtures added, a real contract fixture (renames `archived` in the bank presenter), and an integration fixture (bank lookup without the owner filter must fail the cross-account test).
+- Gate commands: architecture `depcruise src --validate` · function_length/complexity `guard.py --functions` + `eslint src` · format `prettier --check src tests migrations` · lint `eslint .` · types `tsc --noEmit` · unit `vitest run tests/unit` · contracts `vitest run tests/contracts` · integration `vitest run tests/integration` (real Postgres via `TEST_DATABASE_URL`) · e2e `playwright test` (Chromium, desktop + Pixel 7, own API on :3100 and Vite on :5180 against `E2E_DATABASE_URL`) · duplication `duplication.py` + `jscpd` · dead_code `knip` · security `secretlint` · dependencies `npm audit --audit-level=high` · build `tsc --outDir dist`.
+- `G prove`, 2026-11-02 (after M0.5), **dry run in a scratch copy with a placeholder CODEOWNERS handle** (the real run needs the owner's handle, M0.4): PROVED architecture (red/green control) · function_length ×2 · complexity ×2 · format · lint · types · unit · contracts · duplication ×2 (red/green control) · dead_code · security (red/green control) · dependencies · build · integration · e2e (fixture: bank creation posts to a wrong URL), then "PASS: full gates ran green and every one is proven to fail on its fixture". The ledger `.genesis/proofs.json` is written only by the real run.
+- Pending (M0.4, owner): CODEOWNERS handle → real `G prove` → GitHub repository + green CI → `G governance --apply` → `ready=true`; DEC-27 (the kit self-test that fails in any real project).
+- CI from a fresh clone: [link] · CODEOWNERS: [handle] · `G governance --verify`: [pending owner approval]
+- `ready=true`: [pending owner]
+
+## 9. ADRs and decisions
+
+- 2026-11-02 / TypeScript + Fastify + React/Vite + Postgres/Kysely / Next.js, Python API, SQLite / one language and one contract source; transactional job queue / harder to use Python-only PDF tooling (shell out to poppler instead) / revisit if extraction needs a Python-only library.
+- 2026-11-02 / sessions in Postgres + httpOnly cookie / JWT, hosted IdP / instant revocation, no external account / one DB lookup per request / revisit at multi-region scale.
+- 2026-11-02 / tenant isolation in the application + composite FKs / Postgres RLS / simpler, fully tested at the API boundary / one missed `where` clause is the risk, covered by integration denial tests / adopt RLS if a second write path appears.
+- **Open owner decisions** (spec §29; the spec's suggested defaults are assumed until signed off): DEC-01 sign-up open vs invite · DEC-02 minimum age (assume adults) · DEC-03 can an AI key be approved (assume yes, with a permanent badge) · DEC-05 multiple-select in v1 · DEC-06/07 exam timer rules · DEC-08 unanswered-question scoring · DEC-10–12 Smart Mix/mastery/review thresholds · DEC-13/14/20 retention after failure, partial import and deletion · DEC-17 the AI provider list · DEC-18 cost approval threshold.
+
+## 10. Run it (this container)
+
+`bash setup.sh` (idempotent) → dev services: `qbank-api-dev-3000` (`node --import tsx --watch src/server/main.ts`, bound to 127.0.0.1, `QBANK_TRUST_PROXY=true`) and `qbank-web-dev-5173` (Vite on 0.0.0.0, proxies `/api`). Restart both after `npm ci`. Routed URL: `https://<project-slug>--5173.dev.remote.e-m.sa`.

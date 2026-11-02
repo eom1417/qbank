@@ -1,0 +1,6 @@
+package domain
+
+import "__MODULE__/internal/probe/store"
+
+// ProbeArch breaks the dependency rule on purpose.
+var ProbeArch = store.NewMemory

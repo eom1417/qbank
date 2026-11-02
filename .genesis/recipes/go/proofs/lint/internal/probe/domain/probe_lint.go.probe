@@ -1,0 +1,6 @@
+package domain
+
+import "fmt"
+
+// ProbeLint has a vet error: wrong printf verb.
+func ProbeLint() string { return fmt.Sprintf("%d", "text") }

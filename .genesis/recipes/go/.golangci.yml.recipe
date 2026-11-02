@@ -1,0 +1,6 @@
+# golangci-lint v2 settings for the Genesis gates (dupl, unused, gosec run one at a time).
+version: "2"
+linters:
+  settings:
+    dupl:
+      threshold: 50

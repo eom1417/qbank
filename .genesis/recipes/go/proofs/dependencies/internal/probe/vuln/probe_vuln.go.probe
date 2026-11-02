@@ -1,0 +1,9 @@
+// Package vuln calls a function with a known vulnerability (dependency proof).
+package vuln
+
+import "golang.org/x/text/language"
+
+// ProbeVuln reaches language.Parse from golang.org/x/text v0.3.0 (GO-2021-0113).
+func ProbeVuln(tag string) (language.Tag, error) {
+	return language.Parse(tag)
+}

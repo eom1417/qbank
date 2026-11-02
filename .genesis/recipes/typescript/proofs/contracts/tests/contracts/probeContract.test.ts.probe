@@ -1,0 +1,6 @@
+import { expect, it } from 'vitest';
+
+// Replace with a fixture that breaks a REAL public contract (see recipe notes).
+it('probe contract', () => {
+  expect({ total: 1 }).toStrictEqual({ amount: 1 });
+});

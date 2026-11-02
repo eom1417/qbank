@@ -1,0 +1,11 @@
+package contract
+
+import "testing"
+
+// Replace with a fixture that changes a REAL public response (see recipe notes).
+func TestContractProbe(t *testing.T) {
+	got := map[string]int{"total": 1}
+	if _, ok := got["amount"]; !ok {
+		t.Fatal("contract changed: amount missing")
+	}
+}

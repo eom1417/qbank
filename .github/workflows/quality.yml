@@ -1,0 +1,62 @@
+# Required on every PR and protected branch. Fails until bootstrap completes (by design).
+name: Engineering quality
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+  push:
+    branches: [main, master, develop]
+permissions:
+  contents: read
+concurrency:
+  group: engineering-quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  quality:
+    name: Engineering quality  # the required status check (genesis.py governance --apply)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: qbank
+          POSTGRES_PASSWORD: qbank-ci-only
+          POSTGRES_DB: qbank_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U qbank" --health-interval 5s --health-timeout 5s
+          --health-retries 10
+    env:
+      # Throwaway CI database (the service above); never a real environment.
+      TEST_DATABASE_URL: postgres://qbank:qbank-ci-only@127.0.0.1:5432/qbank_test
+      # E2E learners use unique emails, so the same throwaway database is safe to share.
+      E2E_DATABASE_URL: postgres://qbank:qbank-ci-only@127.0.0.1:5432/qbank_test
+    steps:
+      # Pinned to commit SHAs (verified with git ls-remote); Dependabot proposes updates.
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+      - name: Kit self-tests (every guard is seen failing)
+        run: python .genesis/tools/genesis.py setup && python .genesis/tools/genesis.py selftest
+      - name: Policy files need the owner's policy-change label
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: origin/${{ github.base_ref }}
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: python .genesis/tools/policy_gate.py --base "$BASE" --labels "$LABELS"
+      - name: Base-branch guard judges this tree (a PR cannot loosen its own judge)
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: origin/${{ github.base_ref }}
+        run: python .genesis/tools/policy_gate.py --base-guard "$BASE"
+      - name: Install the project's pinned stack
+        run: python .genesis/tools/genesis.py setup --project
+      - name: Full gate + re-prove every gate red on its fixture
+        run: python .genesis/tools/genesis.py prove

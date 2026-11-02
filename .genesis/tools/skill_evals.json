@@ -1,0 +1,80 @@
+{
+  "note": "Real-agent routing evals. by_name must all pass; implicit must pass >= 80%.",
+  "cases": [
+    {
+      "kind": "by_name",
+      "prompt": "use feature-delivery to add a CSV export endpoint for invoices",
+      "expect": "feature-delivery"
+    },
+    {
+      "kind": "by_name",
+      "prompt": "استخدم bugfix-protocol: زر تسجيل الدخول يرجع خطأ 500",
+      "expect": "bugfix-protocol"
+    },
+    {
+      "kind": "by_name",
+      "prompt": "شغّل guard-proofs على المشروع",
+      "expect": "guard-proofs"
+    },
+    {
+      "kind": "by_name",
+      "prompt": "boundary-review the current branch against main",
+      "expect": "boundary-review"
+    },
+    {
+      "kind": "by_name",
+      "prompt": "safe-refactor على مجلد الطلبات",
+      "expect": "safe-refactor"
+    },
+    {
+      "kind": "implicit",
+      "prompt": "أبي أبدأ مشروع جديد من الصفر: نظام حجوزات للعيادات",
+      "expect": "engineering-foundation"
+    },
+    {
+      "kind": "implicit",
+      "prompt": "The login page crashes when the password field is empty. Fix it.",
+      "expect": "bugfix-protocol"
+    },
+    {
+      "kind": "implicit",
+      "prompt": "قسّم ملف orders.py لأنه صار كبير ومتشعب",
+      "expect": "safe-refactor"
+    },
+    {
+      "kind": "implicit",
+      "prompt": "Review this PR for security problems before we merge it",
+      "expect": "boundary-review"
+    },
+    {
+      "kind": "implicit",
+      "prompt": "أضف ميزة تصدير الفواتير PDF",
+      "expect": "feature-delivery"
+    },
+    {
+      "kind": "implicit",
+      "prompt": "Are our quality gates real? Prove the checks actually fail.",
+      "expect": "guard-proofs"
+    },
+    {
+      "kind": "implicit",
+      "prompt": "راجع الفرع الحالي أمنياً قبل الدمج",
+      "expect": "boundary-review"
+    },
+    {
+      "kind": "by_name",
+      "prompt": "بعد ما تخلص التعديلات على الدفع، مرّ عليها بـ boundary-review وقل لي النتيجة",
+      "expect": "boundary-review"
+    },
+    {
+      "kind": "by_name",
+      "prompt": "I have an idea for a habit tracker app, please run engineering-foundation",
+      "expect": "engineering-foundation"
+    },
+    {
+      "kind": "must_not",
+      "prompt": "use to-spec to turn this plan into a spec",
+      "expect": "to-spec"
+    }
+  ]
+}

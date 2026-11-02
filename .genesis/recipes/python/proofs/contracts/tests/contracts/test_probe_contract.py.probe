@@ -1,0 +1,3 @@
+def test_probe_contract() -> None:
+    """Replace with a fixture that breaks a REAL public contract (see recipe notes)."""
+    assert {"total": 1} == {"amount": 1}

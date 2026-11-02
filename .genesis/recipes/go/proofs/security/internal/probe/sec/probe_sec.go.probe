@@ -1,0 +1,4 @@
+package sec
+
+// Password is a hard-coded credential: the security gate must report it.
+var Password = "hunter2-probe-credential"

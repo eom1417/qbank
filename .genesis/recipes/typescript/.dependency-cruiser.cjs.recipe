@@ -1,0 +1,19 @@
+/** Architecture gate: domain imports nothing outward; no cycles. */
+module.exports = {
+  forbidden: [
+    { name: 'no-circular', severity: 'error', from: {}, to: { circular: true } },
+    {
+      name: 'domain-is-pure',
+      severity: 'error',
+      from: { path: '^src/[^/]+/domain/' },
+      to: { path: '^src/[^/]+/(adapters|http)/' },
+    },
+    {
+      name: 'adapters-not-http',
+      severity: 'error',
+      from: { path: '^src/[^/]+/adapters/' },
+      to: { path: '^src/[^/]+/http/' },
+    },
+  ],
+  options: { tsConfig: { fileName: 'tsconfig.json' }, doNotFollow: { path: 'node_modules' } },
+};

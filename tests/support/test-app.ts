@@ -1,0 +1,63 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { sql } from 'kysely';
+import type { FastifyInstance } from 'fastify';
+import { afterAll, beforeAll } from 'vitest';
+import { buildApp } from '../../src/server/app.js';
+import { migrateToLatest } from '../../src/server/migrator.js';
+import type { Clock } from '../../src/server/platform/clock.js';
+import { createDb, type Db } from '../../src/server/platform/db/index.js';
+
+export const ORIGIN = 'http://qbank.test';
+
+function testDatabaseUrl(): string {
+  const fromEnv = process.env['TEST_DATABASE_URL'];
+  if (fromEnv) return fromEnv;
+  const file = existsSync('.env.local') ? readFileSync('.env.local', 'utf8') : '';
+  const match = /^TEST_DATABASE_URL=(.+)$/m.exec(file);
+  if (!match?.[1]) throw new Error('TEST_DATABASE_URL is not set (env or .env.local)');
+  return match[1].trim();
+}
+
+export interface TestApp {
+  app: FastifyInstance;
+  db: Db;
+  close(): Promise<void>;
+}
+
+/** A real app on the dedicated test database, migrated and emptied before each suite. */
+async function startTestApp(clock: Clock = { now: () => new Date() }): Promise<TestApp> {
+  const db = createDb(testDatabaseUrl());
+  await migrateToLatest(db);
+  // Test database only (TEST_DATABASE_URL); every owned table cascades from account.
+  await sql`truncate table account cascade`.execute(db);
+  const config = {
+    databaseUrl: '',
+    host: '127.0.0.1',
+    port: 0,
+    cookieSecure: false,
+    trustProxy: false,
+    allowedOrigins: [ORIGIN],
+    sessionTtlDays: 30,
+    logLevel: 'silent' as const,
+  };
+  const app = buildApp({ config, db, clock });
+  await app.ready();
+  const close = async () => {
+    await app.close();
+    await db.destroy();
+  };
+  return { app, db, close };
+}
+
+/** Starts one test app for the current suite file; call the returned getter inside tests. */
+export function useTestApp(): () => TestApp {
+  let current: TestApp | undefined;
+  beforeAll(async () => {
+    current = await startTestApp();
+  });
+  afterAll(() => current?.close());
+  return () => {
+    if (!current) throw new Error('test app not started');
+    return current;
+  };
+}

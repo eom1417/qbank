@@ -1,0 +1,77 @@
+// Package archtest enforces dependency direction and formatting with the standard library.
+package archtest
+
+import (
+	"go/format"
+	"go/parser"
+	"go/token"
+	"io/fs"
+	"os"
+	"strings"
+	"testing"
+)
+
+func internalPrefix(t *testing.T) string {
+	t.Helper()
+	mod, err := os.ReadFile("../../go.mod")
+	if err != nil {
+		t.Fatal(err)
+	}
+	first := strings.SplitN(string(mod), "\n", 2)[0]
+	return strings.TrimSpace(strings.TrimPrefix(first, "module")) + "/internal/"
+}
+
+// repo is the module root; reading through fs.FS keeps every path inside it.
+var repo = os.DirFS("../..")
+
+func goFiles(t *testing.T) []string {
+	t.Helper()
+	var files []string
+	err := fs.WalkDir(repo, ".", func(path string, d fs.DirEntry, err error) error {
+		if err == nil && !d.IsDir() && strings.HasSuffix(path, ".go") {
+			files = append(files, path)
+		}
+		return err
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return files
+}
+
+func read(t *testing.T, path string) []byte {
+	t.Helper()
+	source, err := fs.ReadFile(repo, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return source
+}
+
+func TestDomainImportsNothingOutward(t *testing.T) {
+	module := internalPrefix(t)
+	for _, path := range goFiles(t) {
+		if !strings.Contains("/"+path, "/domain/") {
+			continue
+		}
+		file, err := parser.ParseFile(token.NewFileSet(), path, read(t, path), parser.ImportsOnly)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, imp := range file.Imports {
+			if strings.HasPrefix(strings.Trim(imp.Path.Value, `"`), module) {
+				t.Errorf("%s: domain may not import %s", path, imp.Path.Value)
+			}
+		}
+	}
+}
+
+func TestGofmt(t *testing.T) {
+	for _, path := range goFiles(t) {
+		source := read(t, path)
+		formatted, err := format.Source(source)
+		if err != nil || string(formatted) != string(source) {
+			t.Errorf("%s: not gofmt-formatted", path)
+		}
+	}
+}

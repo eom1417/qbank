@@ -1,0 +1,11 @@
+def probe_duplicate(rows: list[str]) -> list[str]:
+    cleaned = []
+    for row in rows:
+        value = row.strip()
+        if not value:
+            continue
+        if value.startswith("#"):
+            continue
+        cleaned.append(value.lower())
+    cleaned.sort()
+    return cleaned

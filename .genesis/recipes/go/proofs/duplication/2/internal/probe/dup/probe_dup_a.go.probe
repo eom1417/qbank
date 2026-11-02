@@ -1,0 +1,25 @@
+package dup
+
+import "strings"
+
+// CleanRowsa is a deliberate copy of its twin (duplication proof).
+func CleanRowsa(rows []string) []string {
+	cleaned := make([]string, 0, len(rows))
+	for _, row := range rows {
+		value := strings.TrimSpace(row)
+		if value == "" {
+			continue
+		}
+		if strings.HasPrefix(value, "#") {
+			continue
+		}
+		if strings.HasPrefix(value, "//") {
+			continue
+		}
+		value = strings.ToLower(value)
+		value = strings.ReplaceAll(value, "\t", " ")
+		value = strings.ReplaceAll(value, "  ", " ")
+		cleaned = append(cleaned, value)
+	}
+	return cleaned
+}

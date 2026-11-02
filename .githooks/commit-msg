@@ -1,0 +1,4 @@
+#!/bin/sh
+# Installed by: python3 .genesis/tools/genesis.py hooks — Conventional Commits headers.
+PY=$(command -v python3 || command -v python || command -v py)
+exec "$PY" .genesis/tools/commits.py "$1"

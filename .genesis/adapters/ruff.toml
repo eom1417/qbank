@@ -1,0 +1,14 @@
+# Merge into ruff.toml or [tool.ruff] in pyproject.toml. Editor feedback only:
+# tools/guard.py --functions is the authoritative 50/10 gate.
+line-length = 100
+
+[lint]
+extend-select = ["E", "F", "W", "I", "B", "UP", "SIM", "C90", "PL", "RUF", "S"]
+
+[lint.mccabe]
+max-complexity = 10
+
+[lint.pylint]
+max-statements = 50
+max-branches = 10
+max-args = 5

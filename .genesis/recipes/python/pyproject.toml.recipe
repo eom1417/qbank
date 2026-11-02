@@ -1,0 +1,23 @@
+# Merge these sections into pyproject.toml (rename package placeholder __PKG__ (filled by --var PKG=...) to yours).
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.mypy]
+mypy_path = "src"
+strict = true
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+extend-select = ["E", "F", "W", "I", "B", "UP", "SIM", "C90"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.vulture]
+paths = ["src"]
+min_confidence = 60
+ignore_names = ["main"]

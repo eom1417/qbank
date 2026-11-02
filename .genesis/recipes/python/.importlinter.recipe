@@ -1,0 +1,10 @@
+[importlinter]
+root_package = __PKG__
+
+[importlinter:contract:layers]
+name = CLI -> domain/adapters; domain imports nothing outward
+type = layers
+layers =
+    __PKG__.cli
+    __PKG__.adapters
+    __PKG__.domain

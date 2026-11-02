@@ -1,0 +1,4 @@
+#!/bin/sh
+# Installed by: python3 .genesis/tools/genesis.py hooks
+PY=$(command -v python3 || command -v python || command -v py)
+exec "$PY" .genesis/tools/check.py --hook pre-push

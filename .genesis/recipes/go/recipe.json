@@ -1,0 +1,113 @@
+{
+  "name": "go",
+  "proven": "2026-11-02: 14/14 gate commands red->green on a fresh sample CLI (Go 1.27, golangci-lint v2.15.0, govulncheck v1.9.0)",
+  "setup": [
+    [
+      "go",
+      "mod",
+      "download"
+    ]
+  ],
+  "checks": {
+    "architecture": [
+      "go",
+      "test",
+      "./internal/archtest",
+      "-run",
+      "TestDomainImportsNothingOutward"
+    ],
+    "function_length": [
+      "python3",
+      ".genesis/tools/guard.py",
+      "--functions"
+    ],
+    "complexity": [
+      "python3",
+      ".genesis/tools/guard.py",
+      "--functions"
+    ],
+    "format": [
+      "go",
+      "test",
+      "./internal/archtest",
+      "-run",
+      "TestGofmt"
+    ],
+    "lint": [
+      "go",
+      "vet",
+      "./..."
+    ],
+    "types": [
+      "go",
+      "test",
+      "-count=1",
+      "-run",
+      "^$",
+      "./..."
+    ],
+    "unit": [
+      "go",
+      "test",
+      "./..."
+    ],
+    "contracts": [
+      "go",
+      "test",
+      "./...",
+      "-run",
+      "Contract"
+    ],
+    "duplication": [
+      [
+        "python3",
+        ".genesis/tools/duplication.py"
+      ],
+      [
+        "go",
+        "run",
+        "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0",
+        "run",
+        "--enable-only",
+        "dupl",
+        "./..."
+      ]
+    ],
+    "dead_code": [
+      "go",
+      "run",
+      "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0",
+      "run",
+      "--enable-only",
+      "unused",
+      "./..."
+    ],
+    "security": [
+      "go",
+      "run",
+      "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0",
+      "run",
+      "--enable-only",
+      "gosec",
+      "./..."
+    ],
+    "dependencies": [
+      "go",
+      "run",
+      "golang.org/x/vuln/cmd/govulncheck@v1.9.0",
+      "./..."
+    ],
+    "build": [
+      "go",
+      "build",
+      "./..."
+    ]
+  },
+  "unverified": [],
+  "notes": [
+    "__MODULE__ is filled from go.mod automatically (or --var MODULE=...).",
+    "golangci-lint and govulncheck run pinned through `go run tool@version` (no global install, same in CI); add actions/setup-go to CI.",
+    "Layout: internal/<capability>/{domain,store,...}; archtest enforces domain purity and gofmt with the standard library.",
+    "contracts: name contract tests TestContract*; replace the placeholder fixture with one that changes a real response."
+  ]
+}

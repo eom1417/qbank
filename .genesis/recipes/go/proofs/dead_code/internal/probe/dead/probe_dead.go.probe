@@ -1,0 +1,4 @@
+package dead
+
+// probeDead is never called: the dead-code gate must report it.
+func probeDead() int { return 1 }

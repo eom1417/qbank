@@ -1,0 +1,33 @@
+export function ProbeBranchyTsx({ x }: { x: number }) {
+  if (x === 0) {
+    return <p>0</p>;
+  }
+  if (x === 1) {
+    return <p>1</p>;
+  }
+  if (x === 2) {
+    return <p>2</p>;
+  }
+  if (x === 3) {
+    return <p>3</p>;
+  }
+  if (x === 4) {
+    return <p>4</p>;
+  }
+  if (x === 5) {
+    return <p>5</p>;
+  }
+  if (x === 6) {
+    return <p>6</p>;
+  }
+  if (x === 7) {
+    return <p>7</p>;
+  }
+  if (x === 8) {
+    return <p>8</p>;
+  }
+  if (x === 9) {
+    return <p>9</p>;
+  }
+  return <p>none</p>;
+}

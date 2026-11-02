@@ -1,0 +1,14 @@
+import js from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import { genesisStrictRules } from './.genesis/adapters/eslint.rules.mjs';
+
+export default tseslint.config(
+  { ignores: ['dist/**', 'node_modules/**', '.dependency-cruiser.cjs'] },
+  js.configs.recommended,
+  ...tseslint.configs.strict,
+  {
+    files: ['**/*.{ts,tsx,js,mjs}'],
+    linterOptions: { noInlineConfig: true, reportUnusedDisableDirectives: 'error' },
+    rules: genesisStrictRules,
+  },
+);

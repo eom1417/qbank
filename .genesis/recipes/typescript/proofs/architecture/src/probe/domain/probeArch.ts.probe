@@ -1,0 +1,3 @@
+import { probeAdapter } from '../adapters/probeAdapter.js';
+
+export const probeArch = probeAdapter;

@@ -1,0 +1,5 @@
+# One line ending everywhere (the 400-line rule and diffs must not depend on the OS).
+* text=auto eol=lf
+*.{png,jpg,jpeg,gif,webp,avif,ico,pdf,zip,gz,tgz,7z,woff,woff2,ttf,otf,eot,mp3,mp4,wav,webm,mov,wasm,jar} binary
+*.bat text eol=crlf
+*.cmd text eol=crlf

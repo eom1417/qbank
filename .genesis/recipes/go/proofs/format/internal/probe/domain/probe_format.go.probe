@@ -1,0 +1,4 @@
+package domain
+
+// ProbeFormat is badly formatted on purpose.
+func ProbeFormat( ) int {return 1}

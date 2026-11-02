@@ -1,0 +1,122 @@
+{
+  "name": "python",
+  "proven": "2026-11-02: 14/14 gate commands red->green on a fresh sample CLI (Python 3.12, PEP 668 system Python, no python3-venv)",
+  "setup": [
+    [
+      "python3",
+      ".genesis/tools/venv_run.py",
+      "--create",
+      "-r",
+      "requirements-dev.txt"
+    ]
+  ],
+  "checks": {
+    "architecture": [
+      "python3",
+      ".genesis/tools/venv_run.py",
+      "lint-imports"
+    ],
+    "function_length": [
+      "python3",
+      ".genesis/tools/guard.py",
+      "--functions"
+    ],
+    "complexity": [
+      "python3",
+      ".genesis/tools/guard.py",
+      "--functions"
+    ],
+    "format": [
+      "python3",
+      ".genesis/tools/venv_run.py",
+      "ruff",
+      "format",
+      "--check",
+      "src",
+      "tests"
+    ],
+    "lint": [
+      "python3",
+      ".genesis/tools/venv_run.py",
+      "ruff",
+      "check",
+      "src",
+      "tests"
+    ],
+    "types": [
+      "python3",
+      ".genesis/tools/venv_run.py",
+      "mypy",
+      "src"
+    ],
+    "unit": [
+      "python3",
+      ".genesis/tools/venv_run.py",
+      "pytest",
+      "-q",
+      "tests/unit"
+    ],
+    "contracts": [
+      "python3",
+      ".genesis/tools/venv_run.py",
+      "pytest",
+      "-q",
+      "tests/contracts"
+    ],
+    "duplication": [
+      [
+        "python3",
+        ".genesis/tools/duplication.py"
+      ],
+      [
+        "python3",
+        ".genesis/tools/venv_run.py",
+        "pylint",
+        "--disable=all",
+        "--enable=duplicate-code",
+        "--min-similarity-lines=6",
+        "src/__PKG__"
+      ]
+    ],
+    "dead_code": [
+      "python3",
+      ".genesis/tools/venv_run.py",
+      "vulture"
+    ],
+    "security": [
+      "python3",
+      ".genesis/tools/venv_run.py",
+      "bandit",
+      "-q",
+      "-r",
+      "src"
+    ],
+    "dependencies": [
+      "python3",
+      ".genesis/tools/venv_run.py",
+      "pip-audit",
+      "--strict",
+      "--disable-pip",
+      "--no-deps",
+      "-r",
+      "requirements-dev.txt"
+    ],
+    "build": [
+      "python3",
+      ".genesis/tools/venv_run.py",
+      "python",
+      "-m",
+      "compileall",
+      "-q",
+      "src"
+    ]
+  },
+  "unverified": [],
+  "notes": [
+    "Layout: src/__PKG__/{cli,adapters,domain}; apply with: python3 .genesis/tools/genesis.py recipe python --var PKG=<your_package>.",
+    "Tools run from the project .venv through .genesis/tools/venv_run.py (Linux, macOS, Windows; PEP 668 safe).",
+    "Runtime dependencies: pin them in requirements.txt and add `-r requirements.txt` to the dependencies gate and to setup.",
+    "contracts proof: replace the placeholder with a fixture that changes a real public output and an expect.txt naming the contract test.",
+    "Delete .genesis/adapters/eslint.rules.mjs if the project has no JavaScript."
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "project": "qbank-engine",
+  "ready": false,
+  "source_roots": ["."],
+  "owned_extensions": [
+    ".py", ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".sh", ".html", ".css", ".md", ".txt",
+    ".json", ".yaml", ".yml", ".toml", ".sql"
+  ],
+  "owned_filenames": [
+    "Dockerfile*", "Containerfile*", "*.Dockerfile", "Makefile", "GNUmakefile", "Justfile",
+    "Procfile", "Jenkinsfile", "go.mod", "go.work", "Gemfile", "Podfile", "Pipfile",
+    "Brewfile", "Rakefile", "Vagrantfile", "LICENSE*", "CODEOWNERS", ".gitignore",
+    ".gitattributes", ".editorconfig", ".importlinter", ".*ignore", ".*rc", ".nvmrc",
+    ".python-version", ".tool-versions", "*.example", "pre-commit", "pre-push", "commit-msg"
+  ],
+  "asset_extensions": [],
+  "asset_patterns": [],
+  "generated": [],
+  "external_function_gates": [],
+  "skills": {
+    "required": [
+      "engineering-foundation", "feature-delivery", "bugfix-protocol", "boundary-review",
+      "guard-proofs", "safe-refactor"
+    ],
+    "model_invocable": [
+      "engineering-foundation", "feature-delivery", "bugfix-protocol", "boundary-review",
+      "guard-proofs", "safe-refactor", "tdd", "diagnosing-bugs", "code-review",
+      "codebase-design", "domain-modeling", "grilling", "grill-me", "grill-with-docs",
+      "handoff", "prototype", "research", "improve-codebase-architecture",
+      "writing-for-agents", "verification-before-completion", "writing-plans",
+      "systematic-debugging", "receiving-code-review", "requesting-code-review",
+      "test-driven-development", "using-git-worktrees", "frontend-design", "webapp-testing",
+      "diagnosing-superpowers", "academy-guide", "algorithmic-art", "brand-guidelines",
+      "canvas-design", "discernment-nudge", "doc-coauthoring", "docx", "internal-comms", "pdf",
+      "pptx", "skill-creator", "slack-gif-creator", "theme-factory", "xlsx", "browser",
+      "remote-application"
+    ],
+    "user_only": [
+      "to-spec", "to-tickets", "implement-spec", "implement", "triage", "wayfinder",
+      "setup-matt-pocock-skills", "finishing-a-development-branch", "pr", "ask-matt", "retro",
+      "wizard", "to-questionnaire", "teach", "wait-what", "git-guardrails-claude-code",
+      "setup-pre-commit", "migrate-to-shoehorn", "scaffold-exercises", "using-superpowers",
+      "brainstorming", "executing-plans", "subagent-driven-development",
+      "dispatching-parallel-agents", "writing-skills", "chief-of-staff", "claude-handoff",
+      "loop-me", "setup-ts-deep-modules", "software-factory", "writing-beats",
+      "writing-fragments", "writing-shape", "claude-api", "mcp-builder",
+      "web-artifacts-builder"
+    ]
+  },
+  "applies": {
+    "design": true,
+    "integration": true,
+    "e2e": true,
+    "operations": false
+  },
+  "setup": [["npm", "ci"], ["npx", "playwright", "install", "--with-deps", "chromium"], ["python3", ".genesis/tools/genesis.py", "skills", "--sync"]],
+  "checks": {
+    "architecture": ["npx", "depcruise", "src", "--validate"],
+    "function_length": [["python3", ".genesis/tools/guard.py", "--functions"], ["npx", "eslint", "src"]],
+    "complexity": [["python3", ".genesis/tools/guard.py", "--functions"], ["npx", "eslint", "src"]],
+    "format": ["npx", "prettier", "--check", "src", "tests", "migrations"],
+    "lint": ["npx", "eslint", "."],
+    "types": ["npx", "tsc", "--noEmit"],
+    "unit": ["npx", "vitest", "run", "tests/unit"],
+    "contracts": ["npx", "vitest", "run", "tests/contracts"],
+    "duplication": [["python3", ".genesis/tools/duplication.py"], ["npx", "jscpd"]],
+    "dead_code": ["npx", "knip"],
+    "security": ["npx", "secretlint", "src/**/*", "tests/**/*", "migrations/**/*"],
+    "dependencies": ["npm", "audit", "--audit-level=high"],
+    "build": ["npx", "tsc", "-p", "tsconfig.json", "--outDir", "dist"],
+    "design": [],
+    "integration": ["npx", "vitest", "run", "tests/integration"],
+    "e2e": ["npx", "playwright", "test"],
+    "operations": []
+  },
+  "design_system": {
+    "tokens": ["src/web/design-system/tokens/*"],
+    "components": ["src/web/design-system/components/*"],
+    "ui": ["src/web/*"]
+  }
+}

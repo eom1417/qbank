@@ -1,0 +1,18 @@
+{
+  "entry": [
+    "migrations/*.ts",
+    "tests/**/*.test.{ts,tsx}"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "migrations/**/*.ts",
+    "tests/**/*.{ts,tsx}"
+  ],
+  "ignoreDependencies": [
+    "dependency-cruiser",
+    "jscpd",
+    "prettier",
+    "secretlint",
+    "@secretlint/secretlint-rule-preset-recommend"
+  ]
+}
