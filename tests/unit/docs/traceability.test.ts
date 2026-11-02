@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 // The owner's spec defines exactly these counts; a missing or duplicated row is a plan gap.
 const EXPECTED = { FR: 225, UI: 28, JY: 19, UAT: 86 } as const;
-const DECISIONS = 27;
+const DECISIONS = 28;
 const STATUSES = new Set(['planned', 'partial', 'done', 'accepted']);
 const DECISION_STATUSES = new Set(['open', 'assumed', 'decided']);
 const TRACE_FILES = [
