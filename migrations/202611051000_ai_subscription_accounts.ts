@@ -9,7 +9,9 @@ type Db = Kysely<unknown>;
 export async function up(db: Db): Promise<void> {
   await sql`alter table ai_provider drop constraint ai_provider_kind_check`.execute(db);
   await sql`alter table ai_provider add constraint ai_provider_kind_check
-    check (kind in ('openai_compatible', 'anthropic', 'claude_account', 'codex_account'))`.execute(db);
+    check (kind in ('openai_compatible', 'anthropic', 'claude_account', 'codex_account'))`.execute(
+    db,
+  );
   await sql`alter table ai_provider alter column base_url drop not null`.execute(db);
   await sql`alter table ai_provider add constraint ai_provider_api_has_url
     check ((kind in ('openai_compatible', 'anthropic')) = (base_url is not null))`.execute(db);
