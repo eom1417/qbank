@@ -13,7 +13,7 @@ const LETTERS: Record<string, string> = {
 };
 
 /** One answer as a key prints it ("B", "b", "ب") as a letter A, B, C…; null when it is not one. */
-export function keyLetter(printed: string): string | null {
+function keyLetter(printed: string): string | null {
   const text = printed.trim();
   if (/^[A-Fa-f]$/.test(text)) return text.toUpperCase();
   return LETTERS[text] ?? null;

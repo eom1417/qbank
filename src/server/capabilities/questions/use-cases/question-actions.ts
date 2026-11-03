@@ -11,7 +11,7 @@ export interface QuestionsDeps {
   clock: Clock;
 }
 
-export function toQuestionResponse(row: QuestionRow): QuestionResponse {
+function toQuestionResponse(row: QuestionRow): QuestionResponse {
   return {
     id: row.id,
     sourceId: row.source_id,

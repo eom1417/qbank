@@ -14,15 +14,15 @@ interface Anchored {
   after: TextLine | null;
 }
 
-export interface InlineKey extends Anchored {
+interface InlineKey extends Anchored {
   letters: string[];
 }
 
-export interface Explanation extends Anchored {
+interface Explanation extends Anchored {
   text: string;
 }
 
-export interface KeySection extends Anchored {
+interface KeySection extends Anchored {
   entries: KeyEntry[];
 }
 
