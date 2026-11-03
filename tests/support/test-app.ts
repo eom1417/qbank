@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { sql } from 'kysely';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll } from 'vitest';
@@ -45,7 +46,15 @@ async function startTestApp(clock: Clock = { now: () => new Date() }): Promise<T
     logLevel: 'silent' as const,
     masterKey: TEST_MASTER_KEY,
     // Tests reach the fake provider on 127.0.0.1; production keeps this off (SSRF guard).
-    ai: { allowPrivateUrls: true },
+    ai: {
+      allowPrivateUrls: true,
+      // Stand-ins for the official CLIs (tests/fixtures/fake-cli), so no real account is used.
+      claudeBin: resolve('tests/fixtures/fake-cli/claude.mjs'),
+      codexBin: resolve('tests/fixtures/fake-cli/codex.mjs'),
+      // One directory per test process: each app clears its own at startup.
+      workDir: `.data/test-ai-work/${process.pid}`,
+      cliEnv: { PATH: process.env['PATH'] ?? '' },
+    },
   };
   const app = buildApp({ config, db, clock });
   await app.ready();

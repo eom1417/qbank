@@ -8,7 +8,7 @@ import { AppError, notFound } from '../../../platform/errors/index.js';
 import { isId } from '../../../platform/ids.js';
 import type { Actor } from '../../identity/index.js';
 import type { ProviderChanges } from '../adapters/provider-repository.js';
-import { keyContext, keyHint, type ProviderConnection } from '../domain/provider.js';
+import { isApiKind, keyContext, keyHint, type ProviderConnection } from '../domain/provider.js';
 import type { AiDeps } from './deps.js';
 
 const invalidField = (field: string, code: string) =>
@@ -46,6 +46,8 @@ function newConnection(
     label: input.label,
     model: input.model,
     baseUrl: input.baseUrl,
+    accountEmail: null,
+    accountPlan: null,
     ...keyChanges(deps, ref, input.apiKey ?? null),
     // The user's own provider prices; unknown stays null (no invented bill, FR-08-012).
     inputPrice: input.inputPrice,
@@ -97,6 +99,10 @@ export async function updateProvider(
   const ref = ownedRef(actor, id);
   const current = await deps.providers.find(ref);
   if (!current) throw notFound();
+  if (!isApiKind(current.kind) && (input.apiKey !== undefined || input.baseUrl !== undefined)) {
+    // A subscription account has no key or address: it is signed in again instead.
+    throw invalidField(input.apiKey === undefined ? 'baseUrl' : 'apiKey', 'unavailable');
+  }
   if (input.apiKey === null) requireKeyFor(current.kind, false);
   await requireSafeUrl(deps, input.baseUrl);
   const { apiKey, ...rest } = input;

@@ -1,4 +1,4 @@
-import type { ProviderKind, ReadinessStatus } from '../../../../contracts/ai.js';
+import type { ApiProviderKind, ProviderKind, ReadinessStatus } from '../../../../contracts/ai.js';
 
 /** One AI connection of an account. The key stays sealed: only the adapter opens it, per call. */
 export interface ProviderConnection {
@@ -6,7 +6,11 @@ export interface ProviderConnection {
   ownerId: string;
   kind: ProviderKind;
   label: string;
-  baseUrl: string;
+  /** Null for subscription accounts. */
+  baseUrl: string | null;
+  /** The signed-in subscription account (email and plan as the CLI reports them). */
+  accountEmail: string | null;
+  accountPlan: string | null;
   model: string;
   keyCiphertext: string | null;
   keyHint: string | null;
@@ -35,3 +39,7 @@ export const keyHint = (key: string): string => (key.length >= 16 ? key.slice(-4
 /** Binds a sealed key to its row, so it cannot be opened from another account's row (FR-20-002). */
 export const keyContext = (connection: Pick<ProviderConnection, 'ownerId' | 'id'>): string =>
   `ai_provider:${connection.ownerId}:${connection.id}`;
+
+/** Connections that call an API with a key, as opposed to a signed-in subscription account. */
+export const isApiKind = (kind: ProviderKind): kind is ApiProviderKind =>
+  kind === 'openai_compatible' || kind === 'anthropic';

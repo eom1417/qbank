@@ -14,6 +14,9 @@ const Env = z.object({
     .string()
     .regex(/^[A-Za-z0-9+/]{43}=$/, 'QBANK_MASTER_KEY must be 32 bytes in base64'),
   QBANK_AI_ALLOW_PRIVATE_URLS: z.enum(['true', 'false']).default('false'),
+  QBANK_CLAUDE_BIN: z.string().min(1).default('claude'),
+  QBANK_CODEX_BIN: z.string().min(1).default('codex'),
+  QBANK_AI_WORK_DIR: z.string().min(1).default('.data/ai-work'),
 });
 
 export interface AppConfig {
@@ -37,8 +40,33 @@ export interface AppConfig {
      * server). Off by default: provider URLs must be public https addresses (SSRF guard).
      */
     allowPrivateUrls: boolean;
+    /** The official Claude Code and Codex CLIs that run subscription-account connections. */
+    claudeBin: string;
+    codexBin: string;
+    /** Private per-run homes for those CLIs (created 0700, removed after each run). */
+    workDir: string;
+    /**
+     * The only variables those CLIs receive (an allowlist): never the database URL, the master
+     * key, or this server's own AI credentials.
+     */
+    cliEnv: Record<string, string>;
   };
 }
+
+const CLI_ENV = [
+  'PATH',
+  'LANG',
+  'LC_ALL',
+  'TZ',
+  'SSL_CERT_FILE',
+  'NODE_EXTRA_CA_CERTS',
+  'HTTPS_PROXY',
+  'HTTP_PROXY',
+  'NO_PROXY',
+];
+
+const pick = (env: NodeJS.ProcessEnv, names: readonly string[]): Record<string, string> =>
+  Object.fromEntries(names.flatMap((name) => (env[name] === undefined ? [] : [[name, env[name]]])));
 
 /** The only place that reads the process environment; fails fast on invalid values. */
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -58,6 +86,10 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     masterKey: Buffer.from(parsed.QBANK_MASTER_KEY, 'base64'),
     ai: {
       allowPrivateUrls: parsed.QBANK_AI_ALLOW_PRIVATE_URLS === 'true',
+      claudeBin: parsed.QBANK_CLAUDE_BIN,
+      codexBin: parsed.QBANK_CODEX_BIN,
+      workDir: parsed.QBANK_AI_WORK_DIR,
+      cliEnv: pick(env, CLI_ENV),
     },
   };
 }

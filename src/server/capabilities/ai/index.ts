@@ -12,8 +12,12 @@ import {
 } from './adapters/provider-factory.js';
 import { createProviderRepository } from './adapters/provider-repository.js';
 import { createAiSettingsRepository } from './adapters/settings-repository.js';
+import { clearAccountHomes, createLoginManager, opsFor } from './adapters/accounts/index.js';
+import { registerAccountRoutes } from './http/account-routes.js';
 import { registerLimitRoutes } from './http/limit-routes.js';
 import { registerProviderRoutes, registerReadinessRoutes } from './http/routes.js';
+import { saveAccountLogin, saveRefreshedLogin } from './use-cases/accounts.js';
+import type { AiDeps } from './use-cases/deps.js';
 
 export { toProviderResponse } from './http/presenters.js';
 // For tools that read with a provider directly (the extraction benchmark); the app uses saved
@@ -27,16 +31,42 @@ interface AiSettings {
   secretBox: SecretBox;
   requireActor: RequireActor;
   allowPrivateUrls: boolean;
+  claudeBin: string;
+  codexBin: string;
+  workDir: string;
+  cliEnv: Record<string, string>;
 }
 
-/** BYOK keys, provider connections, readiness and cost limits: the user's own AI (DEC-17, DEC-28). */
+/**
+ * The user's own AI (DEC-17, DEC-28): API keys, or Claude/ChatGPT subscription accounts signed in
+ * through the official CLIs; readiness and cost limits.
+ */
 export function createAi(settings: AiSettings) {
   const { db, secretBox, allowPrivateUrls, requireActor } = settings;
-  const deps = {
-    providers: createProviderRepository(db),
+  const accounts = {
+    claudeBin: settings.claudeBin,
+    codexBin: settings.codexBin,
+    workDir: settings.workDir,
+    cliEnv: settings.cliEnv,
+  };
+  const providers = createProviderRepository(db);
+  void clearAccountHomes(accounts.workDir);
+  const deps: AiDeps = {
+    providers,
     settings: createAiSettingsRepository(db),
-    openProvider: createProviderFactory({ secretBox, allowPrivateUrls }),
+    openProvider: createProviderFactory({
+      secretBox,
+      allowPrivateUrls,
+      accounts,
+      saveCredential: (connection, credential) => saveRefreshedLogin(deps, connection, credential),
+    }),
     listModels: (target: ProviderTarget) => providerFor(target, allowPrivateUrls).listModels(),
+    logins: createLoginManager({
+      home: accounts,
+      opsFor: (provider) => opsFor(accounts, provider),
+      onComplete: (login) => saveAccountLogin(deps, login),
+      newId,
+    }),
     secretBox,
     isAllowedUrl: (url: string) => isAllowedEndpoint(url, allowPrivateUrls),
     clock: settings.clock,
@@ -47,6 +77,7 @@ export function createAi(settings: AiSettings) {
       registerProviderRoutes(app, deps, requireActor);
       registerReadinessRoutes(app, deps, requireActor);
       registerLimitRoutes(app, deps, requireActor);
+      registerAccountRoutes(app, deps, requireActor);
     },
   };
 }

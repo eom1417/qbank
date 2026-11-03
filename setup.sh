@@ -37,6 +37,7 @@ SQL
 fi
 
 bash scripts/setup-master-key.sh
+bash scripts/setup-ai-clis.sh
 
 npm ci
 npx playwright install --with-deps chromium

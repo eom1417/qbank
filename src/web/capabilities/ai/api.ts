@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import {
+  AccountLoginResponse,
   AiSettings,
   CheckResponse,
   EstimateResponse,
@@ -7,6 +8,7 @@ import {
   ProviderListResponse,
   ProviderResponse,
   TrialResponse,
+  type AccountProvider,
   type CreateProviderRequest,
   type EstimateRequest,
   type ListModelsRequest,
@@ -47,3 +49,18 @@ export const estimateTask = (body: EstimateRequest) =>
 /** Checks a key and lists its models without saving anything. */
 export const listModels = (body: ListModelsRequest) =>
   apiRequest('POST', '/api/ai/models', ListModelsResponse, body);
+
+export const startAccountLogin = (provider: AccountProvider) =>
+  apiRequest('POST', '/api/ai/accounts/login', AccountLoginResponse, {
+    provider,
+    acknowledgeDisclosure: true,
+  });
+
+export const fetchAccountLogin = (id: string) =>
+  apiRequest('GET', `/api/ai/accounts/login/${id}`, AccountLoginResponse);
+
+export const submitLoginCode = (id: string, code: string) =>
+  apiRequest('POST', `/api/ai/accounts/login/${id}/code`, AccountLoginResponse, { code });
+
+export const cancelAccountLogin = (id: string) =>
+  apiRequest('DELETE', `/api/ai/accounts/login/${id}`, z.null());

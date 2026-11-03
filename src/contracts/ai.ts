@@ -5,13 +5,24 @@ import { z } from 'zod';
  * `anthropic` = the Claude Messages API; `openai_compatible` = OpenAI and every service or
  * server that offers the same API (DeepSeek, Gemini, OpenRouter, Mistral, Groq, xAI, …).
  */
-export const ProviderKind = z.enum(['openai_compatible', 'anthropic']);
+export const ApiProviderKind = z.enum(['openai_compatible', 'anthropic']);
+export type ApiProviderKind = z.infer<typeof ApiProviderKind>;
+
+/**
+ * Every kind of connection: an API key for one of the APIs above, or a subscription account
+ * (Claude Pro/Max, ChatGPT Plus/Pro via Codex) signed in through the provider's official CLI.
+ */
+export const ProviderKind = z.enum([...ApiProviderKind.options, 'claude_account', 'codex_account']);
 export type ProviderKind = z.infer<typeof ProviderKind>;
+
+/** The subscription accounts a user can sign in with. */
+export const AccountProvider = z.enum(['claude', 'codex']);
+export type AccountProvider = z.infer<typeof AccountProvider>;
 
 export interface ProviderPreset {
   id: string;
   label: string;
-  kind: ProviderKind;
+  kind: ApiProviderKind;
   /** Null for `custom`: the user types the address of any compatible API. */
   baseUrl: string | null;
   /** Where the user creates a key. */
@@ -101,7 +112,7 @@ const ApiKey = z.string().trim().min(8).max(500);
 const Price = z.number().min(0).max(1000).nullable();
 
 const Connection = {
-  kind: ProviderKind,
+  kind: ApiProviderKind,
   baseUrl: BaseUrl,
   /** Optional only for self-hosted compatible servers that take no key. */
   apiKey: ApiKey.optional(),
@@ -144,7 +155,13 @@ export const ProviderResponse = z
     id: z.uuid(),
     kind: ProviderKind,
     label: z.string(),
-    baseUrl: z.string(),
+    /** Null for subscription accounts, which have no API address. */
+    baseUrl: z.string().nullable(),
+    /** The signed-in subscription account; null for API-key connections. */
+    account: z
+      .object({ email: z.string().nullable(), plan: z.string().nullable() })
+      .strict()
+      .nullable(),
     model: z.string(),
     /** Only the last characters, e.g. "••••3f9a"; the full key is never returned (FR-08-009). */
     keyHint: z.string().nullable(),
@@ -235,3 +252,42 @@ export const EstimateResponse = z
   })
   .strict();
 export type EstimateResponse = z.infer<typeof EstimateResponse>;
+
+/** Starts signing in with a subscription account; the content disclosure must be accepted. */
+export const StartAccountLoginRequest = z
+  .object({ provider: AccountProvider, acknowledgeDisclosure: z.literal(true) })
+  .strict();
+export type StartAccountLoginRequest = z.infer<typeof StartAccountLoginRequest>;
+
+/** The code Claude shows after the user approves the sign-in in their browser. */
+export const SubmitLoginCodeRequest = z
+  .object({ code: z.string().trim().min(4).max(500) })
+  .strict();
+export type SubmitLoginCodeRequest = z.infer<typeof SubmitLoginCodeRequest>;
+
+export const AccountLoginStatus = z.enum([
+  'awaiting_code',
+  'waiting',
+  'completed',
+  'failed',
+  'cancelled',
+  'expired',
+]);
+export type AccountLoginStatus = z.infer<typeof AccountLoginStatus>;
+
+/**
+ * A sign-in in progress. Claude: open `authUrl`, approve, paste the code shown. Codex: open
+ * `authUrl` and enter `deviceCode`. On `completed`, `providerId` is the new connection.
+ */
+export const AccountLoginResponse = z
+  .object({
+    id: z.uuid(),
+    provider: AccountProvider,
+    status: AccountLoginStatus,
+    authUrl: z.string().nullable(),
+    deviceCode: z.string().nullable(),
+    error: z.string().nullable(),
+    providerId: z.uuid().nullable(),
+  })
+  .strict();
+export type AccountLoginResponse = z.infer<typeof AccountLoginResponse>;

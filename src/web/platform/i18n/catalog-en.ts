@@ -165,7 +165,7 @@ export const en = {
   'ai.needs.suggest': 'Suggested answers when the book has no answer key.',
   'ai.disclosure.title': 'What is sent to the provider',
   'ai.disclosure.body':
-    'When an AI task runs, the pages or images it needs from your file are sent to the provider you connected, with your key.',
+    'When an AI task runs, the pages or images it needs from your file are sent to the provider you connected, with your key or account.',
   'ai.disclosure.external':
     "That provider's own terms and privacy policy apply. We cannot guarantee what it does with the content.",
   'ai.disclosure.ack':
@@ -205,7 +205,7 @@ export const en = {
     'The provider could not be reached. Check the address and your connection.',
   'ai.status.model_missing': 'Your key cannot use this model. Load the models list and pick one.',
   'ai.status.unexpected': 'The server gave an unexpected answer. Check the address.',
-  'ai.add.title': 'Add an AI connection',
+  'ai.add.title': 'Or connect with an API key',
   'ai.add.kind': 'Provider',
   'ai.add.label': 'Name for this connection',
   'ai.add.modelHint':
@@ -242,6 +242,30 @@ export const en = {
   'ai.add.loadModels': 'Load my models',
   'ai.add.modelsLoaded': 'Your key works. Pick a model from the list.',
   'ai.add.custom': 'Another compatible API (custom)',
+  'ai.kind.claude_account': 'Claude subscription',
+  'ai.kind.codex_account': 'ChatGPT subscription (Codex)',
+  'ai.account.title': 'Sign in with your subscription',
+  'ai.account.intro':
+    "Use the Claude Pro/Max or ChatGPT Plus/Pro plan you already pay for, with no API key. You approve the sign-in on the provider's own page; we never see your password.",
+  'ai.account.claudeTerms':
+    "Anthropic's terms allow Claude subscriptions only in Claude and Claude Code. Here the official Claude Code runs on this server under your account; Anthropic may see this as outside its terms and limit the account. ChatGPT sign-in runs the official Codex.",
+  'ai.account.ack':
+    'I understand, and the content of my files will be sent to the account I sign in with.',
+  'ai.account.claude': 'Sign in with Claude',
+  'ai.account.codex': 'Sign in with ChatGPT (Codex)',
+  'ai.account.openClaude': "1. Open Claude's sign-in page and approve",
+  'ai.account.openCodex': '1. Open the ChatGPT device page and sign in',
+  'ai.account.deviceCode': '2. Enter this one-time code',
+  'ai.account.code': '2. Paste the code Claude shows after you approve',
+  'ai.account.submitCode': 'Finish sign-in',
+  'ai.account.waiting': "Waiting for you to finish on the provider's page…",
+  'ai.account.cancel': 'Cancel sign-in',
+  'ai.account.completed': 'Signed in. Your account was added below.',
+  'ai.account.cancelled': 'Sign-in cancelled.',
+  'ai.account.expired': 'The sign-in expired. Start again.',
+  'ai.account.failed': 'The sign-in did not finish. Check the code and try again.',
+  'ai.account.unavailable': 'Sign-in is not available on this server right now.',
+  'ai.account.plan': 'Plan',
 };
 
 export type MessageKey = keyof typeof en;

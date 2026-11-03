@@ -1,6 +1,7 @@
 import { Alert, Card, MutedText, Title } from '../../design-system/index.js';
 import { useQuery } from '../../platform/api/use-query.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
+import { AccountLoginCard } from './AccountLoginCard.js';
 import { AddProviderCard } from './AddProviderCard.js';
 import { AiAboutCard } from './AiAboutCard.js';
 import { AiLimitsCard } from './AiLimitsCard.js';
@@ -31,6 +32,7 @@ export function AiSettings() {
           </ul>
         )}
       </Card>
+      {state.status === 'ready' && <AccountLoginCard onAdded={reload} />}
       {state.status === 'ready' && <AddProviderCard onAdded={reload} />}
       {state.status === 'ready' && <AiAboutCard hasProvider={providers.length > 0} />}
       <AiLimitsCard />

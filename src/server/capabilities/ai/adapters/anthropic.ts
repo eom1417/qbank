@@ -57,7 +57,8 @@ function classify(error: unknown): CallFailure {
   return BY_STATUS[error.status] ?? 'unexpected';
 }
 
-const toContent = (parts: readonly ContentPart[]): Anthropic.ContentBlockParam[] =>
+/** Page text and images as Anthropic content blocks (also used by the Claude account adapter). */
+export const toAnthropicContent = (parts: readonly ContentPart[]): Anthropic.ContentBlockParam[] =>
   parts.map((part) =>
     part.type === 'text'
       ? { type: 'text', text: part.text }
@@ -93,7 +94,7 @@ async function generate<T>(
       model: endpoint.model,
       max_tokens: MAX_OUTPUT_TOKENS,
       system: request.system,
-      messages: [{ role: 'user', content: toContent(request.parts) }],
+      messages: [{ role: 'user', content: toAnthropicContent(request.parts) }],
       output_config: { format: { type: 'json_schema', schema: z.toJSONSchema(request.schema) } },
     });
   } catch (error) {

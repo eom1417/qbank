@@ -54,6 +54,8 @@ describe('AI provider contract', () => {
       kind: 'openai_compatible',
       label: 'Cloud',
       baseUrl: 'https://ai.example/v1',
+      accountEmail: null,
+      accountPlan: null,
       model: 'm',
       keyCiphertext: 'v1:sealed',
       keyHint: '3f9a',

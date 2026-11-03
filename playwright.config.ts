@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 
 const API_PORT = '3100';
@@ -25,6 +26,10 @@ const apiEnv = {
   QBANK_MASTER_KEY: Buffer.alloc(32, 7).toString('base64'),
   // tests/e2e/ai-settings.spec.ts connects to a fake provider on 127.0.0.1:3199.
   QBANK_AI_ALLOW_PRIVATE_URLS: 'true',
+  // Stand-ins for the official Claude Code and Codex CLIs (no real account is used).
+  QBANK_CLAUDE_BIN: resolve('tests/fixtures/fake-cli/claude.mjs'),
+  QBANK_CODEX_BIN: resolve('tests/fixtures/fake-cli/codex.mjs'),
+  QBANK_AI_WORK_DIR: '.data/e2e-ai-work',
 };
 
 export default defineConfig({

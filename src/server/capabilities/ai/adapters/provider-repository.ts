@@ -10,6 +10,8 @@ type Changeable =
   | 'label'
   | 'model'
   | 'baseUrl'
+  | 'accountEmail'
+  | 'accountPlan'
   | 'keyCiphertext'
   | 'keyHint'
   | 'inputPrice'
@@ -40,6 +42,8 @@ const toConnection = (row: Row): ProviderConnection => ({
   kind: row.kind,
   label: row.label,
   baseUrl: row.base_url,
+  accountEmail: row.account_email,
+  accountPlan: row.account_plan,
   model: row.model,
   keyCiphertext: row.key_ciphertext,
   keyHint: row.key_hint,
@@ -56,6 +60,8 @@ const toColumns = (changes: ProviderChanges) => ({
   label: changes.label,
   model: changes.model,
   base_url: changes.baseUrl,
+  account_email: changes.accountEmail,
+  account_plan: changes.accountPlan,
   key_ciphertext: changes.keyCiphertext,
   key_hint: changes.keyHint,
   input_price: changes.inputPrice,

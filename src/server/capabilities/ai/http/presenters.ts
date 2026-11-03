@@ -1,5 +1,5 @@
 import type { ProviderResponse } from '../../../../contracts/ai.js';
-import type { ProviderConnection } from '../domain/provider.js';
+import { isApiKind, type ProviderConnection } from '../domain/provider.js';
 
 export const toReadiness = (connection: ProviderConnection) => ({
   status: connection.readinessStatus,
@@ -12,8 +12,14 @@ export const toProviderResponse = (connection: ProviderConnection): ProviderResp
   kind: connection.kind,
   label: connection.label,
   baseUrl: connection.baseUrl,
+  account: isApiKind(connection.kind)
+    ? null
+    : { email: connection.accountEmail, plan: connection.accountPlan },
   model: connection.model,
-  keyHint: connection.keyCiphertext ? `••••${connection.keyHint ?? ''}` : null,
+  keyHint:
+    connection.keyCiphertext && isApiKind(connection.kind)
+      ? `••••${connection.keyHint ?? ''}`
+      : null,
   isDefault: connection.isDefault,
   inputPrice: connection.inputPrice,
   outputPrice: connection.outputPrice,
