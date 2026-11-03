@@ -34,7 +34,9 @@ test('import a PDF: choose, confirm rights, follow progress, read the report', a
   await expect(page.getByRole('heading', { name: 'تقرير الاستيراد' })).toBeVisible();
   await expect(page.getByText('كل الصفحات قُرئت من نصها.')).toBeVisible();
   await page.getByRole('link', { name: 'العودة إلى البنك' }).click();
-  await expect(page.getByText('الصفحات: 1–3 · الأسئلة: 8 · تحتاج مراجعة: 7')).toBeVisible();
+  await expect(
+    page.getByText('الصفحات: 1–3 · الأسئلة: 8 · تحتاج مراجعة: 7 · جاهزة للمذاكرة: 0'),
+  ).toBeVisible();
 });
 
 test('a damaged file is refused with a clear reason and nothing is imported', async ({ page }) => {
@@ -63,7 +65,9 @@ test('import into a new bank, see it complete, then delete the original', async 
   await page.getByRole('button', { name: 'احذف الملف الأصلي' }).click();
   await page.getByRole('button', { name: 'تأكيد حذف الأصل (الأسئلة تبقى)' }).click();
   await expect(page.getByText('الملف الأصلي محذوف؛ الأسئلة ومصدرها وصفحاتها باقية.')).toBeVisible();
-  await expect(page.getByText('الصفحات: 1–1 · الأسئلة: 2 · تحتاج مراجعة: 0')).toBeVisible();
+  await expect(
+    page.getByText('الصفحات: 1–1 · الأسئلة: 2 · تحتاج مراجعة: 0 · جاهزة للمذاكرة: 0'),
+  ).toBeVisible();
 });
 
 test('see the pictures an import kept and enlarge one (M5.7)', async ({ page }) => {
@@ -89,4 +93,24 @@ test('see the pictures an import kept and enlarge one (M5.7)', async ({ page }) 
   expect(after.width / after.height).toBeCloseTo(before.width / before.height, 1);
   await viewer.getByRole('button', { name: 'إغلاق' }).click();
   await expect(viewer).toBeHidden();
+});
+
+test('a separate answer file makes the questions ready to study (M6.3)', async ({ page }) => {
+  await newBank(page, 'import-key');
+  const rights = page.getByLabel('أؤكد أنه يحق لي استخدام هذه الملفات لمذاكرتي الشخصية.');
+  await page.getByLabel('ملفات PDF').setInputFiles(fx.english);
+  await rights.check();
+  await page.getByRole('button', { name: 'ارفع وابدأ' }).click();
+  await expect(page.getByText('يحتاج مراجعتك')).toBeVisible({ timeout: 60_000 });
+  await page.getByLabel('ملفات PDF').setInputFiles(fx.answersOnly);
+  await page.getByLabel('نوع الملف').selectOption({ label: 'ملف إجابات لمصدر آخر' });
+  await page.getByLabel('هذه إجابات أسئلة الملف').selectOption({ label: 'english.pdf' });
+  await page.getByRole('button', { name: 'ارفع وابدأ' }).click();
+  const row = page.getByRole('listitem').filter({ hasText: 'answers-only.pdf' });
+  await expect(row.getByText('يحتاج مراجعتك')).toBeVisible({ timeout: 60_000 });
+  await page.getByRole('link', { name: 'العودة إلى البنك' }).click();
+  await expect(
+    page.getByText('الصفحات: 1–3 · الأسئلة: 8 · تحتاج مراجعة: 1 · جاهزة للمذاكرة: 6'),
+  ).toBeVisible();
+  await expect(page.getByText('يُحذف الأصل تلقائياً في').first()).toBeVisible();
 });

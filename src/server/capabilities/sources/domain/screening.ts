@@ -1,5 +1,6 @@
 import type { ImportedQuestion, ReviewReason } from '../../questions/index.js';
 import type { ExtractedQuestion } from '../use-cases/extract-questions.js';
+import { defectsOf } from './defects.js';
 
 export interface PageReading {
   reading: 'text' | 'ocr';
@@ -20,7 +21,9 @@ function placeReasons(
   const reasons: ReviewReason[] = [];
   if (page?.reading === 'ocr') reasons.push('ocr_page');
   if (page?.unreadable) reasons.push('unreadable_page');
-  if (previous !== null && question.number !== previous + 1) reasons.push('numbering_gap');
+  // Numbering starting again at 1 is a new chapter, not a gap.
+  const continues = question.number === (previous ?? 0) + 1 || question.number === 1;
+  if (previous !== null && !continues) reasons.push('numbering_gap');
   if (question.stem.trim().length < 3) reasons.push('empty_stem');
   return reasons;
 }
@@ -29,9 +32,15 @@ const reasonsOf = (
   question: ExtractedQuestion,
   page: PageReading | undefined,
   previous: number | null,
-) => [...answerReasons(question), ...placeReasons(question, page, previous)];
+) => [
+  ...answerReasons(question),
+  ...question.conflicts,
+  ...placeReasons(question, page, previous),
+  ...defectsOf(question),
+];
 
 const provenanceOf = (question: ExtractedQuestion): ImportedQuestion['provenance'] => {
+  if (question.conflicts.length > 0) return 'conflict';
   if (question.answer === null) return 'missing';
   return question.evidence === 'ai_suggested' ? 'ai_suggested' : 'source';
 };
@@ -52,8 +61,11 @@ export function screenQuestions(
     stem: question.stem,
     options: question.options,
     answer: question.answer,
+    answers: question.answers,
+    multiSelect: question.multiSelect,
     provenance: provenanceOf(question),
     evidence: question.evidence,
+    explanation: question.explanation,
     reasons: [
       ...reasonsOf(
         question,
@@ -75,7 +87,7 @@ const AUDIT_MIN = 10;
  */
 export function auditSample(questions: readonly ImportedQuestion[]): Set<number> {
   const decided = questions.filter(
-    (q) => q.kind === 'mcq' && q.answer !== null && q.provenance === 'source',
+    (q) => q.kind === 'mcq' && !q.multiSelect && q.answer !== null && q.provenance === 'source',
   );
   const size = Math.min(
     decided.length,

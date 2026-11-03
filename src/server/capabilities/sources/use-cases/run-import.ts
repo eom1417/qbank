@@ -7,6 +7,7 @@ import type { PageText } from '../domain/page.js';
 import { hasUnreadableText, repairWithOcr } from '../domain/repair.js';
 import { screenQuestions, type PageReading } from '../domain/screening.js';
 import type { SourcesDeps } from './deps.js';
+import { applyAnswerFile } from './apply-answer-file.js';
 import { cropMedia, storeMedia } from './keep-media.js';
 import { readSource } from './read-source.js';
 import { verifyWithAi } from './verify-with-ai.js';
@@ -118,6 +119,47 @@ async function extractAndSave(deps: SourcesDeps, job: JobRow, source: SourceRow,
   return { pages, ...verified };
 }
 
+/** Stages 2–4 for a question source: the job's final counts and stage. */
+async function questionsOutcome(deps: SourcesDeps, job: JobRow, source: SourceRow, file: string) {
+  const { pages, questions, aiOutcome } = await extractAndSave(deps, job, source, file);
+  const review = questions.filter((q) => q.reasons.some((reason) => reason !== 'essay')).length;
+  const stage = finalStage(pages, questions, aiOutcome);
+  return {
+    stage,
+    questions_found: questions.length,
+    questions_review: review,
+    ai_outcome: aiOutcome,
+    error_code: stage === 'failed' ? 'unreadable_file' : null,
+  };
+}
+
+/** Stage 2 for an answer-key file: how many questions it answered, and how many disagree. */
+async function answerFileOutcome(deps: SourcesDeps, job: JobRow, source: SourceRow) {
+  await setStage(deps, job, 'matching');
+  const pages = (await deps.imports.pages(job.id))
+    .filter((page) => page.status === 'done')
+    .map((page) => page.content as PageText);
+  const { matched, conflicts } = await applyAnswerFile(deps, job, source, pages);
+  const stage: ImportStage =
+    matched === 0 ? 'failed' : conflicts > 0 ? 'needs_review' : 'completed';
+  return {
+    stage,
+    questions_found: matched,
+    questions_review: conflicts,
+    ai_outcome: 'not_used',
+    error_code: matched === 0 ? 'no_key_entries' : null,
+  };
+}
+
+/**
+ * When the original is erased on its own (DEC-13, assumed: a short, stated period). A partly
+ * read file keeps it until the user decides (DEC-14); the user may delete it any time.
+ */
+function expiryOf(deps: SourcesDeps, stage: ImportStage): Date | null {
+  if (stage === 'partial_failure') return null;
+  return new Date(deps.clock.now().getTime() + deps.originalRetentionMs);
+}
+
 /** Runs (or resumes) one import job to its end; failures are recorded on the job, never thrown. */
 export async function runImport(deps: SourcesDeps, job: JobRow): Promise<void> {
   const source = await deps.imports.findSource(job.owner_id, job.source_id);
@@ -134,16 +176,11 @@ export async function runImport(deps: SourcesDeps, job: JobRow): Promise<void> {
   try {
     await setStage(deps, job, 'reading');
     await readPages(deps, job, source, file);
-    const { pages, questions, aiOutcome } = await extractAndSave(deps, job, source, file);
-    const review = questions.filter((q) => q.reasons.some((reason) => reason !== 'essay')).length;
-    const stage = finalStage(pages, questions, aiOutcome);
-    await finish({
-      stage,
-      questions_found: questions.length,
-      questions_review: review,
-      ai_outcome: aiOutcome,
-      error_code: stage === 'failed' ? 'unreadable_file' : null,
-    });
+    const outcome = source.answers_for_source_id
+      ? await answerFileOutcome(deps, job, source)
+      : await questionsOutcome(deps, job, source, file);
+    await finish(outcome);
+    await deps.imports.setOriginalExpiry(source.id, expiryOf(deps, outcome.stage));
   } catch {
     await finish({ stage: 'failed', error_code: 'internal' });
   }

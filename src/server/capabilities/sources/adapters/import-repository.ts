@@ -134,6 +134,19 @@ const forgetOriginal = (db: Db, ownerId: string, sourceId: string) =>
     .where('id', '=', sourceId)
     .execute();
 
+const setOriginalExpiry = (db: Db, sourceId: string, at: Date | null) =>
+  db.updateTable('source').set({ original_expires_at: at }).where('id', '=', sourceId).execute();
+
+/** Originals whose stated period is over (DEC-13), still stored. */
+const expiredOriginals = (db: Db, now: Date) =>
+  db
+    .selectFrom('source')
+    .select(['id', 'owner_id', 'blob_key'])
+    .where('original_expires_at', '<=', now)
+    .where('blob_key', 'is not', null)
+    .limit(50)
+    .execute();
+
 /** Owner-scoped store of sources, import jobs and their per-page checkpoints. */
 export function createImportRepository(db: Db) {
   return {
@@ -174,6 +187,8 @@ export function createImportRepository(db: Db) {
     listSources: (ownerId: string, bankId: string) => listSources(db, ownerId, bankId),
     runningJobOf: (sourceId: string) => runningJobOf(db, sourceId),
     forgetOriginal: (ownerId: string, sourceId: string) => forgetOriginal(db, ownerId, sourceId),
+    setOriginalExpiry: (sourceId: string, at: Date | null) => setOriginalExpiry(db, sourceId, at),
+    expiredOriginals: (now: Date) => expiredOriginals(db, now),
     removeSource: (ownerId: string, sourceId: string) =>
       db.deleteFrom('source').where('owner_id', '=', ownerId).where('id', '=', sourceId).execute(),
     countPages: (jobId: string) => countPages(db, jobId),

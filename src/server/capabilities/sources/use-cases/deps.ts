@@ -14,4 +14,6 @@ export interface SourcesDeps {
   newId: () => string;
   maxUploadBytes: number;
   maxPages: number;
+  /** How long an original stays after its import ends, unless the user deletes it first. */
+  originalRetentionMs: number;
 }

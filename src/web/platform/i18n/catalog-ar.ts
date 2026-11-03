@@ -341,6 +341,12 @@ export const ar: Record<MessageKey, string> = {
   'error.too_many_pages': 'صفحات هذا الملف أكثر من المسموح.',
   'error.approval_required': 'استخدام AI هذا يحتاج موافقتك أولاً.',
   'error.not_retryable': 'لا يمكن تغيير هذا الاستيراد الآن.',
+  'source.type.answer_key': 'ملف إجابات لمصدر آخر',
+  'import.answersFor': 'هذه إجابات أسئلة الملف',
+  'import.answersForHint': 'يُطابق كل رقم بسؤاله في الملف المختار، فصلاً بفصل.',
+  'import.error.no_key_entries': 'لم نجد في الملف أرقاماً بإجاباتها (مثل «1. أ»).',
+  'source.eligible': 'جاهزة للمذاكرة',
+  'source.originalExpires': 'يُحذف الأصل تلقائياً في',
   'error.original_deleted': 'الملف الأصلي محذوف، فلا يمكن قراءته مرة أخرى.',
   'import.cancel': 'احذفه قبل أن يبدأ',
 };

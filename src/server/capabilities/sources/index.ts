@@ -25,6 +25,7 @@ interface SourcesSettings {
   requireActor: RequireActor;
   maxUploadBytes: number;
   maxPages: number;
+  originalRetentionDays: number;
 }
 
 /** Uploaded sources and their imports: upload, durable job queue, reading, report (M4). */
@@ -38,6 +39,7 @@ export function createSources(settings: SourcesSettings) {
     newId,
     maxUploadBytes: settings.maxUploadBytes,
     maxPages: settings.maxPages,
+    originalRetentionMs: settings.originalRetentionDays * 24 * 60 * 60_000,
   };
   return {
     worker: createImportWorker(deps),

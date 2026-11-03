@@ -1,5 +1,5 @@
 import { Readable } from 'node:stream';
-import type { ImportedMedia, ReviewReason } from '../../questions/index.js';
+import { occurrencesOf, type ImportedMedia, type ReviewReason } from '../../questions/index.js';
 import { cropRegion } from '../adapters/crops.js';
 import { modalityOf } from '../domain/media-description.js';
 import { withinBookLimits } from '../domain/media-limits.js';
@@ -65,6 +65,7 @@ export async function storeMedia(
   questions: readonly ExtractedQuestion[],
 ) {
   const positions = new Map<number, number>();
+  const occurrences = occurrencesOf(questions);
   const items: ImportedMedia[] = [];
   for (const media of [...cropped].sort(readingOrder)) {
     const question = questions[media.link.question];
@@ -76,6 +77,7 @@ export async function storeMedia(
     items.push({
       questionPage: question.page,
       questionNumber: question.number,
+      questionOccurrence: occurrences[media.link.question] ?? 1,
       position,
       page: region.page,
       box: region.box,

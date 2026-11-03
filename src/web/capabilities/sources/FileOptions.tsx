@@ -9,6 +9,7 @@ import {
   TextField,
 } from '../../design-system/index.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
+import { AnswersForField } from './AnswersForField.js';
 
 /** One chosen file and its own settings (FR-04-004…006). */
 export interface ChosenFile {
@@ -18,10 +19,14 @@ export interface ChosenFile {
   pageTo: string;
   language: SourceLanguage;
   sourceType: SourceType;
+  /** With `answer_key`: the bank's source these answers belong to. */
+  answersFor: string;
   error: string | null;
 }
 
 interface Props {
+  /** The destination bank, whose sources an answer file may answer. */
+  bankId: string;
   chosen: ChosenFile;
   onChange(chosen: ChosenFile): void;
   onRemove(): void;
@@ -58,7 +63,7 @@ function PageRange({ chosen, set }: PageRangeProps) {
 const megabytes = (bytes: number) => (bytes / 1024 / 1024).toFixed(1);
 
 /** A file waiting to be uploaded: page range, language and type, or removed (FR-04-008). */
-export function FileOptions({ chosen, onChange, onRemove }: Props) {
+export function FileOptions({ bankId, chosen, onChange, onRemove }: Props) {
   const { t } = useI18n();
   const set = (changes: Partial<ChosenFile>) => onChange({ ...chosen, ...changes });
   const languages = SourceLanguage.options.map((value) => ({
@@ -89,6 +94,13 @@ export function FileOptions({ chosen, onChange, onRemove }: Props) {
           onChange={(event) => set({ sourceType: event.target.value as SourceType })}
         />
       </Row>
+      {chosen.sourceType === 'answer_key' && (
+        <AnswersForField
+          bankId={bankId}
+          value={chosen.answersFor}
+          onChange={(answersFor) => set({ answersFor })}
+        />
+      )}
       {chosen.error && <MutedText>{chosen.error}</MutedText>}
       <Button variant="ghost" onClick={onRemove}>
         {t('import.remove')}

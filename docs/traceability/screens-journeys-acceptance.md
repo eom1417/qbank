@@ -42,11 +42,11 @@
 
 | المعرّف | العنوان                     | الخطوة | الحالة  | الدليل                                    |
 | ------- | --------------------------- | ------ | ------- | ----------------------------------------- |
-| JY-01   | التحويل الكامل من PDF مصوّر | M6.12  | planned | —                                         |
-| JY-02   | ملف بلا حلول                | M6.4   | planned | —                                         |
-| JY-03   | مفتاح حلول منفصل            | M6.3   | planned | —                                         |
+| JY-01   | التحويل الكامل من PDF مصوّر | M6.12  | partial | `tests/integration/answers.test.ts`       |
+| JY-02   | ملف بلا حلول                | M6.4   | done    | `tests/integration/answers.test.ts`       |
+| JY-03   | مفتاح حلول منفصل            | M6.3   | done    | `tests/integration/answers.test.ts`       |
 | JY-04   | كتاب ذو عمودين              | M4.6   | planned | —                                         |
-| JY-05   | سؤال بصورتي ECG             | M5.3   | planned | —                                         |
+| JY-05   | سؤال بصورتي ECG             | M5.3   | done    | `tests/integration/imports-media.test.ts` |
 | JY-06   | تكرارات مع اختلاف except    | M8.4   | planned | —                                         |
 | JY-07   | تدريب Tutor                 | M9.8   | planned | —                                         |
 | JY-08   | امتحان بوقت إجمالي          | M10.6  | planned | —                                         |
@@ -77,9 +77,9 @@
 | UAT-009 | لغة مختلطة            | M4.4   | done    | `tests/integration/imports.test.ts`       |
 | UAT-010 | عمودان متجاوران       | M4.6   | done    | `tests/integration/imports.test.ts`       |
 | UAT-011 | سؤال عبر صفحتين       | M4.6   | done    | `tests/integration/imports.test.ts`       |
-| UAT-012 | مفتاح في نهاية الكتاب | M6.2   | planned | —                                         |
-| UAT-013 | مفتاح منفصل           | M6.3   | planned | —                                         |
-| UAT-014 | سؤال بال مفتاح        | M6.4   | planned | —                                         |
+| UAT-012 | مفتاح في نهاية الكتاب | M6.2   | done    | `tests/integration/answers.test.ts`       |
+| UAT-013 | مفتاح منفصل           | M6.3   | done    | `tests/integration/answers.test.ts`       |
+| UAT-014 | سؤال بال مفتاح        | M6.4   | done    | `tests/integration/answers.test.ts`       |
 | UAT-015 | ثلاثة خيارات          | M4.6   | done    | `tests/integration/imports.test.ts`       |
 | UAT-016 | خمسة خيارات           | M4.6   | done    | `tests/integration/imports.test.ts`       |
 | UAT-017 | أسئلة مقالية          | M4.6   | done    | `tests/integration/imports.test.ts`       |
@@ -93,9 +93,9 @@
 | UAT-025 | X-ray مشوش            | M5.4   | done    | `tests/integration/imports-media.test.ts` |
 | UAT-026 | جدول مخبري            | M5.5   | done    | `tests/integration/imports-media.test.ts` |
 | UAT-027 | صورة بين سؤالين       | M5.2   | done    | `tests/integration/imports-media.test.ts` |
-| UAT-028 | تعارض مفتاح وشرح      | M6.5   | planned | —                                         |
-| UAT-029 | اقتراح AI             | M6.6   | planned | —                                         |
-| UAT-030 | اعتماد يدوي           | M6.6   | planned | —                                         |
+| UAT-028 | تعارض مفتاح وشرح      | M6.5   | done    | `tests/integration/answers.test.ts`       |
+| UAT-029 | اقتراح AI             | M6.6   | done    | `tests/integration/imports-rules.test.ts` |
+| UAT-030 | اعتماد يدوي           | M6.6   | done    | `tests/integration/imports-rules.test.ts` |
 | UAT-031 | تغيير جواب قديم       | M10.9  | planned | —                                         |
 | UAT-032 | قائمة عالية الخطورة   | M7.1   | planned | —                                         |
 | UAT-033 | تعديل خيار            | M7.2   | planned | —                                         |
@@ -137,8 +137,8 @@
 | UAT-069 | بنك مصور              | M13.1  | planned | —                                         |
 | UAT-070 | إخفاء الأسرار         | M13.1  | planned | —                                         |
 | UAT-071 | نطاق فصل              | M13.1  | planned | —                                         |
-| UAT-072 | PDF مكتمل             | M6.12  | planned | —                                         |
-| UAT-073 | فشل قبل الاكتمال      | M6.12  | planned | —                                         |
+| UAT-072 | PDF مكتمل             | M6.12  | done    | `tests/integration/answers.test.ts`       |
+| UAT-073 | فشل قبل الاكتمال      | M6.12  | partial | `tests/integration/answers.test.ts`       |
 | UAT-074 | حذف بنك A             | M13.5  | planned | —                                         |
 | UAT-075 | حذف حساب              | M13.6  | planned | —                                         |
 | UAT-076 | رابط غير مصرح         | M0.3   | partial | `tests/integration/library.test.ts`       |

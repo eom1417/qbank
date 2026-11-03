@@ -50,6 +50,7 @@ async function startTestApp(clock: Clock = { now: () => new Date() }): Promise<T
       maxPages: 1500,
       // Tests run the import worker themselves (tests/support/imports.ts).
       worker: false,
+      originalRetentionDays: 7,
     },
     masterKey: TEST_MASTER_KEY,
     // Tests reach the fake provider on 127.0.0.1; production keeps this off (SSRF guard).

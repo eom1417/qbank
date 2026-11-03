@@ -22,6 +22,7 @@ function applyMark(question: ImportedQuestion, letter: string | null): ImportedQ
     return {
       ...question,
       answer: letter,
+      answers: [letter],
       provenance: 'ai_suggested',
       evidence: 'ai_suggested',
       reasons,
@@ -34,6 +35,7 @@ function applyMark(question: ImportedQuestion, letter: string | null): ImportedQ
 
 const needsAi = (question: ImportedQuestion, audit: ReadonlySet<number>) =>
   question.kind === 'mcq' &&
+  !question.multiSelect &&
   question.options.length >= 2 &&
   (question.answer === null || audit.has(question.number));
 

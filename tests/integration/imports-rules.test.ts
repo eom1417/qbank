@@ -170,3 +170,30 @@ describe('AI cost approval', () => {
     expect(approved.statusCode).toBe(201);
   });
 });
+
+describe("accepting the AI's suggested answer (M6.6, DEC-03)", () => {
+  it('makes the question eligible, keeps the AI badge, and only for its owner', async () => {
+    const { owner, bankId, providerId } = await withProvider(FAKE_KEYS.valid);
+    const job = await importWithAi(owner, bankId, providerId);
+    const [first, , essay] = await app
+      .db()
+      .selectFrom('question')
+      .select('id')
+      .where('source_id', '=', job.sourceId)
+      .orderBy('source_seq')
+      .execute();
+    const accept = (browser: Browser) =>
+      browser.post(`/api/questions/${first?.id}/accept-ai-answer`, {});
+    const { browser: stranger } = await registeredBrowser(app());
+    expect((await accept(stranger)).statusCode).toBe(404);
+    expect((await accept(owner)).json()).toMatchObject({
+      provenance: 'ai_suggested',
+      aiAccepted: true,
+      status: 'eligible',
+      reviewReasons: [],
+      version: 2,
+    });
+    const refused = await owner.post(`/api/questions/${essay?.id}/accept-ai-answer`, {});
+    expect(refused.statusCode).toBe(409);
+  });
+});

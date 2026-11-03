@@ -48,6 +48,8 @@ export async function buildPdfFixtures() {
   const arabic = await textPdf('arabic');
   const mixed = await textPdf('mixed');
   const essays = await textPdf('essays');
+  const keys = await textPdf('keys');
+  const answersOnly = await textPdf('answers-only');
   const scanned = await scanOf('english');
   const arabicScanned = await scanOf('arabic');
   await browser.close();
@@ -58,6 +60,8 @@ export async function buildPdfFixtures() {
     arabic,
     mixed,
     essays,
+    keys,
+    answersOnly,
     scanned,
     arabicScanned,
     media,

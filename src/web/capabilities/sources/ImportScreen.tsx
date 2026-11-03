@@ -51,7 +51,7 @@ export function ImportScreen() {
       <Link to={`/banks/${backTo}`}>{t('import.back')}</Link>
       <Heading>{t('import.title')}</Heading>
       <DestinationCard key={form.banksVersion} value={destination} onChange={form.setDestination} />
-      <FilesCard files={form.files} setFiles={form.setFiles} />
+      <FilesCard bankId={backTo} files={form.files} setFiles={form.setFiles} />
       <StartCard form={form} />
       {form.jobs.length > 0 && (
         <Card>

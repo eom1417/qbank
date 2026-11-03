@@ -121,7 +121,10 @@ export async function listSources(
     questions: {
       total: counts.get(row.id)?.total ?? 0,
       needsReview: counts.get(row.id)?.needsReview ?? 0,
+      eligible: counts.get(row.id)?.eligible ?? 0,
     },
+    answersFor: row.answers_for_source_id,
+    originalExpiresAt: row.blob_key ? (row.original_expires_at?.toISOString() ?? null) : null,
     latestImport: { id: row.job_id, stage: row.job_stage },
     hasOriginal: row.blob_key !== null,
   }));

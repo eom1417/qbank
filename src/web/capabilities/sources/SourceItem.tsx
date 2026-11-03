@@ -12,7 +12,7 @@ interface SourceItemProps {
 
 /** One source: its latest import, real counts, and deleting its original (FR-19-001). */
 export function SourceItem({ source, onChange }: SourceItemProps) {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const remove = useAction(async () => {
     await deleteOriginal(source.id);
     onChange();
@@ -28,8 +28,15 @@ export function SourceItem({ source, onChange }: SourceItemProps) {
       </Row>
       <MutedText>
         {t('source.pages')}: {source.pageFrom}–{source.pageTo} · {t('source.questions')}:{' '}
-        {source.questions.total} · {t('source.review')}: {source.questions.needsReview}
+        {source.questions.total} · {t('source.review')}: {source.questions.needsReview} ·{' '}
+        {t('source.eligible')}: {source.questions.eligible}
       </MutedText>
+      {source.originalExpiresAt && (
+        <MutedText>
+          {t('source.originalExpires')}{' '}
+          {new Date(source.originalExpiresAt).toLocaleDateString(locale)}
+        </MutedText>
+      )}
       {!source.hasOriginal && <MutedText>{t('source.original.deleted')}</MutedText>}
       {source.hasOriginal && finished && (
         <ConfirmButton

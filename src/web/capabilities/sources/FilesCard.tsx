@@ -11,17 +11,19 @@ const choose = (file: File): ChosenFile => ({
   pageTo: '',
   language: 'auto',
   sourceType: 'question_bank',
+  answersFor: '',
   error: null,
 });
 
 interface FilesCardProps {
+  bankId: string;
   files: ImportForm['files'];
   setFiles: ImportForm['setFiles'];
 }
 
 /** The files to upload and each one's settings; files can be added or removed (FR-04-002). */
 export /** The files to upload and each one's settings; files can be added or removed (FR-04-002). */
-function FilesCard({ files, setFiles }: FilesCardProps) {
+function FilesCard({ bankId, files, setFiles }: FilesCardProps) {
   const { t } = useI18n();
   const add = (list: FileList | null) =>
     setFiles((previous) => [...previous, ...[...(list ?? [])].map(choose)]);
@@ -42,6 +44,7 @@ function FilesCard({ files, setFiles }: FilesCardProps) {
       {files.map((chosen) => (
         <FileOptions
           key={chosen.key}
+          bankId={bankId}
           chosen={chosen}
           onChange={update}
           onRemove={() => remove(chosen.key)}

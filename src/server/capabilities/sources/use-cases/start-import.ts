@@ -64,6 +64,25 @@ async function checkAi(deps: SourcesDeps, actor: Actor, fields: StartImportField
   return fields.aiProviderId;
 }
 
+/**
+ * An answer-key file names a question source of the same bank (M6.3, JY-03); anything else
+ * (another bank, another owner, an answer file itself) is refused as not found.
+ */
+async function answersFor(
+  deps: SourcesDeps,
+  actor: Actor,
+  bankId: string,
+  fields: StartImportFields,
+) {
+  if (fields.sourceType !== 'answer_key') return null;
+  const target = fields.answersFor
+    ? await deps.imports.findSource(actor.accountId, fields.answersFor)
+    : undefined;
+  if (!target || target.bank_id !== bankId || target.source_type === 'answer_key')
+    throw new AppError('validation_failed', { answersFor: 'invalid_value' });
+  return target.id;
+}
+
 /** Uploads one file into a bank and queues its import (UI-07, FR-04-001…008). */
 export async function startImport(
   deps: SourcesDeps,
@@ -73,6 +92,7 @@ export async function startImport(
   upload: Upload,
 ) {
   if (!isId(bankId)) throw notFound();
+  const target = await answersFor(deps, actor, bankId, fields);
   const stored = await storeReadablePdf(deps, upload);
   try {
     const range = rangeOf(fields, stored.pages);
@@ -92,6 +112,8 @@ export async function startImport(
       page_to: range.to,
       language: fields.language,
       source_type: fields.sourceType,
+      answers_for_source_id: target,
+      original_expires_at: null,
       created_at: now,
     };
     const job = {

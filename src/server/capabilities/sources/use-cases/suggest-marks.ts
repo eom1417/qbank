@@ -72,7 +72,11 @@ export async function suggestMarks(
     }
     const reply = await askMark(question, provider, await image(question.page));
     const letter = reply.ok ? reply.letter : null;
-    result.push(letter ? { ...question, answer: letter, evidence: 'ai_suggested' } : question);
+    result.push(
+      letter
+        ? { ...question, answer: letter, answers: [letter], evidence: 'ai_suggested' }
+        : question,
+    );
   }
   return result;
 }

@@ -18,6 +18,7 @@ const Env = z.object({
   QBANK_MAX_UPLOAD_MB: z.coerce.number().int().min(1).max(2000).default(200),
   QBANK_MAX_PAGES: z.coerce.number().int().min(1).max(10000).default(1500),
   QBANK_WORKER: z.enum(['true', 'false']).default('true'),
+  QBANK_ORIGINAL_RETENTION_DAYS: z.coerce.number().int().min(0).max(365).default(7),
   QBANK_CLAUDE_BIN: z.string().min(1).default('claude'),
   QBANK_CODEX_BIN: z.string().min(1).default('codex'),
   QBANK_AI_WORK_DIR: z.string().min(1).default('.data/ai-work'),
@@ -43,6 +44,8 @@ export interface AppConfig {
     maxPages: number;
     /** Runs the import worker inside this process (off in tests, which drive it directly). */
     worker: boolean;
+    /** Days an original stays after its import ends unless the user deletes it (DEC-13). */
+    originalRetentionDays: number;
   };
   /** Encrypts BYOK keys at rest; never logged, never sent to the browser. */
   masterKey: Buffer;
@@ -100,6 +103,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       maxUploadBytes: parsed.QBANK_MAX_UPLOAD_MB * 1024 * 1024,
       maxPages: parsed.QBANK_MAX_PAGES,
       worker: parsed.QBANK_WORKER === 'true',
+      originalRetentionDays: parsed.QBANK_ORIGINAL_RETENTION_DAYS,
     },
     masterKey: Buffer.from(parsed.QBANK_MASTER_KEY, 'base64'),
     ai: {

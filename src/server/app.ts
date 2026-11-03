@@ -1,7 +1,7 @@
 import cookie from '@fastify/cookie';
 import Fastify, { type FastifyInstance } from 'fastify';
 import { createAi } from './capabilities/ai/index.js';
-import { createIdentity } from './capabilities/identity/index.js';
+import { createIdentity, type RequireActor } from './capabilities/identity/index.js';
 import { createLibrary } from './capabilities/library/index.js';
 import { createQuestions } from './capabilities/questions/index.js';
 import { createSources } from './capabilities/sources/index.js';
@@ -19,6 +19,51 @@ export interface AppDeps {
   config: AppConfig;
   db: Db;
   clock: Clock;
+}
+
+/**
+ * The study content: banks, their questions, the user's AI, and imports. Each capability gets
+ * only the others' public interfaces.
+ */
+function registerContent(
+  app: FastifyInstance,
+  { config, db, clock }: AppDeps,
+  requireActor: RequireActor,
+) {
+  const library = createLibrary({ db, clock, requireActor: requireActor });
+  library.register(app);
+  const questions = createQuestions({
+    db,
+    clock,
+    requireActor: requireActor,
+    chaptersOf: library.chaptersOf,
+  });
+  questions.register(app);
+  const ai = createAi({
+    db,
+    clock,
+    secretBox: createSecretBox(config.masterKey),
+    requireActor: requireActor,
+    ...config.ai,
+  });
+  ai.register(app);
+  const sources = createSources({
+    db,
+    clock,
+    blobs: createDiskBlobStore(config.imports.dataDir),
+    questions,
+    ai,
+    requireActor: requireActor,
+    maxUploadBytes: config.imports.maxUploadBytes,
+    maxPages: config.imports.maxPages,
+    originalRetentionDays: config.imports.originalRetentionDays,
+  });
+  sources.register(app);
+  if (config.imports.worker) {
+    sources.worker.start();
+    app.addHook('onClose', async () => sources.worker.stop());
+  }
+  app.decorate('importWorker', sources.worker);
 }
 
 /** Composition root: wires platform owners and capabilities into one Fastify instance. */
@@ -41,31 +86,7 @@ export function buildApp({ config, db, clock }: AppDeps): FastifyInstance {
     cookieSecure: config.cookieSecure,
   });
   identity.register(app);
-  createLibrary({ db, clock, requireActor: identity.requireActor }).register(app);
-  const ai = createAi({
-    db,
-    clock,
-    secretBox: createSecretBox(config.masterKey),
-    requireActor: identity.requireActor,
-    ...config.ai,
-  });
-  ai.register(app);
-  const sources = createSources({
-    db,
-    clock,
-    blobs: createDiskBlobStore(config.imports.dataDir),
-    questions: createQuestions({ db }),
-    ai,
-    requireActor: identity.requireActor,
-    maxUploadBytes: config.imports.maxUploadBytes,
-    maxPages: config.imports.maxPages,
-  });
-  sources.register(app);
-  if (config.imports.worker) {
-    sources.worker.start();
-    app.addHook('onClose', async () => sources.worker.stop());
-  }
-  app.decorate('importWorker', sources.worker);
+  registerContent(app, { config, db, clock }, identity.requireActor);
   if (config.devOutbox) registerOutboxRoute(app, db);
   app.get('/api/health', async () => ({ status: 'ok' }));
   return app;

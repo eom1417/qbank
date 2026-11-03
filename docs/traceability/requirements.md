@@ -10,7 +10,7 @@
 | FR-01-001 | مكتبة خاصة لكل مستخدم         | سابق   | M0.3   | partial | `tests/integration/library.test.ts`              |
 | FR-01-002 | محتوى يجلبه المستخدم          | سابق   | M1.5   | done    | `tests/e2e/library.spec.ts`                      |
 | FR-01-003 | أمانة النص العلمي             | سابق   | M4.6   | done    | `tests/integration/imports.test.ts`              |
-| FR-01-004 | حظر الاختلاق                  | سابق   | M6.4   | planned | —                                                |
+| FR-01-004 | حظر الاختلاق                  | سابق   | M6.4   | done    | `tests/integration/answers.test.ts`              |
 | FR-01-005 | تقليل المراجعة البشرية        | سابق   | M7.1   | planned | —                                                |
 | FR-01-006 | العمل عبر الأجهزة             | سابق   | M9.7   | planned | —                                                |
 | FR-01-007 | لغتان أساسيتان                | سابق   | M15.1  | planned | —                                                |
@@ -51,7 +51,7 @@
 | FR-05-004 | الأعمدة المتجاورة             | مقترح  | M4.6   | done    | `tests/integration/imports.test.ts`              |
 | FR-05-005 | اختيارات غير أربعة            | سابق   | M4.6   | done    | `tests/integration/imports.test.ts`              |
 | FR-05-006 | الهوامش والعناوين             | مقترح  | M4.6   | done    | `tests/integration/imports.test.ts`              |
-| FR-05-007 | تمييز الشرح                   | سابق   | M6.8   | planned | —                                                |
+| FR-05-007 | تمييز الشرح                   | سابق   | M6.8   | done    | `tests/integration/answers.test.ts`              |
 | FR-05-008 | المعادلات والوحدات            | مقترح  | M4.6   | done    | `tests/integration/imports.test.ts`              |
 | FR-05-009 | الجداول                       | مقترح  | M5.5   | partial | `tests/integration/imports-media.test.ts`        |
 | FR-05-010 | غير MCQ                       | مقترح  | M4.6   | done    | `tests/integration/imports.test.ts`              |
@@ -64,20 +64,20 @@
 | FR-06-006 | جودة الصورة شرط قبول          | مقترح  | M5.4   | partial | `tests/integration/imports-media.test.ts`        |
 | FR-06-007 | هوية الصورة ووصفها            | مقترح  | M5.6   | done    | `tests/unit/sources/media-links.test.ts`         |
 | FR-06-008 | فصل الصورة عن الكتاب          | مقترح  | M5.8   | done    | `tests/unit/sources/media-links.test.ts`         |
-| FR-07-001 | مفتاح ظاهر في المصدر          | سابق   | M6.2   | planned | —                                                |
-| FR-07-002 | ملف إجابات منفصل              | مقترح  | M6.3   | planned | —                                                |
-| FR-07-003 | السؤال بلا مفتاح              | سابق   | M6.4   | planned | —                                                |
-| FR-07-004 | حالة اعتماد مستقلة            | سابق   | M6.1   | planned | —                                                |
-| FR-07-005 | تعارض المفتاح والتفسير        | مقترح  | M6.5   | planned | —                                                |
-| FR-07-006 | مقترح حل AI                   | مقترح  | M6.6   | planned | —                                                |
+| FR-07-001 | مفتاح ظاهر في المصدر          | سابق   | M6.2   | done    | `tests/integration/answers.test.ts`              |
+| FR-07-002 | ملف إجابات منفصل              | مقترح  | M6.3   | done    | `tests/integration/answers.test.ts`              |
+| FR-07-003 | السؤال بلا مفتاح              | سابق   | M6.4   | done    | `tests/integration/answers.test.ts`              |
+| FR-07-004 | حالة اعتماد مستقلة            | سابق   | M6.1   | done    | `tests/unit/questions/eligibility.test.ts`       |
+| FR-07-005 | تعارض المفتاح والتفسير        | مقترح  | M6.5   | done    | `tests/integration/answers.test.ts`              |
+| FR-07-006 | مقترح حل AI                   | مقترح  | M6.6   | done    | `tests/integration/imports-rules.test.ts`        |
 | FR-07-007 | تغيير جواب مصحح               | مقترح  | M10.9  | planned | —                                                |
-| FR-07-008 | أجوبة متعددة                  | مقترح  | M6.7   | planned | —                                                |
-| FR-07-009 | شروحات المؤلف                 | مقترح  | M6.8   | planned | —                                                |
+| FR-07-008 | أجوبة متعددة                  | مقترح  | M6.7   | partial | `tests/integration/answers.test.ts`              |
+| FR-07-009 | شروحات المؤلف                 | مقترح  | M6.8   | done    | `tests/integration/answers.test.ts`              |
 | FR-07-010 | عدم كشف الحل مبكراً           | مقترح  | M10.2  | planned | —                                                |
-| FR-08-001 | القراءة والاستخراج بمساعدة AI | سابق   | M6.10  | planned | —                                                |
-| FR-08-002 | تصنيف موضوع السؤال            | سابق   | M6.9   | planned | —                                                |
-| FR-08-003 | كشف خلل المحتوى               | سابق   | M6.10  | planned | —                                                |
-| FR-08-004 | إصلاح اختياري مقيد            | سابق   | M6.10  | planned | —                                                |
+| FR-08-001 | القراءة والاستخراج بمساعدة AI | سابق   | M6.10  | partial | `tests/unit/sources/answers.test.ts`             |
+| FR-08-002 | تصنيف موضوع السؤال            | سابق   | M6.9   | partial | `tests/integration/answers.test.ts`              |
+| FR-08-003 | كشف خلل المحتوى               | سابق   | M6.10  | done    | `tests/unit/sources/answers.test.ts`             |
+| FR-08-004 | إصلاح اختياري مقيد            | سابق   | M7.4   | planned | —                                                |
 | FR-08-005 | شرح AI بعد الإجابة            | مقترح  | M9.4   | planned | —                                                |
 | FR-08-006 | مناقشة الخيارات               | مقترح  | M9.4   | planned | —                                                |
 | FR-08-007 | مراجعة بشرية للجماعي          | مقترح  | M7.5   | planned | —                                                |
@@ -87,7 +87,7 @@
 | FR-08-011 | تحقق جاهزية المفتاح           | مقترح  | M2.4   | done    | `tests/integration/ai-providers.test.ts`         |
 | FR-08-012 | إظهار حدود التكلفة            | مقترح  | M2.5   | done    | `tests/integration/imports-rules.test.ts`        |
 | FR-08-013 | العمل دون مفتاح               | مقترح  | M2.7   | partial | `tests/integration/ai-limits-isolation.test.ts`  |
-| FR-08-014 | رفض الاستنتاج غير المدعوم     | مقترح  | M6.10  | planned | —                                                |
+| FR-08-014 | رفض الاستنتاج غير المدعوم     | مقترح  | M7.4   | planned | —                                                |
 | FR-09-001 | طابور استثناءات مركز          | سابق   | M7.1   | planned | —                                                |
 | FR-09-002 | مراجعة سؤال مفرد              | مقترح  | M7.2   | planned | —                                                |
 | FR-09-003 | تحرير البيانات العلمية        | سابق   | M7.2   | planned | —                                                |
@@ -104,13 +104,13 @@
 | FR-10-004 | خيارات القرار                 | مقترح  | M8.4   | planned | —                                                |
 | FR-10-005 | عزل التكرار داخل امتحان       | مقترح  | M9.9   | planned | —                                                |
 | FR-10-006 | إعادة استيراد بعد تحرير       | مقترح  | M8.5   | planned | —                                                |
-| FR-11-001 | معيار مكتمل                   | مقترح  | M6.11  | planned | —                                                |
-| FR-11-002 | حالات منتهية ومعلقة           | سابق   | M6.11  | planned | —                                                |
+| FR-11-001 | معيار مكتمل                   | مقترح  | M6.11  | done    | `tests/unit/questions/eligibility.test.ts`       |
+| FR-11-002 | حالات منتهية ومعلقة           | سابق   | M6.11  | done    | `tests/unit/questions/eligibility.test.ts`       |
 | FR-11-003 | التصنيف للفصل والموضوع        | سابق   | M1.4   | partial | `tests/integration/taxonomy.test.ts`             |
 | FR-11-004 | وسوم متعددة                   | مقترح  | M1.4   | partial | `tests/integration/taxonomy.test.ts`             |
-| FR-11-005 | الصعوبة                       | مقترح  | M6.9   | planned | —                                                |
-| FR-11-006 | سجل تحرير النسخ               | مقترح  | M6.1   | planned | —                                                |
-| FR-11-007 | استبعاد الأسئلة غير الملائمة  | مقترح  | M6.11  | planned | —                                                |
+| FR-11-005 | الصعوبة                       | مقترح  | M6.9   | partial | `tests/unit/questions/eligibility.test.ts`       |
+| FR-11-006 | سجل تحرير النسخ               | مقترح  | M6.1   | done    | `tests/integration/answers.test.ts`              |
+| FR-11-007 | استبعاد الأسئلة غير الملائمة  | مقترح  | M6.11  | partial | `tests/integration/answers.test.ts`              |
 | FR-12-001 | اختيار نطاق الجلسة            | سابق   | M9.2   | planned | —                                                |
 | FR-12-002 | اختيار نوع الجلسة             | مقترح  | M9.3   | planned | —                                                |
 | FR-12-003 | إرسال الإجابة                 | سابق   | M9.4   | planned | —                                                |
@@ -175,9 +175,9 @@
 | FR-18-004 | عدم تصدير الأسرار             | مقترح  | M13.1  | planned | —                                                |
 | FR-18-005 | الاستعادة المنظمة             | مقترح  | M13.3  | planned | —                                                |
 | FR-18-006 | إشعار المحتوى الذي لا يُنقل   | مقترح  | M13.1  | planned | —                                                |
-| FR-19-001 | حذف PDF بعد تحقق الاكتمال     | سابق   | M6.12  | partial | `tests/integration/imports-rules.test.ts`        |
-| FR-19-002 | الملف الجزئي أو الفاشل        | مقترح  | M6.12  | planned | —                                                |
-| FR-19-003 | تنظيف بقايا المعالجة          | مقترح  | M6.12  | planned | —                                                |
+| FR-19-001 | حذف PDF بعد تحقق الاكتمال     | سابق   | M6.12  | done    | `tests/integration/answers.test.ts`              |
+| FR-19-002 | الملف الجزئي أو الفاشل        | مقترح  | M6.12  | partial | `tests/integration/answers.test.ts`              |
+| FR-19-003 | تنظيف بقايا المعالجة          | مقترح  | M6.12  | done    | `tests/integration/imports-rules.test.ts`        |
 | FR-19-004 | حذف سؤال                      | مقترح  | M13.4  | planned | —                                                |
 | FR-19-005 | حذف بنك                       | مقترح  | M13.5  | planned | —                                                |
 | FR-19-006 | حذف الحساب                    | مقترح  | M13.6  | planned | —                                                |
@@ -219,11 +219,11 @@
 | FR-23-007 | تعديل سؤال خلال امتحان        | مقترح  | M9.1   | planned | —                                                |
 | FR-23-008 | حذف بنك خلال جلسة             | مقترح  | M10.10 | planned | —                                                |
 | FR-23-009 | خروج من خطأ                   | مقترح  | M15.5  | planned | —                                                |
-| FR-24-001 | معيار قبول علمي               | مقترح  | M6.11  | planned | —                                                |
+| FR-24-001 | معيار قبول علمي               | مقترح  | M6.11  | partial | `tests/unit/questions/eligibility.test.ts`       |
 | FR-24-002 | العناية بالمعلومة الحديثة     | مقترح  | M7.10  | planned | —                                                |
 | FR-24-003 | بلاغ الطالب                   | مقترح  | M7.9   | planned | —                                                |
 | FR-24-004 | تدقيق أثر التصحيح             | مقترح  | M10.9  | planned | —                                                |
-| FR-24-005 | منع الحشو                     | مقترح  | M6.10  | planned | —                                                |
+| FR-24-005 | منع الحشو                     | مقترح  | M7.4   | planned | —                                                |
 | FR-24-006 | فحص جودة عينات الاستيراد      | مقترح  | M3.1   | partial | `tests/integration/extraction-benchmark.test.ts` |
 | FR-25-001 | تثبيت القرارات قبل التنفيذ    | مقترح  | M0.7   | planned | —                                                |
 | FR-25-002 | الاستيراد كامل المسار         | سابق   | M18.1  | planned | —                                                |

@@ -17,6 +17,7 @@ export interface UploadOptions {
   sourceType: SourceType;
   aiProviderId: string;
   aiApproved: boolean;
+  answersFor: string;
 }
 
 /** One file per request; the fields go first, as the server reads them before the file. */
@@ -29,6 +30,7 @@ export function uploadFile(bankId: string, file: File, options: UploadOptions) {
   if (options.pageTo) form.append('pageTo', options.pageTo);
   if (options.aiProviderId) form.append('aiProviderId', options.aiProviderId);
   if (options.aiApproved) form.append('aiApproved', 'true');
+  if (options.sourceType === 'answer_key') form.append('answersFor', options.answersFor);
   form.append('file', file);
   return apiRequest('POST', `/api/banks/${bankId}/imports`, ImportResponse, form);
 }

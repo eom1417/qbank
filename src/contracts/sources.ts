@@ -10,6 +10,8 @@ export const SourceType = z.enum([
   'textbook',
   'lecture_notes',
   'other',
+  /** A file with only the answers to another source's questions (M6.3). */
+  'answer_key',
 ]);
 export type SourceType = z.infer<typeof SourceType>;
 
@@ -41,6 +43,8 @@ export const StartImportFields = z
     sourceType: SourceType.default('question_bank'),
     rightsConfirmed: z.literal('true'),
     aiProviderId: z.uuid().optional(),
+    /** With source type `answer_key`: the source whose questions this file answers (M6.3). */
+    answersFor: z.uuid().optional(),
     /** The user approved an AI cost estimate above their limits (DEC-18). */
     aiApproved: z.enum(['true', 'false']).default('false'),
   })
@@ -101,10 +105,21 @@ const SourceResponse = z
     language: SourceLanguage,
     sourceType: SourceType,
     createdAt: z.iso.datetime(),
-    questions: z.object({ total: z.number().int(), needsReview: z.number().int() }).strict(),
+    questions: z
+      .object({
+        total: z.number().int(),
+        needsReview: z.number().int(),
+        /** Ready to study (FR-11-001): an answer from the source, nothing left to review. */
+        eligible: z.number().int(),
+      })
+      .strict(),
+    /** For an answer-key file: the source whose questions it answers (M6.3). */
+    answersFor: z.uuid().nullable(),
     latestImport: z.object({ id: z.uuid(), stage: ImportStage }).strict(),
     /** The uploaded original is still kept; the user may delete it (FR-19-001, DEC-13). */
     hasOriginal: z.boolean(),
+    /** When the original is erased on its own (DEC-13); null while it is kept. */
+    originalExpiresAt: z.iso.datetime().nullable(),
   })
   .strict();
 

@@ -31,6 +31,7 @@ async function replaceMedia(
       .where('source_id', '=', place.sourceId)
       .where('source_page', '=', item.questionPage)
       .where('source_number', '=', item.questionNumber)
+      .where('source_occurrence', '=', item.questionOccurrence)
       .executeTakeFirst();
     if (!question) continue;
     await db
@@ -77,8 +78,7 @@ const mediaOfSource = (db: Db, ownerId: string, sourceId: string) =>
     ])
     .where('media.owner_id', '=', ownerId)
     .where('media.source_id', '=', sourceId)
-    .orderBy('question.source_page')
-    .orderBy('question.source_number')
+    .orderBy('question.source_seq')
     .orderBy('media.position')
     .execute();
 

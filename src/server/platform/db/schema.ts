@@ -126,6 +126,10 @@ interface SourceTable {
   language: 'auto' | 'ar' | 'en' | 'mixed';
   source_type: string;
   created_at: Date;
+  /** An answer-key file names the source whose questions it answers (M6.3). */
+  answers_for_source_id: ColumnType<string | null, string | null | undefined, string | null>;
+  /** When the stored original is erased on its own (DEC-13); null keeps it. */
+  original_expires_at: ColumnType<Date | null, Date | null | undefined, Date | null>;
 }
 
 interface ImportJobTable {
@@ -173,6 +177,27 @@ interface QuestionTable {
   review_reasons: ColumnType<string[], string[] | undefined, string[]>;
   created_at: Date;
   updated_at: Date;
+  answer_letters: ColumnType<string[], string[] | undefined, string[]>;
+  multi_select: ColumnType<boolean, boolean | undefined, boolean>;
+  explanation: ColumnType<string | null, string | null | undefined, string | null>;
+  chapter_id: ColumnType<string | null, string | null | undefined, string | null>;
+  topic_id: ColumnType<string | null, string | null | undefined, string | null>;
+  classification: ColumnType<'none' | 'suggested' | 'manual', string | undefined, string>;
+  difficulty_kind: ColumnType<'unset' | 'manual' | 'inferred', string | undefined, string>;
+  difficulty: ColumnType<number | null, number | null | undefined, number | null>;
+  ai_answer_accepted_at: ColumnType<Date | null, Date | null | undefined, Date | null>;
+  version: ColumnType<number, number | undefined, number>;
+  source_occurrence: ColumnType<number, number | undefined, number>;
+  source_seq: ColumnType<number, number | undefined, number>;
+}
+
+interface QuestionVersionTable {
+  question_id: string;
+  version: number;
+  owner_id: string;
+  snapshot: ColumnType<unknown, string, string>;
+  origin: string;
+  created_at: Date;
 }
 
 interface MediaTable {
@@ -210,4 +235,5 @@ export interface Database {
   import_page: ImportPageTable;
   question: QuestionTable;
   media: MediaTable;
+  question_version: QuestionVersionTable;
 }

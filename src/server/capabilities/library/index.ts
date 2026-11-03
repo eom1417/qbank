@@ -28,6 +28,8 @@ export function createLibrary(settings: LibrarySettings) {
     newId,
   };
   return {
+    /** A bank's chapters with their topics, for other capabilities (questions' suggestions). */
+    chaptersOf: (ownerId: string, bankId: string) => deps.taxonomy.listChapters(ownerId, bankId),
     register: (app: FastifyInstance) => {
       registerBankRoutes(app, deps, requireActor);
       registerTaxonomyRoutes(app, deps, requireActor);

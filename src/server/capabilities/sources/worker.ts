@@ -9,8 +9,17 @@ export function createImportWorker(deps: SourcesDeps, pollMs = 2000) {
   let timer: NodeJS.Timeout | null = null;
   let running = false;
 
-  /** Runs every runnable job now; returns how many ran (tests and the poller use it). */
+  /** Erases originals whose stated period is over (DEC-13); their questions stay. */
+  async function purgeExpired() {
+    for (const source of await deps.imports.expiredOriginals(deps.clock.now())) {
+      await deps.imports.forgetOriginal(source.owner_id, source.id);
+      if (source.blob_key) await deps.blobs.remove(source.blob_key);
+    }
+  }
+
+  /** Runs every runnable job now, then the original sweep; returns how many jobs ran. */
   async function drain(): Promise<number> {
+    await purgeExpired();
     let ran = 0;
     for (;;) {
       const job = await deps.imports.claimNext(deps.clock.now(), LEASE_MS);

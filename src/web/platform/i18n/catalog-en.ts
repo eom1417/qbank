@@ -359,6 +359,13 @@ export const en = {
   'error.too_many_pages': 'This file has more pages than allowed.',
   'error.approval_required': 'This AI use needs your approval first.',
   'error.not_retryable': 'This import cannot be changed now.',
+  'source.type.answer_key': 'Answer file for another source',
+  'import.answersFor': 'These are the answers to',
+  'import.answersForHint':
+    'Each number is matched to its question in the chosen file, chapter by chapter.',
+  'import.error.no_key_entries': 'No numbered answers (like “1. A”) were found in the file.',
+  'source.eligible': 'Ready to study',
+  'source.originalExpires': 'The original is deleted on',
   'error.original_deleted': 'The original file was deleted, so it cannot be read again.',
   'import.cancel': 'Remove before it starts',
 };
