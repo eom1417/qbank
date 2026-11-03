@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import type { ReadinessStatus } from '../../../../contracts/ai.js';
+import type { AiOutcomeStatus } from '../../../../contracts/providers.js';
 
 /** A part of the user's own material sent with a task: page text or a page image. */
-export type ContentPart =
+type ContentPart =
   | { type: 'text'; text: string }
   | { type: 'image'; mediaType: 'image/png' | 'image/jpeg'; base64: string };
 
@@ -14,9 +14,9 @@ export interface StructuredRequest<T> {
   schema: z.ZodType<T>;
 }
 
-export type AiFailure = Exclude<ReadinessStatus, 'unchecked' | 'ready'> | 'invalid_output';
+export type AiFailure = Exclude<AiOutcomeStatus, 'unchecked' | 'ready'> | 'invalid_output';
 
-export interface TokenUsage {
+interface TokenUsage {
   inputTokens: number;
   outputTokens: number;
 }
@@ -24,27 +24,13 @@ export interface TokenUsage {
 export type StructuredResult<T> =
   { ok: true; value: T; usage: TokenUsage | null } | { ok: false; failure: AiFailure };
 
-/** What a provider reported for the key: `ready` with its models, or why it refused. */
-export interface ModelListing {
-  status: ReadinessStatus;
-  models: string[];
-}
-
 /**
- * The only way the product talks to a model (FR-08-010): no vendor is hard-wired. The user
- * brings their own provider and key (BYOK). Adapters: OpenAI-compatible HTTP (OpenAI, DeepSeek,
- * Gemini, OpenRouter, any compatible server), the Anthropic Messages API, recorded fixtures.
+ * The only way the product talks to a model (FR-08-010): no vendor is hard-wired. Today the one
+ * adapter is a provider instance of the AI providers kit (the user's own subscription or key,
+ * DEC-30); tests use recorded replies.
  */
 export interface AiProvider {
-  /** Free call: is the API reachable, the key accepted, and which models may it use? */
-  listModels(): Promise<ModelListing>;
   generate<T>(request: StructuredRequest<T>): Promise<StructuredResult<T>>;
-}
-
-/** FR-08-011: ready only when the key works and the chosen model is offered to it. */
-export function readinessFor(listing: ModelListing, model: string): ReadinessStatus {
-  if (listing.status !== 'ready') return listing.status;
-  return listing.models.includes(model) ? 'ready' : 'model_missing';
 }
 
 /**

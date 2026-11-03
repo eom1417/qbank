@@ -1,5 +1,19 @@
 import { z } from 'zod';
 
+/** Why the user's AI stopped (shown on an import report), or that it is ready. */
+export const AiOutcomeStatus = z.enum([
+  'unchecked',
+  'ready',
+  'invalid_key',
+  'no_permission',
+  'no_quota',
+  'rate_limited',
+  'unreachable',
+  'model_missing',
+  'unexpected',
+]);
+export type AiOutcomeStatus = z.infer<typeof AiOutcomeStatus>;
+
 /**
  * The T3 AI Providers Kit methods the providers screens call, by their wire names (the kit's
  * `WS_METHODS`). Inputs and outputs are the kit's own schemas, checked by ai-host.

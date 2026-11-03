@@ -1,8 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { ProviderResponse } from '../../src/contracts/ai.js';
+import { KitMethod, ProviderView } from '../../src/contracts/providers.js';
 import { AccountResponse } from '../../src/contracts/identity.js';
 import { BankResponse } from '../../src/contracts/library.js';
-import { toProviderResponse } from '../../src/server/capabilities/ai/index.js';
 import { toAccountResponse } from '../../src/server/capabilities/identity/index.js';
 import { toBankResponse } from '../../src/server/capabilities/library/index.js';
 
@@ -46,30 +45,26 @@ describe('public response contracts', () => {
   });
 });
 
-describe('AI provider contract', () => {
-  it('carries a key hint but never the sealed or clear key', () => {
-    const response = toProviderResponse({
-      id: ID,
-      ownerId: ID,
-      kind: 'openai_compatible',
-      label: 'Cloud',
-      baseUrl: 'https://ai.example/v1',
-      accountEmail: null,
-      accountPlan: null,
-      model: 'm',
-      keyCiphertext: 'v1:sealed',
-      keyHint: '3f9a',
-      inputPrice: 1,
-      outputPrice: null,
-      isDefault: true,
-      readinessStatus: 'ready',
-      readinessCheckedAt: AT,
-      createdAt: AT,
-      updatedAt: AT,
-    });
-    expect(ProviderResponse.parse(response)).toEqual(response);
-    expect(response.keyHint).toBe('••••3f9a');
-    expect(response.readiness).toEqual({ status: 'ready', checkedAt: '2026-11-02T08:00:00.000Z' });
-    expect(JSON.stringify(response)).not.toContain('sealed');
+describe('AI providers contract (the kit, DEC-30)', () => {
+  it('passes only the allowlisted kit methods through', () => {
+    expect(KitMethod.safeParse('server.refreshProviders').success).toBe(true);
+    expect(KitMethod.safeParse('server.getConfig').success).toBe(false);
+    expect(KitMethod.safeParse('orchestration.dispatchCommand').success).toBe(false);
+  });
+
+  it('reads a provider snapshot and keeps the fields it does not name', () => {
+    const provider = {
+      instanceId: 'codex',
+      driver: 'codex',
+      enabled: true,
+      installed: true,
+      version: '0.50.0',
+      status: 'ready',
+      auth: { status: 'authenticated', email: 'a@b.test' },
+      models: [{ slug: 'gpt-5', name: 'GPT-5', isDefault: true }],
+      checkedAt: '2026-11-02T08:00:00.000Z',
+    };
+    expect(ProviderView.parse(provider)).toEqual(provider);
+    expect(ProviderView.safeParse({ ...provider, status: 'odd' }).success).toBe(false);
   });
 });

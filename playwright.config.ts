@@ -4,6 +4,11 @@ import { defineConfig, devices } from '@playwright/test';
 
 const API_PORT = '3100';
 const WEB_PORT = 5180;
+const AI_HOST_PORT = 3191;
+/** Test-only secret between the E2E API and its own AI host; never used outside E2E. */
+const AI_HOST_TOKEN = 'e2e-ai-host-token-not-a-secret-0001';
+/** The AI host's own home, emptied per run: no account on this machine is read. */
+const AI_HOST_HOME = resolve('.data/e2e-ai-host');
 
 /** Dedicated E2E database: env (CI) or the git-ignored .env.local written by setup.sh. */
 function e2eDatabaseUrl(): string {
@@ -22,14 +27,8 @@ const apiEnv = {
   QBANK_TRUST_PROXY: 'true',
   QBANK_LOG_LEVEL: 'warn',
   QBANK_DEV_OUTBOX: 'true',
-  // Test-only master key (32 bytes of 0x07); never used outside the E2E database.
-  QBANK_MASTER_KEY: Buffer.alloc(32, 7).toString('base64'),
-  // tests/e2e/ai-settings.spec.ts connects to a fake provider on 127.0.0.1:3199.
-  QBANK_AI_ALLOW_PRIVATE_URLS: 'true',
-  // Stand-ins for the official Claude Code and Codex CLIs (no real account is used).
-  QBANK_CLAUDE_BIN: resolve('tests/fixtures/fake-cli/claude.mjs'),
-  QBANK_CODEX_BIN: resolve('tests/fixtures/fake-cli/codex.mjs'),
-  QBANK_AI_WORK_DIR: '.data/e2e-ai-work',
+  QBANK_AI_HOST_URL: `http://127.0.0.1:${AI_HOST_PORT}`,
+  QBANK_AI_HOST_TOKEN: AI_HOST_TOKEN,
   // Uploaded originals of the E2E runs, apart from the development data.
   QBANK_DATA_DIR: '.data/e2e-app',
 };
@@ -47,6 +46,21 @@ export default defineConfig({
     { name: 'phone', use: { ...devices['Pixel 7'] } },
   ],
   webServer: [
+    {
+      // The vendored providers kit (Node 24, scripts/setup-ai-host.sh), signed in to nothing.
+      command: `rm -rf ${AI_HOST_HOME} && /opt/node24/bin/node src/main.ts`,
+      cwd: 'ai-host',
+      port: AI_HOST_PORT,
+      env: {
+        PATH: process.env['PATH'] ?? '',
+        HOME: `${AI_HOST_HOME}/home`,
+        AI_HOST_HOME: `${AI_HOST_HOME}/kit`,
+        AI_HOST_TOKEN,
+        AI_HOST_PORT: String(AI_HOST_PORT),
+      },
+      reuseExistingServer: false,
+      timeout: 60_000,
+    },
     {
       command: 'node --import tsx src/server/migrate.ts && node --import tsx src/server/main.ts',
       url: `http://127.0.0.1:${API_PORT}/api/health`,

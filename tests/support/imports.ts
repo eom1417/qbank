@@ -56,7 +56,10 @@ function usePdfFixtures(): () => PdfFixtures {
 }
 
 /** A test app and the PDF fixtures, for an import suite file. */
-export const useImportSuite = () => ({ app: useTestApp(), fixtures: usePdfFixtures() });
+export const useImportSuite = (options?: Parameters<typeof useTestApp>[0]) => ({
+  app: useTestApp(options),
+  fixtures: usePdfFixtures(),
+});
 
 /** Stored files of this test process (originals and kept pictures). */
 export const blobCount = () => {

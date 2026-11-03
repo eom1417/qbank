@@ -1,15 +1,16 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { FAKE_KEYS, FAKE_MODELS, startFakeAiServer } from '../support/fake-ai-server.js';
+import { FAKE_INSTANCES, startFakeAiHost } from '../support/fake-ai-host.js';
 import { ownerWithBank, registeredBrowser, type createClient } from '../support/client.js';
 import { blobCount, runImports, uploadFile, useImportSuite } from '../support/imports.js';
 
-const { app, fixtures } = useImportSuite();
-type Browser = ReturnType<typeof createClient>;
-let fake: Awaited<ReturnType<typeof startFakeAiServer>>;
+// The fake AI host starts first: the app reads its address when it starts.
+let fake: Awaited<ReturnType<typeof startFakeAiHost>>;
 beforeAll(async () => {
-  fake = await startFakeAiServer();
+  fake = await startFakeAiHost();
 });
 afterAll(() => fake.close());
+const { app, fixtures } = useImportSuite({ aiHost: () => fake.settings });
+type Browser = ReturnType<typeof createClient>;
 
 describe('files that cannot be imported are refused clearly (FR-23-001, UAT-019)', () => {
   it.each([
@@ -88,19 +89,7 @@ describe('deleting the original file (FR-19-001)', () => {
   });
 });
 
-async function withProvider(apiKey: string) {
-  const { owner, bankId } = await ownerWithBank(app());
-  const body = {
-    kind: 'openai_compatible',
-    label: 'Vision',
-    model: FAKE_MODELS.vision,
-    baseUrl: fake.url,
-    apiKey,
-    acknowledgeDisclosure: true,
-  };
-  const provider = (await owner.post('/api/ai/providers', body)).json();
-  return { owner, bankId, providerId: provider.id as string };
-}
+const ownerWithAi = () => ownerWithBank(app());
 
 /** Imports the Arabic fixture with the given AI connection and runs it. */
 async function importWithAi(owner: Browser, bankId: string, providerId: string) {
@@ -111,10 +100,10 @@ async function importWithAi(owner: Browser, bankId: string, providerId: string) 
   return started.json() as { id: string; sourceId: string };
 }
 
-describe("the user's AI on top of the rules (cascade)", () => {
+describe("the user's AI on top of the rules (cascade, DEC-30)", () => {
   it('suggests answers for undecided questions only, with their own provenance', async () => {
-    const { owner, bankId, providerId } = await withProvider(FAKE_KEYS.valid);
-    const job = await importWithAi(owner, bankId, providerId);
+    const { owner, bankId } = await ownerWithAi();
+    const job = await importWithAi(owner, bankId, FAKE_INSTANCES.vision);
     expect((await owner.get(`/api/imports/${job.id}`)).json()).toMatchObject({
       stage: 'needs_review',
       aiOutcome: 'done',
@@ -131,50 +120,47 @@ describe("the user's AI on top of the rules (cascade)", () => {
       ['A', 'ai_suggested', ['ai_suggested']],
       [null, 'missing', ['essay']],
     ]);
+    expect(fake.asks.at(-1)?.ownerSession).toMatch(/^account:/);
   });
 
-  it('a key that stops working keeps the rules result and says why (JY-14, UAT-084)', async () => {
-    const { owner, bankId, providerId } = await withProvider('sk-expired-key-000');
-    const job = await importWithAi(owner, bankId, providerId);
-    const report = (await owner.get(`/api/imports/${job.id}`)).json();
-    expect(report).toMatchObject({
+  it('a signed-out provider keeps the rules result and says why (JY-14, UAT-084)', async () => {
+    const { owner, bankId } = await ownerWithAi();
+    const job = await importWithAi(owner, bankId, FAKE_INSTANCES.refusing);
+    expect((await owner.get(`/api/imports/${job.id}`)).json()).toMatchObject({
       stage: 'needs_review',
       aiOutcome: 'invalid_key',
       questionsFound: 3,
     });
-    await owner.patch(`/api/ai/providers/${providerId}`, { apiKey: FAKE_KEYS.valid });
+    fake.refusing.delete(FAKE_INSTANCES.refusing);
     await owner.post(`/api/imports/${job.id}/retry`, {});
     await runImports(app());
     expect((await owner.get(`/api/imports/${job.id}`)).json()).toMatchObject({
       aiOutcome: 'done',
       questionsFound: 3,
     });
+    fake.refusing.add(FAKE_INSTANCES.refusing);
   });
 });
 
-describe('AI cost approval', () => {
-  it('asks for approval above the user limits before using AI (DEC-18, FR-22-008)', async () => {
-    const { owner, bankId, providerId } = await withProvider(FAKE_KEYS.valid);
-    await owner.patch('/api/ai/settings', { approvalPages: 1 });
-    const refused = await uploadFile(app(), owner.cookie(), bankId, fixtures().english, {
-      aiProviderId: providerId,
-    });
-    expect([refused.statusCode, refused.json().error]).toEqual([
-      409,
-      { code: 'approval_required', fields: { over_page_limit: 'required' } },
-    ]);
-    const approved = await uploadFile(app(), owner.cookie(), bankId, fixtures().english, {
-      aiProviderId: providerId,
-      aiApproved: 'true',
-    });
-    expect(approved.statusCode).toBe(201);
+describe('choosing the AI for an import', () => {
+  it('refuses an instance the kit has turned off or does not know', async () => {
+    const { owner, bankId } = await ownerWithAi();
+    for (const instance of [FAKE_INSTANCES.disabled, 'no-such-instance']) {
+      const refused = await uploadFile(app(), owner.cookie(), bankId, fixtures().arabic, {
+        aiProviderId: instance,
+      });
+      expect([refused.statusCode, refused.json().error.fields]).toEqual([
+        400,
+        { aiProviderId: 'invalid_value' },
+      ]);
+    }
   });
 });
 
 describe("accepting the AI's suggested answer (M6.6, DEC-03)", () => {
   it('makes the question eligible, keeps the AI badge, and only for its owner', async () => {
-    const { owner, bankId, providerId } = await withProvider(FAKE_KEYS.valid);
-    const job = await importWithAi(owner, bankId, providerId);
+    const { owner, bankId } = await ownerWithAi();
+    const job = await importWithAi(owner, bankId, FAKE_INSTANCES.vision);
     const [first, , essay] = await app
       .db()
       .selectFrom('question')

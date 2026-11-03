@@ -4,7 +4,7 @@ import type { Clock } from '../../platform/clock.js';
 import type { Db } from '../../platform/db/index.js';
 import { newId } from '../../platform/ids.js';
 import type { BlobStore } from '../../platform/storage/blob-store.js';
-import type { Ai } from '../ai/index.js';
+import type { ImportAi } from '../providers/index.js';
 import type { RequireActor } from '../identity/index.js';
 import type { Questions } from '../questions/index.js';
 import { createImportRepository } from './adapters/import-repository.js';
@@ -21,7 +21,7 @@ interface SourcesSettings {
   clock: Clock;
   blobs: BlobStore;
   questions: Questions;
-  ai: Pick<Ai, 'openOwned' | 'estimateFor'>;
+  ai: ImportAi;
   requireActor: RequireActor;
   maxUploadBytes: number;
   maxPages: number;

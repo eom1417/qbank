@@ -36,7 +36,6 @@ SQL
   (umask 077 && printf 'DATABASE_URL=postgres://qbank:%s@127.0.0.1:5432/qbank\nTEST_DATABASE_URL=postgres://qbank:%s@127.0.0.1:5432/qbank_test\nE2E_DATABASE_URL=postgres://qbank:%s@127.0.0.1:5432/qbank_e2e\n' "$PW" "$PW" "$PW" > .env.local)
 fi
 
-bash scripts/setup-master-key.sh
 bash scripts/setup-ai-clis.sh
 bash scripts/setup-ai-host.sh
 

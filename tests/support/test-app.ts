@@ -1,5 +1,4 @@
 import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { sql } from 'kysely';
 import type { FastifyInstance } from 'fastify';
 import { afterAll, beforeAll } from 'vitest';
@@ -9,9 +8,6 @@ import type { Clock } from '../../src/server/platform/clock.js';
 import { createDb, type Db } from '../../src/server/platform/db/index.js';
 
 export const ORIGIN = 'http://qbank.test';
-
-/** A fixed, obviously non-secret master key for the test database only. */
-const TEST_MASTER_KEY = Buffer.alloc(32, 7);
 
 function testDatabaseUrl(): string {
   const fromEnv = process.env['TEST_DATABASE_URL'];
@@ -62,17 +58,6 @@ async function startTestApp(options: TestAppOptions = {}): Promise<TestApp> {
       originalRetentionDays: 7,
     },
     aiHost: options.aiHost?.() ?? NO_AI_HOST,
-    masterKey: TEST_MASTER_KEY,
-    // Tests reach the fake provider on 127.0.0.1; production keeps this off (SSRF guard).
-    ai: {
-      allowPrivateUrls: true,
-      // Stand-ins for the official CLIs (tests/fixtures/fake-cli), so no real account is used.
-      claudeBin: resolve('tests/fixtures/fake-cli/claude.mjs'),
-      codexBin: resolve('tests/fixtures/fake-cli/codex.mjs'),
-      // One directory per test process: each app clears its own at startup.
-      workDir: `.data/test-ai-work/${process.pid}`,
-      cliEnv: { PATH: process.env['PATH'] ?? '' },
-    },
   };
   const app = buildApp({ config, db, clock });
   await app.ready();

@@ -63,13 +63,12 @@
 3. يُقبل الرد فقط إن كان علامة واضحة وواثقة على حرف موجود فعلاً، ويُسجَّل بمنشأ `ai_suggested`، منفصلاً عن مفتاح الكتاب. أي شيء آخر يبقى «يحتاج مراجعة».
 4. الأسئلة المحسومة بالقواعد لا تُرسل أصلاً، فلا تكلفة عليها.
 
-**التحقق الحالي:** يعمل مع البروتوكولين (OpenAI المتوافق، وClaude عبر مكتبة Anthropic الرسمية) ضد مزوّد وهمي في الاختبارات (`tests/integration/extraction-ai.test.ts`).
+**التحقق الحالي:** يعمل عبر حقيبة المزوّدين (DEC-30) ضد مضيف AI وهمي في الاختبارات (`tests/integration/extraction-ai.test.ts`).
 
-**القياس على عينتك:** ينتظر مفتاحاً منك لنموذج يقرأ الصور، يُشغَّل بـ:
+**القياس على عينتك (محدَّث بعد DEC-30):** يمر عبر حقيبة المزوّدين، بمزوّد سجّلت دخوله في `/settings/providers`:
 
 ```
-QBANK_BENCH_AI_KIND=anthropic QBANK_BENCH_AI_BASE_URL=https://api.anthropic.com \
-QBANK_BENCH_AI_MODEL=<model> QBANK_BENCH_AI_KEY=<key> npm run bench:extraction -- .data/samples text,ocr --ai
+QBANK_AI_HOST_TOKEN=<token> npm run bench:extraction -- .data/samples text,ocr --ai=<instance>
 ```
 
 ويضيف لكل ملف صفوف `text+ai` و`ocr+ai` بجانب صفوف القواعد وحدها.

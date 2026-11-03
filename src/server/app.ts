@@ -1,6 +1,5 @@
 import cookie from '@fastify/cookie';
 import Fastify, { type FastifyInstance } from 'fastify';
-import { createAi } from './capabilities/ai/index.js';
 import { createIdentity, type RequireActor } from './capabilities/identity/index.js';
 import { createLibrary } from './capabilities/library/index.js';
 import { createProviders } from './capabilities/providers/index.js';
@@ -8,7 +7,6 @@ import { createQuestions } from './capabilities/questions/index.js';
 import { createSources } from './capabilities/sources/index.js';
 import type { Clock } from './platform/clock.js';
 import type { AppConfig } from './platform/config/index.js';
-import { createSecretBox } from './platform/crypto/secret-box.js';
 import type { Db } from './platform/db/index.js';
 import { handleError, handleNotFound } from './platform/http/error-handler.js';
 import { createOriginGuard } from './platform/http/origin-guard.js';
@@ -23,7 +21,7 @@ export interface AppDeps {
 }
 
 /**
- * The study content: banks, their questions, the user's AI, and imports. Each capability gets
+ * The study content: banks, their questions, the user's AI (the providers kit), and imports. Each capability gets
  * only the others' public interfaces.
  */
 function registerContent(
@@ -41,20 +39,14 @@ function registerContent(
     tagsOf: library.tagsOf,
   });
   questions.register(app);
-  const ai = createAi({
-    db,
-    clock,
-    secretBox: createSecretBox(config.masterKey),
-    requireActor: requireActor,
-    ...config.ai,
-  });
-  ai.register(app);
+  const providers = createProviders({ aiHost: config.aiHost, requireActor });
+  providers.register(app);
   const sources = createSources({
     db,
     clock,
     blobs: createDiskBlobStore(config.imports.dataDir),
     questions,
-    ai,
+    ai: providers.importAi,
     requireActor: requireActor,
     maxUploadBytes: config.imports.maxUploadBytes,
     maxPages: config.imports.maxPages,
@@ -89,7 +81,6 @@ export function buildApp({ config, db, clock }: AppDeps): FastifyInstance {
   });
   identity.register(app);
   registerContent(app, { config, db, clock }, identity.requireActor);
-  createProviders({ aiHost: config.aiHost, requireActor: identity.requireActor }).register(app);
   if (config.devOutbox) registerOutboxRoute(app, db);
   app.get('/api/health', async () => ({ status: 'ok' }));
   return app;

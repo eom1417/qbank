@@ -1,4 +1,4 @@
-import type { AiFailure, AiProvider } from '../../ai/index.js';
+import type { AiFailure, AiProvider } from '../../providers/index.js';
 import { renderPng } from '../adapters/raster.js';
 import {
   acceptedMark,

@@ -73,6 +73,19 @@ async function streamCall(
   );
 }
 
+/** Reads a JSON body, runs it, and sends the reply; a body that is not JSON is a 400. */
+async function withJsonBody(
+  request: IncomingMessage,
+  response: ServerResponse,
+  run: (input: unknown) => Promise<{ readonly status: number; readonly body: unknown }>,
+) {
+  const input = await readJson(request);
+  if (input === null)
+    return send(response, 400, { error: { _tag: 'InvalidInput', message: 'Body must be JSON.' } });
+  const reply = await run(input);
+  send(response, reply.status, reply.body);
+}
+
 async function unaryCall(
   runtime: KitRuntime,
   routes: Routes,
@@ -81,13 +94,9 @@ async function unaryCall(
   response: ServerResponse,
   owner: string,
 ) {
-  const input = await readJson(request);
-  if (input === null)
-    return send(response, 400, { error: { _tag: 'InvalidInput', message: 'Body must be JSON.' } });
-  const reply = await runtime.runPromise(
-    dispatch(routes.unary, method, input, { ownerSessionId: owner }),
+  await withJsonBody(request, response, (input) =>
+    runtime.runPromise(dispatch(routes.unary, method, input, { ownerSessionId: owner })),
   );
-  send(response, reply.status, reply.body);
 }
 
 /** The driver definitions, the provider state snapshot and its live changes. */
@@ -129,11 +138,7 @@ async function askRoute(
   response: ServerResponse,
   cwd: string,
 ) {
-  const input = await readJson(request);
-  if (input === null)
-    return send(response, 400, { error: { _tag: 'InvalidInput', message: 'Body must be JSON.' } });
-  const reply = await runtime.runPromise(handleAsk(input, cwd));
-  send(response, reply.status, reply.body);
+  await withJsonBody(request, response, (input) => runtime.runPromise(handleAsk(input, cwd)));
 }
 
 async function route(

@@ -1,4 +1,4 @@
-import type { AiProvider } from '../../ai/index.js';
+import type { AiProvider } from '../../providers/index.js';
 import type { ImportedQuestion } from '../../questions/index.js';
 import type { JobRow } from '../adapters/import-repository.js';
 import { auditSample } from '../domain/screening.js';

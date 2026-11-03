@@ -1,5 +1,13 @@
 import { AppError } from '../errors/index.js';
 
+/** One question to one provider instance (`POST /ask`). */
+interface AskInput {
+  instanceId: string;
+  prompt: string;
+  imagePngBase64?: string;
+  timeoutMs?: number;
+}
+
 /** A reply from the AI host: its status and JSON body, passed on as they are. */
 interface HostReply {
   status: number;
@@ -9,6 +17,8 @@ interface HostReply {
 export interface AiHostClient {
   /** `POST /rpc/<method>`: one kit provider method. */
   call(method: string, input: unknown, ownerSession: string): Promise<HostReply>;
+  /** `POST /ask`: one question to one provider instance (ai-host turns/). */
+  ask(input: AskInput, ownerSession: string): Promise<HostReply>;
   /** `GET <path>`: a snapshot (`/state`). */
   read(path: string, ownerSession: string): Promise<HostReply>;
   /** `GET <path>` as a live event stream (`/state/events`, `/events/<method>`). */
@@ -45,6 +55,8 @@ export function createAiHostClient(settings: { url: string; token: string | null
           body: JSON.stringify(input ?? {}),
         }),
       ),
+    ask: async (input, ownerSession) =>
+      reply(await request('/ask', ownerSession, { method: 'POST', body: JSON.stringify(input) })),
     read: async (path, ownerSession) => reply(await request(path, ownerSession)),
     open: (path, ownerSession, signal) => request(path, ownerSession, { signal }),
   };

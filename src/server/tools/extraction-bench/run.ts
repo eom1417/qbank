@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import type { AiProvider } from '../../capabilities/ai/index.js';
+import type { AiProvider } from '../../capabilities/providers/index.js';
 import {
   extractQuestions,
   suggestMarks,

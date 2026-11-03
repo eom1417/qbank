@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import { ProviderListResponse } from '../../../contracts/ai.js';
 import {
   ImportResponse,
   MediaListResponse,
@@ -48,9 +47,6 @@ export const deleteOriginal = (sourceId: string) =>
 
 export const fetchSources = (bankId: string) =>
   apiRequest('GET', `/api/banks/${bankId}/sources`, SourceListResponse);
-
-/** The user's AI connections, to offer AI for an import. */
-export const fetchConnections = () => apiRequest('GET', '/api/ai/providers', ProviderListResponse);
 
 /** Stages after which an import no longer changes. */
 export const FINISHED_STAGES = new Set([

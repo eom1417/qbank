@@ -1,5 +1,4 @@
 import type { ColumnType, Generated } from 'kysely';
-import type { ReadinessStatus } from '../../../contracts/ai.js';
 
 type CreatedAt = ColumnType<Date, Date | undefined, never>;
 
@@ -72,32 +71,6 @@ interface TagTable {
   owner_id: string;
   name: string;
   created_at: Date;
-}
-
-interface AiProviderTable {
-  id: string;
-  owner_id: string;
-  kind: 'openai_compatible' | 'anthropic' | 'claude_account' | 'codex_account';
-  label: string;
-  base_url: string | null;
-  account_email: string | null;
-  account_plan: string | null;
-  model: string;
-  key_ciphertext: string | null;
-  key_hint: string | null;
-  input_price: number | null;
-  output_price: number | null;
-  is_default: boolean;
-  readiness_status: Generated<ReadinessStatus>;
-  readiness_checked_at: Date | null;
-  created_at: Date;
-  updated_at: Date;
-}
-
-interface AiSettingsTable {
-  owner_id: string;
-  cost_limit_usd: number | null;
-  approval_pages: number;
 }
 
 export type ImportStage =
@@ -235,8 +208,6 @@ export interface Database {
   chapter: ChapterTable;
   topic: TopicTable;
   tag: TagTable;
-  ai_provider: AiProviderTable;
-  ai_settings: AiSettingsTable;
   source: SourceTable;
   import_job: ImportJobTable;
   import_page: ImportPageTable;

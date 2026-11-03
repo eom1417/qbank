@@ -5,6 +5,7 @@ import { errorMessageKey } from '../../platform/api/messages.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { useAction } from '../../platform/forms/use-submit.js';
 import { AddProviderCard } from './AddProviderCard.js';
+import { DisclosureNote } from './DisclosureNote.js';
 import { fetchDrivers, KitError, kitCall } from './api.js';
 import { ProviderCard } from './ProviderCard.js';
 import { useProviderState } from './use-provider-state.js';
@@ -44,6 +45,7 @@ export function ProvidersScreen() {
         </Button>
       </Row>
       <MutedText>{t('providers.intro')}</MutedText>
+      <DisclosureNote />
       {error.text && <Alert tone="error">{error.text}</Alert>}
       {state.providers.map((provider) => (
         <ProviderCard

@@ -76,10 +76,7 @@ export async function retryImport(
   const { job, source } = await ownedJob(deps, actor, jobId);
   if (!RETRYABLE.has(job.stage)) throw new AppError('not_retryable');
   if (!source.blob_key) throw new AppError('original_deleted');
-  if (
-    input.aiProviderId &&
-    !(await deps.ai.estimateFor(actor.accountId, input.aiProviderId, job.pages_total))
-  ) {
+  if (input.aiProviderId && !(await deps.ai.estimateFor(actor.accountId, input.aiProviderId))) {
     throw new AppError('validation_failed', { aiProviderId: 'invalid_value' });
   }
   await deps.imports.forgetFailedPages(job.id);

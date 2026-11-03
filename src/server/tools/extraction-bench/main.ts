@@ -1,26 +1,29 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { providerFor } from '../../capabilities/ai/index.js';
+import { kitProvider } from '../../capabilities/providers/index.js';
 import type { ReadingMode } from '../../capabilities/sources/index.js';
-import { loadBenchAiTarget } from '../../platform/config/index.js';
+import { createAiHostClient } from '../../platform/ai-host/client.js';
+import { loadBenchAiHost } from '../../platform/config/index.js';
 import { benchSample, listSamples, type SampleResult } from './run.js';
 import { ratios } from './thresholds.js';
 
-// Extraction benchmark (M3.2): `npm run bench:extraction -- [samplesDir] [text,ocr] [--ai]`.
-// `--ai` adds AI mark suggestions with the provider in QBANK_BENCH_AI_* (the developer's own key).
-const [dir = '.data/samples', modeList = 'text,ocr'] = process.argv
-  .slice(2)
-  .filter((arg) => arg !== '--ai');
+// Extraction benchmark (M3.2): `npm run bench:extraction -- [samplesDir] [text,ocr] [--ai=<instance>]`.
+// `--ai=<instance>` adds AI mark suggestions from a provider instance of the AI host (the kit,
+// DEC-30) the developer signed in to; QBANK_AI_HOST_URL and QBANK_AI_HOST_TOKEN reach it.
+const args = process.argv.slice(2);
+const [dir = '.data/samples', modeList = 'text,ocr'] = args.filter(
+  (arg) => !arg.startsWith('--ai'),
+);
 const modes = modeList.split(',') as ReadingMode[];
-const wantsAi = process.argv.includes('--ai');
-const aiTarget = wantsAi ? loadBenchAiTarget() : null;
-if (wantsAi && !aiTarget) {
+const instance = args.find((arg) => arg.startsWith('--ai='))?.slice('--ai='.length);
+const host = instance ? loadBenchAiHost() : null;
+if (instance && !host) {
   console.error(
-    '--ai needs QBANK_BENCH_AI_KIND, QBANK_BENCH_AI_BASE_URL, QBANK_BENCH_AI_MODEL, QBANK_BENCH_AI_KEY',
+    '--ai=<instance> needs QBANK_AI_HOST_TOKEN (and QBANK_AI_HOST_URL if not the default)',
   );
   process.exit(2);
 }
-const ai = aiTarget ? providerFor(aiTarget, false) : null;
+const ai = instance && host ? kitProvider(createAiHostClient(host), 'bench', instance) : null;
 
 const percent = (value: number) => `${(value * 100).toFixed(1)}%`;
 

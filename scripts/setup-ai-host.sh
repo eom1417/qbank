@@ -22,3 +22,8 @@ node scripts/vendor-lock.mjs --check
 (cd vendor/t3-ai-providers-kit/kit &&
   CI=true COREPACK_ENABLE_DOWNLOAD_PROMPT=0 corepack pnpm@10 install --frozen-lockfile --store-dir /root/.cache/pnpm-store)
 ln -sfn ../vendor/t3-ai-providers-kit/kit/apps/server/node_modules ai-host/node_modules
+
+# The shared secret between the API and the AI host, generated once into the git-ignored .env.local.
+if ! grep -q '^QBANK_AI_HOST_TOKEN=' .env.local; then
+  (umask 077 && printf 'QBANK_AI_HOST_TOKEN=%s\n' "$(openssl rand -hex 32)" >> .env.local)
+fi

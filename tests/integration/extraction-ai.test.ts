@@ -1,18 +1,20 @@
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { z } from 'zod';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { providerFor } from '../../src/server/capabilities/ai/index.js';
+import { createAiHostClient } from '../../src/server/platform/ai-host/client.js';
+import { kitProvider } from '../../src/server/capabilities/providers/index.js';
 import { runTool } from '../../src/server/capabilities/sources/adapters/run-tool.js';
 import { extractQuestions, suggestMarks } from '../../src/server/capabilities/sources/index.js';
-import { FAKE_KEYS, FAKE_MODELS, startFakeAiServer } from '../support/fake-ai-server.js';
+import { FAKE_INSTANCES, startFakeAiHost } from '../support/fake-ai-host.js';
 
-// The AI layer over the rules, with the user's own provider (here a fake one, both protocols).
-let fake: Awaited<ReturnType<typeof startFakeAiServer>>;
+// The AI layer over the rules, through the user's provider instance in the kit (a fake host).
+let fake: Awaited<ReturnType<typeof startFakeAiHost>>;
 let dir = '';
 let pdf = '';
 beforeAll(async () => {
-  fake = await startFakeAiServer();
+  fake = await startFakeAiHost();
   dir = mkdtempSync(join(tmpdir(), 'qbank-ai-'));
   pdf = join(dir, 'sample.pdf');
   await runTool('mutool', ['create', '-o', pdf, 'tests/fixtures/extraction/sample-page.txt']);
@@ -22,37 +24,38 @@ afterAll(async () => {
   await fake.close();
 });
 
-const provider = (kind: 'openai_compatible' | 'anthropic', apiKey: string) =>
-  providerFor(
-    {
-      kind,
-      baseUrl: kind === 'anthropic' ? fake.anthropicUrl : fake.url,
-      apiKey,
-      model: FAKE_MODELS.vision,
-    },
-    true,
-  );
+const provider = (instanceId: string) =>
+  kitProvider(createAiHostClient(fake.settings), 'account:test', instanceId);
 
-describe.each(['openai_compatible', 'anthropic'] as const)('AI mark suggestions via %s', (kind) => {
+describe('AI mark suggestions through the providers kit', () => {
   it('asks only about undecided questions, with the page image, and labels the answer', async () => {
     const rules = await extractQuestions(pdf, 'text');
-    const before = fake.calls.length;
-    const suggested = await suggestMarks(pdf, rules, provider(kind, FAKE_KEYS.valid));
+    const before = fake.asks.length;
+    const suggested = await suggestMarks(pdf, rules, provider(FAKE_INSTANCES.vision));
     expect(suggested.map((q) => [q.number, q.answer, q.evidence])).toEqual([
       [1, 'C', 'pen_mark'],
       [2, 'A', 'single_option'],
       [3, 'A', 'ai_suggested'],
     ]);
-    const asked = fake.calls.slice(before);
+    const asked = fake.asks.slice(before);
     expect(asked).toHaveLength(1);
-    expect(JSON.stringify(asked[0]?.body)).toMatch(
-      kind === 'anthropic' ? /"type":"image"/ : /"image_url"/,
-    );
+    expect(asked[0]?.body.imagePngBase64?.length).toBeGreaterThan(100);
+    expect(asked[0]?.body.prompt).toContain('JSON Schema');
   });
 
   it('keeps the question undecided when the provider refuses', async () => {
     const rules = await extractQuestions(pdf, 'text');
-    const suggested = await suggestMarks(pdf, rules, provider(kind, 'sk-wrong-key-999'));
+    const suggested = await suggestMarks(pdf, rules, provider(FAKE_INSTANCES.refusing));
     expect(suggested[2]).toMatchObject({ answer: null, evidence: null });
+  });
+
+  it('reports the host as unavailable when it has no token', async () => {
+    const offline = kitProvider(
+      createAiHostClient({ url: fake.settings.url, token: null }),
+      'account:test',
+      FAKE_INSTANCES.vision,
+    );
+    const request = { name: 'probe', system: 's', parts: [], schema: z.object({}) };
+    await expect(offline.generate(request)).rejects.toMatchObject({ code: 'ai_host_unavailable' });
   });
 });

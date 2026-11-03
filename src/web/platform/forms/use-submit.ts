@@ -41,9 +41,3 @@ export function useSubmit(action: (form: FormData) => Promise<void>) {
 }
 
 export const text = (form: FormData, name: string): string => String(form.get(name) ?? '');
-
-/** An optional number field: empty means "not set". */
-export const numberOrNull = (form: FormData, name: string): number | null => {
-  const value = text(form, name).trim();
-  return value === '' ? null : Number(value);
-};
