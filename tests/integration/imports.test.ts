@@ -105,6 +105,21 @@ describe('import languages and scans (M4.4, M4.5)', () => {
     expect(rows[2]?.kind).toBe('essay');
   });
 
+  it('reads a scanned page by OCR and says so (UAT-006)', async () => {
+    const { report } = await imported(fixtures().scanned);
+    expect(report.pages).toEqual([{ page: 1, status: 'done', reading: 'ocr', warning: 'ocr' }]);
+    expect(report.questionsFound).toBeGreaterThanOrEqual(4);
+    const rows = await app
+      .db()
+      .selectFrom('question')
+      .select('review_reasons')
+      .where('source_id', '=', report.sourceId)
+      .execute();
+    expect(rows.every((row) => row.review_reasons.includes('ocr_page'))).toBe(true);
+  });
+});
+
+describe('mixed languages and the OCR language (M4.4, M4.5)', () => {
   it('reads Arabic questions with English terms and options (UAT-009)', async () => {
     const { report } = await imported(fixtures().mixed, { language: 'mixed' });
     const rows = await savedQuestions(report.sourceId);
@@ -130,17 +145,4 @@ describe('import languages and scans (M4.4, M4.5)', () => {
       expect(rows[0]?.stem).toBe('ما العضو المسؤول عن ضخ الدم؟');
     },
   );
-
-  it('reads a scanned page by OCR and says so (UAT-006)', async () => {
-    const { report } = await imported(fixtures().scanned);
-    expect(report.pages).toEqual([{ page: 1, status: 'done', reading: 'ocr', warning: 'ocr' }]);
-    expect(report.questionsFound).toBeGreaterThanOrEqual(4);
-    const rows = await app
-      .db()
-      .selectFrom('question')
-      .select('review_reasons')
-      .where('source_id', '=', report.sourceId)
-      .execute();
-    expect(rows.every((row) => row.review_reasons.includes('ocr_page'))).toBe(true);
-  });
 });

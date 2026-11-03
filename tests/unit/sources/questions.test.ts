@@ -17,7 +17,7 @@ function line(text: string, x = 44, page = 1): TextLine {
 const letters = (questions: ReturnType<typeof parseQuestions>) =>
   questions.map((q) => q.options.map((o) => `${o.letter}${o.circledGlyph ? '*' : ''}`).join(''));
 
-describe('question parser', () => {
+describe('pages that could not be read', () => {
   it('does not join text across a page that could not be read (FR-23-004)', () => {
     y = 0;
     const questions = parseQuestions([
@@ -34,7 +34,9 @@ describe('question parser', () => {
     ]);
     expect(questions[0]?.options.map((o) => o.text)).toEqual(['Yes', 'No']);
   });
+});
 
+describe('question parser', () => {
   it('joins wrapped stems and options, and keeps page numbers', () => {
     y = 0;
     const questions = parseQuestions([
