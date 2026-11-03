@@ -16,7 +16,7 @@ export interface StructuredRequest<T> {
 
 export type AiFailure = Exclude<ReadinessStatus, 'unchecked' | 'ready'> | 'invalid_output';
 
-interface TokenUsage {
+export interface TokenUsage {
   inputTokens: number;
   outputTokens: number;
 }
@@ -24,14 +24,27 @@ interface TokenUsage {
 export type StructuredResult<T> =
   { ok: true; value: T; usage: TokenUsage | null } | { ok: false; failure: AiFailure };
 
+/** What a provider reported for the key: `ready` with its models, or why it refused. */
+export interface ModelListing {
+  status: ReadinessStatus;
+  models: string[];
+}
+
 /**
- * The only way the product talks to a model (FR-08-010): no vendor is hard-wired. Adapters:
- * OpenAI-compatible HTTP (local Ollama/llama.cpp first, cloud later) and recorded fixtures.
+ * The only way the product talks to a model (FR-08-010): no vendor is hard-wired. The user
+ * brings their own provider and key (BYOK). Adapters: OpenAI-compatible HTTP (OpenAI, DeepSeek,
+ * Gemini, OpenRouter, any compatible server), the Anthropic Messages API, recorded fixtures.
  */
 export interface AiProvider {
-  /** Free check: is the server reachable, the key accepted and the model present? */
-  checkReadiness(): Promise<ReadinessStatus>;
+  /** Free call: is the API reachable, the key accepted, and which models may it use? */
+  listModels(): Promise<ModelListing>;
   generate<T>(request: StructuredRequest<T>): Promise<StructuredResult<T>>;
+}
+
+/** FR-08-011: ready only when the key works and the chosen model is offered to it. */
+export function readinessFor(listing: ModelListing, model: string): ReadinessStatus {
+  if (listing.status !== 'ready') return listing.status;
+  return listing.models.includes(model) ? 'ready' : 'model_missing';
 }
 
 /**

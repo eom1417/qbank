@@ -1,29 +1,19 @@
 import { z } from 'zod';
-import type { ReadinessStatus } from '../../../../contracts/ai.js';
 import {
   parseModelOutput,
-  type AiFailure,
   type AiProvider,
   type ContentPart,
+  type ModelListing,
   type StructuredRequest,
   type StructuredResult,
 } from '../domain/ai-provider.js';
-
-interface Endpoint {
-  baseUrl: string;
-  apiKey: string | null;
-  model: string;
-  /** Re-checks the URL right before each call (DNS can change after the URL was saved). */
-  isAllowed(url: string): Promise<boolean>;
-  fetch?: typeof fetch;
-}
-
-/** Transport and provider refusals; `invalid_output` only comes from reading a completion. */
-type CallFailure = Exclude<AiFailure, 'invalid_output'>;
-
-const CHECK_TIMEOUT_MS = 10_000;
-// Small local models on a CPU-only host can take minutes for one page.
-const GENERATE_TIMEOUT_MS = 300_000;
+import {
+  CHECK_TIMEOUT_MS,
+  GENERATE_TIMEOUT_MS,
+  structuredResult,
+  type CallFailure,
+  type Endpoint,
+} from './provider-call.js';
 
 const ModelList = z.object({ data: z.array(z.object({ id: z.string() })) });
 const Completion = z.object({
@@ -77,12 +67,12 @@ async function call(
   return { ok: true, json: parseModelOutput(text, z.unknown()) };
 }
 
-async function checkReadiness(endpoint: Endpoint): Promise<ReadinessStatus> {
+async function listModels(endpoint: Endpoint): Promise<ModelListing> {
   const outcome = await call(endpoint, '/models', CHECK_TIMEOUT_MS);
-  if (!outcome.ok) return outcome.failure;
+  if (!outcome.ok) return { status: outcome.failure, models: [] };
   const list = ModelList.safeParse(outcome.json);
-  if (!list.success) return 'unexpected';
-  return list.data.data.some((entry) => entry.id === endpoint.model) ? 'ready' : 'model_missing';
+  if (!list.success) return { status: 'unexpected', models: [] };
+  return { status: 'ready', models: list.data.data.map((entry) => entry.id) };
 }
 
 async function generate<T>(
@@ -104,18 +94,19 @@ async function generate<T>(
   if (!outcome.ok) return outcome;
   const completion = Completion.safeParse(outcome.json);
   if (!completion.success) return { ok: false, failure: 'invalid_output' };
-  const content = completion.data.choices[0]?.message.content;
-  const value = content ? parseModelOutput(content, request.schema) : null;
-  if (value === null) return { ok: false, failure: 'invalid_output' };
   const usage = completion.data.usage;
   const tokens = usage && {
     inputTokens: usage.prompt_tokens,
     outputTokens: usage.completion_tokens,
   };
-  return { ok: true, value, usage: tokens ?? null };
+  return structuredResult(
+    completion.data.choices[0]?.message.content,
+    request.schema,
+    tokens ?? null,
+  );
 }
 
 export const createOpenAiCompatibleProvider = (endpoint: Endpoint): AiProvider => ({
-  checkReadiness: () => checkReadiness(endpoint),
+  listModels: () => listModels(endpoint),
   generate: (request) => generate(endpoint, request),
 });

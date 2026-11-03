@@ -1,17 +1,36 @@
+import type { ProviderKind } from '../../../../contracts/ai.js';
 import type { SecretBox } from '../../../platform/crypto/secret-box.js';
 import type { AiProvider } from '../domain/ai-provider.js';
 import { keyContext, type ProviderConnection } from '../domain/provider.js';
+import { createAnthropicProvider } from './anthropic.js';
 import { isAllowedEndpoint } from './endpoint-guard.js';
 import { createOpenAiCompatibleProvider } from './openai-compatible.js';
 import { createRecordedProvider } from './recorded-provider.js';
 
 export interface ProviderFactorySettings {
   secretBox: SecretBox;
-  localUrl: string | null;
   allowPrivateUrls: boolean;
 }
 
+export interface ProviderTarget {
+  kind: ProviderKind;
+  baseUrl: string;
+  apiKey: string | null;
+  model: string;
+}
+
 export type OpenProvider = (connection: ProviderConnection) => AiProvider;
+
+/** A live provider for an address and key; every call passes the SSRF guard. */
+export function providerFor(target: ProviderTarget, allowPrivateUrls: boolean): AiProvider {
+  const endpoint = {
+    ...target,
+    isAllowed: (url: string) => isAllowedEndpoint(url, allowPrivateUrls),
+  };
+  return target.kind === 'anthropic'
+    ? createAnthropicProvider(endpoint)
+    : createOpenAiCompatibleProvider(endpoint);
+}
 
 /**
  * Turns a stored connection into a live provider. This is the only place a key is decrypted,
@@ -26,13 +45,7 @@ export function createProviderFactory(settings: ProviderFactorySettings): OpenPr
     if (connection.keyCiphertext && apiKey === null) {
       return createRecordedProvider({ readiness: 'invalid_key', outputs: [] });
     }
-    const baseUrl = connection.kind === 'local' ? settings.localUrl : connection.baseUrl;
-    if (!baseUrl) return createRecordedProvider({ readiness: 'unreachable', outputs: [] });
-    // The operator's own local server is trusted; user-supplied URLs pass the SSRF guard.
-    const isAllowed =
-      connection.kind === 'local'
-        ? async () => true
-        : (url: string) => isAllowedEndpoint(url, settings.allowPrivateUrls);
-    return createOpenAiCompatibleProvider({ baseUrl, apiKey, model: connection.model, isAllowed });
+    const { kind, baseUrl, model } = connection;
+    return providerFor({ kind, baseUrl, apiKey, model }, settings.allowPrivateUrls);
   };
 }

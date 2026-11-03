@@ -86,7 +86,7 @@
 | FR-08-010 | اختيار مزود AI | سابق | M2.3 | done | `tests/integration/ai-limits-isolation.test.ts` |
 | FR-08-011 | تحقق جاهزية المفتاح | مقترح | M2.4 | done | `tests/integration/ai-providers.test.ts` |
 | FR-08-012 | إظهار حدود التكلفة | مقترح | M2.5 | partial | `tests/integration/ai-limits-isolation.test.ts` |
-| FR-08-013 | العمل دون مفتاح | مقترح | M2.7 | partial | `tests/integration/ai-without-local.test.ts` |
+| FR-08-013 | العمل دون مفتاح | مقترح | M2.7 | partial | `tests/integration/ai-limits-isolation.test.ts` |
 | FR-08-014 | رفض الاستنتاج غير المدعوم | مقترح | M6.10 | planned | — |
 | FR-09-001 | طابور استثناءات مركز | سابق | M7.1 | planned | — |
 | FR-09-002 | مراجعة سؤال مفرد | مقترح | M7.2 | planned | — |

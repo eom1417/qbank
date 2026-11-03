@@ -50,3 +50,16 @@ describe('pen marks around option letters', () => {
     expect(pickMarked([])).toBeNull();
   });
 });
+
+describe('AI mark suggestions are untrusted', () => {
+  it('accepts only a confident, visible mark on a real option', async () => {
+    const { acceptedMark } =
+      await import('../../../src/server/capabilities/sources/domain/mark-suggestion.js');
+    const letters = ['A', 'B', 'C'];
+    expect(acceptedMark({ marked: 'b', mark: 'circle', confident: true }, letters)).toBe('B');
+    expect(acceptedMark({ marked: 'B', mark: 'circle', confident: false }, letters)).toBeNull();
+    expect(acceptedMark({ marked: 'B', mark: 'none', confident: true }, letters)).toBeNull();
+    expect(acceptedMark({ marked: 'E', mark: 'tick', confident: true }, letters)).toBeNull();
+    expect(acceptedMark({ marked: null, mark: 'circle', confident: true }, letters)).toBeNull();
+  });
+});

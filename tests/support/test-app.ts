@@ -28,10 +28,7 @@ interface TestApp {
 }
 
 /** A real app on the dedicated test database, migrated and emptied before each suite. */
-async function startTestApp(
-  clock: Clock = { now: () => new Date() },
-  localUrl: string | null = null,
-): Promise<TestApp> {
+async function startTestApp(clock: Clock = { now: () => new Date() }): Promise<TestApp> {
   const db = createDb(testDatabaseUrl());
   await migrateToLatest(db);
   // Test database only (TEST_DATABASE_URL); every owned table cascades from account.
@@ -47,7 +44,8 @@ async function startTestApp(
     sessionTtlDays: 30,
     logLevel: 'silent' as const,
     masterKey: TEST_MASTER_KEY,
-    ai: { localUrl, allowPrivateUrls: true },
+    // Tests reach the fake provider on 127.0.0.1; production keeps this off (SSRF guard).
+    ai: { allowPrivateUrls: true },
   };
   const app = buildApp({ config, db, clock });
   await app.ready();
@@ -58,14 +56,11 @@ async function startTestApp(
   return { app, db, close };
 }
 
-/**
- * Starts one test app for the current suite file; call the returned getter inside tests.
- * `localAiUrl` is read when the suite starts (after earlier beforeAll hooks, e.g. a fake server).
- */
-export function useTestApp(options: { localAiUrl?: () => string } = {}) {
+/** Starts one test app for the current suite file; call the returned getter inside tests. */
+export function useTestApp() {
   let current: TestApp | undefined;
   beforeAll(async () => {
-    current = await startTestApp(undefined, options.localAiUrl?.() ?? null);
+    current = await startTestApp();
   });
   afterAll(() => current?.close());
   const started = () => {

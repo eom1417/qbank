@@ -60,12 +60,7 @@ function LimitsForm({ settings }: { settings: AiSettings }) {
 function EstimateResult({ estimate }: { estimate: EstimateResponse }) {
   const { t } = useI18n();
   if (!estimate.provider) return <Alert tone="info">{t('ai.estimate.noProvider')}</Alert>;
-  const free = estimate.provider.kind === 'local';
-  const cost = free
-    ? t('ai.estimate.free')
-    : estimate.costUsd === null
-      ? t('ai.estimate.unknown')
-      : `$${estimate.costUsd}`;
+  const cost = estimate.costUsd === null ? t('ai.estimate.unknown') : `$${estimate.costUsd}`;
   return (
     <Alert tone={estimate.needsApproval ? 'info' : 'success'}>
       <Stack>

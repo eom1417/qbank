@@ -14,6 +14,7 @@ const FIELD_MESSAGES: Record<string, MessageKey> = {
   taken: 'field.taken',
   unsafe: 'field.unsafeUrl',
   unavailable: 'field.unavailable',
+  required: 'field.required',
 };
 
 /** Field-level message keys from a validation error, keyed by field name. */

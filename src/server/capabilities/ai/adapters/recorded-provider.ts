@@ -3,6 +3,8 @@ import { parseModelOutput, type AiProvider } from '../domain/ai-provider.js';
 
 interface Recording {
   readiness: ReadinessStatus;
+  /** Models the key may use; the default is whatever a request asks for. */
+  models?: string[];
   /** Raw model outputs, returned in order; each goes through the same validation as live output. */
   outputs: readonly string[];
 }
@@ -11,7 +13,10 @@ interface Recording {
 export function createRecordedProvider(recording: Recording): AiProvider {
   const outputs = [...recording.outputs];
   return {
-    checkReadiness: async () => recording.readiness,
+    listModels: async () => ({
+      status: recording.readiness === 'unchecked' ? 'ready' : recording.readiness,
+      models: recording.readiness === 'ready' ? (recording.models ?? []) : [],
+    }),
     async generate(request) {
       if (recording.readiness !== 'ready' && recording.readiness !== 'unchecked') {
         return { ok: false, failure: recording.readiness };

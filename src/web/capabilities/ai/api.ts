@@ -3,11 +3,13 @@ import {
   AiSettings,
   CheckResponse,
   EstimateResponse,
+  ListModelsResponse,
   ProviderListResponse,
   ProviderResponse,
   TrialResponse,
   type CreateProviderRequest,
   type EstimateRequest,
+  type ListModelsRequest,
   type UpdateAiSettingsRequest,
   type UpdateProviderRequest,
 } from '../../../contracts/ai.js';
@@ -41,3 +43,7 @@ export const saveAiSettings = (body: UpdateAiSettingsRequest) =>
 
 export const estimateTask = (body: EstimateRequest) =>
   apiRequest('POST', '/api/ai/estimate', EstimateResponse, body);
+
+/** Checks a key and lists its models without saving anything. */
+export const listModels = (body: ListModelsRequest) =>
+  apiRequest('POST', '/api/ai/models', ListModelsResponse, body);

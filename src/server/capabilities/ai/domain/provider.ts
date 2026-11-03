@@ -6,7 +6,7 @@ export interface ProviderConnection {
   ownerId: string;
   kind: ProviderKind;
   label: string;
-  baseUrl: string | null;
+  baseUrl: string;
   model: string;
   keyCiphertext: string | null;
   keyHint: string | null;

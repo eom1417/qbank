@@ -31,9 +31,7 @@ export function AiSettings() {
           </ul>
         )}
       </Card>
-      {state.status === 'ready' && (
-        <AddProviderCard localAvailable={state.data.local.available} onAdded={reload} />
-      )}
+      {state.status === 'ready' && <AddProviderCard onAdded={reload} />}
       {state.status === 'ready' && <AiAboutCard hasProvider={providers.length > 0} />}
       <AiLimitsCard />
     </>

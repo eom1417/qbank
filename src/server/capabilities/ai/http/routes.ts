@@ -1,8 +1,10 @@
 import type { FastifyInstance } from 'fastify';
 import {
   CreateProviderRequest,
+  ListModelsRequest,
   UpdateProviderRequest,
   type CheckResponse,
+  type ListModelsResponse,
   type ProviderListResponse,
   type TrialResponse,
 } from '../../../../contracts/ai.js';
@@ -12,6 +14,7 @@ import type { AiDeps } from '../use-cases/deps.js';
 import {
   createProvider,
   deleteProvider,
+  listModelsFor,
   listProviders,
   makeDefaultProvider,
   updateProvider,
@@ -30,7 +33,7 @@ export function registerProviderRoutes(
   app.get('/api/ai/providers', async (request): Promise<ProviderListResponse> => {
     const actor = await requireActor(request);
     const providers = (await listProviders(deps, actor)).map(toProviderResponse);
-    return { providers, local: { available: deps.localUrl !== null } };
+    return { providers };
   });
 
   app.post('/api/ai/providers', async (request, reply) => {
@@ -53,6 +56,18 @@ export function registerProviderRoutes(
   app.delete<IdParams>('/api/ai/providers/:id', async (request, reply) => {
     await deleteProvider(deps, await requireActor(request), request.params.id);
     return reply.status(204).send();
+  });
+}
+
+/** Readiness, trial task and model listing for the user's own keys (FR-08-011). */
+export function registerReadinessRoutes(
+  app: FastifyInstance,
+  deps: AiDeps,
+  requireActor: RequireActor,
+) {
+  app.post('/api/ai/models', async (request): Promise<ListModelsResponse> => {
+    await requireActor(request);
+    return listModelsFor(deps, parseInput(ListModelsRequest, request.body));
   });
 
   app.post<IdParams>('/api/ai/providers/:id/check', async (request): Promise<CheckResponse> => {

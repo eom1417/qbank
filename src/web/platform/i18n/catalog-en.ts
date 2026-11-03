@@ -155,7 +155,7 @@ export const en = {
   'field.taken': 'This value is already used.',
   'ai.title': 'AI and keys',
   'ai.intro':
-    'Connect the AI service you want for AI tasks. Your keys are yours alone: stored encrypted, never shown in full and never exported.',
+    'Connect the AI you already use (OpenAI, Claude, DeepSeek, Gemini or any compatible API) with your own key. Your keys are yours alone: stored encrypted, never shown in full and never exported.',
   'ai.none.title': 'No AI connected',
   'ai.none.body':
     'Everything that does not need AI keeps working: your library, studying, exams, review and analytics.',
@@ -165,17 +165,15 @@ export const en = {
   'ai.needs.suggest': 'Suggested answers when the book has no answer key.',
   'ai.disclosure.title': 'What is sent to the provider',
   'ai.disclosure.body':
-    'When an AI task runs, the pages or images it needs from your file are sent to the provider you chose, with your key.',
-  'ai.disclosure.local': 'This server: the content does not leave this server.',
+    'When an AI task runs, the pages or images it needs from your file are sent to the provider you connected, with your key.',
   'ai.disclosure.external':
-    'An external service: its own terms and privacy policy apply. We cannot guarantee what it does with the content.',
+    "That provider's own terms and privacy policy apply. We cannot guarantee what it does with the content.",
   'ai.disclosure.ack':
     'I understand that the content of my files will be sent to this provider for AI tasks.',
   'ai.providers.title': 'Your AI connections',
   'ai.providers.empty': 'You have no AI connection yet.',
   'ai.default': 'Default',
-  'ai.kind.local': 'This server (local)',
-  'ai.kind.openai_compatible': 'OpenAI-compatible service',
+  'ai.kind.openai_compatible': 'OpenAI-compatible API',
   'ai.model': 'Model',
   'ai.key': 'Key',
   'ai.key.none': 'No key',
@@ -183,7 +181,7 @@ export const en = {
   'ai.check': 'Check readiness',
   'ai.trial': 'Try a sample task',
   'ai.trial.hint':
-    'Reads one short sample question. On this server, which has no graphics card, it can take a few minutes.',
+    'Reads one short sample question with your model. This usually takes a few seconds.',
   'ai.trial.ok': 'The model read the sample question:',
   'ai.trial.answer': 'Answer',
   'ai.trial.invalid':
@@ -204,15 +202,16 @@ export const en = {
   'ai.status.rate_limited':
     'The provider is limiting requests right now. Try again in a few minutes.',
   'ai.status.unreachable':
-    'The server could not be reached. Check the address, or that the local server is running.',
-  'ai.status.model_missing': 'This model is not available on the server. Check its exact name.',
+    'The provider could not be reached. Check the address and your connection.',
+  'ai.status.model_missing': 'Your key cannot use this model. Load the models list and pick one.',
   'ai.status.unexpected': 'The server gave an unexpected answer. Check the address.',
   'ai.add.title': 'Add an AI connection',
   'ai.add.kind': 'Provider',
   'ai.add.label': 'Name for this connection',
-  'ai.add.modelHint': 'The exact model name on the server, e.g. qwen2.5:0.5b',
-  'ai.add.baseUrl': 'Server address (OpenAI-compatible, ending in /v1)',
-  'ai.add.apiKey': 'API key (leave empty for a server without keys)',
+  'ai.add.modelHint':
+    'Load the models your key can use and pick one, or type the exact model name.',
+  'ai.add.baseUrl': 'API address (OpenAI-compatible, usually ending in /v1)',
+  'ai.add.apiKey': 'API key',
   'ai.add.inputPrice': 'Input price, $ per million tokens (optional)',
   'ai.add.outputPrice': 'Output price, $ per million tokens (optional)',
   'ai.add.submit': 'Add connection',
@@ -228,7 +227,6 @@ export const en = {
   'ai.estimate.provider': 'Provider',
   'ai.estimate.tokens': 'Approximate tokens (input / output)',
   'ai.estimate.cost': 'Approximate cost',
-  'ai.estimate.free': 'Free: runs on this server',
   'ai.estimate.unknown': 'Unknown: add the provider prices to get an estimate',
   'ai.estimate.noProvider': 'No AI is connected, so this task would run without AI.',
   'ai.estimate.ok': 'Within your limits: no approval needed.',
@@ -238,6 +236,12 @@ export const en = {
   'ai.reason.cost_unknown': 'the cost cannot be estimated and you set a money limit',
   'field.unsafeUrl': 'Use an https address of a public server.',
   'field.unavailable': 'Not available for this connection.',
+  'ai.kind.anthropic': 'Anthropic API',
+  'ai.add.address': 'Address',
+  'ai.add.getKey': 'Get a key from this provider',
+  'ai.add.loadModels': 'Load my models',
+  'ai.add.modelsLoaded': 'Your key works. Pick a model from the list.',
+  'ai.add.custom': 'Another compatible API (custom)',
 };
 
 export type MessageKey = keyof typeof en;

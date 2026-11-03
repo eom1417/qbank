@@ -1,12 +1,26 @@
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { providerFor } from '../../capabilities/ai/index.js';
 import type { ReadingMode } from '../../capabilities/sources/index.js';
+import { loadBenchAiTarget } from '../../platform/config/index.js';
 import { benchSample, listSamples, type SampleResult } from './run.js';
 import { ratios } from './thresholds.js';
 
-// Extraction benchmark (M3.2): `npm run bench:extraction -- [samplesDir] [text,ocr]`.
-const dir = process.argv[2] ?? '.data/samples';
-const modes = (process.argv[3] ?? 'text,ocr').split(',') as ReadingMode[];
+// Extraction benchmark (M3.2): `npm run bench:extraction -- [samplesDir] [text,ocr] [--ai]`.
+// `--ai` adds AI mark suggestions with the provider in QBANK_BENCH_AI_* (the developer's own key).
+const [dir = '.data/samples', modeList = 'text,ocr'] = process.argv
+  .slice(2)
+  .filter((arg) => arg !== '--ai');
+const modes = modeList.split(',') as ReadingMode[];
+const wantsAi = process.argv.includes('--ai');
+const aiTarget = wantsAi ? loadBenchAiTarget() : null;
+if (wantsAi && !aiTarget) {
+  console.error(
+    '--ai needs QBANK_BENCH_AI_KIND, QBANK_BENCH_AI_BASE_URL, QBANK_BENCH_AI_MODEL, QBANK_BENCH_AI_KEY',
+  );
+  process.exit(2);
+}
+const ai = aiTarget ? providerFor(aiTarget, false) : null;
 
 const percent = (value: number) => `${(value * 100).toFixed(1)}%`;
 
@@ -35,7 +49,7 @@ if (samples.length === 0) {
   process.exit(2);
 }
 const results: SampleResult[] = [];
-for (const sample of samples) results.push(...(await benchSample(dir, sample, modes)));
+for (const sample of samples) results.push(...(await benchSample(dir, sample, modes, ai)));
 console.log(
   '| sample | mode | questions | pages | options | answers right | wrong | undecided | stem text | time | result |',
 );

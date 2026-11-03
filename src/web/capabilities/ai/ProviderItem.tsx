@@ -23,7 +23,7 @@ interface Props {
 function ProviderDetails({ provider }: { provider: ProviderResponse }) {
   const { t, locale } = useI18n();
   const { readiness } = provider;
-  const where = provider.kind === 'local' ? t('ai.kind.local') : provider.baseUrl;
+  const where = `${t(`ai.kind.${provider.kind}`)} · ${provider.baseUrl}`;
   return (
     <>
       <Row>
@@ -33,11 +33,9 @@ function ProviderDetails({ provider }: { provider: ProviderResponse }) {
       <MutedText>
         {where} · {t('ai.model')}: <bdi>{provider.model}</bdi>
       </MutedText>
-      {provider.kind !== 'local' && (
-        <MutedText>
-          {t('ai.key')}: <bdi>{provider.keyHint ?? t('ai.key.none')}</bdi>
-        </MutedText>
-      )}
+      <MutedText>
+        {t('ai.key')}: <bdi>{provider.keyHint ?? t('ai.key.none')}</bdi>
+      </MutedText>
       <Alert tone={readiness.status === 'ready' ? 'success' : 'info'}>
         {t(`ai.status.${readiness.status}`)}
         {readiness.checkedAt &&
@@ -95,11 +93,9 @@ function ActionRow({ provider, actions, onChangeKey }: ActionRowProps) {
           {t('ai.makeDefault')}
         </Button>
       )}
-      {provider.kind !== 'local' && (
-        <Button variant="ghost" onClick={onChangeKey}>
-          {t('ai.changeKey')}
-        </Button>
-      )}
+      <Button variant="ghost" onClick={onChangeKey}>
+        {t('ai.changeKey')}
+      </Button>
       {provider.keyHint && (
         <Button variant="ghost" onClick={() => void change.run(removeKey)}>
           {t('ai.removeKey')}

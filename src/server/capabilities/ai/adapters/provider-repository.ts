@@ -132,6 +132,7 @@ export function createProviderRepository(db: Db): ProviderRepository {
           owner_id: c.ownerId,
           kind: c.kind,
           label: c.label,
+          base_url: c.baseUrl,
           model: c.model,
           is_default: c.isDefault,
           created_at: c.createdAt,

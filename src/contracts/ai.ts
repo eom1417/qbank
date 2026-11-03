@@ -1,8 +1,83 @@
 import { z } from 'zod';
 
-/** `local` = the operator's own server (QBANK_LOCAL_AI_URL); anything else speaks the OpenAI API. */
-export const ProviderKind = z.enum(['local', 'openai_compatible']);
+/**
+ * The API a provider speaks. The user brings their own key and model (BYOK, DEC-17/DEC-28):
+ * `anthropic` = the Claude Messages API; `openai_compatible` = OpenAI and every service or
+ * server that offers the same API (DeepSeek, Gemini, OpenRouter, Mistral, Groq, xAI, …).
+ */
+export const ProviderKind = z.enum(['openai_compatible', 'anthropic']);
 export type ProviderKind = z.infer<typeof ProviderKind>;
+
+export interface ProviderPreset {
+  id: string;
+  label: string;
+  kind: ProviderKind;
+  /** Null for `custom`: the user types the address of any compatible API. */
+  baseUrl: string | null;
+  /** Where the user creates a key. */
+  keysUrl: string | null;
+}
+
+/** One-click presets in the connection form; `custom` covers any other compatible API. */
+export const PROVIDER_PRESETS: readonly ProviderPreset[] = [
+  {
+    id: 'openai',
+    label: 'OpenAI',
+    kind: 'openai_compatible',
+    baseUrl: 'https://api.openai.com/v1',
+    keysUrl: 'https://platform.openai.com/api-keys',
+  },
+  {
+    id: 'anthropic',
+    label: 'Anthropic (Claude)',
+    kind: 'anthropic',
+    baseUrl: 'https://api.anthropic.com',
+    keysUrl: 'https://console.anthropic.com/settings/keys',
+  },
+  {
+    id: 'deepseek',
+    label: 'DeepSeek',
+    kind: 'openai_compatible',
+    baseUrl: 'https://api.deepseek.com/v1',
+    keysUrl: 'https://platform.deepseek.com/api_keys',
+  },
+  {
+    id: 'gemini',
+    label: 'Google Gemini',
+    kind: 'openai_compatible',
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai',
+    keysUrl: 'https://aistudio.google.com/apikey',
+  },
+  {
+    id: 'openrouter',
+    label: 'OpenRouter',
+    kind: 'openai_compatible',
+    baseUrl: 'https://openrouter.ai/api/v1',
+    keysUrl: 'https://openrouter.ai/keys',
+  },
+  {
+    id: 'mistral',
+    label: 'Mistral',
+    kind: 'openai_compatible',
+    baseUrl: 'https://api.mistral.ai/v1',
+    keysUrl: 'https://console.mistral.ai/api-keys',
+  },
+  {
+    id: 'groq',
+    label: 'Groq',
+    kind: 'openai_compatible',
+    baseUrl: 'https://api.groq.com/openai/v1',
+    keysUrl: 'https://console.groq.com/keys',
+  },
+  {
+    id: 'xai',
+    label: 'xAI (Grok)',
+    kind: 'openai_compatible',
+    baseUrl: 'https://api.x.ai/v1',
+    keysUrl: 'https://console.x.ai',
+  },
+  { id: 'custom', label: 'Custom', kind: 'openai_compatible', baseUrl: null, keysUrl: null },
+];
 
 /** What the last readiness check found (FR-08-011). `unchecked` until the first check. */
 export const ReadinessStatus = z.enum([
@@ -25,22 +100,24 @@ const ApiKey = z.string().trim().min(8).max(500);
 /** Price in US dollars per million tokens, as the user's provider lists it; null = unknown. */
 const Price = z.number().min(0).max(1000).nullable();
 
-export const CreateProviderRequest = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('local'), label: Label, model: Model }).strict(),
-  z
-    .object({
-      kind: z.literal('openai_compatible'),
-      label: Label,
-      model: Model,
-      baseUrl: BaseUrl,
-      apiKey: ApiKey.optional(),
-      inputPrice: Price.default(null),
-      outputPrice: Price.default(null),
-      /** Content leaves this server for the chosen provider (FR-20-003): must be acknowledged. */
-      acknowledgeDisclosure: z.literal(true),
-    })
-    .strict(),
-]);
+const Connection = {
+  kind: ProviderKind,
+  baseUrl: BaseUrl,
+  /** Optional only for self-hosted compatible servers that take no key. */
+  apiKey: ApiKey.optional(),
+};
+
+export const CreateProviderRequest = z
+  .object({
+    ...Connection,
+    label: Label,
+    model: Model,
+    inputPrice: Price.default(null),
+    outputPrice: Price.default(null),
+    /** Content leaves this server for the chosen provider (FR-20-003): must be acknowledged. */
+    acknowledgeDisclosure: z.literal(true),
+  })
+  .strict();
 export type CreateProviderRequest = z.infer<typeof CreateProviderRequest>;
 
 /** Partial change; `apiKey: null` removes the stored key. An empty body is rejected. */
@@ -67,7 +144,7 @@ export const ProviderResponse = z
     id: z.uuid(),
     kind: ProviderKind,
     label: z.string(),
-    baseUrl: z.string().nullable(),
+    baseUrl: z.string(),
     model: z.string(),
     /** Only the last characters, e.g. "••••3f9a"; the full key is never returned (FR-08-009). */
     keyHint: z.string().nullable(),
@@ -82,8 +159,6 @@ export type ProviderResponse = z.infer<typeof ProviderResponse>;
 export const ProviderListResponse = z
   .object({
     providers: z.array(ProviderResponse),
-    /** Whether the operator runs a local server; its internal address is never sent. */
-    local: z.object({ available: z.boolean() }).strict(),
   })
   .strict();
 export type ProviderListResponse = z.infer<typeof ProviderListResponse>;
@@ -96,6 +171,15 @@ export const CheckResponse = z
   })
   .strict();
 export type CheckResponse = z.infer<typeof CheckResponse>;
+
+/** Lists the models a key can use, before the connection is saved (the key is not stored). */
+export const ListModelsRequest = z.object(Connection).strict();
+export type ListModelsRequest = z.infer<typeof ListModelsRequest>;
+
+export const ListModelsResponse = z
+  .object({ status: ReadinessStatus, models: z.array(z.string()) })
+  .strict();
+export type ListModelsResponse = z.infer<typeof ListModelsResponse>;
 
 /** The question the model read in a trial run, after validation as untrusted output. */
 export const TrialResponse = z

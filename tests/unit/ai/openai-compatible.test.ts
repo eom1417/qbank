@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createOpenAiCompatibleProvider } from '../../../src/server/capabilities/ai/adapters/openai-compatible.js';
+import { readinessFor } from '../../../src/server/capabilities/ai/domain/ai-provider.js';
 import { TrialQuestion } from '../../../src/server/capabilities/ai/domain/trial.js';
 
 const json = (status: number, body: unknown) =>
@@ -31,21 +32,21 @@ describe('OpenAI-compatible adapter: readiness (FR-08-011)', () => {
     [200, { data: [{ id: 'm1' }] }, 'ready'],
   ])('HTTP %i %j → %s', async (status, body, expected) => {
     const { instance } = provider(async () => json(status, body));
-    expect(await instance.checkReadiness()).toBe(expected);
+    expect(readinessFor(await instance.listModels(), 'm1')).toBe(expected);
   });
 
   it('reports an unreachable server, and never calls a URL the guard refuses', async () => {
     const down = provider(async () => Promise.reject(new TypeError('fetch failed')));
-    expect(await down.instance.checkReadiness()).toBe('unreachable');
+    expect(readinessFor(await down.instance.listModels(), 'm1')).toBe('unreachable');
     const blocked = provider(async () => json(200, { data: [{ id: 'm1' }] }));
     blocked.allowed.value = false;
-    expect(await blocked.instance.checkReadiness()).toBe('unreachable');
+    expect(readinessFor(await blocked.instance.listModels(), 'm1')).toBe('unreachable');
     expect(blocked.fetch).not.toHaveBeenCalled();
   });
 
   it('sends the key as a bearer token, refuses redirects, and sends no header without a key', async () => {
     const keyed = provider(async () => json(200, { data: [] }));
-    await keyed.instance.checkReadiness();
+    await keyed.instance.listModels();
     const [url, init] = keyed.fetch.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe('https://ai.example/v1/models');
     expect(init.redirect).toBe('error');
@@ -53,7 +54,7 @@ describe('OpenAI-compatible adapter: readiness (FR-08-011)', () => {
       'Bearer sk-key-123456789',
     );
     const keyless = provider(async () => json(200, { data: [] }), null);
-    await keyless.instance.checkReadiness();
+    await keyless.instance.listModels();
     const [, keylessInit] = keyless.fetch.mock.calls[0] as unknown as [string, RequestInit];
     expect(keylessInit.headers).not.toHaveProperty('authorization');
   });

@@ -1,10 +1,15 @@
 import { useRef, useState } from 'react';
-import type { CreateProviderRequest, ProviderKind } from '../../../contracts/ai.js';
+import {
+  PROVIDER_PRESETS,
+  type CreateProviderRequest,
+  type ProviderPreset,
+} from '../../../contracts/ai.js';
 import {
   Alert,
   Button,
   Card,
   Checkbox,
+  MutedText,
   SelectField,
   TextField,
   Title,
@@ -13,21 +18,29 @@ import { numberOrNull, text, useSubmit } from '../../platform/forms/use-submit.j
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { DisclosureNote } from './AiAboutCard.js';
 import { createProvider } from './api.js';
+import { ModelField } from './ModelField.js';
 
-interface Props {
-  localAvailable: boolean;
-  onAdded(): void;
+const DEFAULT_PRESET = PROVIDER_PRESETS[0] as ProviderPreset;
+
+interface FieldErrorProps {
+  fieldError(name: string): string | undefined;
 }
 
-function toRequest(kind: ProviderKind, data: FormData): CreateProviderRequest {
-  const common = { label: text(data, 'label'), model: text(data, 'model') };
-  if (kind === 'local') return { kind, ...common };
+/** Address and key of the chosen preset; only `custom` lets the user type an address. */
+function connectionOf(preset: ProviderPreset, data: FormData) {
   const apiKey = text(data, 'apiKey').trim();
   return {
-    kind,
-    ...common,
-    baseUrl: text(data, 'baseUrl'),
+    kind: preset.kind,
+    baseUrl: preset.baseUrl ?? text(data, 'baseUrl').trim(),
     ...(apiKey ? { apiKey } : {}),
+  };
+}
+
+function toRequest(preset: ProviderPreset, data: FormData): CreateProviderRequest {
+  return {
+    ...connectionOf(preset, data),
+    label: text(data, 'label'),
+    model: text(data, 'model'),
     inputPrice: numberOrNull(data, 'inputPrice'),
     outputPrice: numberOrNull(data, 'outputPrice'),
     // The server rejects the request unless this box was really ticked (FR-20-003).
@@ -35,30 +48,46 @@ function toRequest(kind: ProviderKind, data: FormData): CreateProviderRequest {
   };
 }
 
-interface FieldErrorProps {
-  fieldError(name: string): string | undefined;
-}
-
-function ExternalFields({ fieldError }: FieldErrorProps) {
+function KeyFields({ preset, fieldError }: FieldErrorProps & { preset: ProviderPreset }) {
   const { t } = useI18n();
   return (
     <>
-      <TextField
-        name="baseUrl"
-        type="url"
-        required
-        dir="ltr"
-        placeholder="https://"
-        label={t('ai.add.baseUrl')}
-        error={fieldError('baseUrl')}
-      />
+      {preset.baseUrl ? (
+        <MutedText>
+          {t('ai.add.address')}: <bdi>{preset.baseUrl}</bdi>
+        </MutedText>
+      ) : (
+        <TextField
+          name="baseUrl"
+          type="url"
+          required
+          dir="ltr"
+          placeholder="https://"
+          label={t('ai.add.baseUrl')}
+          error={fieldError('baseUrl')}
+        />
+      )}
       <TextField
         name="apiKey"
         type="password"
         autoComplete="off"
+        dir="ltr"
         label={t('ai.add.apiKey')}
         error={fieldError('apiKey')}
       />
+      {preset.keysUrl && (
+        <a href={preset.keysUrl} target="_blank" rel="noreferrer">
+          {t('ai.add.getKey')}
+        </a>
+      )}
+    </>
+  );
+}
+
+function PriceAndConsent({ fieldError }: FieldErrorProps) {
+  const { t } = useI18n();
+  return (
+    <>
       <TextField
         name="inputPrice"
         type="number"
@@ -73,7 +102,7 @@ function ExternalFields({ fieldError }: FieldErrorProps) {
         step="any"
         label={t('ai.add.outputPrice')}
       />
-      <DisclosureNote kind="openai_compatible" />
+      <DisclosureNote />
       <Checkbox
         name="acknowledgeDisclosure"
         label={t('ai.disclosure.ack')}
@@ -83,36 +112,11 @@ function ExternalFields({ fieldError }: FieldErrorProps) {
   );
 }
 
-function CommonFields({ fieldError }: FieldErrorProps) {
-  const { t } = useI18n();
-  return (
-    <>
-      <TextField
-        name="label"
-        required
-        maxLength={80}
-        label={t('ai.add.label')}
-        error={fieldError('label')}
-      />
-      <TextField
-        name="model"
-        required
-        dir="ltr"
-        hint={t('ai.add.modelHint')}
-        label={t('ai.model')}
-        error={fieldError('model')}
-      />
-    </>
-  );
-}
-
-/** Adds a connection: the local server (no key) or any OpenAI-compatible service (UI-24). */
-export function AddProviderCard({ localAvailable, onAdded }: Props) {
+function useAddForm(preset: ProviderPreset, onAdded: () => void) {
   const { t } = useI18n();
   const formRef = useRef<HTMLFormElement>(null);
-  const [kind, setKind] = useState<ProviderKind>(localAvailable ? 'local' : 'openai_compatible');
   const form = useSubmit(async (data) => {
-    await createProvider(toRequest(kind, data));
+    await createProvider(toRequest(preset, data));
     formRef.current?.reset();
     onAdded();
   });
@@ -120,27 +124,47 @@ export function AddProviderCard({ localAvailable, onAdded }: Props) {
     const key = form.fieldErrors[name];
     return key && t(key);
   };
-  const kinds = (
-    localAvailable ? (['local', 'openai_compatible'] as const) : (['openai_compatible'] as const)
-  ).map((value) => ({ value, label: t(`ai.kind.${value}`) }));
+  const connection = () => connectionOf(preset, new FormData(formRef.current ?? undefined));
+  return { form, formRef, fieldError, connection };
+}
+
+/** Connect your own AI (BYOK, UI-24): pick a provider, paste your key, choose a model. */
+export function AddProviderCard({ onAdded }: { onAdded(): void }) {
+  const { t } = useI18n();
+  const [preset, setPreset] = useState<ProviderPreset>(DEFAULT_PRESET);
+  const { form, formRef, fieldError, connection } = useAddForm(preset, onAdded);
+  const presets = PROVIDER_PRESETS.map((p) => ({
+    value: p.id,
+    label: p.id === 'custom' ? t('ai.add.custom') : p.label,
+  }));
+  const choose = (id: string) =>
+    setPreset(PROVIDER_PRESETS.find((p) => p.id === id) ?? DEFAULT_PRESET);
   return (
     <Card>
       <Title>{t('ai.add.title')}</Title>
       <form ref={formRef} className="qb-stack" onSubmit={form.onSubmit} noValidate>
         {form.error && <Alert tone="error">{t(form.error)}</Alert>}
         <SelectField
-          name="kind"
+          name="preset"
           label={t('ai.add.kind')}
-          options={kinds}
-          value={kind}
-          onChange={(event) => setKind(event.target.value as ProviderKind)}
+          options={presets}
+          value={preset.id}
+          onChange={(event) => choose(event.target.value)}
         />
-        <CommonFields fieldError={fieldError} />
-        {kind === 'local' ? (
-          <DisclosureNote kind="local" />
-        ) : (
-          <ExternalFields fieldError={fieldError} />
-        )}
+        {/* Re-mounted per preset, so the suggested name and the model list start fresh. */}
+        <div key={preset.id} className="qb-stack">
+          <TextField
+            name="label"
+            required
+            maxLength={80}
+            defaultValue={preset.id === 'custom' ? '' : preset.label}
+            label={t('ai.add.label')}
+            error={fieldError('label')}
+          />
+          <KeyFields preset={preset} fieldError={fieldError} />
+          <ModelField connection={connection} error={fieldError('model')} />
+        </div>
+        <PriceAndConsent fieldError={fieldError} />
         <Button type="submit" busy={form.busy}>
           {t('ai.add.submit')}
         </Button>

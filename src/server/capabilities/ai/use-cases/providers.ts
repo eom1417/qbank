@@ -1,4 +1,9 @@
-import type { CreateProviderRequest, UpdateProviderRequest } from '../../../../contracts/ai.js';
+import type {
+  CreateProviderRequest,
+  ListModelsRequest,
+  ProviderKind,
+  UpdateProviderRequest,
+} from '../../../../contracts/ai.js';
 import { AppError, notFound } from '../../../platform/errors/index.js';
 import { isId } from '../../../platform/ids.js';
 import type { Actor } from '../../identity/index.js';
@@ -35,17 +40,16 @@ function newConnection(
 ) {
   const now = deps.clock.now();
   const ref = { ownerId: actor.accountId, id: deps.newId() };
-  const external = input.kind === 'openai_compatible' ? input : null;
   const connection: ProviderConnection = {
     ...ref,
     kind: input.kind,
     label: input.label,
     model: input.model,
-    baseUrl: external?.baseUrl ?? null,
-    ...keyChanges(deps, ref, external?.apiKey ?? null),
-    // The operator's local server costs the user nothing; external prices are the user's own.
-    inputPrice: external ? external.inputPrice : 0,
-    outputPrice: external ? external.outputPrice : 0,
+    baseUrl: input.baseUrl,
+    ...keyChanges(deps, ref, input.apiKey ?? null),
+    // The user's own provider prices; unknown stays null (no invented bill, FR-08-012).
+    inputPrice: input.inputPrice,
+    outputPrice: input.outputPrice,
     isDefault,
     readinessStatus: 'unchecked',
     readinessCheckedAt: null,
@@ -55,24 +59,29 @@ function newConnection(
   return connection;
 }
 
+/** The Claude API always needs the user's own key (never this server's credentials). */
+function requireKeyFor(kind: ProviderKind, hasKey: boolean) {
+  if (kind === 'anthropic' && !hasKey) throw invalidField('apiKey', 'required');
+}
+
 export async function createProvider(
   deps: AiDeps,
   actor: Actor,
   input: CreateProviderRequest,
 ): Promise<ProviderConnection> {
-  if (input.kind === 'local' && !deps.localUrl) throw invalidField('kind', 'unavailable');
-  if (input.kind === 'openai_compatible') await requireSafeUrl(deps, input.baseUrl);
+  requireKeyFor(input.kind, input.apiKey !== undefined);
+  await requireSafeUrl(deps, input.baseUrl);
   const isFirst = (await deps.providers.list(actor.accountId)).length === 0;
   const connection = newConnection(deps, actor, input, isFirst);
   await deps.providers.insert(connection);
   return connection;
 }
 
-/** The local server's address comes from the operator and it takes no key. */
-function requireEditableFields(current: ProviderConnection, input: UpdateProviderRequest) {
-  if (current.kind !== 'local') return;
-  if (input.baseUrl !== undefined) throw invalidField('baseUrl', 'unavailable');
-  if (input.apiKey !== undefined) throw invalidField('apiKey', 'unavailable');
+/** Lists the models a key may use without saving anything (the key is used once, in memory). */
+export async function listModelsFor(deps: AiDeps, input: ListModelsRequest) {
+  requireKeyFor(input.kind, input.apiKey !== undefined);
+  await requireSafeUrl(deps, input.baseUrl);
+  return deps.listModels({ ...input, apiKey: input.apiKey ?? null, model: '' });
 }
 
 /** A new key, URL or model invalidates what the last check found. */
@@ -88,7 +97,7 @@ export async function updateProvider(
   const ref = ownedRef(actor, id);
   const current = await deps.providers.find(ref);
   if (!current) throw notFound();
-  requireEditableFields(current, input);
+  if (input.apiKey === null) requireKeyFor(current.kind, false);
   await requireSafeUrl(deps, input.baseUrl);
   const { apiKey, ...rest } = input;
   const changes: ProviderChanges = { ...rest, updatedAt: deps.clock.now() };

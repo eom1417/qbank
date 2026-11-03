@@ -7,6 +7,7 @@ import {
   TRIAL_SYSTEM_PROMPT,
   TrialQuestion,
 } from '../domain/trial.js';
+import { readinessFor } from '../domain/ai-provider.js';
 import type { AiDeps } from './deps.js';
 import { findOwnedProvider } from './providers.js';
 
@@ -30,7 +31,8 @@ function isFreshHardFailure(deps: AiDeps, connection: ProviderConnection): boole
 export async function checkProvider(deps: AiDeps, actor: Actor, id: string) {
   const connection = await findOwnedProvider(deps, actor, id);
   if (isFreshHardFailure(deps, connection)) return { connection, fromCache: true };
-  const status = await deps.openProvider(connection).checkReadiness();
+  const listing = await deps.openProvider(connection).listModels();
+  const status = readinessFor(listing, connection.model);
   return { connection: await record(deps, connection, status), fromCache: false };
 }
 
@@ -49,7 +51,7 @@ export async function runTrial(deps: AiDeps, actor: Actor, id: string) {
   });
   if (isKnownHardFailure(connection.readinessStatus)) return done('not_ready');
   const provider = deps.openProvider(connection);
-  const status = await provider.checkReadiness();
+  const status = readinessFor(await provider.listModels(), connection.model);
   connection = await record(deps, connection, status);
   if (status !== 'ready') return done('not_ready');
   const result = await provider.generate({

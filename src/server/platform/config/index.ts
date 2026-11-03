@@ -13,10 +13,6 @@ const Env = z.object({
   QBANK_MASTER_KEY: z
     .string()
     .regex(/^[A-Za-z0-9+/]{43}=$/, 'QBANK_MASTER_KEY must be 32 bytes in base64'),
-  QBANK_LOCAL_AI_URL: z
-    .url({ protocol: /^https?$/ })
-    .or(z.literal(''))
-    .default(''),
   QBANK_AI_ALLOW_PRIVATE_URLS: z.enum(['true', 'false']).default('false'),
 });
 
@@ -36,9 +32,10 @@ export interface AppConfig {
   /** Encrypts BYOK keys at rest; never logged, never sent to the browser. */
   masterKey: Buffer;
   ai: {
-    /** The operator's own OpenAI-compatible server (Ollama, llama.cpp); null when none runs. */
-    localUrl: string | null;
-    /** Lets users point providers at private or loopback hosts. Local development only (SSRF). */
+    /**
+     * Lets users point a connection at a private or loopback host (a self-hosted compatible
+     * server). Off by default: provider URLs must be public https addresses (SSRF guard).
+     */
     allowPrivateUrls: boolean;
   };
 }
@@ -60,8 +57,31 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     logLevel: parsed.QBANK_LOG_LEVEL,
     masterKey: Buffer.from(parsed.QBANK_MASTER_KEY, 'base64'),
     ai: {
-      localUrl: parsed.QBANK_LOCAL_AI_URL || null,
       allowPrivateUrls: parsed.QBANK_AI_ALLOW_PRIVATE_URLS === 'true',
     },
+  };
+}
+
+const BenchAiEnv = z.object({
+  QBANK_BENCH_AI_KIND: z.enum(['openai_compatible', 'anthropic']),
+  QBANK_BENCH_AI_BASE_URL: z.url({ protocol: /^https$/ }),
+  QBANK_BENCH_AI_MODEL: z.string().min(1),
+  QBANK_BENCH_AI_KEY: z.string().min(8),
+});
+
+/**
+ * The developer's own provider for the extraction benchmark (`npm run bench:extraction -- … --ai`).
+ * Never used by the app, where every user connects their own key. Null when not configured.
+ */
+export function loadBenchAiTarget(env: NodeJS.ProcessEnv = process.env) {
+  const parsed = BenchAiEnv.safeParse(env);
+  if (!parsed.success) return null;
+  const { QBANK_BENCH_AI_KIND, QBANK_BENCH_AI_BASE_URL, QBANK_BENCH_AI_MODEL, QBANK_BENCH_AI_KEY } =
+    parsed.data;
+  return {
+    kind: QBANK_BENCH_AI_KIND,
+    baseUrl: QBANK_BENCH_AI_BASE_URL,
+    model: QBANK_BENCH_AI_MODEL,
+    apiKey: QBANK_BENCH_AI_KEY,
   };
 }

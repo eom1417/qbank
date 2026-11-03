@@ -77,9 +77,9 @@ interface TagTable {
 interface AiProviderTable {
   id: string;
   owner_id: string;
-  kind: 'local' | 'openai_compatible';
+  kind: 'openai_compatible' | 'anthropic';
   label: string;
-  base_url: string | null;
+  base_url: string;
   model: string;
   key_ciphertext: string | null;
   key_hint: string | null;

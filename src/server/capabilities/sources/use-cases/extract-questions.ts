@@ -9,7 +9,8 @@ import { pageCount, readByOcr, readTextLayer } from '../adapters/readers.js';
 /** `text`: the PDF's text layer (OCR only where it is unreadable). `ocr`: render and OCR every page, as for a scanned file. */
 export type ReadingMode = 'text' | 'ocr';
 
-type AnswerEvidence = 'single_option' | 'pen_mark';
+/** `ai_suggested` comes only from the user's AI (suggest-marks), never from the rules. */
+type AnswerEvidence = 'single_option' | 'pen_mark' | 'ai_suggested';
 
 export interface ExtractedQuestion {
   number: number;

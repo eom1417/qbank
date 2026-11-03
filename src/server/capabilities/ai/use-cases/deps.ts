@@ -1,7 +1,8 @@
 import type { Clock } from '../../../platform/clock.js';
 import type { SecretBox } from '../../../platform/crypto/secret-box.js';
 import type { ProviderRepository } from '../adapters/provider-repository.js';
-import type { OpenProvider } from '../adapters/provider-factory.js';
+import type { OpenProvider, ProviderTarget } from '../adapters/provider-factory.js';
+import type { ModelListing } from '../domain/ai-provider.js';
 import type { AiSettingsRepository } from '../adapters/settings-repository.js';
 
 export interface AiDeps {
@@ -11,8 +12,8 @@ export interface AiDeps {
   secretBox: SecretBox;
   /** SSRF guard for user-supplied provider URLs. */
   isAllowedUrl(url: string): Promise<boolean>;
-  /** The operator's local OpenAI-compatible server, if one is configured. */
-  localUrl: string | null;
+  /** A one-off provider for a key that is not saved (choosing a model before saving). */
+  listModels(target: ProviderTarget): Promise<ModelListing>;
   clock: Clock;
   newId: () => string;
 }
