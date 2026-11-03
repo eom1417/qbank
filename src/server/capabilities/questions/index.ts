@@ -4,7 +4,6 @@ import { createMediaRepository } from './adapters/media-repository.js';
 import { createQuestionRepository } from './adapters/question-repository.js';
 
 export type { ImportedMedia, ImportedQuestion, ReviewReason } from './domain/imported.js';
-export type { MediaRow } from './adapters/media-repository.js';
 
 /** Questions with their answer keys, provenance and pictures (M4, M5; review and study follow). */
 export function createQuestions(settings: { db: Db }) {

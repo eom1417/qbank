@@ -98,5 +98,3 @@ export function createMediaRepository(db: Db, newId: () => string) {
         .executeTakeFirst(),
   };
 }
-
-export type MediaRow = Awaited<ReturnType<typeof mediaOfSource>>[number];

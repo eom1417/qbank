@@ -19,7 +19,7 @@ export interface MediaLink {
 const REFERS_TO_MEDIA =
   /\b(?:ECG|EKG|X-?ray|radiograph|CT|MRI|ultrasound|image|figure|picture|photo|shown|below|following|graph|chart|table)\b|الصورة|الشكل|التخطيط|الأشعة|الجدول|المرفق|التالي/i;
 
-export const refersToMedia = (stem: string) => REFERS_TO_MEDIA.test(stem);
+const refersToMedia = (stem: string) => REFERS_TO_MEDIA.test(stem);
 
 /** Same column: the region and the line overlap horizontally over a fair part of the narrower. */
 function sameColumn(a: Box, b: Box): boolean {

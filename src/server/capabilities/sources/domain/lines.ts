@@ -1,6 +1,14 @@
 import { isRtlText, toLogical } from './bidi.js';
 import { splitColumns } from './columns.js';
-import { boxHeight, fontFamily, unionBox, type Box, type PageText, type PageWord } from './page.js';
+import {
+  boxHeight,
+  fontFamily,
+  overlaps,
+  unionBox,
+  type Box,
+  type PageText,
+  type PageWord,
+} from './page.js';
 
 export interface TextLine {
   page: number;
@@ -74,9 +82,6 @@ function toLine(page: PageText, words: PageWord[]): TextLine {
     start: rtl ? box.x1 : box.x0,
   };
 }
-
-const overlaps = (a: Box, b: Box) =>
-  Math.min(a.x1, b.x1) > Math.max(a.x0, b.x0) && Math.min(a.y1, b.y1) > Math.max(a.y0, b.y0);
 
 /** Short labels and numbers a PDF maker set in a fallback font ("(1س", "(أ", "12"). */
 const FALLBACK_MAX_CHARS = 4;

@@ -1,6 +1,6 @@
 import type { Raster } from './answer-marks.js';
 import { area, figureSized, intersect, wordsInside, type MediaRegion } from './media-regions.js';
-import type { Box, PageText } from './page.js';
+import { overlaps, type Box, type PageText } from './page.js';
 
 /** Darker than this is ink for table rules; the pink grid of an ECG and light shading are not. */
 const INK = 170;
@@ -172,9 +172,6 @@ function inkGroups(grid: Grid) {
     if (grid.cells[start] && !seen[start]) groups.push(floodFrom(start, grid, seen));
   return groups;
 }
-
-const overlaps = (a: Box, b: Box) =>
-  Math.min(a.x1, b.x1) > Math.max(a.x0, b.x0) && Math.min(a.y1, b.y1) > Math.max(a.y0, b.y0);
 
 /** Pictures on a scanned page: dense ink that is not words and not a table (FR-06-001). */
 export function scanFigures(

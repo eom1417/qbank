@@ -30,6 +30,10 @@ export interface PageText {
 
 export const boxHeight = (box: Box): number => box.y1 - box.y0;
 
+/** The two boxes share some area. */
+export const overlaps = (a: Box, b: Box): boolean =>
+  Math.min(a.x1, b.x1) > Math.max(a.x0, b.x0) && Math.min(a.y1, b.y1) > Math.max(a.y0, b.y0);
+
 export const unionBox = (boxes: readonly Box[]): Box => ({
   x0: Math.min(...boxes.map((b) => b.x0)),
   y0: Math.min(...boxes.map((b) => b.y0)),
