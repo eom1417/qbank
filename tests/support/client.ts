@@ -15,6 +15,8 @@ export function createClient(app: FastifyInstance) {
     return response;
   }
   return {
+    /** The session cookie, for requests the JSON helpers cannot make (multipart uploads). */
+    cookie: () => cookie,
     get: (url: string) => request('GET', url),
     post: (url: string, payload?: object, origin?: string) => request('POST', url, payload, origin),
     patch: (url: string, payload: object) => request('PATCH', url, payload),

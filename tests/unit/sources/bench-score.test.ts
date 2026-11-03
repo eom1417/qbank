@@ -13,9 +13,10 @@ const got = (number: number, answer: string | null, page = 1) => ({
   number,
   page,
   stem: 'Stem',
+  kind: 'mcq' as const,
   options: [
-    { letter: 'A', text: 'a' },
-    { letter: 'B', text: 'b' },
+    { letter: 'A', label: 'A', text: 'a' },
+    { letter: 'B', label: 'B', text: 'b' },
   ],
   answer,
   evidence: answer ? ('pen_mark' as const) : null,

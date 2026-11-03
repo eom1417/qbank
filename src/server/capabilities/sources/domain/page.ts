@@ -24,6 +24,8 @@ export interface PageText {
   width: number;
   height: number;
   words: PageWord[];
+  /** True for a PDF text layer, which stores right-to-left words in visual order. */
+  visual?: boolean;
 }
 
 export const boxHeight = (box: Box): number => box.y1 - box.y0;

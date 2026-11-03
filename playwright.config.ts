@@ -30,6 +30,8 @@ const apiEnv = {
   QBANK_CLAUDE_BIN: resolve('tests/fixtures/fake-cli/claude.mjs'),
   QBANK_CODEX_BIN: resolve('tests/fixtures/fake-cli/codex.mjs'),
   QBANK_AI_WORK_DIR: '.data/e2e-ai-work',
+  // Uploaded originals of the E2E runs, apart from the development data.
+  QBANK_DATA_DIR: '.data/e2e-app',
 };
 
 export default defineConfig({

@@ -17,13 +17,16 @@ import { registerAccountRoutes } from './http/account-routes.js';
 import { registerLimitRoutes } from './http/limit-routes.js';
 import { registerProviderRoutes, registerReadinessRoutes } from './http/routes.js';
 import { saveAccountLogin, saveRefreshedLogin } from './use-cases/accounts.js';
+import { estimateForConnection } from './use-cases/limits.js';
+import type { AiProvider } from './domain/ai-provider.js';
 import type { AiDeps } from './use-cases/deps.js';
 
 export { toProviderResponse } from './http/presenters.js';
 // For tools that read with a provider directly (the extraction benchmark); the app uses saved
 // connections only.
 export { providerFor, type ProviderTarget } from './adapters/provider-factory.js';
-export type { AiProvider } from './domain/ai-provider.js';
+export type { AiFailure, AiProvider } from './domain/ai-provider.js';
+export type Ai = ReturnType<typeof createAi>;
 
 interface AiSettings {
   db: Db;
@@ -73,6 +76,13 @@ export function createAi(settings: AiSettings) {
     newId,
   };
   return {
+    /** The owner's connection as a live provider for a background task; null if not theirs. */
+    async openOwned(ownerId: string, providerId: string): Promise<AiProvider | null> {
+      const connection = await providers.find({ ownerId, id: providerId });
+      return connection ? deps.openProvider(connection) : null;
+    },
+    estimateFor: (ownerId: string, providerId: string, pages: number) =>
+      estimateForConnection(deps, ownerId, providerId, pages),
     register: (app: FastifyInstance) => {
       registerProviderRoutes(app, deps, requireActor);
       registerReadinessRoutes(app, deps, requireActor);

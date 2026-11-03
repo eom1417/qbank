@@ -58,8 +58,8 @@ function lineGlyphs(lineBody: string): Glyph[] {
   return glyphs;
 }
 
-/** Parses MuPDF structured text (`mutool draw -F stext`): words with boxes and font names. */
-export function parseStext(xml: string): PageText[] {
+/** Parses MuPDF structured text; `firstPage` numbers the pages when only a range was read. */
+export function parseStext(xml: string, firstPage = 1): PageText[] {
   const pages: PageText[] = [];
   for (const [, pageTag = '', body = ''] of xml.matchAll(/<page\b([^>]*)>([\s\S]*?)<\/page>/g)) {
     const words = [...body.matchAll(/<line\b[^>]*>([\s\S]*?)<\/line>/g)].flatMap(
@@ -67,7 +67,7 @@ export function parseStext(xml: string): PageText[] {
     );
     const width = Number(attr(pageTag, 'width'));
     const height = Number(attr(pageTag, 'height'));
-    pages.push({ page: pages.length + 1, width, height, words });
+    pages.push({ page: firstPage + pages.length, width, height, words, visual: true });
   }
   return pages;
 }

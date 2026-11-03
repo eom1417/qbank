@@ -46,11 +46,35 @@ describe('fonts and OCR repair', () => {
       words: [
         word('Typed', 0, 'TimesNewRomanPSMT'),
         word('words', 30, 'TimesNewRomanPS-BoldMT'),
-        word('ink', 60, '.SFUI-Regular'),
+        word('ink', 300, '.SFUI-Regular'),
       ],
     };
     expect(bodyFontFamily([page])).toBe('TimesNewRoman');
     expect(pageLines(page, 'TimesNewRoman').map((l) => l.text)).toEqual(['Typed words']);
+  });
+});
+
+describe('fallback-font labels', () => {
+  it('keeps short labels in a fallback font beside body text, but not ink drawn over it', () => {
+    const at = (text: string, x0: number, x1: number, font: string, y1 = 10) => ({
+      text,
+      box: { x0, y0: 0, x1, y1 },
+      font,
+    });
+    const page = {
+      page: 1,
+      width: 600,
+      height: 800,
+      words: [
+        at('A.', 40, 52, 'TimesNewRomanPSMT'),
+        at('Reassurance', 55, 120, 'TimesNewRomanPSMT'),
+        // A pen circle around "A." that the device read as "0".
+        at('0', 39, 53, '.SFUI-Regular', 14),
+        // A label the PDF maker set in a fallback font.
+        at('(1)', 124, 140, 'LiberationSerif'),
+      ],
+    };
+    expect(pageLines(page, 'TimesNewRoman').map((l) => l.text)).toEqual(['A. Reassurance (1)']);
   });
 
   it('replaces unreadable text-layer words with OCR words on the same line', () => {

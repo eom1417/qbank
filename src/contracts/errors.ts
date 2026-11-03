@@ -11,6 +11,12 @@ export const ErrorCode = z.enum([
   'not_found',
   'forbidden_origin',
   'payload_too_large',
+  'file_unsupported',
+  'file_corrupt',
+  'file_protected',
+  'too_many_pages',
+  'approval_required',
+  'not_retryable',
   'internal',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;

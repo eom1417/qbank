@@ -10,6 +10,9 @@ import { SignInScreen } from '../capabilities/identity/SignInScreen.js';
 import { SignUpScreen } from '../capabilities/identity/SignUpScreen.js';
 import { BankScreen } from '../capabilities/library/BankScreen.js';
 import { LibraryScreen } from '../capabilities/library/LibraryScreen.js';
+import { ImportReportScreen } from '../capabilities/sources/ImportReportScreen.js';
+import { ImportScreen } from '../capabilities/sources/ImportScreen.js';
+import { SourcesCard } from '../capabilities/sources/SourcesCard.js';
 import { MutedText } from '../design-system/index.js';
 import { useI18n } from '../platform/i18n/i18n.js';
 import { AppShell } from './AppShell.js';
@@ -49,7 +52,23 @@ export const router = createBrowserRouter([
         path: '/banks/:bankId',
         element: (
           <Private>
-            <BankScreen />
+            <BankScreen sources={(bankId) => <SourcesCard bankId={bankId} />} />
+          </Private>
+        ),
+      },
+      {
+        path: '/banks/:bankId/import',
+        element: (
+          <Private>
+            <ImportScreen />
+          </Private>
+        ),
+      },
+      {
+        path: '/imports/:id',
+        element: (
+          <Private>
+            <ImportReportScreen />
           </Private>
         ),
       },

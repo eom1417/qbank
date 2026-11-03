@@ -1,0 +1,55 @@
+import { z } from 'zod';
+import { ProviderListResponse } from '../../../contracts/ai.js';
+import {
+  ImportResponse,
+  SourceListResponse,
+  type RetryImportRequest,
+  type SourceLanguage,
+  type SourceType,
+} from '../../../contracts/sources.js';
+import { apiRequest } from '../../platform/api/client.js';
+
+export interface UploadOptions {
+  pageFrom: string;
+  pageTo: string;
+  language: SourceLanguage;
+  sourceType: SourceType;
+  aiProviderId: string;
+  aiApproved: boolean;
+}
+
+/** One file per request; the fields go first, as the server reads them before the file. */
+export function uploadFile(bankId: string, file: File, options: UploadOptions) {
+  const form = new FormData();
+  form.append('rightsConfirmed', 'true');
+  form.append('language', options.language);
+  form.append('sourceType', options.sourceType);
+  if (options.pageFrom) form.append('pageFrom', options.pageFrom);
+  if (options.pageTo) form.append('pageTo', options.pageTo);
+  if (options.aiProviderId) form.append('aiProviderId', options.aiProviderId);
+  if (options.aiApproved) form.append('aiApproved', 'true');
+  form.append('file', file);
+  return apiRequest('POST', `/api/banks/${bankId}/imports`, ImportResponse, form);
+}
+
+export const fetchImport = (id: string) => apiRequest('GET', `/api/imports/${id}`, ImportResponse);
+
+export const retryImport = (id: string, body: RetryImportRequest) =>
+  apiRequest('POST', `/api/imports/${id}/retry`, ImportResponse, body);
+
+export const cancelImport = (id: string) => apiRequest('DELETE', `/api/imports/${id}`, z.null());
+
+export const fetchSources = (bankId: string) =>
+  apiRequest('GET', `/api/banks/${bankId}/sources`, SourceListResponse);
+
+/** The user's AI connections, to offer AI for an import. */
+export const fetchConnections = () => apiRequest('GET', '/api/ai/providers', ProviderListResponse);
+
+/** Stages after which an import no longer changes. */
+export const FINISHED_STAGES = new Set([
+  'completed',
+  'needs_review',
+  'partial_failure',
+  'failed',
+  'cancelled',
+]);

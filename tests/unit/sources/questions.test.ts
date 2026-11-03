@@ -11,7 +11,7 @@ function line(text: string, x = 44, page = 1): TextLine {
     box: { ...box, x0: x + i * 30, x1: x + i * 30 + 25 },
     font: null,
   }));
-  return { page, text, box, words };
+  return { page, text, box, words, rtl: false, start: x };
 }
 
 const letters = (questions: ReturnType<typeof parseQuestions>) =>

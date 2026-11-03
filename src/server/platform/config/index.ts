@@ -14,6 +14,10 @@ const Env = z.object({
     .string()
     .regex(/^[A-Za-z0-9+/]{43}=$/, 'QBANK_MASTER_KEY must be 32 bytes in base64'),
   QBANK_AI_ALLOW_PRIVATE_URLS: z.enum(['true', 'false']).default('false'),
+  QBANK_DATA_DIR: z.string().min(1).default('.data/app'),
+  QBANK_MAX_UPLOAD_MB: z.coerce.number().int().min(1).max(2000).default(200),
+  QBANK_MAX_PAGES: z.coerce.number().int().min(1).max(10000).default(1500),
+  QBANK_WORKER: z.enum(['true', 'false']).default('true'),
   QBANK_CLAUDE_BIN: z.string().min(1).default('claude'),
   QBANK_CODEX_BIN: z.string().min(1).default('codex'),
   QBANK_AI_WORK_DIR: z.string().min(1).default('.data/ai-work'),
@@ -32,6 +36,14 @@ export interface AppConfig {
   allowedOrigins: readonly string[];
   sessionTtlDays: number;
   logLevel: z.infer<typeof Env>['QBANK_LOG_LEVEL'];
+  imports: {
+    /** Uploaded originals live here (BlobStore on local disk) until verified and deleted. */
+    dataDir: string;
+    maxUploadBytes: number;
+    maxPages: number;
+    /** Runs the import worker inside this process (off in tests, which drive it directly). */
+    worker: boolean;
+  };
   /** Encrypts BYOK keys at rest; never logged, never sent to the browser. */
   masterKey: Buffer;
   ai: {
@@ -83,6 +95,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       .filter(Boolean),
     sessionTtlDays: parsed.QBANK_SESSION_TTL_DAYS,
     logLevel: parsed.QBANK_LOG_LEVEL,
+    imports: {
+      dataDir: parsed.QBANK_DATA_DIR,
+      maxUploadBytes: parsed.QBANK_MAX_UPLOAD_MB * 1024 * 1024,
+      maxPages: parsed.QBANK_MAX_PAGES,
+      worker: parsed.QBANK_WORKER === 'true',
+    },
     masterKey: Buffer.from(parsed.QBANK_MASTER_KEY, 'base64'),
     ai: {
       allowPrivateUrls: parsed.QBANK_AI_ALLOW_PRIVATE_URLS === 'true',

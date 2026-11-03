@@ -14,12 +14,14 @@ export class ApiError extends Error {
 }
 
 async function send(method: string, path: string, body?: unknown): Promise<Response> {
+  const form = body instanceof FormData;
   try {
     return await fetch(path, {
       method,
       credentials: 'same-origin',
-      headers: body === undefined ? {} : { 'content-type': 'application/json' },
-      body: body === undefined ? null : JSON.stringify(body),
+      // A FormData body (a file upload) sets its own multipart content type.
+      headers: body === undefined || form ? {} : { 'content-type': 'application/json' },
+      body: body === undefined ? null : form ? body : JSON.stringify(body),
     });
   } catch {
     throw new ApiError('network');

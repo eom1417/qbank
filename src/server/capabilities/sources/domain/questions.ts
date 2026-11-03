@@ -1,8 +1,18 @@
 import { boxHeight, type Box, type PageWord } from './page.js';
+import {
+  answerLetter,
+  optionLabel,
+  questionLabel,
+  type OptionLabel,
+  type OptionSystem,
+} from './labels.js';
 import type { TextLine } from './lines.js';
 
 interface ParsedOption {
+  /** The answer letter by position (A, B, C…), whatever label the page printed. */
   letter: string;
+  /** The label as printed: "A", "b", "ج" or "3". */
+  label: string;
   text: string;
   /** Where the option letter is printed: answer marks are looked for around it. */
   letterBox: Box;
@@ -17,14 +27,14 @@ export interface ParsedQuestion {
   page: number;
   stem: string;
   options: ParsedOption[];
-  /** Left edge of the question label; options must start near it. */
-  indent: number;
-  /** A line at the option indent followed the last option: OCR may have lost a circled option. */
+  /** Where the question label starts (its right edge in Arabic); options must start near it. */
+  start: number;
+  /** The label system of its options, once the first option is read. */
+  system: OptionSystem | null;
+  /** A line at the option start followed the last option: OCR may have lost a circled option. */
   maybeLostOption: boolean;
 }
 
-const QUESTION = /^Q\s?(\d{1,3})\s?[).:-]\s*(.*)$/i;
-const OPTION = /^\(?([A-J])\s?[.)]\s*(.*)$/;
 // How OCR reads a hand-circled letter ("@)Tricuspid atresia", "© Hypothalamic…", "G)GnRH…").
 const CIRCLED = /^(?:[@©®]\)?|G\))\s*(.*)$/;
 // "~*~*~*" rules and "Heart Murmurs (4 Questions)" headings close the current question.
@@ -40,32 +50,51 @@ const MAX_FIRST_OPTION_GAP_LINES = 8;
 type Element =
   { kind: 'stem'; question: ParsedQuestion } | { kind: 'option'; option: ParsedOption };
 
+/** The label continues the question's options: same system, next in sequence. */
+const continuesOptions = (question: ParsedQuestion, label: OptionLabel) =>
+  label.index === question.options.length &&
+  (question.system === null || question.system === label.system);
+
 /**
- * An option line: printed near the question's indent, with the next letter in sequence (a
- * letter out of sequence is a pasted screenshot or a note, not an option).
+ * An option line: printed near the question's start, with the next label in sequence (a label
+ * out of sequence is a pasted screenshot or a note, not an option).
  */
 function optionFrom(line: TextLine, question: ParsedQuestion): ParsedOption | null {
   const first: PageWord | undefined = line.words[0];
-  if (!first || Math.abs(line.box.x0 - question.indent) > INDENT_TOLERANCE) return null;
-  const expected = String.fromCharCode(65 + question.options.length);
-  const option = { letterBox: first.box, page: line.page, letter: expected };
-  const typed = OPTION.exec(line.text);
-  if (typed)
-    return typed[1] === expected ? { ...option, text: typed[2] ?? '', circledGlyph: false } : null;
-  const circled = CIRCLED.exec(line.text);
-  return circled ? { ...option, text: circled[1] ?? '', circledGlyph: true } : null;
+  if (!first || Math.abs(line.start - question.start) > INDENT_TOLERANCE) return null;
+  const index = question.options.length;
+  const base = { letterBox: first.box, page: line.page, letter: answerLetter(index) };
+  const label = optionLabel(line.text);
+  if (label) {
+    if (!continuesOptions(question, label)) return null;
+    question.system = label.system;
+    return { ...base, label: label.label, text: label.text, circledGlyph: false };
+  }
+  const circled = question.system === 'arabic' ? null : CIRCLED.exec(line.text);
+  return circled
+    ? { ...base, label: answerLetter(index), text: circled[1] ?? '', circledGlyph: true }
+    : null;
 }
 
-function questionFrom(line: TextLine): ParsedQuestion | null {
-  const match = QUESTION.exec(line.text);
-  if (!match?.[1]) return null;
-  const stem = match[2] ?? '';
+/**
+ * A question line. Prefixed numbers ("Q3)", "س3)") always start one; a bare "3." only when it
+ * follows the previous question's number and is not the next option of that question.
+ */
+function questionFrom(line: TextLine, previous: ParsedQuestion | undefined): ParsedQuestion | null {
+  const label = questionLabel(line.text);
+  if (!label) return null;
+  if (!label.prefixed && previous) {
+    const option = optionLabel(line.text);
+    if (option && continuesOptions(previous, option)) return null;
+    if (label.number !== previous.number + 1) return null;
+  }
   return {
-    number: Number(match[1]),
+    number: label.number,
     page: line.page,
-    stem,
+    stem: label.text,
     options: [],
-    indent: line.box.x0,
+    start: line.start,
+    system: null,
     maybeLostOption: false,
   };
 }
@@ -112,16 +141,18 @@ function setElementText(element: Element, text: string) {
  * was the missing option: it is moved back out and marked as circled.
  */
 function recoverLostOption(state: ParseState, line: TextLine, question: ParsedQuestion) {
-  const skipped = String.fromCharCode(65 + question.options.length);
-  const next = String.fromCharCode(skipped.charCodeAt(0) + 1);
+  const skipped = question.options.length;
+  const next = optionLabel(line.text);
   const { continuation } = state;
-  if (!continuation || OPTION.exec(line.text)?.[1] !== next) return;
+  if (!continuation || !next || next.index !== skipped + 1) return;
+  if (question.system !== null && question.system !== next.system) return;
   const lost = continuation.line;
-  if (Math.abs(lost.box.x0 - question.indent) > INDENT_TOLERANCE) return;
+  if (Math.abs(lost.start - question.start) > INDENT_TOLERANCE) return;
   setElementText(continuation.element, continuation.textBefore);
   const letterBox = lost.words[0]?.box ?? lost.box;
   question.options.push({
-    letter: skipped,
+    letter: answerLetter(skipped),
+    label: answerLetter(skipped),
     text: lost.text,
     letterBox,
     page: lost.page,
@@ -134,7 +165,7 @@ function appendContinuation(state: ParseState, open: Element, line: TextLine) {
   if (
     open.kind === 'option' &&
     question &&
-    Math.abs(line.box.x0 - question.indent) <= INDENT_TOLERANCE
+    Math.abs(line.start - question.start) <= INDENT_TOLERANCE
   ) {
     question.maybeLostOption = true;
   }
@@ -155,7 +186,7 @@ function acceptOption(state: ParseState, line: TextLine, question: ParsedQuestio
 
 /** Applies one reading line: a new question, a new option, more text, or the end of an element. */
 function step(state: ParseState, line: TextLine): Element | null {
-  const question = questionFrom(line);
+  const question = questionFrom(line, state.questions[state.questions.length - 1]);
   const continuation = state.continuation;
   state.continuation = null;
   if (question) {

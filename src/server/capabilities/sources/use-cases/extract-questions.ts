@@ -1,5 +1,6 @@
 import { inkAround, pickMarked, type Raster } from '../domain/answer-marks.js';
 import { bodyFontFamily, pageLines } from '../domain/lines.js';
+import { dropRunningLines } from '../domain/running-lines.js';
 import { fontFamily, type PageText } from '../domain/page.js';
 import { parseQuestions, type ParsedQuestion } from '../domain/questions.js';
 import { hasUnreadableText, repairWithOcr } from '../domain/repair.js';
@@ -16,7 +17,10 @@ export interface ExtractedQuestion {
   number: number;
   page: number;
   stem: string;
-  options: { letter: string; text: string }[];
+  /** A question with no options is an essay question (FR-05-010); it has no answer key here. */
+  kind: 'mcq' | 'essay';
+  /** `letter` is positional (A, B, C…); `label` is what the page printed (A, ب, 3). */
+  options: { letter: string; label: string; text: string }[];
   /** Null when no option is clearly marked: the question goes to review, never a guess. */
   answer: string | null;
   evidence: AnswerEvidence | null;
@@ -80,31 +84,56 @@ async function answerOf(
   return marked ? { answer: marked.letter, evidence: 'pen_mark' } : UNDECIDED;
 }
 
+/** OCR pages (no text layer) follow the stricter rules: a lone option is not taken as the key. */
+const modeOf = (page: PageText | undefined): ReadingMode => (page?.visual ? 'text' : 'ocr');
+
+function rasterCache(file: string) {
+  const rasters = new Map<number, Promise<Raster>>();
+  return (page: number) => {
+    if (!rasters.has(page)) rasters.set(page, renderPage(file, page));
+    return rasters.get(page) as Promise<Raster>;
+  };
+}
+
+/**
+ * Questions, options and pen-marked answers from pages already read (any page range; text
+ * layer and OCR pages may be mixed). Running headers and footers are removed first.
+ */
+export async function questionsFromPages(
+  file: string,
+  pages: readonly PageText[],
+): Promise<ExtractedQuestion[]> {
+  const byNumber = new Map(pages.map((page) => [page.page, page]));
+  const family = bodyFontFamily(pages.filter((page) => page.visual));
+  const lines = pages.flatMap((page) => pageLines(page, page.visual ? family : null));
+  const heights = new Map(pages.map((page) => [page.page, page.height]));
+  const questions = parseQuestions(dropRunningLines(lines, heights));
+  const raster = rasterCache(file);
+  // Measured on the option's own page; the printed letter is masked: only added ink counts.
+  const inkOf = async (option: ParsedQuestion['options'][number]) => {
+    const page = byNumber.get(option.page);
+    return inkAround(
+      await raster(option.page),
+      option.letterBox,
+      printedBoxes(page, page?.visual ? family : null),
+    );
+  };
+  const extracted: ExtractedQuestion[] = [];
+  for (const question of questions) {
+    const options = question.options.map(({ letter, label, text }) => ({ letter, label, text }));
+    const { number, page, stem } = question;
+    const kind = options.length === 0 ? 'essay' : 'mcq';
+    const answer =
+      kind === 'essay' ? UNDECIDED : await answerOf(question, modeOf(byNumber.get(page)), inkOf);
+    extracted.push({ number, page, stem, kind, options, ...answer });
+  }
+  return extracted;
+}
+
 /** Rules-first extraction (M3.3): questions, options and pen-marked answers, with page numbers. */
 export async function extractQuestions(
   file: string,
   mode: ReadingMode,
 ): Promise<ExtractedQuestion[]> {
-  const pages = await readPages(file, mode);
-  const family = mode === 'text' ? bodyFontFamily(pages) : null;
-  const questions = parseQuestions(pages.flatMap((page) => pageLines(page, family)));
-  const rasters = new Map<number, Promise<Raster>>();
-  const raster = (page: number) => {
-    if (!rasters.has(page)) rasters.set(page, renderPage(file, page));
-    return rasters.get(page) as Promise<Raster>;
-  };
-  // Measured on the option's own page; the printed letter is masked: only added ink counts.
-  const inkOf = async (option: ParsedQuestion['options'][number]) =>
-    inkAround(
-      await raster(option.page),
-      option.letterBox,
-      printedBoxes(pages[option.page - 1], family),
-    );
-  const extracted: ExtractedQuestion[] = [];
-  for (const question of questions) {
-    const options = question.options.map(({ letter, text }) => ({ letter, text }));
-    const { number, page, stem } = question;
-    extracted.push({ number, page, stem, options, ...(await answerOf(question, mode, inkOf)) });
-  }
-  return extracted;
+  return questionsFromPages(file, await readPages(file, mode));
 }

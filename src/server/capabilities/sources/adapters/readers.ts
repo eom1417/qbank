@@ -6,13 +6,19 @@ import { parseStext } from './stext.js';
 
 const OCR_DPI = 200;
 
-/** The PDF's own text layer, with fonts, read by MuPDF. */
-export function readTextLayer(file: string): Promise<PageText[]> {
+export interface PageRange {
+  from: number;
+  to: number;
+}
+
+/** The PDF's own text layer, with fonts, read by MuPDF (all pages, or `range`). */
+export function readTextLayer(file: string, range?: PageRange): Promise<PageText[]> {
   // mutool needs a real output file: it cannot write structured text to a pipe.
   return withTempDir(async (dir) => {
     const out = join(dir, 'text.stext');
-    await runTool('mutool', ['draw', '-q', '-F', 'stext', '-o', out, file], 600_000);
-    return parseStext(await readFile(out, 'utf8'));
+    const pages = range ? [`${range.from}-${range.to}`] : [];
+    await runTool('mutool', ['draw', '-q', '-F', 'stext', '-o', out, file, ...pages], 600_000);
+    return parseStext(await readFile(out, 'utf8'), range?.from ?? 1);
   });
 }
 

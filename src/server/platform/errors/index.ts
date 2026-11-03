@@ -10,6 +10,12 @@ const STATUS: Record<ErrorCode, number> = {
   name_taken: 409,
   invalid_token: 400,
   payload_too_large: 413,
+  file_unsupported: 415,
+  file_corrupt: 422,
+  file_protected: 422,
+  too_many_pages: 422,
+  approval_required: 409,
+  not_retryable: 409,
   internal: 500,
 };
 

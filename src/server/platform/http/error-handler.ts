@@ -4,7 +4,9 @@ import { AppError } from '../errors/index.js';
 
 function toAppError(error: FastifyError | AppError): AppError {
   if (error instanceof AppError) return error;
-  if (error.code === 'FST_ERR_CTP_BODY_TOO_LARGE') return new AppError('payload_too_large');
+  if (error.code === 'FST_ERR_CTP_BODY_TOO_LARGE' || error.statusCode === 413) {
+    return new AppError('payload_too_large');
+  }
   const status = error.statusCode ?? 500;
   if (status >= 400 && status < 500) return new AppError('validation_failed');
   return new AppError('internal');

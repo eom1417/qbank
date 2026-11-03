@@ -3,6 +3,8 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import { createAi } from './capabilities/ai/index.js';
 import { createIdentity } from './capabilities/identity/index.js';
 import { createLibrary } from './capabilities/library/index.js';
+import { createQuestions } from './capabilities/questions/index.js';
+import { createSources } from './capabilities/sources/index.js';
 import type { Clock } from './platform/clock.js';
 import type { AppConfig } from './platform/config/index.js';
 import { createSecretBox } from './platform/crypto/secret-box.js';
@@ -10,6 +12,7 @@ import type { Db } from './platform/db/index.js';
 import { handleError, handleNotFound } from './platform/http/error-handler.js';
 import { createOriginGuard } from './platform/http/origin-guard.js';
 import { newId } from './platform/ids.js';
+import { createDiskBlobStore } from './platform/storage/blob-store.js';
 import { createOutboxMailer, registerOutboxRoute } from './platform/mail/index.js';
 
 export interface AppDeps {
@@ -39,14 +42,38 @@ export function buildApp({ config, db, clock }: AppDeps): FastifyInstance {
   });
   identity.register(app);
   createLibrary({ db, clock, requireActor: identity.requireActor }).register(app);
-  createAi({
+  const ai = createAi({
     db,
     clock,
     secretBox: createSecretBox(config.masterKey),
     requireActor: identity.requireActor,
     ...config.ai,
-  }).register(app);
+  });
+  ai.register(app);
+  const sources = createSources({
+    db,
+    clock,
+    blobs: createDiskBlobStore(config.imports.dataDir),
+    questions: createQuestions({ db }),
+    ai,
+    requireActor: identity.requireActor,
+    maxUploadBytes: config.imports.maxUploadBytes,
+    maxPages: config.imports.maxPages,
+  });
+  sources.register(app);
+  if (config.imports.worker) {
+    sources.worker.start();
+    app.addHook('onClose', async () => sources.worker.stop());
+  }
+  app.decorate('importWorker', sources.worker);
   if (config.devOutbox) registerOutboxRoute(app, db);
   app.get('/api/health', async () => ({ status: 'ok' }));
   return app;
+}
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    /** Runs queued imports now (tests drive the worker through this). */
+    importWorker: { drain(): Promise<number> };
+  }
 }
