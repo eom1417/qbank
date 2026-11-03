@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Figures and tables (test fixture only)</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 18mm 18mm;
+      }
+      body {
+        font-family: 'Liberation Serif', serif;
+        font-size: 11pt;
+      }
+      p {
+        margin: 0 0 3pt;
+      }
+      .q {
+        margin-top: 10pt;
+      }
+      img {
+        display: block;
+        margin: 4pt 0;
+      }
+      .pair img {
+        display: inline-block;
+        margin-right: 12pt;
+      }
+      table {
+        border-collapse: collapse;
+        margin: 4pt 0;
+      }
+      td {
+        border-top: 1px solid #000;
+        border-bottom: 1px solid #000;
+        padding: 3pt 14pt 3pt 0;
+      }
+      .next-page {
+        break-before: page;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="q">
+      <p>Q1) A 10-year-old boy has palpitations. What does this ECG show?</p>
+      <img src="{{ecg}}" style="width: 330px" />
+      <p>A. Sinus rhythm</p>
+      <p>B. Atrial flutter</p>
+      <p>C. Ventricular tachycardia</p>
+    </div>
+    <div class="q">
+      <p>Q2) Which side is abnormal when comparing these two views?</p>
+      <div class="pair">
+        <img src="{{xray}}" style="width: 150px" /><img src="{{photo}}" style="width: 150px" />
+      </div>
+      <p>A. Left</p>
+      <p>B. Right</p>
+    </div>
+    <img src="{{rash}}" style="width: 170px" />
+    <div class="q">
+      <p>Q3) What is the most likely diagnosis of the rash shown above?</p>
+      <p>A. Measles</p>
+      <p>B. Scarlet fever</p>
+    </div>
+    <div class="q">
+      <p>Q4) What does this chest X-ray show?</p>
+      <img src="{{blurry}}" style="width: 160px" />
+      <p>A. Pneumonia</p>
+      <p>B. Normal film</p>
+    </div>
+    <div class="q">
+      <p>Q5) A child has these laboratory results. What is the diagnosis?</p>
+      <table>
+        <tr>
+          <td>Sodium</td>
+          <td>128 mmol/L</td>
+        </tr>
+        <tr>
+          <td>Potassium</td>
+          <td>6.1 mmol/L</td>
+        </tr>
+        <tr>
+          <td>Glucose</td>
+          <td>3.2 mmol/L</td>
+        </tr>
+      </table>
+      <p>A. Adrenal insufficiency</p>
+      <p>B. Diabetes insipidus</p>
+    </div>
+    <div class="q">
+      <p>Q6) What does the echocardiogram on the next page show?</p>
+      <img class="next-page" src="{{echo}}" style="width: 260px" />
+      <p>A. Ventricular septal defect</p>
+      <p>B. Normal heart</p>
+    </div>
+  </body>
+</html>

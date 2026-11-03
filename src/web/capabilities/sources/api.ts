@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ProviderListResponse } from '../../../contracts/ai.js';
 import {
   ImportResponse,
+  MediaListResponse,
   SourceListResponse,
   type RetryImportRequest,
   type SourceLanguage,
@@ -57,3 +58,9 @@ export const FINISHED_STAGES = new Set([
   'failed',
   'cancelled',
 ]);
+
+export const fetchImportMedia = (id: string) =>
+  apiRequest('GET', `/api/imports/${id}/media`, MediaListResponse);
+
+/** The picture itself; the browser sends the session cookie, the server checks the owner. */
+export const mediaSrc = (mediaId: string) => `/api/media/${mediaId}`;

@@ -35,6 +35,8 @@ export interface ParsedQuestion {
   system: OptionSystem | null;
   /** A line at the option start followed the last option: OCR may have lost a circled option. */
   maybeLostOption: boolean;
+  /** Where its lines are, page by page: a figure is linked by where it sits (M5.2). */
+  spans: { page: number; box: Box }[];
 }
 
 // How OCR reads a hand-circled letter ("@)Tricuspid atresia", "© Hypothalamic…", "G)GnRH…").
@@ -103,21 +105,43 @@ function questionFrom(line: TextLine, previous: ParsedQuestion | undefined): Par
     rtl: line.rtl,
     system: null,
     maybeLostOption: false,
+    spans: [{ page: line.page, box: line.box }],
   };
 }
 
 const appendText = (current: string, more: string) => (current ? `${current} ${more}` : more);
 
-function within(previous: TextLine | null, line: TextLine, lines: number): boolean {
+/** A figure or table on a page: the space it takes is not a gap between lines (M5). */
+export interface PlacedFigure {
+  page: number;
+  box: Box;
+}
+
+/** Height of the figures lying between two lines of a page. */
+const figureHeightBetween = (
+  figures: readonly PlacedFigure[],
+  above: Box,
+  below: Box,
+  page: number,
+) =>
+  figures
+    .filter((figure) => figure.page === page && figure.box.y0 >= above.y1 - 1)
+    .filter((figure) => figure.box.y1 <= below.y0 + 1)
+    .reduce((sum, figure) => sum + (figure.box.y1 - figure.box.y0), 0);
+
+function within(
+  previous: TextLine | null,
+  line: TextLine,
+  lines: number,
+  figures: readonly PlacedFigure[],
+): boolean {
   if (!previous) return false;
   // Text runs on to the next page, never over a page that could not be read.
   if (previous.page !== line.page) return line.page === previous.page + 1;
-  return line.box.y0 - previous.box.y1 <= boxHeight(previous.box) * lines;
+  const gap =
+    line.box.y0 - previous.box.y1 - figureHeightBetween(figures, previous.box, line.box, line.page);
+  return gap <= boxHeight(previous.box) * lines;
 }
-
-/** True when `line` reads as the continuation of the element that ended at `previous`. */
-const continues = (previous: TextLine | null, line: TextLine) =>
-  within(previous, line, MAX_GAP_LINES);
 
 /** The last line appended as a continuation, and the text it was appended to. */
 interface Continuation {
@@ -135,6 +159,7 @@ interface ParseState {
   lastOfQuestion: TextLine | null;
   /** A page was skipped (not read): numbering may resume at any number. */
   afterSkippedPage: boolean;
+  figures: readonly PlacedFigure[];
 }
 
 const elementText = (element: Element) =>
@@ -175,6 +200,7 @@ function appendContinuation(state: ParseState, open: Element, line: TextLine) {
   if (open.kind === 'option' && question && atQuestionStart(line, question)) {
     question.maybeLostOption = true;
   }
+  question?.spans.push({ page: line.page, box: line.box });
   const textBefore = elementText(open);
   setElementText(open, appendText(textBefore, line.text));
   state.continuation = { line, element: open, textBefore };
@@ -183,9 +209,11 @@ function appendContinuation(state: ParseState, open: Element, line: TextLine) {
 /** The line as the question's next option, when it is one and close enough to the question. */
 function acceptOption(state: ParseState, line: TextLine, question: ParsedQuestion): Element | null {
   const gap = question.options.length ? MAX_OPTION_GAP_LINES : MAX_FIRST_OPTION_GAP_LINES;
-  const option = within(state.lastOfQuestion, line, gap) ? optionFrom(line, question) : null;
+  const near = within(state.lastOfQuestion, line, gap, state.figures);
+  const option = near ? optionFrom(line, question) : null;
   if (!option) return null;
   question.options.push(option);
+  question.spans.push({ page: line.page, box: line.box });
   state.lastOfQuestion = line;
   return { kind: 'option', option };
 }
@@ -217,7 +245,8 @@ function step(state: ParseState, line: TextLine): Element | null {
   const option = current ? acceptOption(state, line, current) : null;
   if (option) return option;
   const { open } = state;
-  if (!open || SEPARATOR.test(line.text) || !continues(state.previous, line)) return null;
+  if (!open || SEPARATOR.test(line.text)) return null;
+  if (!within(state.previous, line, MAX_GAP_LINES, state.figures)) return null;
   appendContinuation(state, open, line);
   state.lastOfQuestion = line;
   return open;
@@ -227,7 +256,10 @@ function step(state: ParseState, line: TextLine): Element | null {
  * Reads typed multiple-choice questions ("Q12) …" then "A. …") from reading lines across pages.
  * Anything else (headings, pasted explanations, notes) only ends the current element.
  */
-export function parseQuestions(lines: readonly TextLine[]): ParsedQuestion[] {
+export function parseQuestions(
+  lines: readonly TextLine[],
+  figures: readonly PlacedFigure[] = [],
+): ParsedQuestion[] {
   const state: ParseState = {
     questions: [],
     open: null,
@@ -235,6 +267,7 @@ export function parseQuestions(lines: readonly TextLine[]): ParsedQuestion[] {
     continuation: null,
     lastOfQuestion: null,
     afterSkippedPage: false,
+    figures,
   };
   for (const line of lines) {
     state.open = step(state, line);

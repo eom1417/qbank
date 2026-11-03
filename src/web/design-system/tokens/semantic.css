@@ -69,6 +69,7 @@
   --size-form: var(--qb-size-form);
   --size-card-min: var(--qb-size-card-min);
   --size-viewport: var(--qb-size-viewport);
+  --size-thumb: var(--qb-size-thumb);
   --shadow-card: var(--qb-shadow-1);
   --motion-fast: var(--qb-duration-fast);
 }

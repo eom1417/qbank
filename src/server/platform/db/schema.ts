@@ -175,6 +175,25 @@ interface QuestionTable {
   updated_at: Date;
 }
 
+interface MediaTable {
+  id: string;
+  owner_id: string;
+  source_id: string;
+  question_id: string;
+  position: number;
+  page: number;
+  box: ColumnType<unknown, string, string>;
+  kind: 'figure' | 'table';
+  modality: string | null;
+  link: 'certain' | 'uncertain';
+  blob_key: string;
+  width: number;
+  height: number;
+  quality: ColumnType<unknown, string, string>;
+  low_quality: boolean;
+  created_at: Date;
+}
+
 export interface Database {
   account: AccountTable;
   auth_session: AuthSessionTable;
@@ -190,4 +209,5 @@ export interface Database {
   import_job: ImportJobTable;
   import_page: ImportPageTable;
   question: QuestionTable;
+  media: MediaTable;
 }

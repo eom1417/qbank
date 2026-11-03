@@ -55,6 +55,7 @@
   --qb-size-form: 28rem;
   --qb-size-card-min: 18rem;
   --qb-size-viewport: 100vh;
+  --qb-size-thumb: 10rem;
   --qb-shadow-1: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 3px rgb(15 23 42 / 0.1);
   --qb-duration-fast: 120ms;
 }

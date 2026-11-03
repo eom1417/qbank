@@ -17,6 +17,7 @@ import { useAction } from '../../platform/forms/use-submit.js';
 import { useI18n, type MessageKey } from '../../platform/i18n/i18n.js';
 import { fetchImport, FINISHED_STAGES, retryImport } from './api.js';
 import { usePolledImport } from './ImportProgress.js';
+import { MediaCard } from './MediaCard.js';
 
 const RETRYABLE = new Set(['failed', 'partial_failure', 'needs_review']);
 
@@ -92,6 +93,7 @@ function Report({ initial }: { initial: ImportResponse }) {
           </Button>
         )}
       </Card>
+      {FINISHED_STAGES.has(job.stage) && <MediaCard importId={job.id} />}
     </Stack>
   );
 }

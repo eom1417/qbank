@@ -7,7 +7,8 @@ import type { PageText } from '../domain/page.js';
 import { hasUnreadableText, repairWithOcr } from '../domain/repair.js';
 import { screenQuestions, type PageReading } from '../domain/screening.js';
 import type { SourcesDeps } from './deps.js';
-import { questionsFromPages } from './extract-questions.js';
+import { cropMedia, storeMedia } from './keep-media.js';
+import { readSource } from './read-source.js';
 import { verifyWithAi } from './verify-with-ai.js';
 
 /** A page with fewer words than this has no usable text layer: it is read as a scan. */
@@ -95,7 +96,8 @@ async function extractAndSave(deps: SourcesDeps, job: JobRow, source: SourceRow,
   const readable = pages
     .filter((page) => page.status === 'done')
     .map((page) => page.content as PageText);
-  const extracted = await questionsFromPages(file, readable);
+  const { questions: extracted, media } = await readSource(file, readable);
+  const { cropped, reasons } = await cropMedia(file, readable, media);
   await setStage(deps, job, 'verifying');
   const readings = new Map<number, PageReading>(
     pages.map((page) => [
@@ -103,10 +105,16 @@ async function extractAndSave(deps: SourcesDeps, job: JobRow, source: SourceRow,
       { reading: page.reading, unreadable: page.status === 'unreadable' },
     ]),
   );
-  const verified = await verifyWithAi(deps, job, file, screenQuestions(extracted, readings));
+  const verified = await verifyWithAi(
+    deps,
+    job,
+    file,
+    screenQuestions(extracted, readings, reasons),
+  );
   await setStage(deps, job, 'matching');
   const place = { ownerId: job.owner_id, bankId: source.bank_id, sourceId: source.id };
   await deps.questions.saveImported(place, verified.questions, deps.clock.now());
+  await storeMedia(deps, place, cropped, extracted);
   return { pages, ...verified };
 }
 

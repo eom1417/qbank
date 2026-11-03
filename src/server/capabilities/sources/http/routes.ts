@@ -1,8 +1,10 @@
+import { createReadStream } from 'node:fs';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import {
   RetryImportRequest,
   StartImportFields,
   type ImportResponse,
+  type MediaListResponse,
   type SourceListResponse,
 } from '../../../../contracts/sources.js';
 import { AppError } from '../../../platform/errors/index.js';
@@ -13,7 +15,9 @@ import {
   cancelImport,
   deleteOriginal,
   getImport,
+  listImportMedia,
   listSources,
+  mediaFile,
   retryImport,
 } from '../use-cases/manage-imports.js';
 import { startImport } from '../use-cases/start-import.js';
@@ -41,7 +45,7 @@ async function uploadOf(request: FastifyRequest, deps: SourcesDeps) {
   return { fields, upload: { fileName: part.filename || 'file.pdf', data: part.file } };
 }
 
-/** Upload, progress, report, cancel and retry of imports; a bank's sources (UI-07…09, UI-23). */
+/** Upload, progress, report, cancel and retry of imports (UI-07…09). */
 export function registerImportRoutes(
   app: FastifyInstance,
   deps: SourcesDeps,
@@ -54,21 +58,12 @@ export function registerImportRoutes(
     return reply.status(201).send(await getImport(deps, actor, jobId));
   });
 
-  app.get<BankParams>('/api/banks/:bankId/sources', async (request): Promise<SourceListResponse> =>
-    listSources(deps, await requireActor(request), request.params.bankId),
-  );
-
   app.get<IdParams>('/api/imports/:id', async (request): Promise<ImportResponse> =>
     getImport(deps, await requireActor(request), request.params.id),
   );
 
   app.delete<IdParams>('/api/imports/:id', async (request, reply) => {
     await cancelImport(deps, await requireActor(request), request.params.id);
-    return reply.status(204).send();
-  });
-
-  app.delete<IdParams>('/api/sources/:id/original', async (request, reply) => {
-    await deleteOriginal(deps, await requireActor(request), request.params.id);
     return reply.status(204).send();
   });
 
@@ -81,5 +76,34 @@ export function registerImportRoutes(
       parseInput(RetryImportRequest, request.body ?? {}),
     );
     return getImport(deps, actor, request.params.id);
+  });
+}
+
+/** A bank's sources, deleting an original, and the pictures kept from them (UI-23, M5). */
+export function registerSourceRoutes(
+  app: FastifyInstance,
+  deps: SourcesDeps,
+  requireActor: RequireActor,
+) {
+  app.get<BankParams>('/api/banks/:bankId/sources', async (request): Promise<SourceListResponse> =>
+    listSources(deps, await requireActor(request), request.params.bankId),
+  );
+
+  app.get<IdParams>('/api/imports/:id/media', async (request): Promise<MediaListResponse> =>
+    listImportMedia(deps, await requireActor(request), request.params.id),
+  );
+
+  app.get<IdParams>('/api/media/:id', async (request, reply) => {
+    const path = await mediaFile(deps, await requireActor(request), request.params.id);
+    return reply
+      .type('image/png')
+      .header('cache-control', 'private, max-age=3600')
+      .header('x-content-type-options', 'nosniff')
+      .send(createReadStream(path));
+  });
+
+  app.delete<IdParams>('/api/sources/:id/original', async (request, reply) => {
+    await deleteOriginal(deps, await requireActor(request), request.params.id);
+    return reply.status(204).send();
   });
 }

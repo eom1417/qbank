@@ -1,3 +1,4 @@
+import { readdirSync } from 'node:fs';
 import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
 import type { FastifyInstance } from 'fastify';
@@ -56,3 +57,14 @@ function usePdfFixtures(): () => PdfFixtures {
 
 /** A test app and the PDF fixtures, for an import suite file. */
 export const useImportSuite = () => ({ app: useTestApp(), fixtures: usePdfFixtures() });
+
+/** Stored files of this test process (originals and kept pictures). */
+export const blobCount = () => {
+  try {
+    return readdirSync(`.data/test-app/${process.pid}/blobs`, { recursive: true }).filter(
+      (name) => String(name).length > 30,
+    ).length;
+  } catch {
+    return 0;
+  }
+};

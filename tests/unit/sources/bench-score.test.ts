@@ -20,6 +20,7 @@ const got = (number: number, answer: string | null, page = 1) => ({
   ],
   answer,
   evidence: answer ? ('pen_mark' as const) : null,
+  spans: [],
 });
 
 describe('extraction benchmark scoring (M3.2)', () => {

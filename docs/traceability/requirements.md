@@ -53,17 +53,17 @@
 | FR-05-006 | الهوامش والعناوين             | مقترح  | M4.6   | done    | `tests/integration/imports.test.ts`              |
 | FR-05-007 | تمييز الشرح                   | سابق   | M6.8   | planned | —                                                |
 | FR-05-008 | المعادلات والوحدات            | مقترح  | M4.6   | done    | `tests/integration/imports.test.ts`              |
-| FR-05-009 | الجداول                       | مقترح  | M5.5   | planned | —                                                |
+| FR-05-009 | الجداول                       | مقترح  | M5.5   | partial | `tests/integration/imports-media.test.ts`        |
 | FR-05-010 | غير MCQ                       | مقترح  | M4.6   | done    | `tests/integration/imports.test.ts`              |
 | FR-05-011 | أمانة الصياغة                 | مقترح  | M4.6   | done    | `tests/unit/sources/mixed-scripts.test.ts`       |
-| FR-06-001 | استخراج الصور المرتبطة        | سابق   | M5.2   | planned | —                                                |
-| FR-06-002 | إسناد الصورة الصحيح           | سابق   | M5.2   | planned | —                                                |
-| FR-06-003 | صور متعددة للسؤال             | مقترح  | M5.3   | planned | —                                                |
-| FR-06-004 | الامتداد عبر الصفحات          | مقترح  | M5.3   | planned | —                                                |
-| FR-06-005 | تكبير دون تشويه               | مقترح  | M5.7   | planned | —                                                |
-| FR-06-006 | جودة الصورة شرط قبول          | مقترح  | M5.4   | planned | —                                                |
-| FR-06-007 | هوية الصورة ووصفها            | مقترح  | M5.6   | planned | —                                                |
-| FR-06-008 | فصل الصورة عن الكتاب          | مقترح  | M5.8   | planned | —                                                |
+| FR-06-001 | استخراج الصور المرتبطة        | سابق   | M5.2   | done    | `tests/integration/imports-media.test.ts`        |
+| FR-06-002 | إسناد الصورة الصحيح           | سابق   | M5.2   | done    | `tests/integration/imports-media.test.ts`        |
+| FR-06-003 | صور متعددة للسؤال             | مقترح  | M5.3   | done    | `tests/integration/imports-media.test.ts`        |
+| FR-06-004 | الامتداد عبر الصفحات          | مقترح  | M5.3   | done    | `tests/integration/imports-media.test.ts`        |
+| FR-06-005 | تكبير دون تشويه               | مقترح  | M5.7   | done    | `tests/e2e/import.spec.ts`                       |
+| FR-06-006 | جودة الصورة شرط قبول          | مقترح  | M5.4   | partial | `tests/integration/imports-media.test.ts`        |
+| FR-06-007 | هوية الصورة ووصفها            | مقترح  | M5.6   | done    | `tests/unit/sources/media-links.test.ts`         |
+| FR-06-008 | فصل الصورة عن الكتاب          | مقترح  | M5.8   | done    | `tests/unit/sources/media-links.test.ts`         |
 | FR-07-001 | مفتاح ظاهر في المصدر          | سابق   | M6.2   | planned | —                                                |
 | FR-07-002 | ملف إجابات منفصل              | مقترح  | M6.3   | planned | —                                                |
 | FR-07-003 | السؤال بلا مفتاح              | سابق   | M6.4   | planned | —                                                |
@@ -119,7 +119,7 @@
 | FR-12-006 | تسجيل الاختيار والمحاولة      | مقترح  | M9.5   | planned | —                                                |
 | FR-12-007 | علامة للمراجعة                | مقترح  | M9.6   | planned | —                                                |
 | FR-12-008 | الانتقال والاستكمال           | مقترح  | M9.7   | planned | —                                                |
-| FR-12-009 | تكبير الوسائط                 | مقترح  | M5.7   | planned | —                                                |
+| FR-12-009 | تكبير الوسائط                 | مقترح  | M5.7   | done    | `tests/e2e/import.spec.ts`                       |
 | FR-12-010 | ملخص الجلسة                   | مقترح  | M9.8   | planned | —                                                |
 | FR-12-011 | إعادة أخطاء الجلسة            | مقترح  | M9.8   | planned | —                                                |
 | FR-13-001 | اختيار العدد والنطاق          | سابق   | M10.1  | planned | —                                                |

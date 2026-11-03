@@ -1,8 +1,7 @@
-import { readdirSync } from 'node:fs';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { FAKE_KEYS, FAKE_MODELS, startFakeAiServer } from '../support/fake-ai-server.js';
 import { ownerWithBank, registeredBrowser, type createClient } from '../support/client.js';
-import { runImports, uploadFile, useImportSuite } from '../support/imports.js';
+import { blobCount, runImports, uploadFile, useImportSuite } from '../support/imports.js';
 
 const { app, fixtures } = useImportSuite();
 type Browser = ReturnType<typeof createClient>;
@@ -11,16 +10,6 @@ beforeAll(async () => {
   fake = await startFakeAiServer();
 });
 afterAll(() => fake.close());
-
-const blobCount = () => {
-  try {
-    return readdirSync(`.data/test-app/${process.pid}/blobs`, { recursive: true }).filter(
-      (name) => String(name).length > 30,
-    ).length;
-  } catch {
-    return 0;
-  }
-};
 
 describe('files that cannot be imported are refused clearly (FR-23-001, UAT-019)', () => {
   it.each([

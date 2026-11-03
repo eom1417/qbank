@@ -8,15 +8,12 @@ import type { Ai } from '../ai/index.js';
 import type { RequireActor } from '../identity/index.js';
 import type { Questions } from '../questions/index.js';
 import { createImportRepository } from './adapters/import-repository.js';
-import { registerImportRoutes } from './http/routes.js';
+import { registerImportRoutes, registerSourceRoutes } from './http/routes.js';
 import type { SourcesDeps } from './use-cases/deps.js';
 import { createImportWorker } from './worker.js';
 
-export {
-  extractQuestions,
-  type ExtractedQuestion,
-  type ReadingMode,
-} from './use-cases/extract-questions.js';
+export { extractQuestions } from './use-cases/read-source.js';
+export type { ExtractedQuestion, ReadingMode } from './use-cases/extract-questions.js';
 export { suggestMarks } from './use-cases/suggest-marks.js';
 
 interface SourcesSettings {
@@ -48,6 +45,7 @@ export function createSources(settings: SourcesSettings) {
       void app.register(async (scope) => {
         await scope.register(multipart);
         registerImportRoutes(scope, deps, settings.requireActor);
+        registerSourceRoutes(scope, deps, settings.requireActor);
       });
     },
   };

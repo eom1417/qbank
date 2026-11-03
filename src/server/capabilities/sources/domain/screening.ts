@@ -38,11 +38,12 @@ const provenanceOf = (question: ExtractedQuestion): ImportedQuestion['provenance
 
 /**
  * The free check of every extracted question (step 2 of the import): anything uncertain gets a
- * reason and goes to review instead of being trusted silently.
+ * reason and goes to review instead of being trusted silently, its pictures included (M5).
  */
 export function screenQuestions(
   questions: readonly ExtractedQuestion[],
   pages: ReadonlyMap<number, PageReading>,
+  mediaReasons: ReadonlyMap<number, readonly ReviewReason[]> = new Map(),
 ): ImportedQuestion[] {
   return questions.map((question, index) => ({
     number: question.number,
@@ -53,11 +54,14 @@ export function screenQuestions(
     answer: question.answer,
     provenance: provenanceOf(question),
     evidence: question.evidence,
-    reasons: reasonsOf(
-      question,
-      pages.get(question.page),
-      index === 0 ? null : (questions[index - 1]?.number ?? null),
-    ),
+    reasons: [
+      ...reasonsOf(
+        question,
+        pages.get(question.page),
+        index === 0 ? null : (questions[index - 1]?.number ?? null),
+      ),
+      ...(mediaReasons.get(index) ?? []),
+    ],
   }));
 }
 

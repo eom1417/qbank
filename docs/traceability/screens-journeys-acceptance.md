@@ -88,11 +88,11 @@
 | UAT-020 | ملف متعدد             | M4.2   | done    | `tests/e2e/import.spec.ts`                |
 | UAT-021 | نطاق صفحات            | M4.2   | done    | `tests/integration/imports.test.ts`       |
 | UAT-022 | حالة التقدم           | M4.3   | done    | `tests/e2e/import.spec.ts`                |
-| UAT-023 | ECG أساسي             | M5.2   | planned | —                                         |
-| UAT-024 | صورتان بسؤال          | M5.3   | planned | —                                         |
-| UAT-025 | X-ray مشوش            | M5.4   | planned | —                                         |
-| UAT-026 | جدول مخبري            | M5.5   | planned | —                                         |
-| UAT-027 | صورة بين سؤالين       | M5.2   | planned | —                                         |
+| UAT-023 | ECG أساسي             | M5.2   | done    | `tests/integration/imports-media.test.ts` |
+| UAT-024 | صورتان بسؤال          | M5.3   | done    | `tests/integration/imports-media.test.ts` |
+| UAT-025 | X-ray مشوش            | M5.4   | done    | `tests/integration/imports-media.test.ts` |
+| UAT-026 | جدول مخبري            | M5.5   | done    | `tests/integration/imports-media.test.ts` |
+| UAT-027 | صورة بين سؤالين       | M5.2   | done    | `tests/integration/imports-media.test.ts` |
 | UAT-028 | تعارض مفتاح وشرح      | M6.5   | planned | —                                         |
 | UAT-029 | اقتراح AI             | M6.6   | planned | —                                         |
 | UAT-030 | اعتماد يدوي           | M6.6   | planned | —                                         |

@@ -1,5 +1,6 @@
 import type {
   ImportResponse,
+  MediaListResponse,
   RetryImportRequest,
   SourceListResponse,
 } from '../../../../contracts/sources.js';
@@ -139,4 +140,35 @@ export async function deleteOriginal(deps: SourcesDeps, actor: Actor, sourceId: 
   if (!source.blob_key) return;
   await deps.imports.forgetOriginal(actor.accountId, source.id);
   await deps.blobs.remove(source.blob_key);
+}
+
+/** The pictures an import kept, with the question each belongs to (UI-09, M5). */
+export async function listImportMedia(
+  deps: SourcesDeps,
+  actor: Actor,
+  jobId: string,
+): Promise<MediaListResponse> {
+  const { source } = await ownedJob(deps, actor, jobId);
+  const rows = await deps.questions.mediaOfSource(actor.accountId, source.id);
+  return {
+    media: rows.map((row) => ({
+      id: row.id,
+      questionNumber: row.question_number,
+      page: row.page,
+      position: row.position,
+      kind: row.kind,
+      modality: row.modality,
+      link: row.link,
+      lowQuality: row.low_quality,
+      width: row.width,
+      height: row.height,
+    })),
+  };
+}
+
+/** A kept picture's stored file, only for its owner (anyone else gets a plain 404). */
+export async function mediaFile(deps: SourcesDeps, actor: Actor, mediaId: string) {
+  const media = isId(mediaId) ? await deps.questions.findMedia(actor.accountId, mediaId) : null;
+  if (!media) throw notFound();
+  return deps.blobs.pathOf(media.blob_key);
 }

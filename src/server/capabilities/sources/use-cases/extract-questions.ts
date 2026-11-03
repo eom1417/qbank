@@ -2,10 +2,8 @@ import { inkAround, pickMarked, type Raster } from '../domain/answer-marks.js';
 import { bodyFontFamilies, pageLines } from '../domain/lines.js';
 import { dropRunningLines } from '../domain/running-lines.js';
 import { fontFamily, type PageText } from '../domain/page.js';
-import { parseQuestions, type ParsedQuestion } from '../domain/questions.js';
-import { hasUnreadableText, repairWithOcr } from '../domain/repair.js';
+import { parseQuestions, type ParsedQuestion, type PlacedFigure } from '../domain/questions.js';
 import { renderPage } from '../adapters/raster.js';
-import { pageCount, readByOcr, readTextLayer } from '../adapters/readers.js';
 
 /** `text`: the PDF's text layer (OCR only where it is unreadable). `ocr`: render and OCR every page, as for a scanned file. */
 export type ReadingMode = 'text' | 'ocr';
@@ -24,26 +22,8 @@ export interface ExtractedQuestion {
   /** Null when no option is clearly marked: the question goes to review, never a guess. */
   answer: string | null;
   evidence: AnswerEvidence | null;
-}
-
-/** Text layer first; pages with unreadable glyphs get those lines from OCR instead. */
-async function readHybrid(file: string): Promise<PageText[]> {
-  const pages = await readTextLayer(file);
-  const repaired: PageText[] = [];
-  for (const page of pages) {
-    repaired.push(
-      hasUnreadableText(page) ? repairWithOcr(page, await readByOcr(file, page.page)) : page,
-    );
-  }
-  return repaired;
-}
-
-async function readPages(file: string, mode: ReadingMode): Promise<PageText[]> {
-  if (mode === 'text') return readHybrid(file);
-  const pages: PageText[] = [];
-  for (let page = 1; page <= (await pageCount(file)); page++)
-    pages.push(await readByOcr(file, page));
-  return pages;
+  /** Where its lines are on each page, to link figures by position (M5.2). */
+  spans: ParsedQuestion['spans'];
 }
 
 /** Printed words on a page (the body font, or every OCR word): their ink is not a pen mark. */
@@ -87,7 +67,8 @@ async function answerOf(
 /** OCR pages (no text layer) follow the stricter rules: a lone option is not taken as the key. */
 const modeOf = (page: PageText | undefined): ReadingMode => (page?.visual ? 'text' : 'ocr');
 
-function rasterCache(file: string) {
+/** Page images rendered once per file, shared by mark and figure detection. */
+export function rasterCache(file: string) {
   const rasters = new Map<number, Promise<Raster>>();
   return (page: number) => {
     if (!rasters.has(page)) rasters.set(page, renderPage(file, page));
@@ -102,13 +83,14 @@ function rasterCache(file: string) {
 export async function questionsFromPages(
   file: string,
   pages: readonly PageText[],
+  raster = rasterCache(file),
+  figures: readonly PlacedFigure[] = [],
 ): Promise<ExtractedQuestion[]> {
   const byNumber = new Map(pages.map((page) => [page.page, page]));
   const body = bodyFontFamilies(pages.filter((page) => page.visual));
   const lines = pages.flatMap((page) => pageLines(page, page.visual ? body : null));
   const heights = new Map(pages.map((page) => [page.page, page.height]));
-  const questions = parseQuestions(dropRunningLines(lines, heights));
-  const raster = rasterCache(file);
+  const questions = parseQuestions(dropRunningLines(lines, heights), figures);
   // Measured on the option's own page; the printed letter is masked: only added ink counts.
   const inkOf = async (option: ParsedQuestion['options'][number]) => {
     const page = byNumber.get(option.page);
@@ -121,19 +103,11 @@ export async function questionsFromPages(
   const extracted: ExtractedQuestion[] = [];
   for (const question of questions) {
     const options = question.options.map(({ letter, label, text }) => ({ letter, label, text }));
-    const { number, page, stem } = question;
+    const { number, page, stem, spans } = question;
     const kind = options.length === 0 ? 'essay' : 'mcq';
     const answer =
       kind === 'essay' ? UNDECIDED : await answerOf(question, modeOf(byNumber.get(page)), inkOf);
-    extracted.push({ number, page, stem, kind, options, ...answer });
+    extracted.push({ number, page, stem, kind, options, spans, ...answer });
   }
   return extracted;
-}
-
-/** Rules-first extraction (M3.3): questions, options and pen-marked answers, with page numbers. */
-export async function extractQuestions(
-  file: string,
-  mode: ReadingMode,
-): Promise<ExtractedQuestion[]> {
-  return questionsFromPages(file, await readPages(file, mode));
 }

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { readBytes, renderPgm, runTool, withTempDir } from './run-tool.js';
 
 /** Parses a binary PGM (P5) image as written by `pdftoppm -gray`. */
-function parsePgm(data: Buffer, scale: number): Raster {
+export function parsePgm(data: Buffer, scale: number): Raster {
   const header = /^P5\s+(\d+)\s+(\d+)\s+(\d+)\s/.exec(data.subarray(0, 64).toString('latin1'));
   if (!header?.[1] || !header[2]) throw new Error('not a PGM image');
   const width = Number(header[1]);

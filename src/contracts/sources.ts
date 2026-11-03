@@ -110,3 +110,24 @@ const SourceResponse = z
 
 export const SourceListResponse = z.object({ sources: z.array(SourceResponse) }).strict();
 export type SourceListResponse = z.infer<typeof SourceListResponse>;
+
+/** A picture kept for a question (M5): what it is, how sure the link is, and its quality. */
+const MediaResponse = z
+  .object({
+    id: z.uuid(),
+    questionNumber: z.number().int(),
+    page: z.number().int(),
+    position: z.number().int(),
+    kind: z.enum(['figure', 'table']),
+    /** Named only from the question's stem (FR-06-007): ecg, xray, ct, mri, ultrasound… */
+    modality: z.string().nullable(),
+    /** `uncertain`: placed between questions; the user confirms it in review (UAT-027). */
+    link: z.enum(['certain', 'uncertain']),
+    lowQuality: z.boolean(),
+    width: z.number().int(),
+    height: z.number().int(),
+  })
+  .strict();
+
+export const MediaListResponse = z.object({ media: z.array(MediaResponse) }).strict();
+export type MediaListResponse = z.infer<typeof MediaListResponse>;

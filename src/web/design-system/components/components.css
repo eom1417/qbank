@@ -227,3 +227,37 @@
 .qb-indent {
   padding-inline-start: var(--space-lg);
 }
+.qb-dialog {
+  inline-size: min(100%, var(--size-page));
+  max-inline-size: 100%;
+  max-block-size: var(--size-viewport);
+  padding: var(--space-md);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.qb-dialog__bar {
+  align-items: center;
+  margin-block-end: var(--space-sm);
+}
+/* Enlarging keeps the picture's proportions (FR-06-005); the frame scrolls to pan. */
+.qb-zoom {
+  overflow: auto;
+  max-block-size: calc(var(--size-viewport) - var(--space-2xl) * 3);
+  touch-action: pan-x pan-y pinch-zoom;
+  background: var(--color-canvas);
+}
+.qb-zoom__image {
+  display: block;
+  inline-size: calc(var(--qb-zoom, 1) * 100%);
+  max-inline-size: none;
+  block-size: auto;
+}
+.qb-thumb {
+  display: block;
+  inline-size: 100%;
+  block-size: var(--size-thumb);
+  object-fit: contain;
+  background: var(--color-canvas);
+}

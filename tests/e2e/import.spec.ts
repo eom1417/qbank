@@ -65,3 +65,28 @@ test('import into a new bank, see it complete, then delete the original', async 
   await expect(page.getByText('الملف الأصلي محذوف؛ الأسئلة ومصدرها وصفحاتها باقية.')).toBeVisible();
   await expect(page.getByText('الصفحات: 1–1 · الأسئلة: 2 · تحتاج مراجعة: 0')).toBeVisible();
 });
+
+test('see the pictures an import kept and enlarge one (M5.7)', async ({ page }) => {
+  await newBank(page, 'import-media');
+  await page.getByLabel('ملفات PDF').setInputFiles(fx.media);
+  await page.getByLabel('أؤكد أنه يحق لي استخدام هذه الملفات لمذاكرتي الشخصية.').check();
+  await page.getByRole('button', { name: 'ارفع وابدأ' }).click();
+  const row = page.getByRole('listitem').filter({ hasText: 'media.pdf' });
+  await expect(row.getByText('يحتاج مراجعتك')).toBeVisible({ timeout: 60_000 });
+  await row.getByRole('link', { name: 'media.pdf' }).click();
+  await expect(page.getByRole('heading', { name: 'الصور والجداول' })).toBeVisible();
+  await expect(page.getByText('ربط غير مؤكد — راجعه')).toBeVisible();
+  await expect(page.getByText('جودة منخفضة')).toBeVisible();
+  await page.getByRole('button', { name: 'كبّر الصورة: تخطيط قلب — السؤال 1' }).click();
+  const viewer = page.getByRole('dialog', { name: 'تخطيط قلب — السؤال 1' });
+  await expect(viewer.getByRole('img', { name: 'تخطيط قلب — السؤال 1' })).toBeVisible();
+  const before = await viewer.getByRole('img').boundingBox();
+  await viewer.getByRole('button', { name: 'تكبير' }).click();
+  await viewer.getByRole('button', { name: 'تكبير' }).click();
+  const after = await viewer.getByRole('img').boundingBox();
+  if (!before || !after) throw new Error('the picture is not on screen');
+  expect(after.width / before.width).toBeCloseTo(2, 1);
+  expect(after.width / after.height).toBeCloseTo(before.width / before.height, 1);
+  await viewer.getByRole('button', { name: 'إغلاق' }).click();
+  await expect(viewer).toBeHidden();
+});

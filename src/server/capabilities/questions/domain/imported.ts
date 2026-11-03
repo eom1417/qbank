@@ -10,7 +10,10 @@ export type ReviewReason =
   | 'unreadable_page'
   | 'numbering_gap'
   | 'empty_stem'
-  | 'essay';
+  | 'essay'
+  | 'media_uncertain'
+  | 'media_low_quality'
+  | 'media_not_kept';
 
 /** One question as an import produced it, before it is saved. */
 export interface ImportedQuestion {
@@ -24,6 +27,24 @@ export interface ImportedQuestion {
   /** `pen_mark`, `single_option` or `ai_suggested`: the evidence behind the answer. */
   evidence: string | null;
   reasons: ReviewReason[];
+}
+
+/** A figure or table kept for a question, already stored as a blob (M5). */
+export interface ImportedMedia {
+  /** The question it belongs to, by its place in the source. */
+  questionPage: number;
+  questionNumber: number;
+  /** Order among the question's pictures (FR-06-003). */
+  position: number;
+  page: number;
+  box: { x0: number; y0: number; x1: number; y1: number };
+  kind: 'figure' | 'table';
+  modality: string | null;
+  certain: boolean;
+  blobKey: string;
+  width: number;
+  height: number;
+  quality: { sharpness: number; contrast: number; ppi: number | null; low: boolean };
 }
 
 /** Reasons that only inform; every other reason holds the question for review. */
