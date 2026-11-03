@@ -8,12 +8,15 @@ import { dispatch } from '../bridge/dispatch.ts';
 import { encodeSuccess } from '../bridge/rpc.ts';
 import { listDrivers } from '../bridge/drivers.ts';
 import { readState, stateChanges } from '../bridge/state.ts';
+import { handleAsk } from '../turns/route.ts';
 import type { StreamOpener, TaggedFailure, UnaryHandler } from '../bridge/types.ts';
 import type { HostConfig } from '../config.ts';
 import type { KitRuntime } from '../runtime.ts';
 import { allowed, ownerSessionOf, readJson } from './guard.ts';
 
 export interface Routes {
+  /** Where provider sessions run (the kit's cwd). */
+  readonly cwd: string;
   readonly unary: Readonly<Record<string, UnaryHandler>>;
   readonly streams: Readonly<Record<string, StreamOpener>>;
 }
@@ -119,6 +122,20 @@ async function methodRoute(
   send(response, 404, { error: { _tag: 'NotFound' } });
 }
 
+/** `POST /ask`: QBank's one-shot question (the session owner in turns/). */
+async function askRoute(
+  runtime: KitRuntime,
+  request: IncomingMessage,
+  response: ServerResponse,
+  cwd: string,
+) {
+  const input = await readJson(request);
+  if (input === null)
+    return send(response, 400, { error: { _tag: 'InvalidInput', message: 'Body must be JSON.' } });
+  const reply = await runtime.runPromise(handleAsk(input, cwd));
+  send(response, reply.status, reply.body);
+}
+
 async function route(
   runtime: KitRuntime,
   routes: Routes,
@@ -130,6 +147,8 @@ async function route(
   const owner = ownerSessionOf(request);
   if (!owner) return send(response, 400, { error: { _tag: 'MissingOwnerSession' } });
   if (await stateRoute(runtime, request, response, path)) return;
+  if (request.method === 'POST' && path === '/ask')
+    return askRoute(runtime, request, response, routes.cwd);
   await methodRoute(runtime, routes, request, response, owner);
 }
 

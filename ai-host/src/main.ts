@@ -16,7 +16,7 @@ await runtime.runPromise(startSettingsWatcher);
 const installation = await runtime.runPromise(makeProviderInstallation());
 const server = startServer(
   runtime,
-  { unary: unaryMethods(installation), streams: streamMethods(installation) },
+  { cwd: config.cwd, unary: unaryMethods(installation), streams: streamMethods(installation) },
   config,
 );
 await runtime.runPromise(Effect.logInfo(`ai-host listening on 127.0.0.1:${config.port}`));
