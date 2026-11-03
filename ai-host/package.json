@@ -1,0 +1,13 @@
+{
+  "name": "qbank-ai-host",
+  "private": true,
+  "type": "module",
+  "description": "Runs the vendored T3 AI Providers Kit for QBank and exposes it on a loopback port.",
+  "engines": {
+    "node": ">=24.10"
+  },
+  "scripts": {
+    "start": "node src/main.ts",
+    "typecheck": "../vendor/t3-ai-providers-kit/kit/node_modules/.bin/tsc -p tsconfig.json --noEmit"
+  }
+}

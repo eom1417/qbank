@@ -1,0 +1,17 @@
+{
+  "name": "t3-ai-providers-kit",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.10"
+  },
+  "scripts": {
+    "typecheck": "tsc -p apps/server/tsconfig.json --noEmit",
+    "smoke": "node apps/server/src/providerKit/smoke.ts"
+  },
+  "devDependencies": {
+    "@effect/language-service": "latest",
+    "@types/node": "24.12.4",
+    "typescript": "npm:@tsc-rs/typescript@0.8.0"
+  }
+}

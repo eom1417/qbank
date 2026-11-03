@@ -38,6 +38,7 @@ fi
 
 bash scripts/setup-master-key.sh
 bash scripts/setup-ai-clis.sh
+bash scripts/setup-ai-host.sh
 
 npm ci
 npx playwright install --with-deps chromium

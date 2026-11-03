@@ -5,7 +5,7 @@ import { genesisStrictRules } from './.genesis/adapters/eslint.rules.mjs';
 
 export default tseslint.config(
   // Platform-managed files (gitignored, re-provisioned by the host) are not project code.
-  { ignores: ['dist/**', 'node_modules/**', '.data/**', '.dependency-cruiser.cjs', 'scripts/browser.mjs', '.browser/**'] },
+  { ignores: ['dist/**', 'node_modules/**', '.data/**', '.dependency-cruiser.cjs', 'scripts/browser.mjs', '.browser/**', 'vendor/**'] },
   js.configs.recommended,
   ...tseslint.configs.strict,
   {

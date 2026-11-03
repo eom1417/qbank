@@ -1,0 +1,53 @@
+{
+  "name": "t3",
+  "version": "0.1.6",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pingdotgg/t3code",
+    "directory": "apps/server"
+  },
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "0.3.284",
+    "@effect/platform-node": "4.1.2",
+    "@t3tools/provider-acp": "workspace:*",
+    "@t3tools/provider-acp-registry": "workspace:*",
+    "@t3tools/provider-core": "workspace:*",
+    "@t3tools/provider-cursor": "workspace:*",
+    "@t3tools/provider-fx": "workspace:*",
+    "@t3tools/provider-grok": "workspace:*",
+    "@t3tools/provider-kiro": "workspace:*",
+    "@t3tools/provider-muse": "workspace:*",
+    "@t3tools/provider-opencode": "workspace:*",
+    "@t3tools/provider-pi": "workspace:*",
+    "character-entities": "2.0.2",
+    "diff": "8.0.3",
+    "effect": "4.1.2",
+    "jose": "6.2.2",
+    "proper-lockfile": "4.1.2",
+    "saxes": "6.0.0",
+    "stream-chain": "4.2.5",
+    "stream-json": "3.6.0",
+    "yaml": "2.9.0",
+    "yauzl": "3.4.0"
+  },
+  "devDependencies": {
+    "@t3tools/contracts": "workspace:*",
+    "@t3tools/secret-provider-core": "workspace:*",
+    "@t3tools/secret-provider-definitions": "workspace:*",
+    "@t3tools/secret-provider-onepassword": "workspace:*",
+    "@t3tools/shared": "workspace:*",
+    "@types/node": "24.12.4",
+    "@types/proper-lockfile": "4.1.4",
+    "@types/yauzl": "3.4.0",
+    "effect-acp": "workspace:*",
+    "effect-codex-app-server": "workspace:*"
+  },
+  "engines": {
+    "node": "^22.16 || ^23.11 || >=24.10"
+  }
+}

@@ -12,6 +12,8 @@ __pycache__/
 .coverage
 /coverage/
 node_modules/
+# ai-host resolves the kit's packages through a link (made by setup.sh), not its own install.
+/ai-host/node_modules
 .venv/
 venv/
 .env

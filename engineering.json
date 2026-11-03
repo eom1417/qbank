@@ -15,7 +15,28 @@
   ],
   "asset_extensions": [],
   "asset_patterns": [],
-  "generated": [],
+  "generated": [
+    {
+      "pattern": "vendor/t3-ai-providers-kit/*",
+      "reason": "T3 AI Providers Kit (MIT, pingdotgg/t3code), vendored byte-for-byte by owner decision DEC-30; third-party code, never hand-edited",
+      "regenerate": "replace vendor/t3-ai-providers-kit with a new kit release, then run node scripts/vendor-lock.mjs --write",
+      "verify": [
+        "node",
+        "scripts/vendor-lock.mjs",
+        "--check"
+      ]
+    },
+    {
+      "pattern": "vendor/*.lock.json",
+      "reason": "SHA-256 of every vendored file, written by scripts/vendor-lock.mjs",
+      "regenerate": "node scripts/vendor-lock.mjs --write",
+      "verify": [
+        "node",
+        "scripts/vendor-lock.mjs",
+        "--check"
+      ]
+    }
+  ],
   "external_function_gates": [],
   "skills": {
     "required": [
