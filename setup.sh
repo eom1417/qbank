@@ -19,6 +19,8 @@ if ! pg_lsclusters -h | grep -q '^16 qbank '; then
 fi
 pg_ctlcluster 16 qbank start 2>/dev/null || true
 
+bash scripts/setup-reading-tools.sh
+
 if [ ! -f .env.local ]; then
   PW="$(python3 -c 'import secrets; print(secrets.token_urlsafe(24))')"
   su postgres -c "psql -q -v ON_ERROR_STOP=1" <<SQL

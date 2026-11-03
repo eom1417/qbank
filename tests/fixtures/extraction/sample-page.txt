@@ -1,0 +1,26 @@
+%%MediaBox 0 0 612 792
+%%Font TmRm Times-Roman
+%%Font TmBd Times-Bold
+%%Font Helv Helvetica
+
+% Synthetic recall page for the extraction tests: printed questions, one hand-drawn circle,
+% a single-option question, an unmarked question and a note in another font.
+BT /TmBd 12 Tf 44 740 Td (Q1\) A child has peaked T waves on the ECG. Which electrolyte) Tj ET
+BT /TmBd 12 Tf 44 725 Td (disturbance is the most likely cause?) Tj ET
+BT /TmRm 12 Tf 44 700 Td (A. Hypokalemia) Tj ET
+BT /TmRm 12 Tf 44 680 Td (B. Hypocalcemia) Tj ET
+BT /TmRm 12 Tf 44 660 Td (C. Hyperkalemia) Tj ET
+BT /TmRm 12 Tf 44 640 Td (D. Hypomagnesemia) Tj ET
+0.8 0.2 0.4 RG 1.6 w
+61.0 664.0 m
+61.0 669.5 56.1 674.0 50.0 674.0 c
+43.9 674.0 39.0 669.5 39.0 664.0 c
+39.0 658.5 43.9 654.0 50.0 654.0 c
+56.1 654.0 61.0 658.5 61.0 664.0 c
+S
+BT /TmBd 12 Tf 44 590 Td (Q2\) First-line treatment of stable SVT in a child?) Tj ET
+BT /TmRm 12 Tf 44 566 Td (A. Vagal manoeuvres) Tj ET
+BT /TmBd 12 Tf 44 520 Td (Q3\) Which murmur is louder on standing?) Tj ET
+BT /TmRm 12 Tf 44 496 Td (A. Hypertrophic cardiomyopathy) Tj ET
+BT /TmRm 12 Tf 44 476 Td (B. Innocent murmur) Tj ET
+BT /Helv 12 Tf 44 456 Td (A. handwritten note, not an option) Tj ET
