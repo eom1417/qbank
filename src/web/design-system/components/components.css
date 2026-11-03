@@ -261,3 +261,15 @@
   object-fit: contain;
   background: var(--color-canvas);
 }
+/* A share of a limit (FR usage limits): the text beside it carries the number. */
+.qb-meter {
+  block-size: var(--space-sm);
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
+  overflow: hidden;
+}
+.qb-meter__bar {
+  block-size: 100%;
+  inline-size: calc(var(--qb-meter, 0) * 1%);
+  background: var(--color-accent);
+}

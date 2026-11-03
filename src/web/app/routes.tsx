@@ -17,6 +17,7 @@ import { MutedText } from '../design-system/index.js';
 import { useI18n } from '../platform/i18n/i18n.js';
 import { AppShell } from './AppShell.js';
 import { SettingsPage } from './SettingsPage.js';
+import { ProvidersScreen } from '../capabilities/providers/ProvidersScreen.js';
 
 function Loading() {
   const { t } = useI18n();
@@ -77,6 +78,14 @@ export const router = createBrowserRouter([
         element: (
           <Private>
             <SettingsPage />
+          </Private>
+        ),
+      },
+      {
+        path: '/settings/providers',
+        element: (
+          <Private>
+            <ProvidersScreen />
           </Private>
         ),
       },

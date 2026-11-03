@@ -28,6 +28,13 @@ async function send(method: string, path: string, body?: unknown): Promise<Respo
   }
 }
 
+/**
+ * The raw response, for APIs with their own error shape (the AI providers kit replies with
+ * its tagged errors). Network failures still throw `ApiError('network')`.
+ */
+export const apiRaw = (method: 'GET' | 'POST', path: string, body?: unknown) =>
+  send(method, path, body);
+
 /** The one HTTP client of the SPA: responses are validated against the shared contracts. */
 export async function apiRequest<S extends z.ZodType>(
   method: 'GET' | 'POST' | 'PATCH' | 'DELETE',

@@ -48,6 +48,11 @@ export function registerProviderRoutes(
     return reply.status(result.status).send(result.body);
   });
 
+  app.get('/api/providers/drivers', async (request, reply) => {
+    const result = await client.read('/drivers', await ownerOf(requireActor, request));
+    return reply.status(result.status).send(result.body);
+  });
+
   app.get('/api/providers/state/events', async (request, reply) =>
     relayEvents(client, request, reply, '/state/events', await ownerOf(requireActor, request)),
   );

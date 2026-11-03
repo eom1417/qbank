@@ -6,6 +6,7 @@ import * as Stream from 'effect/Stream';
 
 import { dispatch } from '../bridge/dispatch.ts';
 import { encodeSuccess } from '../bridge/rpc.ts';
+import { listDrivers } from '../bridge/drivers.ts';
 import { readState, stateChanges } from '../bridge/state.ts';
 import type { StreamOpener, TaggedFailure, UnaryHandler } from '../bridge/types.ts';
 import type { HostConfig } from '../config.ts';
@@ -86,7 +87,7 @@ async function unaryCall(
   send(response, reply.status, reply.body);
 }
 
-/** The provider state snapshot and its live changes. */
+/** The driver definitions, the provider state snapshot and its live changes. */
 async function stateRoute(
   runtime: KitRuntime,
   request: IncomingMessage,
@@ -94,7 +95,8 @@ async function stateRoute(
   path: string,
 ) {
   if (request.method !== 'GET') return false;
-  if (path === '/state') send(response, 200, await runtime.runPromise(readState));
+  if (path === '/drivers') send(response, 200, { drivers: listDrivers() });
+  else if (path === '/state') send(response, 200, await runtime.runPromise(readState));
   else if (path === '/state/events')
     sse(runtime, request, response, await runtime.runPromise(stateChanges));
   else return false;

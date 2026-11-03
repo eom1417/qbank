@@ -1,4 +1,5 @@
-import { Heading, NarrowColumn } from '../design-system/index.js';
+import { Link } from 'react-router';
+import { buttonClass, Heading, NarrowColumn } from '../design-system/index.js';
 import { AiSettings } from '../capabilities/ai/AiSettings.js';
 import { AccountSettings } from '../capabilities/identity/AccountSettings.js';
 import { TagsCard } from '../capabilities/library/TagsCard.js';
@@ -10,6 +11,9 @@ export function SettingsPage() {
   return (
     <NarrowColumn>
       <Heading>{t('settings.title')}</Heading>
+      <Link className={buttonClass('secondary')} to="/settings/providers">
+        {t('providers.title')}
+      </Link>
       <AccountSettings />
       <AiSettings />
       <TagsCard />

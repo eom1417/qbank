@@ -33,3 +33,124 @@ export const KitMethod = z.enum(KIT_METHODS);
 export const KitStream = z.enum(KIT_STREAMS);
 export type KitMethod = z.infer<typeof KitMethod>;
 export type KitStream = z.infer<typeof KitStream>;
+
+/** What the providers screens read of one kit instance (the kit's `ServerProvider`). */
+export const ProviderView = z.looseObject({
+  instanceId: z.string(),
+  driver: z.string(),
+  displayName: z.string().optional(),
+  badgeLabel: z.string().optional(),
+  enabled: z.boolean(),
+  installed: z.boolean(),
+  version: z.string().nullable(),
+  status: z.enum(['ready', 'warning', 'error', 'disabled']),
+  message: z.string().optional(),
+  auth: z.looseObject({
+    status: z.enum(['authenticated', 'unauthenticated', 'unknown']),
+    label: z.string().optional(),
+    email: z.string().optional(),
+    canLogout: z.boolean().optional(),
+  }),
+  setup: z
+    .looseObject({
+      canAuthenticate: z.boolean(),
+      canInstall: z.boolean(),
+      documentationUrl: z.string().optional(),
+    })
+    .optional(),
+  models: z.array(
+    z.looseObject({ slug: z.string(), name: z.string(), isDefault: z.boolean().optional() }),
+  ),
+  usageLimits: z
+    .looseObject({
+      windows: z.array(
+        z.looseObject({
+          id: z.string(),
+          label: z.string(),
+          usedPercent: z.number(),
+          resetsAt: z.string().optional(),
+        }),
+      ),
+      resetCredits: z.looseObject({ availableCount: z.number() }).optional(),
+    })
+    .optional(),
+  versionAdvisory: z
+    .looseObject({
+      status: z.string(),
+      latestVersion: z.string().nullable(),
+      canUpdate: z.boolean(),
+    })
+    .optional(),
+  updateState: z.looseObject({ status: z.string(), message: z.string().nullable() }).optional(),
+});
+export type ProviderView = z.infer<typeof ProviderView>;
+
+/** A configured instance as settings.json keeps it (secrets redacted by the kit). */
+const InstanceConfig = z.looseObject({ driver: z.string(), enabled: z.boolean().optional() });
+export type InstanceConfig = z.infer<typeof InstanceConfig>;
+
+export const ProviderStateResponse = z.looseObject({
+  providers: z.array(ProviderView),
+  settings: z.looseObject({ providerInstances: z.record(z.string(), InstanceConfig).optional() }),
+});
+export type ProviderStateResponse = z.infer<typeof ProviderStateResponse>;
+
+/** A driver the user can add (the kit's client definition). */
+export const DriverView = z.looseObject({
+  driverKind: z.string(),
+  label: z.string(),
+  badgeLabel: z.string().nullable(),
+  featured: z.boolean(),
+  environmentFields: z.array(
+    z.looseObject({
+      name: z.string(),
+      label: z.string(),
+      description: z.string().optional(),
+      sensitive: z.boolean().optional(),
+    }),
+  ),
+});
+export type DriverView = z.infer<typeof DriverView>;
+export const DriverListResponse = z.looseObject({ drivers: z.array(DriverView) });
+
+const AuthInteraction = z.union([
+  z.looseObject({
+    type: z.literal('browser'),
+    id: z.string(),
+    url: z.string(),
+    acceptsCallback: z.boolean().optional(),
+  }),
+  z.looseObject({
+    type: z.literal('deviceCode'),
+    id: z.string(),
+    url: z.string(),
+    userCode: z.string(),
+  }),
+  z.looseObject({ type: z.literal('terminal'), id: z.string(), output: z.string() }),
+  z.looseObject({
+    type: z.literal('credentials'),
+    id: z.string(),
+    fields: z.array(z.looseObject({ name: z.string(), label: z.string(), secret: z.boolean() })),
+  }),
+]);
+
+/** One sign-in flow as the kit reports it (`ProviderAuthState`). */
+export const AuthStateView = z.looseObject({
+  instanceId: z.string(),
+  phase: z.enum(['idle', 'starting', 'waiting', 'verifying', 'succeeded', 'failed', 'cancelled']),
+  flowId: z.string().nullable(),
+  authorizationUrl: z.string().nullable(),
+  message: z.string().nullable(),
+  methods: z
+    .array(
+      z.looseObject({
+        id: z.string(),
+        name: z.string(),
+        description: z.string().nullable(),
+        type: z.string(),
+      }),
+    )
+    .optional(),
+  interaction: AuthInteraction.nullable().optional(),
+});
+export type AuthStateView = z.infer<typeof AuthStateView>;
