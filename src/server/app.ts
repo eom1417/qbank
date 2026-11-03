@@ -3,6 +3,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import { createAi } from './capabilities/ai/index.js';
 import { createIdentity, type RequireActor } from './capabilities/identity/index.js';
 import { createLibrary } from './capabilities/library/index.js';
+import { createProviders } from './capabilities/providers/index.js';
 import { createQuestions } from './capabilities/questions/index.js';
 import { createSources } from './capabilities/sources/index.js';
 import type { Clock } from './platform/clock.js';
@@ -88,6 +89,7 @@ export function buildApp({ config, db, clock }: AppDeps): FastifyInstance {
   });
   identity.register(app);
   registerContent(app, { config, db, clock }, identity.requireActor);
+  createProviders({ aiHost: config.aiHost, requireActor: identity.requireActor }).register(app);
   if (config.devOutbox) registerOutboxRoute(app, db);
   app.get('/api/health', async () => ({ status: 'ok' }));
   return app;

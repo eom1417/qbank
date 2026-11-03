@@ -22,6 +22,8 @@ const Env = z.object({
   QBANK_CLAUDE_BIN: z.string().min(1).default('claude'),
   QBANK_CODEX_BIN: z.string().min(1).default('codex'),
   QBANK_AI_WORK_DIR: z.string().min(1).default('.data/ai-work'),
+  QBANK_AI_HOST_URL: z.url({ protocol: /^http$/ }).default('http://127.0.0.1:3790'),
+  QBANK_AI_HOST_TOKEN: z.string().min(32).optional(),
 });
 
 export interface AppConfig {
@@ -47,6 +49,11 @@ export interface AppConfig {
     /** Days an original stays after its import ends unless the user deletes it (DEC-13). */
     originalRetentionDays: number;
   };
+  /**
+   * The AI host (ai-host/): the vendored T3 AI Providers Kit on a loopback port. Without a token
+   * the providers screens report it as unavailable.
+   */
+  aiHost: { url: string; token: string | null };
   /** Encrypts BYOK keys at rest; never logged, never sent to the browser. */
   masterKey: Buffer;
   ai: {
@@ -105,6 +112,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       worker: parsed.QBANK_WORKER === 'true',
       originalRetentionDays: parsed.QBANK_ORIGINAL_RETENTION_DAYS,
     },
+    aiHost: { url: parsed.QBANK_AI_HOST_URL, token: parsed.QBANK_AI_HOST_TOKEN ?? null },
     masterKey: Buffer.from(parsed.QBANK_MASTER_KEY, 'base64'),
     ai: {
       allowPrivateUrls: parsed.QBANK_AI_ALLOW_PRIVATE_URLS === 'true',

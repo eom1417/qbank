@@ -29,7 +29,16 @@ interface TestApp {
 }
 
 /** A real app on the dedicated test database, migrated and emptied before each suite. */
-async function startTestApp(clock: Clock = { now: () => new Date() }): Promise<TestApp> {
+/** No AI host unless a suite starts one (tests/support/ai-host.ts). */
+const NO_AI_HOST = { url: 'http://127.0.0.1:9', token: null };
+
+interface TestAppOptions {
+  clock?: Clock;
+  aiHost?: () => { url: string; token: string | null };
+}
+
+async function startTestApp(options: TestAppOptions = {}): Promise<TestApp> {
+  const clock = options.clock ?? { now: () => new Date() };
   const db = createDb(testDatabaseUrl());
   await migrateToLatest(db);
   // Test database only (TEST_DATABASE_URL); every owned table cascades from account.
@@ -52,6 +61,7 @@ async function startTestApp(clock: Clock = { now: () => new Date() }): Promise<T
       worker: false,
       originalRetentionDays: 7,
     },
+    aiHost: options.aiHost?.() ?? NO_AI_HOST,
     masterKey: TEST_MASTER_KEY,
     // Tests reach the fake provider on 127.0.0.1; production keeps this off (SSRF guard).
     ai: {
@@ -74,10 +84,10 @@ async function startTestApp(clock: Clock = { now: () => new Date() }): Promise<T
 }
 
 /** Starts one test app for the current suite file; call the returned getter inside tests. */
-export function useTestApp() {
+export function useTestApp(options: TestAppOptions = {}) {
   let current: TestApp | undefined;
   beforeAll(async () => {
-    current = await startTestApp();
+    current = await startTestApp(options);
   });
   afterAll(() => current?.close());
   const started = () => {

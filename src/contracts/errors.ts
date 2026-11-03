@@ -18,6 +18,7 @@ export const ErrorCode = z.enum([
   'approval_required',
   'not_retryable',
   'original_deleted',
+  'ai_host_unavailable',
   'internal',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;

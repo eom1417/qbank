@@ -1,5 +1,8 @@
+import { providersEn } from './catalog-providers-en.js';
+
 /** English UI strings. catalog-ar.ts must define exactly the same keys (enforced by its type). */
 export const en = {
+  ...providersEn,
   'app.name': 'QBank Engine',
   'shell.language': 'العربية',
   'shell.theme.system': 'Theme: system',

@@ -1,6 +1,8 @@
 import type { MessageKey } from './catalog-en.js';
+import { providersAr } from './catalog-providers-ar.js';
 
 export const ar: Record<MessageKey, string> = {
+  ...providersAr,
   'app.name': 'محرك بنك الأسئلة',
   'shell.language': 'English',
   'shell.theme.system': 'المظهر: حسب الجهاز',

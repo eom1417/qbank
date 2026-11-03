@@ -17,6 +17,7 @@ const STATUS: Record<ErrorCode, number> = {
   approval_required: 409,
   not_retryable: 409,
   original_deleted: 409,
+  ai_host_unavailable: 503,
   internal: 500,
 };
 

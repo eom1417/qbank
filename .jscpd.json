@@ -1,1 +1,10 @@
-{ "threshold": 0, "minLines": 6, "minTokens": 40, "reporters": ["console"], "absolute": false, "gitignore": true, "pattern": "{src,tests,migrations}/**/*.{ts,tsx}" }
+{
+  "threshold": 0,
+  "minLines": 6,
+  "minTokens": 40,
+  "reporters": ["console"],
+  "absolute": false,
+  "gitignore": true,
+  "pattern": "{src,tests,migrations}/**/*.{ts,tsx}",
+  "ignore": ["vendor/**", "ai-host/node_modules/**"]
+}
