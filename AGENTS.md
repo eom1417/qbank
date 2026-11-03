@@ -71,7 +71,7 @@ Goal → owner lookup → impact map (entry → use case → domain → adapter 
 
 Never without the owner's explicit approval of the exact action: merge, deploy, publish, push to the main branch, force-push, delete branches or data, rotate secrets, buy services, change repository settings, run destructive migrations. In Claude Code the hook asks the owner before such commands run. Preserve other people's uncommitted work.
 
-Milestone branches (`docs/DECISIONS.md` DEC-29): one branch per milestone, cut from a clean `main`. When a milestone is done, ask the owner plainly «هل تريد دمج الفرع؟». An owner instruction to continue with the next milestone approves merging that branch into `main`, deleting it and removing temporary files before the next milestone starts, unless the owner explicitly says not to merge. Never start a milestone while an earlier branch is unresolved. The hook still asks the owner to confirm the exact command.
+Milestone branches (`docs/DECISIONS.md` DEC-29): one branch per milestone, cut from a clean `main`. When a milestone is done, ask the owner plainly «هل تريد دمج الفرع؟». An owner instruction to continue with the next milestone approves merging that branch into `main`, deleting it and removing temporary files before the next milestone starts, unless the owner explicitly says not to merge. Never start a milestone while an earlier branch is unresolved. The hook therefore lets a local `--ff-only` merge through without a prompt; any other merge, a push to `main` and every other outward action still ask.
 
 ## Docs on demand (`.genesis/docs/`)
 

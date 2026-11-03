@@ -61,6 +61,21 @@ class OwnerConfirmationTests(RepoCase):
                 decision = json.loads(done.stdout)['hookSpecificOutput']
                 self.assertEqual(decision['permissionDecision'], 'ask')
 
+    def test_local_fast_forward_merge_follows_the_owner_rule(self):
+        # DEC-29 (owner): a local fast-forward merge of a milestone branch runs on the owner's
+        # word; any other merge, or a push to main in the same command, still asks.
+        quiet = ('git checkout main && git merge --ff-only feat/m4 && git branch -d feat/m4',)
+        asks = ('git merge feat/m4', 'git merge --no-ff feat/m4',
+                'git merge --ff-only feat/m4 && git push origin main',
+                'git merge --ff-only feat/m4 && git merge feat/other')
+        for command in quiet:
+            with self.subTest(command=command):
+                self.assertEqual(self.bash(command).stdout.strip(), '')
+        for command in asks:
+            with self.subTest(command=command):
+                decision = json.loads(self.bash(command).stdout)['hookSpecificOutput']
+                self.assertEqual(decision['permissionDecision'], 'ask')
+
     def test_routine_commands_do_not_ask(self):
         for command in ('git push -u origin feat/login', 'npm test', 'git status'):
             with self.subTest(command=command):
