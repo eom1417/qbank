@@ -21,6 +21,14 @@ function mentions(text: string, name: string): boolean {
 }
 
 /**
+ * The tags whose names the question mentions (FR-11-004, FR-08-002): suggestions only, the
+ * user's own tags on a question always stay.
+ */
+export function suggestTags(text: string, tags: readonly { id: string; name: string }[]): string[] {
+  return tags.filter((tag) => mentions(text, tag.name)).map((tag) => tag.id);
+}
+
+/**
  * A chapter and topic for a question from the names the user gave them (FR-08-002): the
  * longest topic name the question mentions wins, else the longest chapter name. Only a
  * suggestion: the user's own choice always stays (M7 edits it).

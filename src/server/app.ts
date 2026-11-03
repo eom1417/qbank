@@ -37,6 +37,7 @@ function registerContent(
     clock,
     requireActor: requireActor,
     chaptersOf: library.chaptersOf,
+    tagsOf: library.tagsOf,
   });
   questions.register(app);
   const ai = createAi({

@@ -191,6 +191,13 @@ interface QuestionTable {
   source_seq: ColumnType<number, number | undefined, number>;
 }
 
+interface QuestionTagTable {
+  question_id: string;
+  tag_id: string;
+  owner_id: string;
+  origin: 'suggested' | 'manual';
+}
+
 interface QuestionVersionTable {
   question_id: string;
   version: number;
@@ -236,4 +243,5 @@ export interface Database {
   question: QuestionTable;
   media: MediaTable;
   question_version: QuestionVersionTable;
+  question_tag: QuestionTagTable;
 }

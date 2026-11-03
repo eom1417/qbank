@@ -34,6 +34,7 @@ describe('answer keys in the source (M6.2, M6.4, M6.5, M6.7, M6.8, M6.11)', () =
     const topic = (
       await owner.post(`/api/chapters/${chapter.id}/topics`, { name: 'Heart murmurs' })
     ).json();
+    const tag = (await owner.post('/api/tags', { name: 'Kawasaki' })).json();
     const { job } = await imported(owner, bankId, fixtures().keys);
     const saved = await rows(job.sourceId);
     expect(
@@ -52,6 +53,9 @@ describe('answer keys in the source (M6.2, M6.4, M6.5, M6.7, M6.8, M6.11)', () =
       explanation: 'The correct answer is C because adrenaline reverses shock.',
     });
     expect(saved[3]?.multi_select).toBe(true);
+    const kawasaki = (await owner.get(`/api/questions/${saved[3]?.id}`)).json();
+    expect(kawasaki.tags).toEqual([{ id: tag.id, origin: 'suggested' }]);
+    expect((await owner.get(`/api/questions/${saved[0]?.id}`)).json().tags).toEqual([]);
     expect(saved[0]).toMatchObject({
       topic_id: topic.id,
       chapter_id: chapter.id,
@@ -67,11 +71,23 @@ describe("versions and the user's own answers (M6.1)", () => {
     const { owner, bankId } = await ownerWithBank(app());
     const { job } = await imported(owner, bankId, fixtures().keys);
     const third = (await rows(job.sourceId))[2];
+    if (!third) throw new Error('the fixture has a third question');
     await app
       .db()
       .updateTable('question')
       .set({ answer_letters: ['A'], answer_letter: 'A', answer_provenance: 'manual' })
-      .where('id', '=', third?.id ?? '')
+      .where('id', '=', third.id)
+      .execute();
+    const tag = (await owner.post('/api/tags', { name: 'Vaccines' })).json();
+    await app
+      .db()
+      .insertInto('question_tag')
+      .values({
+        question_id: third.id,
+        tag_id: tag.id,
+        owner_id: third.owner_id,
+        origin: 'manual',
+      })
       .execute();
     await owner.post(`/api/imports/${job.id}/retry`, {});
     await runImports(app());
@@ -81,11 +97,13 @@ describe("versions and the user's own answers (M6.1)", () => {
       'manual',
       'eligible',
     ]);
+    const tags = (await owner.get(`/api/questions/${third.id}`)).json().tags;
+    expect(tags).toEqual([{ id: tag.id, origin: 'manual' }]);
     const versions = await app
       .db()
       .selectFrom('question_version')
       .select('origin')
-      .where('question_id', '=', third?.id ?? '')
+      .where('question_id', '=', third.id)
       .execute();
     expect(versions.map((v) => v.origin)).toEqual(['import', 'import']);
   });

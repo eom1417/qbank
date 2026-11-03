@@ -30,6 +30,8 @@ export function createLibrary(settings: LibrarySettings) {
   return {
     /** A bank's chapters with their topics, for other capabilities (questions' suggestions). */
     chaptersOf: (ownerId: string, bankId: string) => deps.taxonomy.listChapters(ownerId, bankId),
+    /** The account's tags, for questions' tag suggestions (FR-11-004). */
+    tagsOf: (ownerId: string) => deps.tags.list(ownerId),
     register: (app: FastifyInstance) => {
       registerBankRoutes(app, deps, requireActor);
       registerTaxonomyRoutes(app, deps, requireActor);

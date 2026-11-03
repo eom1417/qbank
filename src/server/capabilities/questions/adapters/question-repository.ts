@@ -4,7 +4,8 @@ import type { Db } from '../../../platform/db/index.js';
 import type { ChapterNames } from '../domain/classify.js';
 import { withAnswerFile } from '../domain/answer-file.js';
 import { occurrencesOf, type ImportedQuestion } from '../domain/imported.js';
-import { existingAt, importedValues, type Place } from './question-writes.js';
+import { suggestTags } from '../domain/classify.js';
+import { existingAt, importedValues, writeSuggestedTags, type Place } from './question-writes.js';
 
 export interface SourceCounts {
   sourceId: string;
@@ -66,16 +67,16 @@ async function recordVersion(db: Db, questionId: string, origin: string, now: Da
 async function saveImported(
   db: Db,
   newId: () => string,
-  writes: { place: Place; chapters: readonly ChapterNames[]; now: Date },
+  writes: { place: Place; names: BankNames; now: Date },
   questions: readonly ImportedQuestion[],
 ) {
-  const { place, chapters, now } = writes;
+  const { place, names, now } = writes;
   const occurrences = occurrencesOf(questions);
   for (const [seq, question] of questions.entries()) {
     const occurrence = occurrences[seq] ?? 1;
     const existing = await existingAt(db, place, question, occurrence);
     const values = {
-      ...importedValues(question, existing, chapters),
+      ...importedValues(question, existing, names.chapters),
       source_seq: seq,
       updated_at: now,
     };
@@ -96,6 +97,8 @@ async function saveImported(
           ...values,
         })
         .execute();
+    const text = `${question.stem} ${question.explanation ?? ''}`;
+    await writeSuggestedTags(db, place.ownerId, id, suggestTags(text, names.tags));
     await recordVersion(db, id, 'import', now);
   }
 }
@@ -186,17 +189,39 @@ async function countsBySource(db: Db, ownerId: string, bankId: string): Promise<
 }
 
 /** Owner-scoped store of questions; an import writes each one once per source place. */
-export function createQuestionRepository(
-  db: Db,
-  newId: () => string,
-  chaptersOf: (ownerId: string, bankId: string) => Promise<readonly ChapterNames[]>,
-) {
+/** The names the user gave their bank's chapters and topics, and their tags. */
+interface BankNames {
+  chapters: readonly ChapterNames[];
+  tags: readonly { id: string; name: string }[];
+}
+
+/** Reads those names from the library (passed in: questions never reach into it). */
+export interface NameLookups {
+  chaptersOf(ownerId: string, bankId: string): Promise<readonly ChapterNames[]>;
+  tagsOf(ownerId: string): Promise<readonly { id: string; name: string }[]>;
+}
+
+/** A question's tags and whether each was suggested or set by the user. */
+const tagsOfQuestion = (db: Db, ownerId: string, questionId: string) =>
+  db
+    .selectFrom('question_tag')
+    .select(['tag_id', 'origin'])
+    .where('owner_id', '=', ownerId)
+    .where('question_id', '=', questionId)
+    .orderBy('tag_id')
+    .execute();
+
+export function createQuestionRepository(db: Db, newId: () => string, lookups: NameLookups) {
   return {
     saveImported: async (place: Place, questions: readonly ImportedQuestion[], now: Date) => {
-      const chapters = await chaptersOf(place.ownerId, place.bankId);
-      await saveImported(db, newId, { place, chapters, now }, questions);
+      const names = {
+        chapters: await lookups.chaptersOf(place.ownerId, place.bankId),
+        tags: await lookups.tagsOf(place.ownerId),
+      };
+      await saveImported(db, newId, { place, names, now }, questions);
     },
     findQuestion: (ownerId: string, id: string) => findQuestion(db, ownerId, id),
+    tagsOfQuestion: (ownerId: string, id: string) => tagsOfQuestion(db, ownerId, id),
     updateQuestion: (
       ownerId: string,
       id: string,

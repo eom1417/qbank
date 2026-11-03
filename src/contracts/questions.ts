@@ -26,6 +26,8 @@ export const QuestionResponse = z
     topicId: z.uuid().nullable(),
     /** none, suggested (from the bank's names) or manual (FR-08-002). */
     classification: z.enum(['none', 'suggested', 'manual']),
+    /** Tags on the question: suggested from the account's tag names, or set by the user. */
+    tags: z.array(z.object({ id: z.uuid(), origin: z.enum(['suggested', 'manual']) }).strict()),
     /** unset, manual or inferred from results, always said (FR-11-005). */
     difficulty: z
       .object({ kind: z.enum(['unset', 'manual', 'inferred']), value: z.number().int().nullable() })

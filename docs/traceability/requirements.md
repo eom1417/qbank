@@ -61,7 +61,7 @@
 | FR-06-003 | صور متعددة للسؤال             | مقترح  | M5.3   | done    | `tests/integration/imports-media.test.ts`        |
 | FR-06-004 | الامتداد عبر الصفحات          | مقترح  | M5.3   | done    | `tests/integration/imports-media.test.ts`        |
 | FR-06-005 | تكبير دون تشويه               | مقترح  | M5.7   | done    | `tests/e2e/import.spec.ts`                       |
-| FR-06-006 | جودة الصورة شرط قبول          | مقترح  | M5.4   | partial | `tests/integration/imports-media.test.ts`        |
+| FR-06-006 | جودة الصورة شرط قبول          | مقترح  | M5.4   | done    | `tests/integration/imports-media.test.ts`        |
 | FR-06-007 | هوية الصورة ووصفها            | مقترح  | M5.6   | done    | `tests/unit/sources/media-links.test.ts`         |
 | FR-06-008 | فصل الصورة عن الكتاب          | مقترح  | M5.8   | done    | `tests/unit/sources/media-links.test.ts`         |
 | FR-07-001 | مفتاح ظاهر في المصدر          | سابق   | M6.2   | done    | `tests/integration/answers.test.ts`              |
@@ -75,7 +75,7 @@
 | FR-07-009 | شروحات المؤلف                 | مقترح  | M6.8   | done    | `tests/integration/answers.test.ts`              |
 | FR-07-010 | عدم كشف الحل مبكراً           | مقترح  | M10.2  | planned | —                                                |
 | FR-08-001 | القراءة والاستخراج بمساعدة AI | سابق   | M6.10  | partial | `tests/unit/sources/answers.test.ts`             |
-| FR-08-002 | تصنيف موضوع السؤال            | سابق   | M6.9   | partial | `tests/integration/answers.test.ts`              |
+| FR-08-002 | تصنيف موضوع السؤال            | سابق   | M6.9   | done    | `tests/integration/answers.test.ts`              |
 | FR-08-003 | كشف خلل المحتوى               | سابق   | M6.10  | done    | `tests/unit/sources/answers.test.ts`             |
 | FR-08-004 | إصلاح اختياري مقيد            | سابق   | M7.4   | planned | —                                                |
 | FR-08-005 | شرح AI بعد الإجابة            | مقترح  | M9.4   | planned | —                                                |
@@ -176,7 +176,7 @@
 | FR-18-005 | الاستعادة المنظمة             | مقترح  | M13.3  | planned | —                                                |
 | FR-18-006 | إشعار المحتوى الذي لا يُنقل   | مقترح  | M13.1  | planned | —                                                |
 | FR-19-001 | حذف PDF بعد تحقق الاكتمال     | سابق   | M6.12  | done    | `tests/integration/answers.test.ts`              |
-| FR-19-002 | الملف الجزئي أو الفاشل        | مقترح  | M6.12  | partial | `tests/integration/answers.test.ts`              |
+| FR-19-002 | الملف الجزئي أو الفاشل        | مقترح  | M6.12  | done    | `tests/integration/imports-failure.test.ts`      |
 | FR-19-003 | تنظيف بقايا المعالجة          | مقترح  | M6.12  | done    | `tests/integration/imports-rules.test.ts`        |
 | FR-19-004 | حذف سؤال                      | مقترح  | M13.4  | planned | —                                                |
 | FR-19-005 | حذف بنك                       | مقترح  | M13.5  | planned | —                                                |

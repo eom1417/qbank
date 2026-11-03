@@ -11,7 +11,7 @@ export interface QuestionsDeps {
   clock: Clock;
 }
 
-function toQuestionResponse(row: QuestionRow): QuestionResponse {
+function toQuestionResponse(row: QuestionRow, tags: QuestionResponse['tags']): QuestionResponse {
   return {
     id: row.id,
     sourceId: row.source_id,
@@ -31,6 +31,7 @@ function toQuestionResponse(row: QuestionRow): QuestionResponse {
     chapterId: row.chapter_id,
     topicId: row.topic_id,
     classification: row.classification,
+    tags,
     difficulty: { kind: row.difficulty_kind, value: row.difficulty },
     version: row.version,
   };
@@ -42,8 +43,14 @@ async function owned(deps: QuestionsDeps, actor: Actor, id: string) {
   return row;
 }
 
-export const getQuestion = async (deps: QuestionsDeps, actor: Actor, id: string) =>
-  toQuestionResponse(await owned(deps, actor, id));
+export async function getQuestion(deps: QuestionsDeps, actor: Actor, id: string) {
+  const row = await owned(deps, actor, id);
+  const tags = await deps.questions.tagsOfQuestion(actor.accountId, id);
+  return toQuestionResponse(
+    row,
+    tags.map((tag) => ({ id: tag.tag_id, origin: tag.origin })),
+  );
+}
 
 /** Accepts the AI's suggested answer for the actor's own question (M6.6). */
 export async function acceptSuggestedAnswer(deps: QuestionsDeps, actor: Actor, id: string) {

@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { acceptAiAnswer } from '../../../src/server/capabilities/questions/domain/accept-ai.js';
 import { withAnswerFile } from '../../../src/server/capabilities/questions/domain/answer-file.js';
-import { suggestPlace } from '../../../src/server/capabilities/questions/domain/classify.js';
+import {
+  suggestPlace,
+  suggestTags,
+} from '../../../src/server/capabilities/questions/domain/classify.js';
 import { eligibilityOf } from '../../../src/server/capabilities/questions/domain/imported.js';
 
 const base = {
@@ -89,5 +92,10 @@ describe('suggesting a chapter and topic (FR-08-002)', () => {
       topicId: null,
     });
     expect(suggestPlace('Cardiologyx is not a word', chapters)).toBeNull();
+    const tags = [
+      { id: 'g1', name: 'Kawasaki' },
+      { id: 'g2', name: 'Asthma' },
+    ];
+    expect(suggestTags('Features of Kawasaki disease?', tags)).toEqual(['g1']);
   });
 });

@@ -102,4 +102,31 @@ export function importedValues(
   };
 }
 
+/** Replaces the suggested tags of a question; tags the user set by hand stay (FR-11-004). */
+export async function writeSuggestedTags(
+  db: Db,
+  ownerId: string,
+  questionId: string,
+  tagIds: readonly string[],
+) {
+  await db
+    .deleteFrom('question_tag')
+    .where('question_id', '=', questionId)
+    .where('origin', '=', 'suggested')
+    .execute();
+  if (tagIds.length === 0) return;
+  await db
+    .insertInto('question_tag')
+    .values(
+      tagIds.map((tag_id) => ({
+        question_id: questionId,
+        tag_id,
+        owner_id: ownerId,
+        origin: 'suggested' as const,
+      })),
+    )
+    .onConflict((conflict) => conflict.columns(['question_id', 'tag_id']).doNothing())
+    .execute();
+}
+
 export { existingAt };
