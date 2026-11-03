@@ -105,6 +105,32 @@ describe('import languages and scans (M4.4, M4.5)', () => {
     expect(rows[2]?.kind).toBe('essay');
   });
 
+  it('reads Arabic questions with English terms and options (UAT-009)', async () => {
+    const { report } = await imported(fixtures().mixed, { language: 'mixed' });
+    const rows = await savedQuestions(report.sourceId);
+    expect(rows.map((q) => [q.stem, (q.options as { text: string }[]).map((o) => o.text)])).toEqual(
+      [
+        [
+          'ما الدواء الأول في علاج Anaphylaxis عند الأطفال؟',
+          ['Epinephrine IM', 'Diphenhydramine', 'Prednisolone', 'Salbutamol'],
+        ],
+        [
+          'طفل عمره ٦ أشهر و9% = HbA1c، ما الخطوة التالية؟',
+          ['Repeat the test', 'Start insulin', 'Oral glucose tolerance test'],
+        ],
+      ],
+    );
+  });
+
+  it.each(['ar', 'auto'])(
+    'reads an Arabic scan in Arabic when the language is %s (FR-04-006)',
+    async (language) => {
+      const { report } = await imported(fixtures().arabicScanned, { language });
+      const rows = await savedQuestions(report.sourceId);
+      expect(rows[0]?.stem).toBe('ما العضو المسؤول عن ضخ الدم؟');
+    },
+  );
+
   it('reads a scanned page by OCR and says so (UAT-006)', async () => {
     const { report } = await imported(fixtures().scanned);
     expect(report.pages).toEqual([{ page: 1, status: 'done', reading: 'ocr', warning: 'ocr' }]);

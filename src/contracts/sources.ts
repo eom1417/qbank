@@ -103,6 +103,8 @@ const SourceResponse = z
     createdAt: z.iso.datetime(),
     questions: z.object({ total: z.number().int(), needsReview: z.number().int() }).strict(),
     latestImport: z.object({ id: z.uuid(), stage: ImportStage }).strict(),
+    /** The uploaded original is still kept; the user may delete it (FR-19-001, DEC-13). */
+    hasOriginal: z.boolean(),
   })
   .strict();
 

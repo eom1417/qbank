@@ -116,6 +116,24 @@ const countPages = async (db: Db, jobId: string) => {
   return Number(row.n);
 };
 
+/** An import of the source that is still queued or being read. */
+const runningJobOf = (db: Db, sourceId: string) =>
+  db
+    .selectFrom('import_job')
+    .select('id')
+    .where('source_id', '=', sourceId)
+    .where('stage', 'in', ['queued', 'reading', 'extracting', 'verifying', 'matching'])
+    .executeTakeFirst();
+
+/** Keeps the source and its questions; only the stored original goes (FR-19-001). */
+const forgetOriginal = (db: Db, ownerId: string, sourceId: string) =>
+  db
+    .updateTable('source')
+    .set({ blob_key: null })
+    .where('owner_id', '=', ownerId)
+    .where('id', '=', sourceId)
+    .execute();
+
 /** Owner-scoped store of sources, import jobs and their per-page checkpoints. */
 export function createImportRepository(db: Db) {
   return {
@@ -154,6 +172,8 @@ export function createImportRepository(db: Db) {
         .where('status', '=', 'failed')
         .execute(),
     listSources: (ownerId: string, bankId: string) => listSources(db, ownerId, bankId),
+    runningJobOf: (sourceId: string) => runningJobOf(db, sourceId),
+    forgetOriginal: (ownerId: string, sourceId: string) => forgetOriginal(db, ownerId, sourceId),
     removeSource: (ownerId: string, sourceId: string) =>
       db.deleteFrom('source').where('owner_id', '=', ownerId).where('id', '=', sourceId).execute(),
     countPages: (jobId: string) => countPages(db, jobId),

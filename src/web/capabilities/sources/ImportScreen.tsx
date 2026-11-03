@@ -1,16 +1,18 @@
 import { useState } from 'react';
-import { useImportForm, type ImportForm } from './use-import-form.js';
+import { NEW_BANK, useImportForm, type ImportForm } from './use-import-form.js';
 import { Link, useParams } from 'react-router';
 import { Alert, Button, Card, Checkbox, Heading, Stack, Title } from '../../design-system/index.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { AiChoice } from './AiChoice.js';
+import { DestinationCard } from './DestinationCard.js';
 import { FilesCard } from './FilesCard.js';
 import { ImportProgressRow } from './ImportProgress.js';
 
 function StartCard({ form }: { form: ImportForm }) {
   const { t } = useI18n();
   const [rights, setRights] = useState(false);
-  const { ai, setAi, upload, files } = form;
+  const { ai, setAi, upload, files, destination } = form;
+  const missingName = destination.bankId === NEW_BANK && destination.newName.trim() === '';
   return (
     <Card>
       <AiChoice
@@ -27,7 +29,7 @@ function StartCard({ form }: { form: ImportForm }) {
       />
       {upload.error && <Alert tone="error">{t(upload.error)}</Alert>}
       <Button
-        disabled={!rights || files.length === 0}
+        disabled={!rights || files.length === 0 || missingName}
         busy={upload.busy}
         onClick={() => void upload.run()}
       >
@@ -42,10 +44,13 @@ export function ImportScreen() {
   const { t } = useI18n();
   const bankId = useParams()['bankId'] ?? '';
   const form = useImportForm(bankId);
+  const { destination } = form;
+  const backTo = destination.bankId === NEW_BANK ? bankId : destination.bankId;
   return (
     <Stack>
-      <Link to={`/banks/${bankId}`}>{t('import.back')}</Link>
+      <Link to={`/banks/${backTo}`}>{t('import.back')}</Link>
       <Heading>{t('import.title')}</Heading>
+      <DestinationCard key={form.banksVersion} value={destination} onChange={form.setDestination} />
       <FilesCard files={form.files} setFiles={form.setFiles} />
       <StartCard form={form} />
       {form.jobs.length > 0 && (

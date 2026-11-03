@@ -1,5 +1,5 @@
 import { inkAround, pickMarked, type Raster } from '../domain/answer-marks.js';
-import { bodyFontFamily, pageLines } from '../domain/lines.js';
+import { bodyFontFamilies, pageLines } from '../domain/lines.js';
 import { dropRunningLines } from '../domain/running-lines.js';
 import { fontFamily, type PageText } from '../domain/page.js';
 import { parseQuestions, type ParsedQuestion } from '../domain/questions.js';
@@ -47,9 +47,9 @@ async function readPages(file: string, mode: ReadingMode): Promise<PageText[]> {
 }
 
 /** Printed words on a page (the body font, or every OCR word): their ink is not a pen mark. */
-const printedBoxes = (page: PageText | undefined, family: string | null) =>
+const printedBoxes = (page: PageText | undefined, body: ReadonlySet<string> | null) =>
   (page?.words ?? [])
-    .filter((word) => !family || !word.font || fontFamily(word.font) === family)
+    .filter((word) => !body || !word.font || body.has(fontFamily(word.font)))
     .map((word) => word.box);
 
 type Answer = Pick<ExtractedQuestion, 'answer' | 'evidence'>;
@@ -104,8 +104,8 @@ export async function questionsFromPages(
   pages: readonly PageText[],
 ): Promise<ExtractedQuestion[]> {
   const byNumber = new Map(pages.map((page) => [page.page, page]));
-  const family = bodyFontFamily(pages.filter((page) => page.visual));
-  const lines = pages.flatMap((page) => pageLines(page, page.visual ? family : null));
+  const body = bodyFontFamilies(pages.filter((page) => page.visual));
+  const lines = pages.flatMap((page) => pageLines(page, page.visual ? body : null));
   const heights = new Map(pages.map((page) => [page.page, page.height]));
   const questions = parseQuestions(dropRunningLines(lines, heights));
   const raster = rasterCache(file);
@@ -115,7 +115,7 @@ export async function questionsFromPages(
     return inkAround(
       await raster(option.page),
       option.letterBox,
-      printedBoxes(page, page?.visual ? family : null),
+      printedBoxes(page, page?.visual ? body : null),
     );
   };
   const extracted: ExtractedQuestion[] = [];

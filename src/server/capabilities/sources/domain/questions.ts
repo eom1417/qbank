@@ -29,6 +29,8 @@ export interface ParsedQuestion {
   options: ParsedOption[];
   /** Where the question label starts (its right edge in Arabic); options must start near it. */
   start: number;
+  /** Its label reads right to left: lines of either script line up on its right edge. */
+  rtl: boolean;
   /** The label system of its options, once the first option is read. */
   system: OptionSystem | null;
   /** A line at the option start followed the last option: OCR may have lost a circled option. */
@@ -47,6 +49,10 @@ const MAX_OPTION_GAP_LINES = 3.5;
 /** A handwritten note may sit between the stem and the first option. */
 const MAX_FIRST_OPTION_GAP_LINES = 8;
 
+/** A line starting where the question does, on the question's own side (FR-05-002). */
+const atQuestionStart = (line: TextLine, question: ParsedQuestion) =>
+  Math.abs((question.rtl ? line.box.x1 : line.box.x0) - question.start) <= INDENT_TOLERANCE;
+
 type Element =
   { kind: 'stem'; question: ParsedQuestion } | { kind: 'option'; option: ParsedOption };
 
@@ -61,7 +67,7 @@ const continuesOptions = (question: ParsedQuestion, label: OptionLabel) =>
  */
 function optionFrom(line: TextLine, question: ParsedQuestion): ParsedOption | null {
   const first: PageWord | undefined = line.words[0];
-  if (!first || Math.abs(line.start - question.start) > INDENT_TOLERANCE) return null;
+  if (!first || !atQuestionStart(line, question)) return null;
   const index = question.options.length;
   const base = { letterBox: first.box, page: line.page, letter: answerLetter(index) };
   const label = optionLabel(line.text);
@@ -94,6 +100,7 @@ function questionFrom(line: TextLine, previous: ParsedQuestion | undefined): Par
     stem: label.text,
     options: [],
     start: line.start,
+    rtl: line.rtl,
     system: null,
     maybeLostOption: false,
   };
@@ -103,7 +110,8 @@ const appendText = (current: string, more: string) => (current ? `${current} ${m
 
 function within(previous: TextLine | null, line: TextLine, lines: number): boolean {
   if (!previous) return false;
-  if (previous.page !== line.page) return true;
+  // Text runs on to the next page, never over a page that could not be read.
+  if (previous.page !== line.page) return line.page === previous.page + 1;
   return line.box.y0 - previous.box.y1 <= boxHeight(previous.box) * lines;
 }
 
@@ -125,6 +133,8 @@ interface ParseState {
   continuation: Continuation | null;
   /** The last line that belonged to the current question. */
   lastOfQuestion: TextLine | null;
+  /** A page was skipped (not read): numbering may resume at any number. */
+  afterSkippedPage: boolean;
 }
 
 const elementText = (element: Element) =>
@@ -147,7 +157,7 @@ function recoverLostOption(state: ParseState, line: TextLine, question: ParsedQu
   if (!continuation || !next || next.index !== skipped + 1) return;
   if (question.system !== null && question.system !== next.system) return;
   const lost = continuation.line;
-  if (Math.abs(lost.start - question.start) > INDENT_TOLERANCE) return;
+  if (!atQuestionStart(lost, question)) return;
   setElementText(continuation.element, continuation.textBefore);
   const letterBox = lost.words[0]?.box ?? lost.box;
   question.options.push({
@@ -162,11 +172,7 @@ function recoverLostOption(state: ParseState, line: TextLine, question: ParsedQu
 
 function appendContinuation(state: ParseState, open: Element, line: TextLine) {
   const question = state.questions[state.questions.length - 1];
-  if (
-    open.kind === 'option' &&
-    question &&
-    Math.abs(line.start - question.start) <= INDENT_TOLERANCE
-  ) {
+  if (open.kind === 'option' && question && atQuestionStart(line, question)) {
     question.maybeLostOption = true;
   }
   const textBefore = elementText(open);
@@ -184,16 +190,24 @@ function acceptOption(state: ParseState, line: TextLine, question: ParsedQuestio
   return { kind: 'option', option };
 }
 
+/** The line as the start of a new question, when it is one. */
+function startQuestion(state: ParseState, line: TextLine): Element | null {
+  if (state.previous && line.page > state.previous.page + 1) state.afterSkippedPage = true;
+  const last = state.afterSkippedPage ? undefined : state.questions[state.questions.length - 1];
+  const question = questionFrom(line, last);
+  if (!question) return null;
+  state.afterSkippedPage = false;
+  state.questions.push(question);
+  state.lastOfQuestion = line;
+  return { kind: 'stem', question };
+}
+
 /** Applies one reading line: a new question, a new option, more text, or the end of an element. */
 function step(state: ParseState, line: TextLine): Element | null {
-  const question = questionFrom(line, state.questions[state.questions.length - 1]);
   const continuation = state.continuation;
   state.continuation = null;
-  if (question) {
-    state.questions.push(question);
-    state.lastOfQuestion = line;
-    return { kind: 'stem', question };
-  }
+  const started = startQuestion(state, line);
+  if (started) return started;
   const current = state.questions[state.questions.length - 1];
   if (current) {
     state.continuation = continuation;
@@ -220,6 +234,7 @@ export function parseQuestions(lines: readonly TextLine[]): ParsedQuestion[] {
     previous: null,
     continuation: null,
     lastOfQuestion: null,
+    afterSkippedPage: false,
   };
   for (const line of lines) {
     state.open = step(state, line);

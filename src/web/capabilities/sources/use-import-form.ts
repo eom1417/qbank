@@ -4,15 +4,39 @@ import { ApiError } from '../../platform/api/client.js';
 import { errorMessageKey } from '../../platform/api/messages.js';
 import { useAction } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
+import { createBank } from '../library/api.js';
 import { uploadFile } from './api.js';
 import type { ChosenFile } from './FileOptions.js';
 
+/** The destination value that means "create a new bank with this name" (FR-04-003). */
+export const NEW_BANK = 'new';
+
+export interface Destination {
+  bankId: string;
+  newName: string;
+}
+
+/** The bank the files go to; a new one is created first, once, then chosen. */
+function useDestination(bankId: string) {
+  const [destination, setDestination] = useState<Destination>({ bankId, newName: '' });
+  const [banksVersion, setBanksVersion] = useState(0);
+  const resolveBank = async () => {
+    if (destination.bankId !== NEW_BANK) return destination.bankId;
+    const created = await createBank({ name: destination.newName });
+    setDestination({ bankId: created.id, newName: '' });
+    setBanksVersion((version) => version + 1);
+    return created.id;
+  };
+  return { destination, setDestination, banksVersion, resolveBank };
+}
+
 /**
- * The upload screen's state: chosen files, created imports, the AI choice and its approval.
+ * The upload screen's state: destination, chosen files, created imports, the AI choice.
  * Files are uploaded one by one; a file that fails keeps its row with the reason.
  */
 export function useImportForm(bankId: string) {
   const { t } = useI18n();
+  const { destination, setDestination, banksVersion, resolveBank } = useDestination(bankId);
   const [files, setFiles] = useState<ChosenFile[]>([]);
   const [jobs, setJobs] = useState<ImportResponse[]>([]);
   const [ai, setAi] = useState({
@@ -21,10 +45,11 @@ export function useImportForm(bankId: string) {
     approval: null as string[] | null,
   });
   const upload = useAction(async () => {
+    const target = await resolveBank();
     for (const chosen of files) {
       try {
         const options = { ...chosen, aiProviderId: ai.providerId, aiApproved: ai.approved };
-        const job = await uploadFile(bankId, chosen.file, options);
+        const job = await uploadFile(target, chosen.file, options);
         setJobs((previous) => [...previous, job]);
         setFiles((previous) => previous.filter((other) => other.key !== chosen.key));
       } catch (error) {
@@ -42,7 +67,18 @@ export function useImportForm(bankId: string) {
     }
   });
   const forget = (id: string) => setJobs((previous) => previous.filter((job) => job.id !== id));
-  return { files, setFiles, jobs, ai, setAi, upload, forget };
+  return {
+    destination,
+    setDestination,
+    banksVersion,
+    files,
+    setFiles,
+    jobs,
+    ai,
+    setAi,
+    upload,
+    forget,
+  };
 }
 
 export type ImportForm = ReturnType<typeof useImportForm>;

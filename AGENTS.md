@@ -33,14 +33,14 @@ This repository follows **Project Genesis**. On first arrival read `START_HERE.m
 
 ## Gates (real commands, fail closed)
 
-| When | Command |
-|---|---|
-| Health and next step | `G doctor` |
-| While editing | targeted tests + `G check` (fast) |
-| Before a PR / on the final tree | `G check --full` (once) |
+| When                               | Command                                        |
+| ---------------------------------- | ---------------------------------------------- |
+| Health and next step               | `G doctor`                                     |
+| While editing                      | targeted tests + `G check` (fast)              |
+| Before a PR / on the final tree    | `G check --full` (once)                        |
 | Gate or tool configuration changed | `G prove` (plants every fixture, requires red) |
-| Before release | `G check --release` + environment checks |
-| One gate | `G check --only <gate>` |
+| Before release                     | `G check --release` + environment checks       |
+| One gate                           | `G check --only <gate>`                        |
 
 A missing tool is **BLOCKED**, never PASS. Built-in guards (file size + bypasses, copy-paste, design tokens, skill policy) run before every gate. Every configured gate must have been seen failing on its fixture in `.genesis/proofs/` (`.genesis/docs/17_GUARD_PROOFS.md`). Never edit guards, proofs, thresholds, CI, lint configs or `engineering.json` to get your own change through; that is an owner decision (`.genesis/docs/12_GUARD_CATALOG.md`). Claude Code hooks, git hooks and CI enforce this independently.
 
@@ -48,20 +48,20 @@ A missing tool is **BLOCKED**, never PASS. Built-in guards (file size + bypasses
 
 Skills listed in `engineering.json → skills.model_invocable` are callable by name. When the user names one anywhere in a message (start, middle or end, any language), **load it with your native Skill tool as your first action, before any other tool call**, then follow it. Do the same when the situation clearly matches its description; combine several when a task spans them (one Skill call each). Skills in `skills.user_only` have side effects (publish, merge, deploy, delete, account changes): never start them yourself; tell the user the slash command. Prefer these project skills over generic built-ins with similar names (for reviews use `boundary-review`, not a client's built-in review command).
 
-| Situation | Skill(s) |
-|---|---|
-| New project, new major module, adopting a repo | `engineering-foundation` → `guard-proofs` |
-| Feature, screen, endpoint, data change | `feature-delivery` (+ `tdd` if installed) |
-| Bug, error, failing test | `bugfix-protocol` (+ `diagnosing-bugs` or `systematic-debugging`) |
-| Review, security review, audit, merge readiness | `boundary-review` |
-| Gate or CI changed; "are the guards real?" | `guard-proofs` |
-| Refactor, split, dedupe | `safe-refactor` (+ `codebase-design`) |
-| Domain terms, ADRs | `domain-modeling` |
-| Stress-test a plan or idea | `grilling` / `grill-me` |
-| Multi-step plan before coding | `writing-plans` |
-| About to claim "done" | `verification-before-completion` |
-| UI look and feel; browser checks | `frontend-design`; `webapp-testing` |
-| Context handoff | `handoff` |
+| Situation                                       | Skill(s)                                                          |
+| ----------------------------------------------- | ----------------------------------------------------------------- |
+| New project, new major module, adopting a repo  | `engineering-foundation` → `guard-proofs`                         |
+| Feature, screen, endpoint, data change          | `feature-delivery` (+ `tdd` if installed)                         |
+| Bug, error, failing test                        | `bugfix-protocol` (+ `diagnosing-bugs` or `systematic-debugging`) |
+| Review, security review, audit, merge readiness | `boundary-review`                                                 |
+| Gate or CI changed; "are the guards real?"      | `guard-proofs`                                                    |
+| Refactor, split, dedupe                         | `safe-refactor` (+ `codebase-design`)                             |
+| Domain terms, ADRs                              | `domain-modeling`                                                 |
+| Stress-test a plan or idea                      | `grilling` / `grill-me`                                           |
+| Multi-step plan before coding                   | `writing-plans`                                                   |
+| About to claim "done"                           | `verification-before-completion`                                  |
+| UI look and feel; browser checks                | `frontend-design`; `webapp-testing`                               |
+| Context handoff                                 | `handoff`                                                         |
 
 Third-party names apply only if installed (`.genesis/docs/08_TOOLS_SKILLS.md`). Edit skills only in `.agents/skills/`, then `G skills --apply` (it refreshes the `.claude/skills/` mirror). Say which skills you actually loaded; never claim a skill ran when it did not.
 
@@ -70,6 +70,8 @@ Third-party names apply only if installed (`.genesis/docs/08_TOOLS_SKILLS.md`). 
 Goal → owner lookup → impact map (entry → use case → domain → adapter → tests) → test → code → fast gate → full gate once → diff review → short evidence report (`.genesis/docs/16_ACCEPTANCE_AND_HANDOFF.md`). Escalate only real blockers: data loss, security, irreversible or owner decisions, unavailable required guards.
 
 Never without the owner's explicit approval of the exact action: merge, deploy, publish, push to the main branch, force-push, delete branches or data, rotate secrets, buy services, change repository settings, run destructive migrations. In Claude Code the hook asks the owner before such commands run. Preserve other people's uncommitted work.
+
+Milestone branches (`docs/DECISIONS.md` DEC-29): one branch per milestone, cut from a clean `main`. When a milestone is done, ask the owner plainly «هل تريد دمج الفرع؟». An owner instruction to continue with the next milestone approves merging that branch into `main`, deleting it and removing temporary files before the next milestone starts, unless the owner explicitly says not to merge. Never start a milestone while an earlier branch is unresolved. The hook still asks the owner to confirm the exact command.
 
 ## Docs on demand (`.genesis/docs/`)
 

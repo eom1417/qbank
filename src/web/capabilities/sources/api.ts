@@ -39,6 +39,10 @@ export const retryImport = (id: string, body: RetryImportRequest) =>
 
 export const cancelImport = (id: string) => apiRequest('DELETE', `/api/imports/${id}`, z.null());
 
+/** Deletes a source's stored original; its questions stay (FR-19-001). */
+export const deleteOriginal = (sourceId: string) =>
+  apiRequest('DELETE', `/api/sources/${sourceId}/original`, z.null());
+
 export const fetchSources = (bankId: string) =>
   apiRequest('GET', `/api/banks/${bankId}/sources`, SourceListResponse);
 

@@ -266,8 +266,11 @@ export const en = {
   'ai.account.unavailable': 'Sign-in is not available on this server right now.',
   'ai.account.plan': 'Plan',
   'import.start': 'Import files',
-  'import.title': 'Import files into this bank',
+  'import.title': 'Import files',
   'import.back': 'Back to the bank',
+  'import.destination': 'Bank the questions go to',
+  'import.destination.new': 'A new bank…',
+  'import.destination.newName': 'New bank name',
   'import.files': 'PDF files',
   'import.filesHint': 'Text or scanned PDFs you are allowed to use. You can choose several.',
   'import.pageFrom': 'From page (optional)',
@@ -327,6 +330,9 @@ export const en = {
   'source.type.textbook': 'Textbook',
   'source.type.lecture_notes': 'Lecture notes',
   'source.type.other': 'Other',
+  'source.original.delete': 'Delete the original file',
+  'source.original.confirmDelete': 'Confirm deleting the original (questions stay)',
+  'source.original.deleted': 'Original file deleted; its questions, source and pages stay.',
   'error.file_unsupported': 'This is not a PDF file.',
   'error.file_corrupt': 'This PDF is damaged and cannot be read.',
   'error.file_protected':
@@ -334,6 +340,7 @@ export const en = {
   'error.too_many_pages': 'This file has more pages than allowed.',
   'error.approval_required': 'This AI use needs your approval first.',
   'error.not_retryable': 'This import cannot be changed now.',
+  'error.original_deleted': 'The original file was deleted, so it cannot be read again.',
   'import.cancel': 'Remove before it starts',
 };
 

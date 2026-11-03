@@ -1,7 +1,8 @@
+import type { SourceLanguage } from '../../../../contracts/sources.js';
 import type { ImportStage } from '../../../platform/db/schema.js';
 import type { ImportedQuestion } from '../../questions/index.js';
 import type { JobRow, PageRow, SourceRow } from '../adapters/import-repository.js';
-import { readByOcr, readTextLayer } from '../adapters/readers.js';
+import { readScan, readTextLayer } from '../adapters/readers.js';
 import type { PageText } from '../domain/page.js';
 import { hasUnreadableText, repairWithOcr } from '../domain/repair.js';
 import { screenQuestions, type PageReading } from '../domain/screening.js';
@@ -23,14 +24,15 @@ async function readPage(
   file: string,
   pageNo: number,
   text: PageText | undefined,
+  language: SourceLanguage,
 ): Promise<PageResult> {
   if (text && text.words.length >= MIN_TEXT_WORDS) {
     const page = hasUnreadableText(text)
-      ? repairWithOcr(text, await readByOcr(file, pageNo))
+      ? repairWithOcr(text, await readScan(file, pageNo, language))
       : text;
     return { status: 'done', reading: 'text', warning: null, page };
   }
-  const page = await readByOcr(file, pageNo);
+  const page = await readScan(file, pageNo, language);
   if (page.words.length < MIN_OCR_WORDS)
     return { status: 'unreadable', reading: 'ocr', warning: 'unreadable_page', page };
   return { status: 'done', reading: 'ocr', warning: 'ocr', page };
@@ -49,12 +51,14 @@ async function readPages(deps: SourcesDeps, job: JobRow, source: SourceRow, file
   const textOf = new Map(textLayer.map((page) => [page.page, page]));
   for (let pageNo = range.from; pageNo <= range.to; pageNo++) {
     if (done.has(pageNo)) continue;
-    const result = await readPage(file, pageNo, textOf.get(pageNo)).catch((): PageResult => ({
-      status: 'failed',
-      reading: 'text',
-      warning: 'read_failed',
-      page: { page: pageNo, width: 0, height: 0, words: [] },
-    }));
+    const result = await readPage(file, pageNo, textOf.get(pageNo), source.language).catch(
+      (): PageResult => ({
+        status: 'failed',
+        reading: 'text',
+        warning: 'read_failed',
+        page: { page: pageNo, width: 0, height: 0, words: [] },
+      }),
+    );
     const { page, ...checkpoint } = result;
     await deps.imports.savePage({
       job_id: job.id,

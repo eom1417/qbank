@@ -9,7 +9,13 @@ import { AppError } from '../../../platform/errors/index.js';
 import { parseInput } from '../../../platform/http/validate.js';
 import type { RequireActor } from '../../identity/index.js';
 import type { SourcesDeps } from '../use-cases/deps.js';
-import { cancelImport, getImport, listSources, retryImport } from '../use-cases/manage-imports.js';
+import {
+  cancelImport,
+  deleteOriginal,
+  getImport,
+  listSources,
+  retryImport,
+} from '../use-cases/manage-imports.js';
 import { startImport } from '../use-cases/start-import.js';
 
 type BankParams = { Params: { bankId: string } };
@@ -58,6 +64,11 @@ export function registerImportRoutes(
 
   app.delete<IdParams>('/api/imports/:id', async (request, reply) => {
     await cancelImport(deps, await requireActor(request), request.params.id);
+    return reply.status(204).send();
+  });
+
+  app.delete<IdParams>('/api/sources/:id/original', async (request, reply) => {
+    await deleteOriginal(deps, await requireActor(request), request.params.id);
     return reply.status(204).send();
   });
 

@@ -2,7 +2,8 @@
 const ARABIC = /[\u0600-\u06FF\u0750-\u077F\uFB50-\uFDFF\uFE70-\uFEFF]/u;
 const LATIN = /[A-Za-z]/;
 /** Runs that keep their own left-to-right order inside right-to-left text. */
-const LTR_RUN = /[A-Za-z0-9٠-٩]+(?:[.,:/٫][A-Za-z0-9٠-٩]+)*/g;
+// A percent or degree sign stays on its number's side ("9%", "37°C").
+const LTR_RUN = /[%‰°]*[A-Za-z0-9٠-٩]+(?:[.,:/٫%‰°]+[A-Za-z0-9٠-٩]+)*[%‰°]*/g;
 const MIRRORED: Record<string, string> = {
   '(': ')',
   ')': '(',

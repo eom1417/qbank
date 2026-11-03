@@ -10,6 +10,10 @@ const SEQUENCES: Record<OptionSystem, readonly string[]> = {
   digits: [...'123456789'],
 };
 
+/** The rest of `line` after a label read on its Latin-digit copy, in its original digits. */
+const restOf = (line: string, rest: string | undefined) =>
+  rest ? line.slice(line.length - rest.length) : '';
+
 // Arabic letters as typed or as some fonts write them ("هـ", "ا" for "أ").
 const ARABIC_ALIASES: Record<string, string> = { هـ: 'ه', ا: 'أ', إ: 'أ', آ: 'أ' };
 
@@ -41,7 +45,7 @@ export function optionLabel(line: string): OptionLabel | null {
     const system = systemOf(match[1]);
     const label = system === 'arabic' ? (ARABIC_ALIASES[match[1]] ?? match[1]) : match[1];
     const index = SEQUENCES[system].indexOf(label);
-    return index === -1 ? null : { system, index, label: match[1], text: match[2] ?? '' };
+    return index === -1 ? null : { system, index, label: match[1], text: restOf(line, match[2]) };
   }
   return null;
 }
@@ -64,7 +68,9 @@ export function questionLabel(line: string): QuestionLabel | null {
   const text = latinDigits(line);
   const prefixed = PREFIXED.exec(text);
   if (prefixed?.[1])
-    return { number: Number(prefixed[1]), text: prefixed[2] ?? '', prefixed: true };
+    return { number: Number(prefixed[1]), text: restOf(line, prefixed[2]), prefixed: true };
   const bare = BARE.exec(text);
-  return bare?.[1] ? { number: Number(bare[1]), text: bare[2] ?? '', prefixed: false } : null;
+  return bare?.[1]
+    ? { number: Number(bare[1]), text: restOf(line, bare[2]), prefixed: false }
+    : null;
 }

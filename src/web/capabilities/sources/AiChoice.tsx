@@ -1,6 +1,7 @@
 import { Alert, Checkbox, MutedText, SelectField, Stack } from '../../design-system/index.js';
 import { useQuery } from '../../platform/api/use-query.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
+import { DisclosureNote } from '../ai/AiAboutCard.js';
 import { fetchConnections } from './api.js';
 
 /** The user's own AI for this import (optional), what it sends, and cost approval (DEC-18). */
@@ -29,9 +30,7 @@ export function AiChoice({ value, onChange, approval, approved, onApprove }: AiC
         onChange={(event) => onChange(event.target.value)}
       />
       <MutedText>{t(value ? 'import.ai.with' : 'import.ai.without')}</MutedText>
-      {value && (
-        <Alert tone="info">{`${t('ai.disclosure.body')} ${t('ai.disclosure.external')}`}</Alert>
-      )}
+      {value && <DisclosureNote />}
       {approval && (
         <Alert tone="info">
           {t('ai.estimate.approval')}{' '}

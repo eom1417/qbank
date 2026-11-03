@@ -13,16 +13,29 @@ export interface TextLine {
   start: number;
 }
 
-/** The family most of the document's characters are set in (typed body text). */
-export function bodyFontFamily(pages: readonly PageText[]): string | null {
-  const counts = new Map<string, number>();
+/** Body fonts are counted per script, so a second script set in its own font is kept. */
+const SCRIPTS: readonly RegExp[] = [/[\u0600-\u06FF\uFB50-\uFDFF\uFE70-\uFEFF]/u, /[A-Za-z]/];
+/** A script with less than this share of the letters is not body text (a stray note). */
+const MIN_SCRIPT_SHARE = 0.1;
+
+/** The fonts typed body text is set in: the leading family of each script the document uses. */
+export function bodyFontFamilies(pages: readonly PageText[]): ReadonlySet<string> | null {
+  const counts = SCRIPTS.map(() => new Map<string, number>());
   for (const word of pages.flatMap((page) => page.words)) {
     if (!word.font) continue;
     const family = fontFamily(word.font);
-    counts.set(family, (counts.get(family) ?? 0) + word.text.length);
+    SCRIPTS.forEach((script, index) => {
+      const letters = [...word.text].filter((char) => script.test(char)).length;
+      const count = counts[index];
+      if (letters > 0 && count) count.set(family, (count.get(family) ?? 0) + letters);
+    });
   }
-  const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]);
-  return ranked[0]?.[0] ?? null;
+  const total = (count: Map<string, number>) => [...count.values()].reduce((a, b) => a + b, 0);
+  const all = counts.reduce((sum, count) => sum + total(count), 0);
+  const leading = counts
+    .filter((count) => total(count) >= all * MIN_SCRIPT_SHARE && total(count) > 0)
+    .map((count) => [...count.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? '');
+  return leading.length > 0 ? new Set(leading) : null;
 }
 
 const sameLine = (line: PageWord[], word: PageWord): boolean => {
@@ -68,19 +81,19 @@ const overlaps = (a: Box, b: Box) =>
 /** Short labels and numbers a PDF maker set in a fallback font ("(1س", "(أ", "12"). */
 const FALLBACK_MAX_CHARS = 4;
 
-function keepBodyWords(line: PageWord[], bodyFamily: string): PageWord[] {
-  const isBody = (word: PageWord) => !word.font || fontFamily(word.font) === bodyFamily;
-  const body = line.filter(isBody);
-  if (body.length === 0) return [];
-  const height = Math.max(...body.map((word) => boxHeight(word.box)));
+function keepBodyWords(line: PageWord[], body: ReadonlySet<string>): PageWord[] {
+  const isBody = (word: PageWord) => !word.font || body.has(fontFamily(word.font));
+  const bodyWords = line.filter(isBody);
+  if (bodyWords.length === 0) return [];
+  const height = Math.max(...bodyWords.map((word) => boxHeight(word.box)));
   const nearBody = (word: PageWord) =>
-    body.some(
+    bodyWords.some(
       (other) =>
         Math.min(Math.abs(word.box.x0 - other.box.x1), Math.abs(other.box.x0 - word.box.x1)) <=
         height * 1.5,
     );
   // Ink drawn over printed text (a circle the device read as "0") overlaps it: not a label.
-  const overBody = (word: PageWord) => body.some((other) => overlaps(word.box, other.box));
+  const overBody = (word: PageWord) => bodyWords.some((other) => overlaps(word.box, other.box));
   const isLabel = (word: PageWord) =>
     word.text.length <= FALLBACK_MAX_CHARS && nearBody(word) && !overBody(word);
   return line.filter((word) => isBody(word) || isLabel(word));
@@ -88,12 +101,12 @@ function keepBodyWords(line: PageWord[], bodyFamily: string): PageWord[] {
 
 /**
  * Groups a page's words into reading lines, column by column (FR-05-004). With a known body
- * family, words in other fonts (device handwriting, pasted screenshots) are left out, except
+ * fonts, words in other fonts (device handwriting, pasted screenshots) are left out, except
  * short labels set in a fallback font right beside body text on the same line.
  */
-export function pageLines(page: PageText, bodyFamily: string | null): TextLine[] {
-  const kept = bodyFamily
-    ? groupLines(page.words).flatMap((line) => keepBodyWords(line, bodyFamily))
+export function pageLines(page: PageText, body: ReadonlySet<string> | null): TextLine[] {
+  const kept = body
+    ? groupLines(page.words).flatMap((line) => keepBodyWords(line, body))
     : page.words;
   return splitColumns(page, kept).flatMap((column) =>
     groupLines(column).map((line) => toLine(page, line)),

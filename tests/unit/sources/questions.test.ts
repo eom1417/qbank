@@ -18,6 +18,23 @@ const letters = (questions: ReturnType<typeof parseQuestions>) =>
   questions.map((q) => q.options.map((o) => `${o.letter}${o.circledGlyph ? '*' : ''}`).join(''));
 
 describe('question parser', () => {
+  it('does not join text across a page that could not be read (FR-23-004)', () => {
+    y = 0;
+    const questions = parseQuestions([
+      line('6. Last question of page one?'),
+      line('A. Yes'),
+      line('B. No'),
+      line('the end of question 7, whose page failed', 44, 3),
+      line('8. A question after it?', 44, 3),
+      line('A. Yes', 44, 3),
+    ]);
+    expect(questions.map((q) => [q.number, q.page, q.stem])).toEqual([
+      [6, 1, 'Last question of page one?'],
+      [8, 3, 'A question after it?'],
+    ]);
+    expect(questions[0]?.options.map((o) => o.text)).toEqual(['Yes', 'No']);
+  });
+
   it('joins wrapped stems and options, and keeps page numbers', () => {
     y = 0;
     const questions = parseQuestions([

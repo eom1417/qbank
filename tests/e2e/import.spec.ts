@@ -14,7 +14,7 @@ async function newBank(page: Page, tag: string) {
   await page.getByRole('button', { name: 'إنشاء البنك' }).click();
   await page.getByRole('link', { name: 'فتح البنك' }).click();
   await page.getByRole('link', { name: 'استورد ملفات' }).click();
-  await expect(page.getByRole('heading', { name: 'استورد ملفات إلى هذا البنك' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'استيراد ملفات' })).toBeVisible();
 }
 
 test('import a PDF: choose, confirm rights, follow progress, read the report', async ({ page }) => {
@@ -45,4 +45,23 @@ test('a damaged file is refused with a clear reason and nothing is imported', as
   await page.getByRole('button', { name: 'ارفع وابدأ' }).click();
   await expect(page.getByText('ملف PDF تالف ولا يمكن قراءته.')).toBeVisible();
   await expect(page.getByText('arabic.pdf')).toHaveCount(0);
+});
+
+test('import into a new bank, see it complete, then delete the original', async ({ page }) => {
+  await newBank(page, 'import-new');
+  await page.getByLabel('البنك الذي تذهب إليه الأسئلة').selectOption({ label: 'بنك جديد…' });
+  await page.getByLabel('اسم البنك الجديد').fill('أسئلة مقالية');
+  await page.getByLabel('ملفات PDF').setInputFiles(fx.essays);
+  await page.getByLabel('أؤكد أنه يحق لي استخدام هذه الملفات لمذاكرتي الشخصية.').check();
+  await page.getByRole('button', { name: 'ارفع وابدأ' }).click();
+  await expect(page.getByText('اكتمل الاستيراد، والأسئلة في البنك.')).toBeVisible({
+    timeout: 60_000,
+  });
+  await expect(page.getByLabel('البنك الذي تذهب إليه الأسئلة')).toHaveValue(/.+/);
+  await page.getByRole('link', { name: 'العودة إلى البنك' }).click();
+  await expect(page.getByRole('heading', { level: 1, name: 'أسئلة مقالية' })).toBeVisible();
+  await page.getByRole('button', { name: 'احذف الملف الأصلي' }).click();
+  await page.getByRole('button', { name: 'تأكيد حذف الأصل (الأسئلة تبقى)' }).click();
+  await expect(page.getByText('الملف الأصلي محذوف؛ الأسئلة ومصدرها وصفحاتها باقية.')).toBeVisible();
+  await expect(page.getByText('الصفحات: 1–1 · الأسئلة: 2 · تحتاج مراجعة: 0')).toBeVisible();
 });

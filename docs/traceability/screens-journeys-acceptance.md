@@ -31,7 +31,7 @@
 | UI-20   | المراجعات المستحقة    | M11.4  | planned | —                                   |
 | UI-21   | تحليلات الطالب        | M12.10 | planned | —                                   |
 | UI-22   | البحث                 | M12.11 | planned | —                                   |
-| UI-23   | إدارة المصادر         | M4.9   | partial | `tests/e2e/import.spec.ts`          |
+| UI-23   | إدارة المصادر         | M4.9   | done    | `tests/e2e/import.spec.ts`          |
 | UI-24   | إعدادات المفاتيح      | M2.2   | done    | `tests/e2e/ai-settings.spec.ts`     |
 | UI-25   | إعدادات الدراسة       | M1.6   | partial | `tests/e2e/account.spec.ts`         |
 | UI-26   | التصدير               | M13.1  | planned | —                                   |
@@ -74,7 +74,7 @@
 | UAT-006 | PDF ممسوح             | M4.5   | done    | `tests/integration/imports.test.ts`       |
 | UAT-007 | PDF عربي              | M4.4   | done    | `tests/integration/imports.test.ts`       |
 | UAT-008 | PDF إنجليزي           | M4.4   | done    | `tests/integration/imports.test.ts`       |
-| UAT-009 | لغة مختلطة            | M4.4   | partial | `tests/integration/imports.test.ts`       |
+| UAT-009 | لغة مختلطة            | M4.4   | done    | `tests/integration/imports.test.ts`       |
 | UAT-010 | عمودان متجاوران       | M4.6   | done    | `tests/integration/imports.test.ts`       |
 | UAT-011 | سؤال عبر صفحتين       | M4.6   | done    | `tests/integration/imports.test.ts`       |
 | UAT-012 | مفتاح في نهاية الكتاب | M6.2   | planned | —                                         |

@@ -17,6 +17,7 @@ export const ErrorCode = z.enum([
   'too_many_pages',
   'approval_required',
   'not_retryable',
+  'original_deleted',
   'internal',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;

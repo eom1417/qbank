@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { parseTesseractTsv } from '../../../src/server/capabilities/sources/adapters/readers.js';
 import { parseStext } from '../../../src/server/capabilities/sources/adapters/stext.js';
 import {
-  bodyFontFamily,
+  bodyFontFamilies,
   pageLines,
 } from '../../../src/server/capabilities/sources/domain/lines.js';
 import { fontFamily } from '../../../src/server/capabilities/sources/domain/page.js';
@@ -28,6 +28,8 @@ describe('text layer and OCR readers', () => {
     expect(parseTesseractTsv(tsv, 144)).toEqual([
       { text: 'Hello', box: { x0: 100, y0: 50, x1: 125, y1: 62.5 }, font: null, line: '1.1.1' },
     ]);
+    const marked = tsv.replace('Hello', '\u200fس١)\u200f').replace('\t\n', '\t\u200f\n');
+    expect(parseTesseractTsv(marked, 144).map((word) => word.text)).toEqual(['س١)']);
   });
 });
 
@@ -49,8 +51,8 @@ describe('fonts and OCR repair', () => {
         word('ink', 300, '.SFUI-Regular'),
       ],
     };
-    expect(bodyFontFamily([page])).toBe('TimesNewRoman');
-    expect(pageLines(page, 'TimesNewRoman').map((l) => l.text)).toEqual(['Typed words']);
+    expect(bodyFontFamilies([page])).toEqual(new Set(['TimesNewRoman']));
+    expect(pageLines(page, new Set(['TimesNewRoman'])).map((l) => l.text)).toEqual(['Typed words']);
   });
 });
 
@@ -74,7 +76,9 @@ describe('fallback-font labels', () => {
         at('(1)', 124, 140, 'LiberationSerif'),
       ],
     };
-    expect(pageLines(page, 'TimesNewRoman').map((l) => l.text)).toEqual(['A. Reassurance (1)']);
+    expect(pageLines(page, new Set(['TimesNewRoman'])).map((l) => l.text)).toEqual([
+      'A. Reassurance (1)',
+    ]);
   });
 
   it('replaces unreadable text-layer words with OCR words on the same line', () => {

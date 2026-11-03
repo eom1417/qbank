@@ -80,6 +80,25 @@ describe('ownership and lifecycle', () => {
   });
 });
 
+describe('deleting the original file (FR-19-001)', () => {
+  it('erases the stored file on request and keeps the questions; only the owner can', async () => {
+    const { owner, bankId } = await ownerWithBank(app());
+    const queued = (await uploadFile(app(), owner.cookie(), bankId, fixtures().arabic)).json();
+    const remove = (browser: Browser) => browser.delete(`/api/sources/${queued.sourceId}/original`);
+    expect((await remove(owner)).statusCode).toBe(409);
+    await runImports(app());
+    const { browser: stranger } = await registeredBrowser(app());
+    expect((await remove(stranger)).statusCode).toBe(404);
+    const before = blobCount();
+    expect((await remove(owner)).statusCode).toBe(204);
+    expect(blobCount()).toBe(before - 1);
+    const { sources } = (await owner.get(`/api/banks/${bankId}/sources`)).json();
+    expect(sources).toMatchObject([{ hasOriginal: false, questions: { total: 3 } }]);
+    const retry = await owner.post(`/api/imports/${queued.id}/retry`, {});
+    expect([retry.statusCode, retry.json().error.code]).toEqual([409, 'original_deleted']);
+  });
+});
+
 async function withProvider(apiKey: string) {
   const { owner, bankId } = await ownerWithBank(app());
   const body = {

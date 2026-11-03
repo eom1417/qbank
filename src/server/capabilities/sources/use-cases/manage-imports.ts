@@ -72,8 +72,9 @@ export async function retryImport(
   jobId: string,
   input: RetryImportRequest,
 ) {
-  const { job } = await ownedJob(deps, actor, jobId);
+  const { job, source } = await ownedJob(deps, actor, jobId);
   if (!RETRYABLE.has(job.stage)) throw new AppError('not_retryable');
+  if (!source.blob_key) throw new AppError('original_deleted');
   if (
     input.aiProviderId &&
     !(await deps.ai.estimateFor(actor.accountId, input.aiProviderId, job.pages_total))
@@ -121,6 +122,21 @@ export async function listSources(
       needsReview: counts.get(row.id)?.needsReview ?? 0,
     },
     latestImport: { id: row.job_id, stage: row.job_stage },
+    hasOriginal: row.blob_key !== null,
   }));
   return { sources };
+}
+
+/**
+ * Deletes a source's uploaded original at the user's request (FR-19-001, DEC-13: erased on
+ * request). The source, its page attribution and its questions stay; it cannot be read again.
+ */
+export async function deleteOriginal(deps: SourcesDeps, actor: Actor, sourceId: string) {
+  const source = isId(sourceId) ? await deps.imports.findSource(actor.accountId, sourceId) : null;
+  if (!source) throw notFound();
+  const running = await deps.imports.runningJobOf(source.id);
+  if (running) throw new AppError('not_retryable');
+  if (!source.blob_key) return;
+  await deps.imports.forgetOriginal(actor.accountId, source.id);
+  await deps.blobs.remove(source.blob_key);
 }

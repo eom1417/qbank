@@ -16,6 +16,7 @@ const STATUS: Record<ErrorCode, number> = {
   too_many_pages: 422,
   approval_required: 409,
   not_retryable: 409,
+  original_deleted: 409,
   internal: 500,
 };
 
