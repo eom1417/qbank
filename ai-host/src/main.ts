@@ -1,29 +1,11 @@
-import * as Effect from 'effect/Effect';
-
-import { makeProviderInstallation } from './bridge/install.ts';
-import { streamMethods, unaryMethods } from './bridge/methods.ts';
-import { readConfig } from './config.ts';
-import { startServer } from './http/server.ts';
-import { makeKitRuntime, startSettingsWatcher } from './runtime.ts';
+import { MANAGED_TOKEN_COMMAND, printManagedToken } from './managed-token.ts';
 
 /**
- * QBank's AI host: boots the vendored T3 AI Providers Kit with its standalone host ports and
- * serves its provider methods to QBank's server on a loopback port.
+ * Entry point. Codex runs this same file as its token command in managed ChatGPT mode (the
+ * kit's self-invocation); every other start boots the AI host.
  */
-const config = readConfig(process.env);
-const runtime = makeKitRuntime(config);
-await runtime.runPromise(startSettingsWatcher);
-const installation = await runtime.runPromise(makeProviderInstallation());
-const server = startServer(
-  runtime,
-  { cwd: config.cwd, unary: unaryMethods(installation), streams: streamMethods(installation) },
-  config,
-);
-await runtime.runPromise(Effect.logInfo(`ai-host listening on 127.0.0.1:${config.port}`));
-
-const stop = () => {
-  server.close();
-  void runtime.dispose().finally(() => process.exit(0));
-};
-process.on('SIGTERM', stop);
-process.on('SIGINT', stop);
+if (process.argv[2] === MANAGED_TOKEN_COMMAND) {
+  process.exitCode = await printManagedToken(process.argv.slice(3));
+} else {
+  await import('./host.ts');
+}

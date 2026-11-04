@@ -34,3 +34,20 @@ export function addInstance(driver: string, name: string, environment: Record<st
 
 export const refreshInstance = (instanceId: string) =>
   kitCall('server.refreshProviders', { instanceId, refreshModels: true });
+
+/** Codex runs the CLI already signed in on this computer, or its own copy signed in here. */
+export type CodexSetupMode = 'existing' | 'managed';
+
+export function codexSetupModeOf(current: InstanceConfig): CodexSetupMode {
+  const config = (current as { config?: { setupMode?: unknown } }).config;
+  return config?.setupMode === 'managed' ? 'managed' : 'existing';
+}
+
+export function setCodexSetupMode(
+  instanceId: string,
+  current: InstanceConfig,
+  mode: CodexSetupMode,
+) {
+  const config = (current as { config?: Record<string, unknown> }).config ?? {};
+  return write('upsert', instanceId, { ...current, config: { ...config, setupMode: mode } });
+}

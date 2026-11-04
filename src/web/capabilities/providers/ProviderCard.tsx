@@ -1,6 +1,7 @@
 import type { InstanceConfig, ProviderView } from '../../../contracts/providers.js';
 import { Badge, Card, MutedText, Row, Stack, Title } from '../../design-system/index.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
+import { CodexSetupChoice } from './CodexSetupChoice.js';
 import { ProviderActions } from './ProviderActions.js';
 import { ProviderLimits } from './ProviderLimits.js';
 import { ProviderModels } from './ProviderModels.js';
@@ -47,6 +48,7 @@ export function ProviderCard({ provider, label, config, onError }: CardProps) {
             {t('providers.version')} <bdi>{provider.version}</bdi>
           </MutedText>
         )}
+        <CodexSetupChoice provider={provider} config={config} onError={onError} />
         <SignInPanel provider={provider} onError={onError} />
         <ProviderLimits provider={provider} />
         <ProviderModels provider={provider} />
