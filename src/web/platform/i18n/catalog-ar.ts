@@ -9,6 +9,7 @@ import { analyticsAr } from './catalog-analytics-ar.js';
 import { portabilityAr } from './catalog-portability-ar.js';
 import { helpAr } from './catalog-help-ar.js';
 import { skinsAr } from './catalog-skins-ar.js';
+import { cliLoginAr } from './catalog-cli-login-ar.js';
 import { providersAr } from './catalog-providers-ar.js';
 
 export const ar: Record<MessageKey, string> = {
@@ -23,6 +24,7 @@ export const ar: Record<MessageKey, string> = {
   ...portabilityAr,
   ...helpAr,
   ...skinsAr,
+  ...cliLoginAr,
   'app.name': 'محرك بنك الأسئلة',
   'shell.language': 'English',
   'shell.theme.system': 'المظهر: حسب الجهاز',

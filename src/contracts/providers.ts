@@ -168,3 +168,44 @@ export const AuthStateView = z.looseObject({
   interaction: AuthInteraction.nullable().optional(),
 });
 export type AuthStateView = z.infer<typeof AuthStateView>;
+
+/**
+ * Sign-in through a provider's official CLI (ai-host cli-login), for providers the kit can only
+ * sign in from a terminal. Credentials stay in the AI host's home and refresh on their own.
+ */
+const CLI_LOGIN_METHODS = [
+  'codex.chatgpt',
+  'codex.apiKey',
+  'claude.subscription',
+  'claude.console',
+] as const;
+export const CliLoginMethod = z.enum(CLI_LOGIN_METHODS);
+export type CliLoginMethod = z.infer<typeof CliLoginMethod>;
+export const CliProvider = z.enum(['codex', 'claude']);
+export type CliProvider = z.infer<typeof CliProvider>;
+
+/** A pasted code or key: printable, one line, bounded. */
+const PastedLine = z
+  .string()
+  .trim()
+  .min(1)
+  .max(512)
+  .regex(/^[\x21-\x7e]+$/);
+
+export const CliLoginStartRequest = z
+  .object({ method: CliLoginMethod, secret: PastedLine.optional() })
+  .strict();
+export const CliLoginCodeRequest = z.object({ code: PastedLine }).strict();
+export const CliLogoutRequest = z.object({ provider: CliProvider }).strict();
+
+export const CliLoginView = z.object({
+  id: z.string(),
+  method: CliLoginMethod,
+  provider: CliProvider,
+  status: z.enum(['starting', 'waiting', 'verifying', 'done', 'failed', 'expired']),
+  link: z.string().nullable(),
+  userCode: z.string().nullable(),
+  needsCode: z.boolean(),
+  message: z.string().nullable(),
+});
+export type CliLoginView = z.infer<typeof CliLoginView>;

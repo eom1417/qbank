@@ -8,7 +8,7 @@ import type { RequireActor } from '../../identity/index.js';
 type MethodParams = { Params: { method: string }; Querystring: { input?: string } };
 
 /** A sign-in flow belongs to the QBank account that started it (kit: ownerSessionId). */
-const ownerOf = async (requireActor: RequireActor, request: FastifyRequest) =>
+export const ownerOf = async (requireActor: RequireActor, request: FastifyRequest) =>
   `account:${(await requireActor(request)).accountId}`;
 
 /** Relays the AI host's server-sent events to the browser until either side closes. */

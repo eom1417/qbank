@@ -6,6 +6,7 @@ import { ProviderActions } from './ProviderActions.js';
 import { ProviderLimits } from './ProviderLimits.js';
 import { ProviderModels } from './ProviderModels.js';
 import { SignInPanel } from './SignInPanel.js';
+import { CliSignInPanel, cliOf } from './CliSignInPanel.js';
 
 interface CardProps {
   provider: ProviderView;
@@ -30,6 +31,8 @@ function AuthLine({ provider }: { provider: ProviderView }) {
 /** One provider instance: status, sign-in, models, usage limits and every action it allows. */
 export function ProviderCard({ provider, label, config, onError }: CardProps) {
   const { t } = useI18n();
+  // The kit's "run `codex login`" advice is replaced by the sign-in panel below.
+  const signInHere = cliOf(provider, config) !== null && provider.auth.status !== 'authenticated';
   return (
     <Card>
       <Stack>
@@ -41,7 +44,7 @@ export function ProviderCard({ provider, label, config, onError }: CardProps) {
           {provider.badgeLabel && <Badge>{provider.badgeLabel}</Badge>}
         </Row>
         <AuthLine provider={provider} />
-        {provider.message && <MutedText>{provider.message}</MutedText>}
+        {provider.message && !signInHere && <MutedText>{provider.message}</MutedText>}
         {!provider.installed && <MutedText>{t('providers.notInstalled')}</MutedText>}
         {provider.version && (
           <MutedText>
@@ -50,6 +53,7 @@ export function ProviderCard({ provider, label, config, onError }: CardProps) {
         )}
         <CodexSetupChoice provider={provider} config={config} onError={onError} />
         <SignInPanel provider={provider} onError={onError} />
+        <CliSignInPanel provider={provider} config={config} onError={onError} />
         <ProviderLimits provider={provider} />
         <ProviderModels provider={provider} />
         <ProviderActions provider={provider} config={config} onError={onError} />

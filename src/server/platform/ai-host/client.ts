@@ -19,6 +19,8 @@ export interface AiHostClient {
   call(method: string, input: unknown, ownerSession: string): Promise<HostReply>;
   /** `POST /ask`: one question to one provider instance (ai-host turns/). */
   ask(input: AskInput, ownerSession: string): Promise<HostReply>;
+  /** `POST <path>` with a JSON body (`/login/...`). */
+  post(path: string, input: unknown, ownerSession: string): Promise<HostReply>;
   /** `GET <path>`: a snapshot (`/state`). */
   read(path: string, ownerSession: string): Promise<HostReply>;
   /** `GET <path>` as a live event stream (`/state/events`, `/events/<method>`). */
@@ -47,16 +49,13 @@ export function createAiHostClient(settings: { url: string; token: string | null
     status: response.status,
     body: (await response.json()) as unknown,
   });
+  const post = async (path: string, input: unknown, ownerSession: string) =>
+    reply(await request(path, ownerSession, { method: 'POST', body: JSON.stringify(input) }));
   return {
-    call: async (method, input, ownerSession) =>
-      reply(
-        await request(`/rpc/${encodeURIComponent(method)}`, ownerSession, {
-          method: 'POST',
-          body: JSON.stringify(input ?? {}),
-        }),
-      ),
-    ask: async (input, ownerSession) =>
-      reply(await request('/ask', ownerSession, { method: 'POST', body: JSON.stringify(input) })),
+    call: (method, input, ownerSession) =>
+      post(`/rpc/${encodeURIComponent(method)}`, input ?? {}, ownerSession),
+    ask: (input, ownerSession) => post('/ask', input, ownerSession),
+    post,
     read: async (path, ownerSession) => reply(await request(path, ownerSession)),
     open: (path, ownerSession, signal) => request(path, ownerSession, { signal }),
   };

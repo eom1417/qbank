@@ -35,14 +35,15 @@ async function waitForHealth(url: string, token: string) {
  * A real ai-host for a test suite: its own temporary home (so no real account on this machine is
  * read or refreshed), a random port and token, and only PATH from this process.
  */
-export async function startAiHost() {
+export async function startAiHost(options: { binDir?: string } = {}) {
   const home = mkdtempSync(join(tmpdir(), 'qbank-ai-host-'));
   const port = await freePort();
   const token = randomBytes(32).toString('hex');
   const child: ChildProcess = spawn(NODE24, [resolve('ai-host/src/main.ts')], {
     cwd: resolve('ai-host'),
     env: {
-      PATH: process.env['PATH'] ?? '',
+      // A test may put stand-in CLIs first on the PATH (cli-login).
+      PATH: [options.binDir, process.env['PATH'] ?? ''].filter(Boolean).join(':'),
       HOME: home,
       AI_HOST_HOME: join(home, 'kit'),
       AI_HOST_TOKEN: token,

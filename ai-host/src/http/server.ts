@@ -9,6 +9,7 @@ import { encodeSuccess } from '../bridge/rpc.ts';
 import { listDrivers } from '../bridge/drivers.ts';
 import { readState, stateChanges } from '../bridge/state.ts';
 import { handleAsk } from '../turns/route.ts';
+import { loginRoute } from '../cli-login/routes.ts';
 import type { StreamOpener, TaggedFailure, UnaryHandler } from '../bridge/types.ts';
 import type { HostConfig } from '../config.ts';
 import type { KitRuntime } from '../runtime.ts';
@@ -152,6 +153,8 @@ async function route(
   const owner = ownerSessionOf(request);
   if (!owner) return send(response, 400, { error: { _tag: 'MissingOwnerSession' } });
   if (await stateRoute(runtime, request, response, path)) return;
+  const login = await loginRoute(request, path, owner);
+  if (login) return send(response, login.status, login.body);
   if (request.method === 'POST' && path === '/ask')
     return askRoute(runtime, request, response, routes.cwd);
   await methodRoute(runtime, routes, request, response, owner);
