@@ -18,6 +18,11 @@ export function createBackups(settings: { db: Db; clock: Clock; dataDir: string 
   };
   return {
     runDue: () => backupIfDue(deps),
+    /** When the newest backup was made, if any (M17.3). */
+    latest: async () => {
+      const [newest] = await deps.files.list();
+      return newest ? new Date(newest.meta.createdAt) : null;
+    },
     register: (app: FastifyInstance, requireActor: RequireActor) =>
       registerBackupRoutes(app, deps, requireActor),
   };

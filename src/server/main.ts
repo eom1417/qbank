@@ -4,13 +4,15 @@ import { migrateToLatest } from './migrator.js';
 import { systemClock } from './platform/clock.js';
 import { loadConfig } from './platform/config/index.js';
 import { createDb } from './platform/db/index.js';
+import { createRotatingLog } from './platform/logging/rotating-file.js';
 
 const config = loadConfig();
 const db = createDb(config.databaseUrl);
 // A local install updates its own database on start; a hosted one runs `npm run migrate`.
 if (config.mode === 'local') await migrateToLatest(db);
 const pairingToken = config.mode === 'local' ? loadPairingToken(config.imports.dataDir) : null;
-const app = buildApp({ config, db, clock: systemClock, pairingToken });
+const log = config.mode === 'local' ? createRotatingLog(config.imports.dataDir) : undefined;
+const app = buildApp({ config, db, clock: systemClock, pairingToken, ...(log ? { log } : {}) });
 
 const shutdown = async () => {
   await app.close();

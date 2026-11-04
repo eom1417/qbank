@@ -33,12 +33,14 @@ interface SourcesSettings {
   maxUploadBytes: number;
   maxPages: number;
   originalRetentionDays: number;
+  log: SourcesDeps['log'];
 }
 
 /** Uploaded sources and their imports: upload, durable job queue, reading, report (M4). */
 export function createSources(settings: SourcesSettings) {
   const deps: SourcesDeps = {
     ownsBank: settings.ownsBank,
+    log: settings.log,
     imports: createImportRepository(settings.db),
     blobs: settings.blobs,
     questions: settings.questions,
@@ -58,6 +60,14 @@ export function createSources(settings: SourcesSettings) {
     /** Recreates exported sources in a restored bank (FR-18-005). */
     restoreSources: (ownerId: string, bankId: string, sources: readonly PortableSource[]) =>
       restoreSources(deps, ownerId, bankId, sources),
+    /** The newest import of the last week that failed or was only partly read (M17.3). */
+    lastFailure: async (ownerId: string, since: Date) => {
+      const ended = await deps.imports.recentlyEnded(ownerId, since);
+      const failed = ended.find((job) => ['failed', 'partial_failure'].includes(job.stage));
+      return failed
+        ? { fileName: failed.file_name, stage: failed.stage, at: failed.finished_at }
+        : null;
+    },
     register: (app: FastifyInstance) => {
       void app.register(async (scope) => {
         await scope.register(multipart);

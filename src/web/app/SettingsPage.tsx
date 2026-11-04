@@ -3,6 +3,7 @@ import { buttonClass, Heading, NarrowColumn } from '../design-system/index.js';
 import { AccountSettings } from '../capabilities/identity/AccountSettings.js';
 import { DevicesCard } from '../capabilities/identity/DevicesCard.js';
 import { BackupCard } from '../capabilities/backup/BackupCard.js';
+import { HealthCard } from '../capabilities/health/HealthCard.js';
 import { TagsCard } from '../capabilities/library/TagsCard.js';
 import { AccountDeletionCard } from '../capabilities/portability/AccountDeletionCard.js';
 import { RestoreCard } from '../capabilities/portability/RestoreCard.js';
@@ -20,6 +21,7 @@ export function SettingsPage() {
       <AccountSettings />
       <DevicesCard />
       <TagsCard />
+      <HealthCard />
       <BackupCard />
       <RestoreCard />
       <AccountDeletionCard />

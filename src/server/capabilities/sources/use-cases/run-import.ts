@@ -215,7 +215,8 @@ export async function runImport(deps: SourcesDeps, job: JobRow): Promise<void> {
       : await questionsOutcome(deps, job, source, file);
     await finish(outcome);
     await deps.imports.setOriginalExpiry(source.id, expiryOf(deps, outcome.stage));
-  } catch {
+  } catch (error) {
+    deps.log.error({ jobId: job.id, err: error }, 'import failed');
     await finish({ stage: 'failed', error_code: 'internal' });
   }
 }

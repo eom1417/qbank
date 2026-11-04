@@ -6,6 +6,7 @@ import {
   type RequireActor,
 } from './capabilities/identity/index.js';
 import { createBackups, type Backups } from './capabilities/backup/index.js';
+import { registerHealth } from './capabilities/health/index.js';
 import { createPortability } from './capabilities/portability/index.js';
 import { createLibrary } from './capabilities/library/index.js';
 import { createProviders } from './capabilities/providers/index.js';
@@ -16,6 +17,7 @@ import type { Clock } from './platform/clock.js';
 import type { AppConfig } from './platform/config/index.js';
 import type { Db } from './platform/db/index.js';
 import { handleError } from './platform/http/error-handler.js';
+import { requestForLog, type RotatingLog } from './platform/logging/rotating-file.js';
 import { createOriginGuard } from './platform/http/origin-guard.js';
 import { registerWebApp } from './platform/http/web-app.js';
 import { newId } from './platform/ids.js';
@@ -28,6 +30,8 @@ export interface AppDeps {
   clock: Clock;
   /** Local mode: the install's pairing code (identity `loadPairingToken`). Null in accounts mode. */
   pairingToken: string | null;
+  /** The log file of a local install (M17.3); stdout only when absent. */
+  log?: RotatingLog;
 }
 
 type ContentDeps = Omit<AppDeps, 'pairingToken'>;
@@ -69,6 +73,7 @@ function registerImports(
   });
   providers.register(app);
   const sources = createSources({
+    log: app.log,
     db,
     clock,
     blobs: parts.blobs,
@@ -118,12 +123,19 @@ function registerContent(app: FastifyInstance, deps: ContentDeps, identity: Iden
     },
     identity.requireActor,
   ).register(app);
+  return { providers, sources };
 }
 
 /** Composition root: wires platform owners and capabilities into one Fastify instance. */
-export function buildApp({ config, db, clock, pairingToken }: AppDeps): FastifyInstance {
+export function buildApp(deps: AppDeps): FastifyInstance {
+  const { config, db, clock, pairingToken } = deps;
   const app = Fastify({
-    logger: { level: config.logLevel, redact: ['req.headers.cookie', 'req.headers.authorization'] },
+    logger: {
+      level: config.logLevel,
+      redact: ['req.headers.cookie', 'req.headers.authorization'],
+      serializers: { req: requestForLog },
+      ...(deps.log ? { stream: deps.log } : {}),
+    },
     bodyLimit: 1024 * 1024,
     // Only a proxy on this computer (the dev server) may name the visitor's address.
     trustProxy: config.trustProxy ? ['127.0.0.1', '::1'] : false,
@@ -145,13 +157,34 @@ export function buildApp({ config, db, clock, pairingToken }: AppDeps): FastifyI
     publicOrigin: config.allowedOrigins[0] ?? null,
   });
   identity.register(app);
-  registerContent(app, { config, db, clock }, identity);
+  const content = registerContent(app, { config, db, clock }, identity);
   if (config.devOutbox) registerOutboxRoute(app, db);
+  registerOperations(app, deps, identity, content);
+  app.get('/api/health', async () => ({ status: 'ok' }));
+  return app;
+}
+
+/** Backups (local mode) and system health, over what the content capabilities expose (M17). */
+function registerOperations(
+  app: FastifyInstance,
+  deps: AppDeps,
+  identity: IdentityModule,
+  content: ReturnType<typeof registerContent>,
+) {
+  const { config, db, clock } = deps;
   const backups = createBackups({ db, clock, dataDir: config.imports.dataDir });
   if (config.mode === 'local') backups.register(app, identity.requireActor);
   app.decorate('backups', backups);
-  app.get('/api/health', async () => ({ status: 'ok' }));
-  return app;
+  const health = {
+    clock,
+    dataDir: config.imports.dataDir,
+    ai: content.providers.client,
+    aiConfigured: config.aiHost.token !== null,
+    latestBackup: config.mode === 'local' ? backups.latest : null,
+    lastFailure: content.sources.lastFailure,
+    logFile: deps.log?.file ?? null,
+  };
+  registerHealth(app, health, identity.requireActor);
 }
 
 declare module 'fastify' {

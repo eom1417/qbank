@@ -5,6 +5,8 @@ import type { Questions } from '../../questions/index.js';
 import type { ImportRepository } from '../adapters/import-repository.js';
 
 export interface SourcesDeps {
+  /** Why a job failed, for the owner's log (M17.3): codes and the error, never page text. */
+  log: { error(details: object, message: string): void };
   imports: ImportRepository;
   blobs: BlobStore;
   questions: Questions;

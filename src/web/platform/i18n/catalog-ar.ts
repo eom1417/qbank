@@ -11,6 +11,7 @@ import { helpAr } from './catalog-help-ar.js';
 import { skinsAr } from './catalog-skins-ar.js';
 import { cliLoginAr } from './catalog-cli-login-ar.js';
 import { backupAr } from './catalog-backup-ar.js';
+import { healthAr } from './catalog-health-ar.js';
 import { providersAr } from './catalog-providers-ar.js';
 
 export const ar: Record<MessageKey, string> = {
@@ -27,6 +28,7 @@ export const ar: Record<MessageKey, string> = {
   ...skinsAr,
   ...cliLoginAr,
   ...backupAr,
+  ...healthAr,
   'app.name': 'محرك بنك الأسئلة',
   'shell.language': 'English',
   'shell.theme.system': 'المظهر: حسب الجهاز',
