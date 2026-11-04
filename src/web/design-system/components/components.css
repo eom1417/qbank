@@ -327,3 +327,7 @@
   border-color: var(--color-danger);
   background: var(--color-danger-soft);
 }
+.qb-choice__mark {
+  margin-inline-start: auto;
+  font-weight: var(--weight-strong);
+}

@@ -27,6 +27,8 @@ export const studyEn = {
   'study.submit': 'Send my answer',
   'study.correct': 'Right',
   'study.wrong': 'Not right',
+  'study.mark.right': 'Right answer',
+  'study.mark.wrong': 'Your pick, not right',
   'study.rightAnswer': 'The right answer:',
   'study.explanation.show': 'Show the book’s explanation',
   'study.explanation.hide': 'Hide the explanation',

@@ -144,11 +144,11 @@
 | UAT-076 | رابط غير مصرح         | M0.3   | done    | `tests/integration/privacy-audit.test.ts`    |
 | UAT-077 | مزود AI خارجي         | M2.6   | partial | `tests/e2e/providers.spec.ts`                |
 | UAT-078 | صورة مريض معرف        | M14.1  | done    | `tests/e2e/help.spec.ts`                     |
-| UAT-079 | واجهة RTL             | M15.1  | partial | `tests/e2e/library.spec.ts`                  |
-| UAT-080 | واجهة LTR             | M15.1  | partial | `tests/e2e/language.spec.ts`                 |
-| UAT-081 | Dark mode             | M15.2  | partial | `tests/e2e/language.spec.ts`                 |
-| UAT-082 | هاتف صغير             | M15.3  | partial | `tests/e2e/library.spec.ts`                  |
-| UAT-083 | ألوان الملاحظات       | M15.2  | planned | —                                            |
+| UAT-079 | واجهة RTL             | M15.1  | done    | `tests/e2e/accessibility.spec.ts`            |
+| UAT-080 | واجهة LTR             | M15.1  | done    | `tests/e2e/accessibility.spec.ts`            |
+| UAT-081 | Dark mode             | M15.2  | done    | `tests/e2e/accessibility.spec.ts`            |
+| UAT-082 | هاتف صغير             | M15.3  | done    | `tests/e2e/accessibility.spec.ts`            |
+| UAT-083 | ألوان الملاحظات       | M15.2  | done    | `tests/e2e/accessibility.spec.ts`            |
 | UAT-084 | مفتاح منتهي           | M2.4   | done    | `tests/integration/imports-rules.test.ts`    |
 | UAT-085 | تكرار مهمة فاشلة      | M4.7   | done    | `tests/integration/imports.test.ts`          |
 | UAT-086 | تعديل سؤال في جلسة    | M10.9  | done    | `tests/integration/study-exam.test.ts`       |

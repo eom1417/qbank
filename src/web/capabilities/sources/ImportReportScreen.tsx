@@ -44,8 +44,9 @@ function PageIssues({ job }: { job: ImportResponse }) {
   if (job.pages.length === 0) return <MutedText>{t('import.report.cleanPages')}</MutedText>;
   return (
     <ul className="qb-list">
-      {job.pages.map((page) => (
-        <li key={page.page} className="qb-list__item">
+      {/* A page can be reported more than once (one line per problem), so the line is the key. */}
+      {job.pages.map((page, line) => (
+        <li key={line} className="qb-list__item">
           {t('import.report.page')} {page.page}:{' '}
           {t(`import.page.${page.warning ?? page.status}` as 'import.page.ocr')}
         </li>

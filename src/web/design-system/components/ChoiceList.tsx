@@ -5,7 +5,11 @@ export interface Choice {
   label: string;
   /** After the answer: right, the user's wrong pick, or nothing to say. */
   mark?: 'right' | 'wrong' | undefined;
+  /** What the mark means, in words: never colour alone (UAT-083). */
+  markLabel?: string | undefined;
 }
+
+const SYMBOL = { right: '✓', wrong: '✕' } as const;
 
 interface ChoiceListProps {
   legend: string;
@@ -49,6 +53,11 @@ export function ChoiceList({
             onChange={() => toggle(choice.value)}
           />
           <span dir="auto">{choice.label}</span>
+          {choice.mark && (
+            <span className="qb-choice__mark">
+              <span aria-hidden="true">{SYMBOL[choice.mark]}</span> {choice.markLabel}
+            </span>
+          )}
         </label>
       ))}
     </fieldset>

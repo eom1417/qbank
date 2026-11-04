@@ -29,6 +29,8 @@ export const studyAr: Record<keyof typeof studyEn, string> = {
   'study.submit': 'أرسل إجابتي',
   'study.correct': 'صحيح',
   'study.wrong': 'غير صحيح',
+  'study.mark.right': 'الإجابة الصحيحة',
+  'study.mark.wrong': 'اختيارك، غير صحيح',
   'study.rightAnswer': 'الإجابة الصحيحة:',
   'study.explanation.show': 'اعرض شرح الكتاب',
   'study.explanation.hide': 'أخفِ الشرح',

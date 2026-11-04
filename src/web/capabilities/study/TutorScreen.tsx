@@ -11,7 +11,7 @@ import { SolutionView } from './SolutionView.js';
 import { useTutor } from './use-tutor.js';
 
 /** Right answers are marked only once the solution is known (UAT-041). */
-function choicesOf(item: ItemResponse): Choice[] {
+function choicesOf(item: ItemResponse, t: ReturnType<typeof useI18n>['t']): Choice[] {
   const right = new Set(item.solution?.answers ?? []);
   const chosen = new Set(item.solution?.chosen ?? []);
   return item.options.map((o) => {
@@ -24,17 +24,19 @@ function choicesOf(item: ItemResponse): Choice[] {
       value: o.letter,
       label: `${o.label} ${o.text}`,
       mark: item.solution ? mark : undefined,
+      markLabel: mark && t(`study.mark.${mark}`),
     };
   });
 }
 
 /** The question as asked, its options marked only once answered. */
 function QuestionView({ tutor }: { tutor: ReturnType<typeof useTutor> }) {
+  const { t } = useI18n();
   const item = tutor.item as ItemResponse;
   return (
     <QuestionCard
       item={item}
-      choices={choicesOf(item)}
+      choices={choicesOf(item, t)}
       selected={tutor.selected}
       disabled={item.solution !== null}
       onChoose={tutor.setSelected}

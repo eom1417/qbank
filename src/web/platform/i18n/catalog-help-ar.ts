@@ -42,4 +42,8 @@ export const helpAr: Record<keyof typeof helpEn, string> = {
   'support.build': 'أنشئ التقرير',
   'support.copy': 'انسخ التقرير',
   'support.copied': 'نُسخ',
+  'error.screen.title': 'تعذّر فتح هذه الشاشة',
+  'error.screen.body': 'لم يضع شيء مما حفظته. حاول مرة أخرى، أو ارجع إلى مكتبتك.',
+  'error.screen.reload': 'حاول مرة أخرى',
+  'error.screen.home': 'العودة إلى المكتبة',
 };

@@ -31,12 +31,14 @@ import { ImportReportScreen } from '../capabilities/sources/ImportReportScreen.j
 import { ImportScreen } from '../capabilities/sources/ImportScreen.js';
 import { SourcesCard } from '../capabilities/sources/SourcesCard.js';
 import { AppShell } from './AppShell.js';
+import { RouteError } from './RouteError.js';
 import { SettingsPage } from './SettingsPage.js';
 import { ProvidersScreen } from '../capabilities/providers/ProvidersScreen.js';
 
 export const router = createBrowserRouter([
   {
     element: <AppShell />,
+    errorElement: <RouteError />,
     children: [
       { path: '/', element: <Home /> },
       {

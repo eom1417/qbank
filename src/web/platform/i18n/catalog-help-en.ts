@@ -40,4 +40,8 @@ export const helpEn = {
   'support.build': 'Build the report',
   'support.copy': 'Copy the report',
   'support.copied': 'Copied',
+  'error.screen.title': 'This screen could not open',
+  'error.screen.body': 'Nothing you saved is lost. Try again, or go back to your library.',
+  'error.screen.reload': 'Try again',
+  'error.screen.home': 'Back to the library',
 };
