@@ -5,6 +5,12 @@ import { auditSample } from '../domain/screening.js';
 import type { SourcesDeps } from './deps.js';
 import { askMark, pageImages } from './suggest-marks.js';
 
+/** The AI an import job runs on: its instance and, if chosen, that instance's model. */
+export const aiTargetOf = (job: Pick<JobRow, 'ai_provider_id' | 'ai_model'>) => ({
+  instanceId: job.ai_provider_id ?? '',
+  ...(job.ai_model ? { model: job.ai_model } : {}),
+});
+
 interface Verified {
   questions: ImportedQuestion[];
   /** `not_used`, `done`, `not_ready` (connection missing) or why the provider stopped. */
@@ -68,7 +74,7 @@ export async function verifyWithAi(
   questions: ImportedQuestion[],
 ): Promise<Verified> {
   if (!job.ai_provider_id) return { questions, aiOutcome: 'not_used' };
-  const provider = await deps.ai.openOwned(job.owner_id, job.ai_provider_id);
+  const provider = await deps.ai.openOwned(job.owner_id, aiTargetOf(job));
   if (!provider) return { questions, aiOutcome: 'not_ready' };
   return askAll(file, provider, questions);
 }

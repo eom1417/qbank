@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AiTarget } from './providers.js';
 import { QuestionOption } from './questions.js';
 
 const Ids = z.array(z.uuid()).max(200);
@@ -182,9 +183,7 @@ export const MarkRequest = z
 export const MarkResponse = z.object({ flagged: z.boolean(), favorite: z.boolean() }).strict();
 
 /** The user's AI explains after the answer (FR-08-005, FR-08-006): labelled, never the book's. */
-export const AiExplanationRequest = z
-  .object({ instanceId: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$/) })
-  .strict();
+export const AiExplanationRequest = AiTarget;
 
 export const AiExplanation = z
   .object({

@@ -92,9 +92,9 @@ function registerItemRoutes(app: FastifyInstance, deps: StudyDeps, requireActor:
   });
   app.post<ItemParams>(`${base}/ai-explanation`, async (request) => {
     const actor = await requireActor(request);
-    const { instanceId } = parseInput(AiExplanationRequest, request.body);
+    const target = parseInput(AiExplanationRequest, request.body);
     const ref = { sessionId: request.params.id, position: positionOf(request.params.position) };
-    return explainWithAi(deps, actor, ref, instanceId);
+    return explainWithAi(deps, actor, ref, target);
   });
 }
 

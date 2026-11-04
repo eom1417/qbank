@@ -53,7 +53,11 @@ function rangeOf(fields: StartImportFields, pages: number) {
 /** With AI chosen, its estimate must be within the user's limits or approved (DEC-18, FR-22-008). */
 async function checkAi(deps: SourcesDeps, actor: Actor, fields: StartImportFields) {
   if (!fields.aiProviderId) return null;
-  const estimate = await deps.ai.estimateFor(actor.accountId, fields.aiProviderId);
+  const target = {
+    instanceId: fields.aiProviderId,
+    ...(fields.aiModel ? { model: fields.aiModel } : {}),
+  };
+  const estimate = await deps.ai.estimateFor(actor.accountId, target);
   if (!estimate) throw new AppError('validation_failed', { aiProviderId: 'invalid_value' });
   if (estimate.needsApproval && fields.aiApproved !== 'true') {
     throw new AppError(
@@ -123,6 +127,7 @@ export async function startImport(
       stage: 'queued' as const,
       pages_total: range.to - range.from + 1,
       ai_provider_id: aiProviderId,
+      ai_model: aiProviderId ? (fields.aiModel ?? null) : null,
       created_at: now,
       updated_at: now,
     };

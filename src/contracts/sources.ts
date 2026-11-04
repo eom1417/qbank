@@ -1,7 +1,7 @@
 import { z } from 'zod';
+import { KitInstanceId, KitModel } from './providers.js';
 
 /** The kit's ProviderInstanceId: letters, digits, dashes and underscores. */
-const KitInstanceId = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$/);
 
 export const SourceLanguage = z.enum(['auto', 'ar', 'en', 'mixed']);
 export type SourceLanguage = z.infer<typeof SourceLanguage>;
@@ -47,6 +47,8 @@ export const StartImportFields = z
     rightsConfirmed: z.literal('true'),
     /** A provider instance of the AI providers kit, such as `codex` (DEC-30). */
     aiProviderId: KitInstanceId.optional(),
+    /** That instance's model for this import; its default when omitted. */
+    aiModel: KitModel.optional(),
     /** With source type `answer_key`: the source whose questions this file answers (M6.3). */
     answersFor: z.uuid().optional(),
     /** The user approved an AI cost estimate above their limits (DEC-18). */
@@ -93,7 +95,11 @@ export const ImportResponse = z
 export type ImportResponse = z.infer<typeof ImportResponse>;
 
 export const RetryImportRequest = z
-  .object({ aiProviderId: KitInstanceId.nullable().optional(), aiApproved: z.boolean().optional() })
+  .object({
+    aiProviderId: KitInstanceId.nullable().optional(),
+    aiModel: KitModel.nullable().optional(),
+    aiApproved: z.boolean().optional(),
+  })
   .strict();
 export type RetryImportRequest = z.infer<typeof RetryImportRequest>;
 

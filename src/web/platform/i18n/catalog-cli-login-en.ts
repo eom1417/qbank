@@ -32,4 +32,5 @@ export const cliLoginEn = {
   'cliLogin.again': 'Start again',
   'cliLogin.signOut': 'Sign out',
   'cliLogin.signOut.confirm': 'Sign out of this provider',
+  'ai.model.default': 'default model',
 };

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { AiTarget } from '../../../../contracts/providers.js';
 import type { AiHostClient } from '../../../platform/ai-host/client.js';
 import {
   parseModelOutput,
@@ -37,6 +38,18 @@ function promptOf<T>(request: StructuredRequest<T>): string {
   ].join('\n\n');
 }
 
+/** One question to the chosen instance and model, with the page image when there is one. */
+function askOf<T>(target: AiTarget, request: StructuredRequest<T>) {
+  const image = request.parts.find((part) => part.type === 'image');
+  return {
+    instanceId: target.instanceId,
+    ...(target.model ? { model: target.model } : {}),
+    prompt: promptOf(request),
+    ...(image?.type === 'image' ? { imagePngBase64: image.base64 } : {}),
+    timeoutMs: ASK_TIMEOUT_MS,
+  };
+}
+
 /**
  * QBank's AI port on a provider instance of the kit (DEC-30): the user's own subscription or
  * key, one read-only turn per question. The reply is still checked by `parseModelOutput`.
@@ -44,20 +57,11 @@ function promptOf<T>(request: StructuredRequest<T>): string {
 export function kitProvider(
   client: AiHostClient,
   ownerSession: string,
-  instanceId: string,
+  target: AiTarget,
 ): AiProvider {
   return {
     async generate<T>(request: StructuredRequest<T>): Promise<StructuredResult<T>> {
-      const image = request.parts.find((part) => part.type === 'image');
-      const reply = await client.ask(
-        {
-          instanceId,
-          prompt: promptOf(request),
-          ...(image?.type === 'image' ? { imagePngBase64: image.base64 } : {}),
-          timeoutMs: ASK_TIMEOUT_MS,
-        },
-        ownerSession,
-      );
+      const reply = await client.ask(askOf(target, request), ownerSession);
       if (reply.status !== 200) {
         const reason = (reply.body as { error?: { reason?: string } } | null)?.error?.reason ?? '';
         return { ok: false, failure: FAILURES[reason] ?? 'unexpected' };

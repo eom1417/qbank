@@ -10,6 +10,7 @@ import { isId } from '../../../platform/ids.js';
 import type { Actor } from '../../identity/index.js';
 import type { JobRow } from '../adapters/import-repository.js';
 import type { SourcesDeps } from './deps.js';
+import { aiTargetOf } from './verify-with-ai.js';
 
 async function ownedJob(deps: SourcesDeps, actor: Actor, jobId: string) {
   const job = isId(jobId) ? await deps.imports.findJob(actor.accountId, jobId) : undefined;
@@ -68,6 +69,16 @@ const RETRYABLE: ReadonlySet<JobRow['stage']> = new Set([
  * kept, and questions are updated in place, never duplicated (UAT-085). The AI connection may
  * be changed, e.g. after fixing an expired key (JY-14).
  */
+/** The AI for a retry: the one chosen now, or the job's own when none was sent. */
+function retryTarget(job: JobRow, input: RetryImportRequest) {
+  if (input.aiProviderId === undefined)
+    return { ai_provider_id: job.ai_provider_id, ai_model: job.ai_model };
+  return {
+    ai_provider_id: input.aiProviderId,
+    ai_model: input.aiProviderId ? (input.aiModel ?? null) : null,
+  };
+}
+
 export async function retryImport(
   deps: SourcesDeps,
   actor: Actor,
@@ -77,15 +88,15 @@ export async function retryImport(
   const { job, source } = await ownedJob(deps, actor, jobId);
   if (!RETRYABLE.has(job.stage)) throw new AppError('not_retryable');
   if (!source.blob_key) throw new AppError('original_deleted');
-  if (input.aiProviderId && !(await deps.ai.estimateFor(actor.accountId, input.aiProviderId))) {
+  const ai = retryTarget(job, input);
+  if (input.aiProviderId && !(await deps.ai.estimateFor(actor.accountId, aiTargetOf(ai)))) {
     throw new AppError('validation_failed', { aiProviderId: 'invalid_value' });
   }
   await deps.imports.forgetFailedPages(job.id);
-  const aiProviderId = input.aiProviderId === undefined ? job.ai_provider_id : input.aiProviderId;
   await deps.imports.update(job.id, {
     stage: 'queued',
     attempts: job.attempts + 1,
-    ai_provider_id: aiProviderId,
+    ...ai,
     ai_outcome: null,
     error_code: null,
     finished_at: null,

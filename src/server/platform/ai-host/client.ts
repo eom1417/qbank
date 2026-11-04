@@ -3,6 +3,8 @@ import { AppError } from '../errors/index.js';
 /** One question to one provider instance (`POST /ask`). */
 interface AskInput {
   instanceId: string;
+  /** One of the instance's models; its default when omitted. */
+  model?: string;
   prompt: string;
   imagePngBase64?: string;
   timeoutMs?: number;

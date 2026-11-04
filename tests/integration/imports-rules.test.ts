@@ -153,6 +153,31 @@ describe('choosing the AI for an import', () => {
   });
 });
 
+describe('choosing the model for an import', () => {
+  it('reads with the model chosen, keeps it for a retry, and refuses one not offered', async () => {
+    const { owner, bankId } = await ownerWithAi();
+    const upload = (aiModel: string) =>
+      uploadFile(app(), owner.cookie(), bankId, fixtures().arabic, {
+        aiProviderId: FAKE_INSTANCES.vision,
+        aiModel,
+      });
+    const refused = await upload('not-offered');
+    expect([refused.statusCode, refused.json().error.fields]).toEqual([
+      400,
+      { aiProviderId: 'invalid_value' },
+    ]);
+    const job = (await upload('fake-small')).json() as { id: string };
+    await runImports(app());
+    expect(fakeHost().asks.at(-1)?.body.model).toBe('fake-small');
+    const asked = fakeHost().asks.length;
+    await owner.post(`/api/imports/${job.id}/retry`, {});
+    await runImports(app());
+    const retried = fakeHost().asks.slice(asked);
+    expect(retried.length).toBeGreaterThan(0);
+    expect(retried.every((ask) => ask.body.model === 'fake-small')).toBe(true);
+  });
+});
+
 describe("accepting the AI's suggested answer (M6.6, DEC-03)", () => {
   it('makes the question eligible, keeps the AI badge, and only for its owner', async () => {
     const { owner, bankId } = await ownerWithAi();

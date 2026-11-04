@@ -37,7 +37,7 @@ const MARK_ANSWER = JSON.stringify({ marked: 'A', mark: 'circle', confident: tru
 
 interface Ask {
   ownerSession: string | undefined;
-  body: { instanceId?: string; prompt?: string; imagePngBase64?: string };
+  body: { instanceId?: string; model?: string; prompt?: string; imagePngBase64?: string };
 }
 
 async function readJson(request: IncomingMessage): Promise<unknown> {
@@ -56,6 +56,10 @@ const instance = (instanceId: string, enabled: boolean) => ({
   enabled,
   supportsTextGeneration: true,
   auth: { status: 'authenticated' },
+  models: [
+    { slug: 'fake-large', name: 'Fake Large', isDefault: true },
+    { slug: 'fake-small', name: 'Fake Small' },
+  ],
 });
 
 /**

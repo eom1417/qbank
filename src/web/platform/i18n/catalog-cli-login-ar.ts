@@ -34,4 +34,5 @@ export const cliLoginAr: Record<keyof typeof cliLoginEn, string> = {
   'cliLogin.again': 'ابدأ من جديد',
   'cliLogin.signOut': 'تسجيل الخروج',
   'cliLogin.signOut.confirm': 'سجّل الخروج من هذا المزوّد',
+  'ai.model.default': 'النموذج الافتراضي',
 };

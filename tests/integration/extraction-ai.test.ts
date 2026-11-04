@@ -25,7 +25,7 @@ afterAll(async () => {
 });
 
 const provider = (instanceId: string) =>
-  kitProvider(createAiHostClient(fake.settings), 'account:test', instanceId);
+  kitProvider(createAiHostClient(fake.settings), 'account:test', { instanceId });
 
 describe('AI mark suggestions through the providers kit', () => {
   it('asks only about undecided questions, with the page image, and labels the answer', async () => {
@@ -53,7 +53,7 @@ describe('AI mark suggestions through the providers kit', () => {
     const offline = kitProvider(
       createAiHostClient({ url: fake.settings.url, token: null }),
       'account:test',
-      FAKE_INSTANCES.vision,
+      { instanceId: FAKE_INSTANCES.vision },
     );
     const request = { name: 'probe', system: 's', parts: [], schema: z.object({}) };
     await expect(offline.generate(request)).rejects.toMatchObject({ code: 'ai_host_unavailable' });

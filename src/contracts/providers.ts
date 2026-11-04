@@ -169,6 +169,16 @@ export const AuthStateView = z.looseObject({
 });
 export type AuthStateView = z.infer<typeof AuthStateView>;
 
+/** A provider instance of the AI providers kit, such as `codex` (DEC-30). */
+export const KitInstanceId = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$/);
+/** One of that instance's models, such as `gpt-5.5`; when omitted, the instance's default. */
+export const KitModel = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:/@-]{0,199}$/);
+/** Which of the user's AI runs a task: the instance and, if chosen, its model. */
+export const AiTarget = z
+  .object({ instanceId: KitInstanceId, model: KitModel.optional() })
+  .strict();
+export type AiTarget = z.infer<typeof AiTarget>;
+
 /**
  * Sign-in through a provider's official CLI (ai-host cli-login), for providers the kit can only
  * sign in from a terminal. Credentials stay in the AI host's home and refresh on their own.

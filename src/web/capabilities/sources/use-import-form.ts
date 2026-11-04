@@ -7,6 +7,7 @@ import { useI18n } from '../../platform/i18n/i18n.js';
 import { createBank } from '../library/api.js';
 import { uploadFile } from './api.js';
 import type { ChosenFile } from './FileOptions.js';
+import { targetOfChoice, useAiChoices, useRememberedChoice } from '../providers/ready-providers.js';
 
 /** The destination value that means "create a new bank with this name" (FR-04-003). */
 export const NEW_BANK = 'new';
@@ -34,21 +35,29 @@ function useDestination(bankId: string) {
  * The upload screen's state: destination, chosen files, created imports, the AI choice.
  * Files are uploaded one by one; a file that fails keeps its row with the reason.
  */
+/** The upload's AI fields: the chosen instance and its model, or none. */
+function aiFields(choice: string) {
+  const target = targetOfChoice(choice);
+  return { aiProviderId: target?.instanceId ?? '', aiModel: target?.model ?? '' };
+}
+
 export function useImportForm(bankId: string) {
   const { t } = useI18n();
   const { destination, setDestination, banksVersion, resolveBank } = useDestination(bankId);
   const [files, setFiles] = useState<ChosenFile[]>([]);
   const [jobs, setJobs] = useState<ImportResponse[]>([]);
-  const [ai, setAi] = useState({
-    providerId: '',
-    approved: false,
-    approval: null as string[] | null,
-  });
+  const [choice, remember] = useRememberedChoice('import', useAiChoices(), '');
+  const [ai, setAi] = useState({ approved: false, approval: null as string[] | null });
+  /** A new AI choice is remembered, and any earlier approval no longer applies. */
+  const chooseAi = (next: string) => {
+    remember(next);
+    setAi({ approved: false, approval: null });
+  };
   const upload = useAction(async () => {
     const target = await resolveBank();
     for (const chosen of files) {
       try {
-        const options = { ...chosen, aiProviderId: ai.providerId, aiApproved: ai.approved };
+        const options = { ...chosen, ...aiFields(choice), aiApproved: ai.approved };
         const job = await uploadFile(target, chosen.file, options);
         setJobs((previous) => [...previous, job]);
         setFiles((previous) => previous.filter((other) => other.key !== chosen.key));
@@ -74,7 +83,8 @@ export function useImportForm(bankId: string) {
     files,
     setFiles,
     jobs,
-    ai,
+    ai: { ...ai, choice },
+    chooseAi,
     setAi,
     upload,
     forget,

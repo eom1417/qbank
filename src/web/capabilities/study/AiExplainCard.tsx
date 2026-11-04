@@ -11,7 +11,7 @@ import {
 } from '../../design-system/index.js';
 import { useAction } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
-import { useReadyProviders } from '../providers/ready-providers.js';
+import { targetOfChoice, useAiChoices, useRememberedChoice } from '../providers/ready-providers.js';
 import { explainWithAi } from './api.js';
 
 type Explained = Extract<AiExplanationResponse, { outcome: 'explained' }>;
@@ -39,14 +39,22 @@ function ExplanationView({ reply }: { reply: Explained }) {
   );
 }
 
+/** The chosen instance and model; only offered choices reach here. */
+const targetOf = (choice: string) => targetOfChoice(choice) ?? { instanceId: choice };
+
 /** The user's AI explains, apart from the book and labelled as theirs (FR-08-005, UAT-043). */
 export function AiExplainCard({ sessionId, position }: { sessionId: string; position: number }) {
   const { t } = useI18n();
-  const providers = useReadyProviders();
-  const [instance, setInstance] = useState('');
+  const providers = useAiChoices();
+  const [chosen, setInstance] = useRememberedChoice(
+    'explain',
+    providers,
+    providers[0]?.value ?? '',
+  );
   const [reply, setReply] = useState<AiExplanationResponse | null>(null);
-  const chosen = instance || providers[0]?.value || '';
-  const ask = useAction(async () => setReply(await explainWithAi(sessionId, position, chosen)));
+  const ask = useAction(async () =>
+    setReply(await explainWithAi(sessionId, position, targetOf(chosen))),
+  );
   if (providers.length === 0) return null;
   return (
     <Card>

@@ -70,6 +70,7 @@ export async function restoreSources(
         stage: 'completed',
         pages_total: source.pageCount,
         ai_provider_id: null,
+        ai_model: null,
         created_at: now,
         updated_at: now,
       },

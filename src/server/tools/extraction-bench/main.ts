@@ -23,7 +23,10 @@ if (instance && !host) {
   );
   process.exit(2);
 }
-const ai = instance && host ? kitProvider(createAiHostClient(host), 'bench', instance) : null;
+const ai =
+  instance && host
+    ? kitProvider(createAiHostClient(host), 'bench', { instanceId: instance })
+    : null;
 
 const percent = (value: number) => `${(value * 100).toFixed(1)}%`;
 

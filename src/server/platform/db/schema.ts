@@ -118,6 +118,8 @@ interface ImportJobTable {
   questions_found: Generated<number>;
   questions_review: Generated<number>;
   ai_provider_id: string | null;
+  /** The model chosen for that instance; its default when null. */
+  ai_model: Generated<string | null>;
   ai_outcome: string | null;
   error_code: string | null;
   attempts: Generated<number>;

@@ -15,6 +15,8 @@ export interface UploadOptions {
   language: SourceLanguage;
   sourceType: SourceType;
   aiProviderId: string;
+  /** That instance's model; its default when empty. */
+  aiModel: string;
   aiApproved: boolean;
   answersFor: string;
 }
@@ -28,6 +30,7 @@ export function uploadFile(bankId: string, file: File, options: UploadOptions) {
   if (options.pageFrom) form.append('pageFrom', options.pageFrom);
   if (options.pageTo) form.append('pageTo', options.pageTo);
   if (options.aiProviderId) form.append('aiProviderId', options.aiProviderId);
+  if (options.aiProviderId && options.aiModel) form.append('aiModel', options.aiModel);
   if (options.aiApproved) form.append('aiApproved', 'true');
   if (options.sourceType === 'answer_key') form.append('answersFor', options.answersFor);
   form.append('file', file);

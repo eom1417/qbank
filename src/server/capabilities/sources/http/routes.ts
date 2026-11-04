@@ -112,8 +112,8 @@ export function registerSourceRoutes(
     '/api/questions/:id/fix-suggestion',
     async (request): Promise<FixSuggestionResponse> => {
       const actor = await requireActor(request);
-      const { instanceId } = parseInput(FixSuggestionRequest, request.body);
-      return suggestFix(deps, actor, request.params.id, instanceId);
+      const target = parseInput(FixSuggestionRequest, request.body);
+      return suggestFix(deps, actor, request.params.id, target);
     },
   );
 

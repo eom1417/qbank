@@ -1,3 +1,4 @@
+import type { AiTarget } from '../../../contracts/providers.js';
 import { ReportsResponse } from '../../../contracts/review.js';
 import {
   ActiveSessionsResponse,
@@ -65,10 +66,13 @@ export const fetchSummary = (id: string) =>
 export const retryWrong = (id: string) =>
   apiRequest('POST', `${session(id)}/retry-wrong`, SessionResponse, {});
 
-export const explainWithAi = (id: string, position: number, instanceId: string) =>
-  apiRequest('POST', `${session(id)}/items/${position}/ai-explanation`, AiExplanationResponse, {
-    instanceId,
-  });
+export const explainWithAi = (id: string, position: number, target: AiTarget) =>
+  apiRequest(
+    'POST',
+    `${session(id)}/items/${position}/ai-explanation`,
+    AiExplanationResponse,
+    target,
+  );
 
 export const setMark = (questionId: string, mark: { flagged?: boolean; favorite?: boolean }) =>
   apiRequest('PUT', `/api/questions/${questionId}/mark`, MarkResponse, mark);

@@ -1,3 +1,4 @@
+import type { AiTarget } from '../../../../contracts/providers.js';
 import type { FixSuggestionResponse } from '../../../../contracts/review.js';
 import { AppError, notFound } from '../../../platform/errors/index.js';
 import { isId } from '../../../platform/ids.js';
@@ -29,13 +30,13 @@ export async function suggestFix(
   deps: SourcesDeps,
   actor: Actor,
   questionId: string,
-  instanceId: string,
+  target: AiTarget,
 ): Promise<FixSuggestionResponse> {
   const question = isId(questionId)
     ? await deps.questions.findQuestion(actor.accountId, questionId)
     : undefined;
   if (!question) throw notFound();
-  const provider = await deps.ai.openOwned(actor.accountId, instanceId);
+  const provider = await deps.ai.openOwned(actor.accountId, target);
   if (!provider) throw new AppError('validation_failed', { instanceId: 'invalid_value' });
   const page = await pageTextOf(deps, actor.accountId, question.source_id, question.source_page);
   if (page === null) return { outcome: 'refused', why: 'no_page_text' };

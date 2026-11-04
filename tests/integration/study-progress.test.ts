@@ -102,3 +102,23 @@ describe('flags and the AI explanation (FR-12-007, FR-08-005)', () => {
     expect((await itemAt(owner, id, 0)).json().solution.explanation).toBeNull();
   });
 });
+
+describe("choosing the model of the user's AI", () => {
+  it('runs on the model chosen, and refuses one the provider does not offer', async () => {
+    const { owner, bankId } = await ownerWithBank(app());
+    await seed(owner, bankId, many(1));
+    const id = await startTutor(owner, bankId, 1);
+    await answer(owner, id, 0, ['B']);
+    const explain = (model: string) =>
+      owner.post(`/api/study/sessions/${id}/items/0/ai-explanation`, {
+        instanceId: FAKE_INSTANCES.explainer,
+        model,
+      });
+    expect((await explain('fake-small')).json()).toMatchObject({
+      generatedBy: `${FAKE_INSTANCES.explainer} · fake-small`,
+    });
+    expect(fakeHost().asks.at(-1)?.body.model).toBe('fake-small');
+    expect((await explain('not-offered')).statusCode).toBe(400);
+    expect((await explain('bad model!')).statusCode).toBe(400);
+  });
+});

@@ -1,3 +1,4 @@
+import type { AiTarget } from '../../../../contracts/providers.js';
 import { AiExplanation, type AiExplanationResponse } from '../../../../contracts/study.js';
 import { AppError } from '../../../platform/errors/index.js';
 import type { Actor } from '../../identity/index.js';
@@ -28,14 +29,14 @@ export async function explainWithAi(
   deps: StudyDeps,
   actor: Actor,
   ref: { sessionId: string; position: number },
-  instanceId: string,
+  target: AiTarget,
 ): Promise<AiExplanationResponse> {
   const session = await ownedSession(deps, actor, ref.sessionId);
   const item = (await deps.sessions.itemsOf(actor.accountId, session.id))[ref.position];
   if (!item) throw new AppError('not_found');
   if (item.answered_at === null)
     throw new AppError('validation_failed', { position: 'not_answered' });
-  const provider = await deps.ai.openOwned(actor.accountId, instanceId);
+  const provider = await deps.ai.openOwned(actor.accountId, target);
   if (!provider) throw new AppError('validation_failed', { instanceId: 'invalid_value' });
   const reply = await provider.generate({
     name: 'explanation',
@@ -44,5 +45,6 @@ export async function explainWithAi(
     schema: AiExplanation,
   });
   if (!reply.ok) return { outcome: 'failed', failure: reply.failure };
-  return { outcome: 'explained', generatedBy: instanceId, ...reply.value };
+  const generatedBy = [target.instanceId, target.model].filter(Boolean).join(' · ');
+  return { outcome: 'explained', generatedBy, ...reply.value };
 }

@@ -13,7 +13,7 @@ import {
 import { useAction } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { DisclosureNote } from '../providers/DisclosureNote.js';
-import { useReadyProviders } from '../providers/ready-providers.js';
+import { targetOfChoice, useAiChoices, useRememberedChoice } from '../providers/ready-providers.js';
 import { editQuestion, suggestFix } from './api.js';
 import { QuestionTextDiff } from './QuestionTextDiff.js';
 
@@ -109,6 +109,9 @@ function AskForm({
   );
 }
 
+/** The chosen instance and model; only offered choices reach here. */
+const targetOf = (choice: string) => targetOfChoice(choice) ?? { instanceId: choice };
+
 /** Asking the user's AI to fix reading errors only, shown as a diff (FR-09-005, M7.4). */
 export function FixCard({
   question,
@@ -118,11 +121,10 @@ export function FixCard({
   onApplied(q: QuestionResponse): void;
 }) {
   const { t } = useI18n();
-  const providers = useReadyProviders();
-  const [instance, setInstance] = useState('');
+  const providers = useAiChoices();
+  const [chosen, setInstance] = useRememberedChoice('fix', providers, providers[0]?.value ?? '');
   const [reply, setReply] = useState<FixSuggestionResponse | null>(null);
-  const chosen = instance || providers[0]?.value || '';
-  const ask = useAction(async () => setReply(await suggestFix(question.id, chosen)));
+  const ask = useAction(async () => setReply(await suggestFix(question.id, targetOf(chosen))));
   const applied = (q: QuestionResponse) => {
     setReply(null);
     onApplied(q);

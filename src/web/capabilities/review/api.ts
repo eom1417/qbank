@@ -1,3 +1,4 @@
+import type { AiTarget } from '../../../contracts/providers.js';
 import { z } from 'zod';
 import { QuestionResponse, type EditQuestionRequest } from '../../../contracts/questions.js';
 import {
@@ -52,5 +53,5 @@ export const fetchReports = (id: string) =>
 export const resolveReport = (reportId: string) =>
   apiRequest('POST', `/api/reports/${reportId}/resolve`, z.null(), {});
 
-export const suggestFix = (id: string, instanceId: string) =>
-  apiRequest('POST', `/api/questions/${id}/fix-suggestion`, FixSuggestionResponse, { instanceId });
+export const suggestFix = (id: string, target: AiTarget) =>
+  apiRequest('POST', `/api/questions/${id}/fix-suggestion`, FixSuggestionResponse, target);

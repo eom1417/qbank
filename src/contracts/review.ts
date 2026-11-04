@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AiTarget } from './providers.js';
 
 /** How much a question risks a wrong answer in study (FR-09-001). */
 const Severity = z.enum(['high', 'medium', 'low']);
@@ -116,9 +117,7 @@ export const ReportsResponse = z.object({ reports: z.array(ReportView) }).strict
 export type ReportsResponse = z.infer<typeof ReportsResponse>;
 
 /** Ask the user's AI to fix reading errors in one question (FR-09-005, M7.4). */
-export const FixSuggestionRequest = z
-  .object({ instanceId: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$/) })
-  .strict();
+export const FixSuggestionRequest = AiTarget;
 
 /**
  * A suggestion the owner compares and may apply; it is never saved on its own. Refused when it
