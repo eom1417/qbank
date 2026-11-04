@@ -7,6 +7,8 @@ import { editQuestion } from './api.js';
 import { useEditorState } from './editor-state.js';
 import { AnswerImpact } from './AnswerImpact.js';
 import { OptionRows } from './OptionRows.js';
+import { ClassificationFields } from './ClassificationFields.js';
+import { useClassification } from './classification-state.js';
 
 interface Props {
   question: QuestionResponse;
@@ -17,7 +19,10 @@ interface Props {
 export function QuestionForm({ question, onSaved }: Props) {
   const { t } = useI18n();
   const editor = useEditorState(question);
-  const save = useAction(async () => onSaved(await editQuestion(question.id, editor.request())));
+  const place = useClassification(question);
+  const save = useAction(async () =>
+    onSaved(await editQuestion(question.id, { ...editor.request(), ...place.changes() })),
+  );
   const submit = (event: FormEvent) => {
     event.preventDefault();
     void save.run();
@@ -50,6 +55,7 @@ export function QuestionForm({ question, onSaved }: Props) {
             onChange={(e) => editor.setUpdateNote(e.target.value)}
           />
         </Stack>
+        <ClassificationFields question={question} state={place} />
         <Button type="submit" busy={save.busy}>
           {t('editor.save')}
         </Button>

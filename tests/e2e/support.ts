@@ -1,3 +1,4 @@
+import { basename } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import { buildPdfFixtures, type PdfFixtures } from '../support/pdf-fixtures.js';
 
@@ -48,6 +49,11 @@ export function usePdfFixtures() {
 /** A new learner's bank with the English fixture imported (8 questions, 7 to review). */
 export async function importedEnglishBank(page: Page, tag: string, file: string) {
   await signUp(page, newLearner(tag), AR);
+  await importIntoNewBank(page, file);
+}
+
+/** From the library: a new bank "Medicine" with `file` imported, back on the bank page. */
+export async function importIntoNewBank(page: Page, file: string) {
   await page.getByLabel('اسم البنك').fill('Medicine');
   await page.getByRole('button', { name: 'إنشاء البنك' }).click();
   await page.getByRole('link', { name: 'فتح البنك' }).click();
@@ -55,7 +61,7 @@ export async function importedEnglishBank(page: Page, tag: string, file: string)
   await page.getByLabel('ملفات PDF').setInputFiles(file);
   await page.getByLabel('أؤكد أنه يحق لي استخدام هذه الملفات لمذاكرتي الشخصية.').check();
   await page.getByRole('button', { name: 'ارفع وابدأ' }).click();
-  const row = page.getByRole('listitem').filter({ hasText: 'english.pdf' });
+  const row = page.getByRole('listitem').filter({ hasText: basename(file) });
   await expect(row.getByText('يحتاج مراجعتك')).toBeVisible({ timeout: 60_000 });
   await page.getByRole('link', { name: 'العودة إلى البنك' }).click();
 }
@@ -76,6 +82,11 @@ export async function answerAndApprove(page: Page) {
 /** A bank with the English fixture imported and its first two questions answered. */
 export async function studyableBank(page: Page, tag: string, file: string) {
   await importedEnglishBank(page, tag, file);
+  await approveFirstTwo(page);
+}
+
+/** From the bank page: its first two questions in review get an answer and are approved. */
+export async function approveFirstTwo(page: Page) {
   await page.getByRole('link', { name: 'راجع الأسئلة' }).click();
   for (let i = 0; i < 2; i++) {
     await page.getByRole('link', { name: 'افتح' }).first().click();
@@ -83,4 +94,27 @@ export async function studyableBank(page: Page, tag: string, file: string) {
     await page.getByRole('link', { name: 'المراجعة' }).click();
   }
   await page.getByRole('link', { name: 'العودة إلى البنك' }).click();
+}
+
+/** Settings of a local install: restores the newest backup, and waits for the app to reload. */
+export async function restoreNewestBackup(page: Page, webUrl: string) {
+  await page.goto(`${webUrl}/settings`);
+  await page.getByRole('button', { name: 'استرجاع…' }).first().click();
+  await page.getByRole('button', { name: 'استرجع هذه النسخة' }).click();
+  const reloaded = page.waitForEvent('load');
+  await page.getByRole('button', { name: 'استبدل كل شيء بهذه النسخة' }).click();
+  await reloaded;
+}
+
+/** The providers state as the kit reports it, with one signed-in provider (`extra` adds to it). */
+export async function mockReadyProvider(page: Page, extra: Record<string, unknown> = {}) {
+  const provider = {
+    ...{ instanceId: 'claudeAgent', driver: 'claudeAgent', displayName: 'Claude' },
+    ...{ enabled: true, installed: true, version: '2', status: 'ready' },
+    ...{ auth: { status: 'authenticated' }, models: [] },
+    ...extra,
+  };
+  await page.route('**/api/providers/state', (route) =>
+    route.fulfill({ json: { providers: [provider], settings: {} } }),
+  );
 }

@@ -2,6 +2,7 @@ import type { SessionRow } from '../adapters/session-repository.js';
 import { isOverdue } from '../domain/exam.js';
 import { isCorrect, type Snapshot } from '../domain/grading.js';
 import type { StudyDeps } from './deps.js';
+import { noteDifficulty } from './difficulty.js';
 
 /**
  * Grades every saved answer of an exam against its snapshot and ends it (FR-13-011). An item
@@ -17,6 +18,9 @@ export async function submitSession(deps: StudyDeps, session: SessionRow, by: 'o
     }));
   const now = deps.clock.now();
   await deps.sessions.submitExam(session.owner_id, session.id, graded, { by, now });
+  const answered = items.filter((item) => item.question_id && (item.chosen ?? []).length > 0);
+  for (const item of answered)
+    await noteDifficulty(deps, session.owner_id, item.question_id as string);
 }
 
 /**

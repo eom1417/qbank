@@ -5,6 +5,7 @@ import type { ItemRow, SessionRow } from '../adapters/session-repository.js';
 import { canChange } from '../domain/exam.js';
 import { isCorrect, type Snapshot } from '../domain/grading.js';
 import type { StudyDeps } from './deps.js';
+import { noteDifficulty } from './difficulty.js';
 import { getSession, ownedSession } from './sessions.js';
 
 async function itemAt(deps: StudyDeps, actor: Actor, sessionId: string, position: number) {
@@ -94,6 +95,7 @@ export async function answerItem(
     { chosen, correct: isCorrect(chosen, snapshot.answers), seconds: answer.seconds, now },
   );
   if (!recorded) throw new AppError('already_answered');
+  if (item.question_id) await noteDifficulty(deps, actor.accountId, item.question_id);
   const [saved] = (await deps.sessions.itemsOf(actor.accountId, session.id)).filter(
     (i) => i.position === item.position,
   );

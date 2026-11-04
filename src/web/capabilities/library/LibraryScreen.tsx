@@ -20,7 +20,8 @@ import { useQuery } from '../../platform/api/use-query.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { fetchBanks } from './api.js';
 import { CreateBankCard } from './CreateBankCard.js';
-import { visibleBanks, type BankSort } from './library-view.js';
+import { lastStudiedOf, visibleBanks, type BankSort } from './library-view.js';
+import { fetchHistory } from '../analytics/api.js';
 
 type Show = BankListFilter['archived'];
 
@@ -64,7 +65,7 @@ interface ToolbarProps {
 
 function LibraryToolbar({ query, sort, show, onChange }: ToolbarProps) {
   const { t } = useI18n();
-  const sorts = (['updated', 'created', 'name'] as const).map((value) => ({
+  const sorts = (['updated', 'studied', 'created', 'name'] as const).map((value) => ({
     value,
     label: t(`library.sort.${value}`),
   }));
@@ -136,6 +137,8 @@ export function LibraryScreen() {
   });
   const load = useCallback(() => fetchBanks(view.show), [view.show]);
   const { state, reload } = useQuery(load);
+  const history = useQuery(useCallback(() => fetchHistory('', ''), [])).state;
+  const studied = lastStudiedOf(history.status === 'ready' ? history.data.sessions : []);
   const banks = state.status === 'ready' ? state.data.banks : [];
   const isNewLibrary = state.status === 'ready' && banks.length === 0 && view.show === 'exclude';
   return (
@@ -148,7 +151,7 @@ export function LibraryScreen() {
         <LibraryToolbar {...view} onChange={(next) => setView({ ...view, ...next })} />
       )}
       <BankResults
-        banks={visibleBanks(banks, view.query, view.sort)}
+        banks={visibleBanks(banks, view.query, view.sort, studied)}
         query={view.query}
         onClear={() => setView({ ...view, query: '' })}
       />

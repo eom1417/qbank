@@ -46,6 +46,15 @@ async function checkTags(deps: ReviewDeps, actor: Actor, tagIds: readonly string
     throw new AppError('validation_failed', { tagIds: 'invalid_value' });
 }
 
+/** A difficulty the owner sets is theirs (`manual`); clearing it lets results speak again. */
+const difficultyChange = (edit: EditQuestionRequest) =>
+  edit.difficulty === undefined
+    ? {}
+    : {
+        difficulty: edit.difficulty,
+        difficulty_kind: edit.difficulty === null ? 'unset' : 'manual',
+      };
+
 /** Text the owner wrote stays theirs: a re-import will not overwrite it (FR-10-006). */
 const ownerText = (edit: EditQuestionRequest, now: Date) =>
   edit.stem !== undefined || edit.options !== undefined || edit.explanation !== undefined
@@ -74,7 +83,7 @@ export async function editQuestion(
   await deps.questions.updateQuestion(
     actor.accountId,
     id,
-    { ...content, ...place, ...ownerText(edit, deps.clock.now()) },
+    { ...content, ...place, ...difficultyChange(edit), ...ownerText(edit, deps.clock.now()) },
     edit.fromAiSuggestion ? 'ai_fix' : 'edit',
     deps.clock.now(),
   );

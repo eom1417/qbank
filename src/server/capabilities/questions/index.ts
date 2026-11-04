@@ -23,6 +23,8 @@ import { newId } from '../../platform/ids.js';
 import { createMediaRepository } from './adapters/media-repository.js';
 import { createQuestionRepository } from './adapters/question-repository.js';
 import type { ChapterNames } from './domain/classify.js';
+import { inferredDifficulty } from './domain/difficulty.js';
+import { setInferredDifficulty } from './adapters/insights.js';
 
 export type { PoolQuestion } from './adapters/study-pool.js';
 export type { RestoredQuestion } from './adapters/portability.js';
@@ -87,6 +89,16 @@ function sharedInterface(settings: QuestionsSettings, deps: Deps) {
       const added = await portability.restoreQuestions(owner, questions);
       await detectDuplicates(deps, owner, added, owner.now);
       return added.length;
+    },
+    /** Results set the difficulty, unless the owner set it by hand (FR-11-005). */
+    inferDifficulty: async (
+      ownerId: string,
+      questionId: string,
+      correct: number,
+      total: number,
+    ) => {
+      const value = inferredDifficulty(correct, total);
+      if (value !== null) await setInferredDifficulty(settings.db, ownerId, questionId, value);
     },
     /** The owner's questions by words and filters (FR-17-001, UI-22). */
     searchQuestions: (ownerId: string, filter: SearchFilter) =>

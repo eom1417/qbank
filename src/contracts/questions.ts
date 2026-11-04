@@ -91,6 +91,8 @@ export const EditQuestionRequest = z
     chapterId: z.uuid().nullable().optional(),
     topicId: z.uuid().nullable().optional(),
     tagIds: z.array(z.uuid()).max(50).optional(),
+    /** 1 (easy) to 5 (hard), set by the owner; null clears it (FR-11-005). */
+    difficulty: z.number().int().min(1).max(5).nullable().optional(),
     /** The change applies the user's AI fix suggestion (FR-01-009: the history says so). */
     fromAiSuggestion: z.boolean().optional(),
   })

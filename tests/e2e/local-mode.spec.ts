@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
 import { LOCAL_DATA_DIR, LOCAL_WEB_URL } from '../../playwright.config.js';
+import { restoreNewestBackup } from './support.js';
 
 // Local mode (DEC-31): no account to create; a browser pairs with the install's code.
 const code = () => readFileSync(join(LOCAL_DATA_DIR, 'pairing-token'), 'utf8').trim();
@@ -46,13 +47,8 @@ test('backs up now, and previews a restore before anything changes (M17.2)', asy
   await page.getByLabel('اسم البنك').fill('Made after the backup');
   await page.getByRole('button', { name: 'إنشاء البنك' }).click();
   await expect(page.getByText('Made after the backup')).toBeVisible();
-  await page.goto(`${LOCAL_WEB_URL}/settings`);
   // Newest first: the backup this test made before the bank.
-  await page.getByRole('button', { name: 'استرجاع…' }).first().click();
-  await page.getByRole('button', { name: 'استرجع هذه النسخة' }).click();
-  const reloaded = page.waitForEvent('load');
-  await page.getByRole('button', { name: 'استبدل كل شيء بهذه النسخة' }).click();
-  await reloaded;
+  await restoreNewestBackup(page, LOCAL_WEB_URL);
   await page.getByRole('link', { name: 'المكتبة' }).click();
   await expect(page.getByRole('heading', { name: 'مكتبتك فارغة' })).toBeVisible();
 });

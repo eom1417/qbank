@@ -161,6 +161,7 @@ export const en = {
   'library.sort': 'Sort by',
   'library.sort.updated': 'Recently changed',
   'library.sort.created': 'Recently added',
+  'library.sort.studied': 'Last studied',
   'library.sort.name': 'Name',
   'library.show': 'Show',
   'library.show.exclude': 'Active banks',

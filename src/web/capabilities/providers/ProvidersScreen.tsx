@@ -45,6 +45,7 @@ export function ProvidersScreen() {
         </Button>
       </Row>
       <MutedText>{t('providers.intro')}</MutedText>
+      <Alert tone="info">{t('providers.withoutAi')}</Alert>
       <DisclosureNote />
       {error.text && <Alert tone="error">{error.text}</Alert>}
       {state.providers.map((provider) => (

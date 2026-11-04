@@ -149,6 +149,7 @@ export const ar: Record<MessageKey, string> = {
   'library.sort': 'الترتيب حسب',
   'library.sort.updated': 'آخر تعديل',
   'library.sort.created': 'آخر إضافة',
+  'library.sort.studied': 'آخر مذاكرة',
   'library.sort.name': 'الاسم',
   'library.show': 'عرض',
   'library.show.exclude': 'البنوك النشطة',

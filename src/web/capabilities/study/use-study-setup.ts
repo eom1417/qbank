@@ -8,6 +8,7 @@ import type {
 
 import { previewStudy } from './api.js';
 import type { TimingKind } from './ExamOptions.js';
+import { useSession } from '../identity/session.js';
 
 /** Smart Mix's announced default (FR-14-001, DEC-10 assumed). */
 export const DEFAULT_SHARES: MixShares = { new: 50, weak: 30, due: 20 };
@@ -38,7 +39,11 @@ function usePreview(scope: StudyScope, kind: StudyKind) {
 export function useStudySetup(initialBank: string | null) {
   const [bankIds, setBankIds] = useState<string[]>(initialBank ? [initialBank] : []);
   const [kind, setKind] = useState<StudyKind>('random');
-  const [size, setSize] = useState(20);
+  // The owner's default session size (Settings → study preferences, FR-02-005, UI-25).
+  const { state: session } = useSession();
+  const preferred =
+    session.status === 'signed-in' ? session.account.preferences.defaultSessionSize : 20;
+  const [size, setSize] = useState(preferred);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [mode, setMode] = useState<'tutor' | 'exam'>('tutor');
   const [timing, setTiming] = useState<TimingKind>('none');

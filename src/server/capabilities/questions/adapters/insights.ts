@@ -89,3 +89,13 @@ export function createInsights(db: Db) {
     reportedQuestionIds: (ownerId: string) => reportedQuestionIds(db, ownerId),
   };
 }
+
+/** Not a content change: no new version, and never over a difficulty the owner set. */
+export const setInferredDifficulty = (db: Db, ownerId: string, id: string, value: number) =>
+  db
+    .updateTable('question')
+    .set({ difficulty: value, difficulty_kind: 'inferred' })
+    .where('owner_id', '=', ownerId)
+    .where('id', '=', id)
+    .where('difficulty_kind', '!=', 'manual')
+    .execute();

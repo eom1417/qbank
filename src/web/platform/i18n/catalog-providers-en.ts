@@ -3,6 +3,8 @@ export const providersEn = {
   'error.ai_host_unavailable':
     'The AI service is not running on this machine. Start it, then try again.',
   'providers.title': 'AI providers',
+  'providers.withoutAi':
+    'AI is optional. Without it everything works: importing (text and scanned pages), review, Tutor and exams, analytics, export and backups. With your AI: reading whole pages, checking answers the reading left open, fix suggestions and explanations.',
   'providers.intro':
     'Your own AI: subscriptions you sign in to on this machine, or API keys. Every request uses your own accounts.',
   'providers.refreshAll': 'Check all again',
