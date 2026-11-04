@@ -25,14 +25,38 @@ export const PreviewRequest = z.object({ scope: StudyScope, kind: StudyKind }).s
 export const PreviewResponse = z.object({ available: z.number().int() }).strict();
 export type PreviewResponse = z.infer<typeof PreviewResponse>;
 
-export const StartSessionRequest = z
-  .object({
-    scope: StudyScope,
-    kind: StudyKind,
-    size: z.number().int().min(1).max(200),
-    mode: z.literal('tutor'),
-  })
-  .strict();
+/**
+ * An exam's timing, shown with its rules before starting (FR-13-002…005): none, a total time,
+ * or a time per question (forward only, DEC-07 assumed).
+ */
+export const ExamTiming = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('none') }).strict(),
+  z
+    .object({
+      kind: z.literal('total'),
+      seconds: z
+        .number()
+        .int()
+        .min(60)
+        .max(6 * 3600),
+    })
+    .strict(),
+  z
+    .object({ kind: z.literal('per_question'), seconds: z.number().int().min(10).max(3600) })
+    .strict(),
+]);
+export type ExamTiming = z.infer<typeof ExamTiming>;
+
+const SessionBase = {
+  scope: StudyScope,
+  kind: StudyKind,
+  size: z.number().int().min(1).max(200),
+};
+
+export const StartSessionRequest = z.discriminatedUnion('mode', [
+  z.object({ ...SessionBase, mode: z.literal('tutor') }).strict(),
+  z.object({ ...SessionBase, mode: z.literal('exam'), timing: ExamTiming }).strict(),
+]);
 export type StartSessionRequest = z.infer<typeof StartSessionRequest>;
 
 export const SessionResponse = z
@@ -45,6 +69,10 @@ export const SessionResponse = z
     position: z.number().int(),
     status: z.enum(['active', 'finished']),
     createdAt: z.iso.datetime(),
+    timing: z.enum(['none', 'total', 'per_question']),
+    timingSeconds: z.number().int().nullable(),
+    /** Ended by the owner, or by the time running out (FR-13-011). */
+    endedBy: z.enum(['owner', 'time']).nullable(),
   })
   .strict();
 export type SessionResponse = z.infer<typeof SessionResponse>;
@@ -75,6 +103,12 @@ export const ItemResponse = z
     flagged: z.boolean(),
     favorite: z.boolean(),
     solution: Solution.nullable(),
+    /** An exam answer saved so far (never graded before submission). */
+    saved: z.array(z.string()),
+    /** This exam item's own flag (FR-13-009). */
+    examFlag: z.boolean(),
+    /** Whether the answer can still be changed (exam timing rules). */
+    changeable: z.boolean(),
   })
   .strict();
 export type ItemResponse = z.infer<typeof ItemResponse>;
@@ -139,3 +173,45 @@ export const AiExplanationResponse = z.discriminatedUnion('outcome', [
   z.object({ outcome: z.literal('failed'), failure: z.string() }).strict(),
 ]);
 export type AiExplanationResponse = z.infer<typeof AiExplanationResponse>;
+
+/** The exam as the map and the pre-submission check show it (FR-13-008, FR-13-010, UI-18). */
+export const ExamStateResponse = z
+  .object({
+    status: z.enum(['active', 'finished']),
+    timing: z.enum(['none', 'total', 'per_question']),
+    /** Seconds left of the exam (total) or of the current question; null when untimed. */
+    secondsLeft: z.number().int().nullable(),
+    position: z.number().int(),
+    items: z.array(
+      z
+        .object({
+          position: z.number().int(),
+          answered: z.boolean(),
+          flagged: z.boolean(),
+          changeable: z.boolean(),
+        })
+        .strict(),
+    ),
+  })
+  .strict();
+export type ExamStateResponse = z.infer<typeof ExamStateResponse>;
+
+export const ChoiceRequest = z
+  .object({ chosen: z.array(z.string().regex(/^[A-J]$/)).max(10) })
+  .strict();
+
+export const FlagRequest = z.object({ flagged: z.boolean() }).strict();
+
+/** Submitting is a deliberate act: never the result of a stray "next" (FR-13-010). */
+export const SubmitRequest = z.object({ confirm: z.literal(true) }).strict();
+
+/** What a changed answer key would mean for past attempts (FR-07-007, FR-24-004, UAT-031). */
+export const AnswerImpactResponse = z
+  .object({
+    attempts: z.number().int(),
+    sessions: z.number().int(),
+    /** Attempts whose result would differ under the new key; they stay as graded. */
+    wouldChange: z.number().int(),
+  })
+  .strict();
+export type AnswerImpactResponse = z.infer<typeof AnswerImpactResponse>;

@@ -2,6 +2,9 @@ import type { FastifyInstance } from 'fastify';
 import {
   AiExplanationRequest,
   AnswerRequest,
+  ChoiceRequest,
+  FlagRequest,
+  SubmitRequest,
   PositionRequest,
   PreviewRequest,
   StartSessionRequest,
@@ -9,6 +12,14 @@ import {
 import { parseInput } from '../../../platform/http/validate.js';
 import type { RequireActor } from '../../identity/index.js';
 import { explainWithAi } from '../use-cases/ai-explanation.js';
+import {
+  answerImpact,
+  examState,
+  flagExamItem,
+  openExamItem,
+  saveChoice,
+  submitExam,
+} from '../use-cases/exam.js';
 import type { StudyDeps } from '../use-cases/deps.js';
 import { answerItem, getItem, retryWrong, summary } from '../use-cases/items.js';
 import {
@@ -85,6 +96,54 @@ function registerItemRoutes(app: FastifyInstance, deps: StudyDeps, requireActor:
   });
 }
 
+/** Exams: the map and clock, saving answers, flags, submission, and key-change impact (M10). */
+function registerExamRoutes(app: FastifyInstance, deps: StudyDeps, requireActor: RequireActor) {
+  const item = '/api/study/sessions/:id/items/:position';
+  const ref = (request: { params: { id: string; position: string } }) => ({
+    id: request.params.id,
+    position: positionOf(request.params.position),
+  });
+  app.get<SessionParams>('/api/study/sessions/:id/exam', async (request) =>
+    examState(deps, await requireActor(request), request.params.id),
+  );
+  app.post<ItemParams>(`${item}/open`, async (request) =>
+    openExamItem(
+      deps,
+      await requireActor(request),
+      request.params.id,
+      positionOf(request.params.position),
+    ),
+  );
+  app.put<ItemParams>(`${item}/choice`, async (request) => {
+    const { chosen } = parseInput(ChoiceRequest, request.body);
+    return saveChoice(deps, await requireActor(request), ref(request), chosen);
+  });
+  app.put<ItemParams>(`${item}/flag`, async (request) => {
+    const { flagged } = parseInput(FlagRequest, request.body);
+    return flagExamItem(deps, await requireActor(request), ref(request), flagged);
+  });
+  app.post<SessionParams>('/api/study/sessions/:id/submit', async (request, reply) => {
+    const actor = await requireActor(request);
+    parseInput(SubmitRequest, request.body);
+    await submitExam(deps, actor, request.params.id);
+    return reply.send(await getSession(deps, actor, request.params.id));
+  });
+  app.get<{ Querystring: { questionId?: string; answers?: string } }>(
+    '/api/study/answer-impact',
+    async (request) => {
+      const answers = String(request.query.answers ?? '')
+        .split(',')
+        .filter((l) => /^[A-J]$/.test(l));
+      return answerImpact(
+        deps,
+        await requireActor(request),
+        String(request.query.questionId ?? ''),
+        answers,
+      );
+    },
+  );
+}
+
 export function registerStudyRoutes(
   app: FastifyInstance,
   deps: StudyDeps,
@@ -92,4 +151,5 @@ export function registerStudyRoutes(
 ) {
   registerSessionRoutes(app, deps, requireActor);
   registerItemRoutes(app, deps, requireActor);
+  registerExamRoutes(app, deps, requireActor);
 }

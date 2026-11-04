@@ -1,19 +1,9 @@
 import { useNavigate, useParams } from 'react-router';
 import type { ItemResponse } from '../../../contracts/study.js';
-import {
-  Alert,
-  Button,
-  Card,
-  ChoiceList,
-  type Choice,
-  Grid,
-  MutedText,
-  Row,
-  Stack,
-  ZoomableImage,
-} from '../../design-system/index.js';
+import { Alert, Button, type Choice, MutedText, Row, Stack } from '../../design-system/index.js';
 import { useAction } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
+import { QuestionCard } from './QuestionBody.js';
 import { AiExplainCard } from './AiExplainCard.js';
 import { finishStudy } from './api.js';
 import { MarksBar } from './MarksBar.js';
@@ -38,36 +28,17 @@ function choicesOf(item: ItemResponse): Choice[] {
   });
 }
 
-/** The question as asked: stem, pictures (FR-12-009) and options. */
+/** The question as asked, its options marked only once answered. */
 function QuestionView({ tutor }: { tutor: ReturnType<typeof useTutor> }) {
-  const { t } = useI18n();
   const item = tutor.item as ItemResponse;
   return (
-    <Card>
-      <Stack>
-        <p dir="auto">{item.stem}</p>
-        {item.pictureIds.length > 0 && (
-          <Grid>
-            {item.pictureIds.map((id) => (
-              <ZoomableImage
-                key={id}
-                src={`/api/media/${id}`}
-                alt={t('editor.pictures')}
-                zoom={1}
-              />
-            ))}
-          </Grid>
-        )}
-        <ChoiceList
-          legend={t('study.choices')}
-          choices={choicesOf(item)}
-          selected={tutor.selected}
-          multiple={item.multiSelect}
-          disabled={item.solution !== null}
-          onChange={tutor.setSelected}
-        />
-      </Stack>
-    </Card>
+    <QuestionCard
+      item={item}
+      choices={choicesOf(item)}
+      selected={tutor.selected}
+      disabled={item.solution !== null}
+      onChoose={tutor.setSelected}
+    />
   );
 }
 

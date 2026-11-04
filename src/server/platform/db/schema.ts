@@ -258,6 +258,11 @@ interface StudySessionTable {
   created_at: Date;
   updated_at: Date;
   finished_at: Date | null;
+  timing: ColumnType<'none' | 'total' | 'per_question', string | undefined, string>;
+  timing_seconds: ColumnType<number | null, number | null | undefined, number | null>;
+  /** A total-time exam ends here, by the server's clock (FR-13-011). */
+  deadline_at: ColumnType<Date | null, Date | null | undefined, Date | null>;
+  ended_by: ColumnType<'owner' | 'time' | null, string | null | undefined, string | null>;
 }
 
 interface StudyItemTable {
@@ -270,6 +275,11 @@ interface StudyItemTable {
   correct: boolean | null;
   seconds: number | null;
   answered_at: Date | null;
+  flagged: ColumnType<boolean, boolean | undefined, boolean>;
+  /** An exam answer saved on change; graded only at submission (FR-13-007). */
+  saved_at: ColumnType<Date | null, Date | null | undefined, Date | null>;
+  /** When a per-question-timed item was first shown (FR-13-004). */
+  opened_at: ColumnType<Date | null, Date | null | undefined, Date | null>;
 }
 
 interface QuestionMarkTable {

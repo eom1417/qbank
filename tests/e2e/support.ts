@@ -72,3 +72,15 @@ export async function answerAndApprove(page: Page) {
   if (await approve.isVisible()) await approve.click();
   await expect(page.getByText('الحالة: جاهز للدراسة')).toBeVisible();
 }
+
+/** A bank with the English fixture imported and its first two questions answered. */
+export async function studyableBank(page: Page, tag: string, file: string) {
+  await importedEnglishBank(page, tag, file);
+  await page.getByRole('link', { name: 'راجع الأسئلة' }).click();
+  for (let i = 0; i < 2; i++) {
+    await page.getByRole('link', { name: 'افتح' }).first().click();
+    await answerAndApprove(page);
+    await page.getByRole('link', { name: 'المراجعة' }).click();
+  }
+  await page.getByRole('link', { name: 'العودة إلى البنك' }).click();
+}

@@ -24,6 +24,8 @@ export const ErrorCode = z.enum([
   'not_enough_questions',
   'already_answered',
   'nothing_to_retry',
+  'exam_ended',
+  'question_locked',
   'original_deleted',
   'ai_host_unavailable',
   'internal',

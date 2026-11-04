@@ -1,25 +1,13 @@
-import { expect, test, type Page } from '@playwright/test';
-import { answerAndApprove, importedEnglishBank, usePdfFixtures } from './support.js';
+import { expect, test } from '@playwright/test';
+import { studyableBank, usePdfFixtures } from './support.js';
 
 const fixtures = usePdfFixtures();
-
-/** A bank with the English fixture imported and its first two questions answered. */
-async function studyableBank(page: Page) {
-  await importedEnglishBank(page, 'study', fixtures().english);
-  await page.getByRole('link', { name: 'راجع الأسئلة' }).click();
-  for (let i = 0; i < 2; i++) {
-    await page.getByRole('link', { name: 'افتح' }).first().click();
-    await answerAndApprove(page);
-    await page.getByRole('link', { name: 'المراجعة' }).click();
-  }
-  await page.getByRole('link', { name: 'العودة إلى البنك' }).click();
-}
 
 test('Tutor: choose, send, see the solution, flag, finish, and read an honest summary (UI-13…15, JY-07)', async ({
   page,
 }) => {
   test.setTimeout(90_000);
-  await studyableBank(page);
+  await studyableBank(page, 'study', fixtures().english);
   await page.getByRole('link', { name: 'ذاكر' }).click();
   await expect(page.getByRole('heading', { name: 'ابدأ جلسة Tutor' })).toBeVisible();
   await expect(page.getByText('الجاهز هو هذا العدد فقط: 2')).toBeVisible();

@@ -1,6 +1,7 @@
 import type {
   SessionResponse,
   StartSessionRequest,
+  ExamTiming,
   StudyKind,
   StudyScope,
 } from '../../../../contracts/study.js';
@@ -10,6 +11,8 @@ import type { Actor } from '../../identity/index.js';
 import type { PoolQuestion } from '../../questions/index.js';
 import type { SessionRow } from '../adapters/session-repository.js';
 import type { Snapshot } from '../domain/grading.js';
+import { deadlineFor } from '../domain/exam.js';
+import { settleOverdue } from './submission.js';
 import { candidatesFor, shuffled, type LastAttempt } from '../domain/selection.js';
 import type { StudyDeps } from './deps.js';
 
@@ -58,7 +61,16 @@ function toSession(row: SessionRow, answered: number): SessionResponse {
     position: row.position,
     status: row.status,
     createdAt: row.created_at.toISOString(),
+    timing: row.timing,
+    timingSeconds: row.timing_seconds,
+    endedBy: row.ended_by,
   };
+}
+
+/** An exam's timing as announced; the clock starts now, when start was pressed (UAT-049). */
+function timingOf(timing: ExamTiming, now: Date) {
+  const seconds = timing.kind === 'none' ? null : timing.seconds;
+  return { kind: timing.kind, seconds, deadline: deadlineFor(timing.kind, seconds, now) };
 }
 
 /**
@@ -81,6 +93,7 @@ export async function startSession(deps: StudyDeps, actor: Actor, request: Start
     scope: request.scope,
     now,
     items,
+    ...(request.mode === 'exam' ? { timing: timingOf(request.timing, now) } : {}),
   });
   return getSession(deps, actor, id);
 }
@@ -88,7 +101,7 @@ export async function startSession(deps: StudyDeps, actor: Actor, request: Start
 export async function ownedSession(deps: StudyDeps, actor: Actor, id: string) {
   const row = isId(id) ? await deps.sessions.findSession(actor.accountId, id) : undefined;
   if (!row) throw notFound();
-  return row;
+  return settleOverdue(deps, row);
 }
 
 export async function getSession(deps: StudyDeps, actor: Actor, id: string) {

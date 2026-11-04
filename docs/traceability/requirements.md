@@ -70,10 +70,10 @@
 | FR-07-004 | حالة اعتماد مستقلة            | سابق   | M6.1   | done    | `tests/unit/questions/eligibility.test.ts`       |
 | FR-07-005 | تعارض المفتاح والتفسير        | مقترح  | M6.5   | done    | `tests/integration/answers.test.ts`              |
 | FR-07-006 | مقترح حل AI                   | مقترح  | M6.6   | done    | `tests/integration/imports-rules.test.ts`        |
-| FR-07-007 | تغيير جواب مصحح               | مقترح  | M10.9  | planned | —                                                |
+| FR-07-007 | تغيير جواب مصحح               | مقترح  | M10.9  | done    | `tests/integration/study-exam.test.ts`           |
 | FR-07-008 | أجوبة متعددة                  | مقترح  | M6.7   | partial | `tests/integration/answers.test.ts`              |
 | FR-07-009 | شروحات المؤلف                 | مقترح  | M6.8   | done    | `tests/integration/answers.test.ts`              |
-| FR-07-010 | عدم كشف الحل مبكراً           | مقترح  | M10.2  | planned | —                                                |
+| FR-07-010 | عدم كشف الحل مبكراً           | مقترح  | M10.2  | done    | `tests/integration/study-exam.test.ts`           |
 | FR-08-001 | القراءة والاستخراج بمساعدة AI | سابق   | M6.10  | partial | `tests/unit/sources/answers.test.ts`             |
 | FR-08-002 | تصنيف موضوع السؤال            | سابق   | M6.9   | done    | `tests/integration/answers.test.ts`              |
 | FR-08-003 | كشف خلل المحتوى               | سابق   | M6.10  | done    | `tests/unit/sources/answers.test.ts`             |
@@ -122,20 +122,20 @@
 | FR-12-009 | تكبير الوسائط                 | مقترح  | M5.7   | done    | `tests/e2e/import.spec.ts`                       |
 | FR-12-010 | ملخص الجلسة                   | مقترح  | M9.8   | done    | `tests/integration/study-progress.test.ts`       |
 | FR-12-011 | إعادة أخطاء الجلسة            | مقترح  | M9.8   | done    | `tests/integration/study-progress.test.ts`       |
-| FR-13-001 | اختيار العدد والنطاق          | سابق   | M10.1  | planned | —                                                |
-| FR-13-002 | بدون وقت                      | سابق   | M10.1  | planned | —                                                |
-| FR-13-003 | وقت إجمالي                    | سابق   | M10.1  | planned | —                                                |
-| FR-13-004 | وقت لكل سؤال                  | سابق   | M10.1  | planned | —                                                |
-| FR-13-005 | تأكيد قبل البداية             | مقترح  | M10.1  | planned | —                                                |
-| FR-13-006 | حجب الحلول أثناء الامتحان     | سابق   | M10.2  | planned | —                                                |
-| FR-13-007 | حفظ تلقائي للاختيارات         | سابق   | M10.3  | planned | —                                                |
-| FR-13-008 | خريطة الأسئلة                 | مقترح  | M10.4  | planned | —                                                |
-| FR-13-009 | علامات Flag                   | سابق   | M10.4  | planned | —                                                |
-| FR-13-010 | فحص التسليم                   | مقترح  | M10.5  | planned | —                                                |
-| FR-13-011 | نهاية الوقت                   | مقترح  | M10.6  | planned | —                                                |
-| FR-13-012 | استعادة المحاولة              | مقترح  | M10.7  | planned | —                                                |
-| FR-13-013 | نتيجة مفصلة بعد التسليم       | سابق   | M10.8  | planned | —                                                |
-| FR-13-014 | مراجعة بعد التسليم            | مقترح  | M10.8  | planned | —                                                |
+| FR-13-001 | اختيار العدد والنطاق          | سابق   | M10.1  | done    | `tests/integration/study-tutor.test.ts`          |
+| FR-13-002 | بدون وقت                      | سابق   | M10.1  | done    | `tests/integration/study-exam.test.ts`           |
+| FR-13-003 | وقت إجمالي                    | سابق   | M10.1  | done    | `tests/integration/study-exam.test.ts`           |
+| FR-13-004 | وقت لكل سؤال                  | سابق   | M10.1  | done    | `tests/integration/study-exam.test.ts`           |
+| FR-13-005 | تأكيد قبل البداية             | مقترح  | M10.1  | done    | `tests/e2e/exam.spec.ts`                         |
+| FR-13-006 | حجب الحلول أثناء الامتحان     | سابق   | M10.2  | done    | `tests/integration/study-exam.test.ts`           |
+| FR-13-007 | حفظ تلقائي للاختيارات         | سابق   | M10.3  | done    | `tests/integration/study-exam.test.ts`           |
+| FR-13-008 | خريطة الأسئلة                 | مقترح  | M10.4  | done    | `tests/e2e/exam.spec.ts`                         |
+| FR-13-009 | علامات Flag                   | سابق   | M10.4  | done    | `tests/integration/study-exam.test.ts`           |
+| FR-13-010 | فحص التسليم                   | مقترح  | M10.5  | done    | `tests/e2e/exam.spec.ts`                         |
+| FR-13-011 | نهاية الوقت                   | مقترح  | M10.6  | done    | `tests/integration/study-exam.test.ts`           |
+| FR-13-012 | استعادة المحاولة              | مقترح  | M10.7  | done    | `tests/integration/study-exam.test.ts`           |
+| FR-13-013 | نتيجة مفصلة بعد التسليم       | سابق   | M10.8  | done    | `tests/e2e/exam.spec.ts`                         |
+| FR-13-014 | مراجعة بعد التسليم            | مقترح  | M10.8  | done    | `tests/integration/study-exam.test.ts`           |
 | FR-14-001 | الصيغة 50/30/20               | سابق   | M11.6  | planned | —                                                |
 | FR-14-002 | إعادة توزيع النقص             | سابق   | M11.6  | planned | —                                                |
 | FR-14-003 | تعريف الجديد                  | مقترح  | M11.6  | planned | —                                                |
@@ -215,14 +215,14 @@
 | FR-23-003 | انقطاع AI                     | مقترح  | M4.7   | done    | `tests/integration/imports-rules.test.ts`        |
 | FR-23-004 | فشل جزئي في المصدر            | مقترح  | M4.7   | done    | `tests/integration/imports-failure.test.ts`      |
 | FR-23-005 | إعادة المحاولة                | مقترح  | M4.7   | done    | `tests/integration/imports-failure.test.ts`      |
-| FR-23-006 | انقطاع أثناء Exam             | مقترح  | M10.7  | planned | —                                                |
+| FR-23-006 | انقطاع أثناء Exam             | مقترح  | M10.7  | done    | `tests/integration/study-exam.test.ts`           |
 | FR-23-007 | تعديل سؤال خلال امتحان        | مقترح  | M9.1   | done    | `tests/integration/study-tutor.test.ts`          |
 | FR-23-008 | حذف بنك خلال جلسة             | مقترح  | M10.10 | planned | —                                                |
 | FR-23-009 | خروج من خطأ                   | مقترح  | M15.5  | planned | —                                                |
 | FR-24-001 | معيار قبول علمي               | مقترح  | M6.11  | partial | `tests/unit/questions/eligibility.test.ts`       |
 | FR-24-002 | العناية بالمعلومة الحديثة     | مقترح  | M7.10  | done    | `tests/integration/question-editing.test.ts`     |
 | FR-24-003 | بلاغ الطالب                   | مقترح  | M7.9   | done    | `tests/integration/question-editing.test.ts`     |
-| FR-24-004 | تدقيق أثر التصحيح             | مقترح  | M10.9  | planned | —                                                |
+| FR-24-004 | تدقيق أثر التصحيح             | مقترح  | M10.9  | done    | `tests/integration/study-exam.test.ts`           |
 | FR-24-005 | منع الحشو                     | مقترح  | M7.4   | done    | `tests/unit/sources/fix-suggestion.test.ts`      |
 | FR-24-006 | فحص جودة عينات الاستيراد      | مقترح  | M3.1   | partial | `tests/integration/extraction-benchmark.test.ts` |
 | FR-25-001 | تثبيت القرارات قبل التنفيذ    | مقترح  | M0.7   | planned | —                                                |

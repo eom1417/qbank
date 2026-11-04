@@ -1,7 +1,8 @@
 import type { ItemResponse, SummaryResponse } from '../../../../contracts/study.js';
 import { AppError, notFound } from '../../../platform/errors/index.js';
 import type { Actor } from '../../identity/index.js';
-import type { ItemRow } from '../adapters/session-repository.js';
+import type { ItemRow, SessionRow } from '../adapters/session-repository.js';
+import { canChange } from '../domain/exam.js';
 import { isCorrect, type Snapshot } from '../domain/grading.js';
 import type { StudyDeps } from './deps.js';
 import { getSession, ownedSession } from './sessions.js';
@@ -15,20 +16,28 @@ async function itemAt(deps: StudyDeps, actor: Actor, sessionId: string, position
 }
 
 /**
- * One question of the session as it was snapshotted. Its solution (right answers and the
- * book's explanation) is only included once it was answered (FR-12-003, UAT-041).
+ * When the solution may be seen: in Tutor once this item is answered (FR-12-003), in an exam
+ * only after it was submitted (FR-13-006, FR-07-010, UAT-051).
  */
+const solutionShown = (session: SessionRow, item: ItemRow) =>
+  session.mode === 'exam' ? session.status === 'finished' : item.answered_at !== null;
+
+function changeableNow(deps: StudyDeps, session: SessionRow, item: ItemRow) {
+  if (session.mode === 'tutor') return item.answered_at === null;
+  return canChange(session, item, session.position, deps.clock.now());
+}
+
+/** One question of the session as it was snapshotted, with only what may be seen now. */
 async function toItem(
   deps: StudyDeps,
   actor: Actor,
-  item: ItemRow,
-  total: number,
+  view: { session: SessionRow; item: ItemRow; total: number },
 ): Promise<ItemResponse> {
+  const { session, item, total } = view;
   const snapshot = item.snapshot as Snapshot;
   const [mark] = item.question_id
     ? await deps.questions.marksOf(actor.accountId, [item.question_id])
     : [];
-  const answered = item.answered_at !== null;
   return {
     position: item.position,
     total,
@@ -39,7 +48,7 @@ async function toItem(
     pictureIds: snapshot.pictureIds,
     flagged: mark?.flagged ?? false,
     favorite: mark?.favorite ?? false,
-    solution: answered
+    solution: solutionShown(session, item)
       ? {
           chosen: item.chosen ?? [],
           correct: item.correct === true,
@@ -47,12 +56,16 @@ async function toItem(
           explanation: snapshot.explanation,
         }
       : null,
+    saved: item.chosen ?? [],
+    examFlag: item.flagged,
+    changeable: changeableNow(deps, session, item),
   };
 }
 
+export { itemAt, toItem };
+
 export async function getItem(deps: StudyDeps, actor: Actor, sessionId: string, position: number) {
-  const { item, total } = await itemAt(deps, actor, sessionId, position);
-  return toItem(deps, actor, item, total);
+  return toItem(deps, actor, await itemAt(deps, actor, sessionId, position));
 }
 
 /**
@@ -66,6 +79,7 @@ export async function answerItem(
   answer: { chosen: string[]; seconds: number },
 ) {
   const { session, item, total } = await itemAt(deps, actor, ref.sessionId, ref.position);
+  if (session.mode !== 'tutor') throw new AppError('validation_failed', { mode: 'invalid_value' });
   const snapshot = item.snapshot as Snapshot;
   const letters = new Set(snapshot.options.map((o) => o.letter));
   if (!answer.chosen.every((letter) => letters.has(letter)))
@@ -82,7 +96,7 @@ export async function answerItem(
   const [saved] = (await deps.sessions.itemsOf(actor.accountId, session.id)).filter(
     (i) => i.position === item.position,
   );
-  return toItem(deps, actor, saved ?? item, total);
+  return toItem(deps, actor, { session, item: saved ?? item, total });
 }
 
 /** The end of the session (FR-12-010, UI-15): counts with what each is out of, and the wrong ones. */

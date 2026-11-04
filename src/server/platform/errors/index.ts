@@ -23,6 +23,8 @@ const STATUS: Record<ErrorCode, number> = {
   not_enough_questions: 409,
   already_answered: 409,
   nothing_to_retry: 409,
+  exam_ended: 409,
+  question_locked: 409,
   original_deleted: 409,
   ai_host_unavailable: 503,
   internal: 500,

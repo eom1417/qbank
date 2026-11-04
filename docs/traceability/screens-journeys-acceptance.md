@@ -24,10 +24,10 @@
 | UI-13   | إعداد Tutor           | M9.2   | done    | `tests/e2e/study.spec.ts`           |
 | UI-14   | سؤال Tutor            | M9.4   | done    | `tests/e2e/study.spec.ts`           |
 | UI-15   | نهاية Tutor           | M9.8   | done    | `tests/e2e/study.spec.ts`           |
-| UI-16   | إعداد Exam            | M10.1  | planned | —                                   |
-| UI-17   | شاشة Exam             | M10.2  | planned | —                                   |
-| UI-18   | مراجعة قبل تسليم Exam | M10.5  | planned | —                                   |
-| UI-19   | تقرير Exam            | M10.8  | planned | —                                   |
+| UI-16   | إعداد Exam            | M10.1  | done    | `tests/e2e/exam.spec.ts`            |
+| UI-17   | شاشة Exam             | M10.2  | done    | `tests/e2e/exam.spec.ts`            |
+| UI-18   | مراجعة قبل تسليم Exam | M10.5  | done    | `tests/e2e/exam.spec.ts`            |
+| UI-19   | تقرير Exam            | M10.8  | done    | `tests/e2e/exam.spec.ts`            |
 | UI-20   | المراجعات المستحقة    | M11.4  | planned | —                                   |
 | UI-21   | تحليلات الطالب        | M12.10 | planned | —                                   |
 | UI-22   | البحث                 | M12.11 | planned | —                                   |
@@ -49,14 +49,14 @@
 | JY-05   | سؤال بصورتي ECG             | M5.3   | done    | `tests/integration/imports-media.test.ts`  |
 | JY-06   | تكرارات مع اختلاف except    | M8.4   | done    | `tests/e2e/duplicates.spec.ts`             |
 | JY-07   | تدريب Tutor                 | M9.8   | done    | `tests/e2e/study.spec.ts`                  |
-| JY-08   | امتحان بوقت إجمالي          | M10.6  | planned | —                                          |
-| JY-09   | امتحان بوقت لكل سؤال        | M10.6  | planned | —                                          |
-| JY-10   | انقطاع أثناء امتحان         | M10.7  | planned | —                                          |
+| JY-08   | امتحان بوقت إجمالي          | M10.6  | done    | `tests/e2e/exam.spec.ts`                   |
+| JY-09   | امتحان بوقت لكل سؤال        | M10.6  | done    | `tests/integration/study-exam.test.ts`     |
+| JY-10   | انقطاع أثناء امتحان         | M10.7  | done    | `tests/integration/study-exam.test.ts`     |
 | JY-11   | Smart Mix عند الوفرة        | M11.6  | planned | —                                          |
 | JY-12   | Smart Mix عند نقص الجديد    | M11.6  | planned | —                                          |
 | JY-13   | مراجعة متباعدة              | M11.3  | planned | —                                          |
 | JY-14   | فشل AI في منتصف الاستيراد   | M4.7   | done    | `tests/integration/imports-rules.test.ts`  |
-| JY-15   | تعارض إجابة بعد امتحان      | M10.9  | planned | —                                          |
+| JY-15   | تعارض إجابة بعد امتحان      | M10.9  | done    | `tests/integration/study-exam.test.ts`     |
 | JY-16   | تصدير ثم حذف بنك            | M13.5  | planned | —                                          |
 | JY-17   | تبديل اللغة والجهاز         | M9.7   | partial | `tests/integration/study-progress.test.ts` |
 | JY-18   | تصفح دون درجة               | M12.12 | planned | —                                          |
@@ -96,7 +96,7 @@
 | UAT-028 | تعارض مفتاح وشرح      | M6.5   | done    | `tests/integration/answers.test.ts`          |
 | UAT-029 | اقتراح AI             | M6.6   | done    | `tests/integration/imports-rules.test.ts`    |
 | UAT-030 | اعتماد يدوي           | M6.6   | done    | `tests/integration/imports-rules.test.ts`    |
-| UAT-031 | تغيير جواب قديم       | M10.9  | planned | —                                            |
+| UAT-031 | تغيير جواب قديم       | M10.9  | done    | `tests/integration/study-exam.test.ts`       |
 | UAT-032 | قائمة عالية الخطورة   | M7.1   | done    | `tests/integration/review-queue.test.ts`     |
 | UAT-033 | تعديل خيار            | M7.2   | done    | `tests/e2e/review.spec.ts`                   |
 | UAT-034 | اعتماد جماعي          | M7.5   | done    | `tests/integration/review-queue.test.ts`     |
@@ -113,15 +113,15 @@
 | UAT-045 | الرجوع لسؤال          | M9.5   | done    | `tests/integration/study-tutor.test.ts`      |
 | UAT-046 | ثلاثة أخطاء           | M9.8   | done    | `tests/integration/study-progress.test.ts`   |
 | UAT-047 | انقطاع عابر           | M9.7   | done    | `tests/integration/study-progress.test.ts`   |
-| UAT-048 | بدون زمن              | M10.1  | planned | —                                            |
-| UAT-049 | زمن إجمالي            | M10.1  | planned | —                                            |
-| UAT-050 | زمن لكل سؤال          | M10.1  | planned | —                                            |
-| UAT-051 | لا كشف مبكر           | M10.2  | planned | —                                            |
-| UAT-052 | تغيير جواب            | M10.3  | planned | —                                            |
-| UAT-053 | Flags                 | M10.4  | planned | —                                            |
-| UAT-054 | مراجعة قبل التسليم    | M10.5  | planned | —                                            |
-| UAT-055 | قطع اتصال             | M10.7  | planned | —                                            |
-| UAT-056 | تقرير نهائي           | M10.8  | planned | —                                            |
+| UAT-048 | بدون زمن              | M10.1  | done    | `tests/integration/study-exam.test.ts`       |
+| UAT-049 | زمن إجمالي            | M10.1  | done    | `tests/integration/study-exam.test.ts`       |
+| UAT-050 | زمن لكل سؤال          | M10.1  | done    | `tests/integration/study-exam.test.ts`       |
+| UAT-051 | لا كشف مبكر           | M10.2  | done    | `tests/integration/study-exam.test.ts`       |
+| UAT-052 | تغيير جواب            | M10.3  | done    | `tests/integration/study-exam.test.ts`       |
+| UAT-053 | Flags                 | M10.4  | done    | `tests/integration/study-exam.test.ts`       |
+| UAT-054 | مراجعة قبل التسليم    | M10.5  | done    | `tests/e2e/exam.spec.ts`                     |
+| UAT-055 | قطع اتصال             | M10.7  | done    | `tests/integration/study-exam.test.ts`       |
+| UAT-056 | تقرير نهائي           | M10.8  | done    | `tests/e2e/exam.spec.ts`                     |
 | UAT-057 | وفرة المجموعات        | M11.6  | planned | —                                            |
 | UAT-058 | نقص الجديد            | M11.6  | planned | —                                            |
 | UAT-059 | لا تكرار              | M9.9   | done    | `tests/integration/study-tutor.test.ts`      |
@@ -151,4 +151,4 @@
 | UAT-083 | ألوان الملاحظات       | M15.2  | planned | —                                            |
 | UAT-084 | مفتاح منتهي           | M2.4   | done    | `tests/integration/imports-rules.test.ts`    |
 | UAT-085 | تكرار مهمة فاشلة      | M4.7   | done    | `tests/integration/imports.test.ts`          |
-| UAT-086 | تعديل سؤال في جلسة    | M10.9  | planned | —                                            |
+| UAT-086 | تعديل سؤال في جلسة    | M10.9  | done    | `tests/integration/study-exam.test.ts`       |

@@ -5,6 +5,7 @@ import { useAction } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { editQuestion } from './api.js';
 import { useEditorState } from './editor-state.js';
+import { AnswerImpact } from './AnswerImpact.js';
 import { OptionRows } from './OptionRows.js';
 
 interface Props {
@@ -31,6 +32,11 @@ export function QuestionForm({ question, onSaved }: Props) {
           onChange={(e) => editor.setStem(e.target.value)}
         />
         <OptionRows editor={editor} />
+        <AnswerImpact
+          questionId={question.id}
+          answers={editor.answers}
+          changed={editor.answers.join() !== question.answers.join()}
+        />
         <Stack>
           <TextArea
             label={t('editor.explanation')}

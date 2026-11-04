@@ -15,6 +15,7 @@ import { useQuery } from '../../platform/api/use-query.js';
 import { useAction } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { fetchSummary, retryWrong } from './api.js';
+import { ExamResult } from './ExamResult.js';
 
 /** A count and what it is out of: rates never hide their denominator (FR-12-010). */
 function Count({ label, value, of }: { label: string; value: number; of: number }) {
@@ -54,6 +55,7 @@ export function SummaryScreen() {
       <MutedText>
         {t('study.summary.time')} {s.seconds}
       </MutedText>
+      <ExamResult sessionId={sessionId} summary={s} />
       {s.wrong === 0 ? (
         <Alert tone="success">{t('study.summary.noWrong')}</Alert>
       ) : (

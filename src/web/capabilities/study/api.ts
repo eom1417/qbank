@@ -1,6 +1,9 @@
 import { ReportsResponse } from '../../../contracts/review.js';
 import {
   ActiveSessionsResponse,
+  AnswerImpactResponse,
+  ExamStateResponse,
+  type ExamTiming,
   AiExplanationResponse,
   ItemResponse,
   MarkResponse,
@@ -53,3 +56,34 @@ export const setMark = (questionId: string, mark: { flagged?: boolean; favorite?
 
 export const reportQuestion = (questionId: string, kind: string) =>
   apiRequest('POST', `/api/questions/${questionId}/reports`, ReportsResponse, { kind });
+
+export const startExam = (scope: StudyScope, kind: StudyKind, size: number, timing: ExamTiming) =>
+  apiRequest('POST', '/api/study/sessions', SessionResponse, {
+    scope,
+    kind,
+    size,
+    mode: 'exam',
+    timing,
+  });
+
+export const fetchExamState = (id: string) =>
+  apiRequest('GET', `${session(id)}/exam`, ExamStateResponse);
+
+export const openExamItem = (id: string, position: number) =>
+  apiRequest('POST', `${session(id)}/items/${position}/open`, ItemResponse, {});
+
+export const saveChoice = (id: string, position: number, chosen: string[]) =>
+  apiRequest('PUT', `${session(id)}/items/${position}/choice`, ItemResponse, { chosen });
+
+export const flagExamItem = (id: string, position: number, flagged: boolean) =>
+  apiRequest('PUT', `${session(id)}/items/${position}/flag`, ItemResponse, { flagged });
+
+export const submitExam = (id: string) =>
+  apiRequest('POST', `${session(id)}/submit`, SessionResponse, { confirm: true });
+
+export const fetchAnswerImpact = (questionId: string, answers: readonly string[]) =>
+  apiRequest(
+    'GET',
+    `/api/study/answer-impact?questionId=${questionId}&answers=${answers.join(',')}`,
+    AnswerImpactResponse,
+  );

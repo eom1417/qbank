@@ -19,7 +19,10 @@ export function ActiveSessionsCard() {
               {t(`study.kind.${s.kind === 'retry' ? 'wrong' : s.kind}`)} · {s.answered}/{s.total}{' '}
               {t('study.answered')}
             </MutedText>
-            <Link className={buttonClass('secondary')} to={`/study/sessions/${s.id}`}>
+            <Link
+              className={buttonClass('secondary')}
+              to={`/${s.mode === 'exam' ? 'exam' : 'study'}/sessions/${s.id}`}
+            >
               {t('study.active.resume')}
             </Link>
           </Row>

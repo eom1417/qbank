@@ -12,6 +12,8 @@ import { DuplicatesScreen } from '../capabilities/duplicates/DuplicatesScreen.js
 import { ReimportCard } from '../capabilities/duplicates/ReimportCard.js';
 import { TransferCard } from '../capabilities/duplicates/TransferCard.js';
 import { QuestionScreen } from '../capabilities/review/QuestionScreen.js';
+import { ExamCheckScreen } from '../capabilities/study/ExamCheckScreen.js';
+import { ExamScreen } from '../capabilities/study/ExamScreen.js';
 import { StudyLink } from '../capabilities/study/StudyLink.js';
 import { StudySetupScreen } from '../capabilities/study/StudySetupScreen.js';
 import { SummaryScreen } from '../capabilities/study/SummaryScreen.js';
@@ -68,6 +70,22 @@ export const router = createBrowserRouter([
         element: (
           <Private>
             <TutorScreen />
+          </Private>
+        ),
+      },
+      {
+        path: '/exam/sessions/:id',
+        element: (
+          <Private>
+            <ExamScreen />
+          </Private>
+        ),
+      },
+      {
+        path: '/exam/sessions/:id/check',
+        element: (
+          <Private>
+            <ExamCheckScreen />
           </Private>
         ),
       },

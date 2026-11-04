@@ -17,7 +17,8 @@ import { useQuery } from '../../platform/api/use-query.js';
 import { useAction } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { fetchBanks } from '../library/api.js';
-import { startStudy } from './api.js';
+import { startExam, startStudy } from './api.js';
+import { ExamOptions, timingOf } from './ExamOptions.js';
 import { useStudySetup } from './use-study-setup.js';
 
 const KINDS: StudyKind[] = ['random', 'new', 'wrong', 'due', 'flagged'];
@@ -94,16 +95,47 @@ function SetupFields({ setup }: { setup: Setup }) {
   );
 }
 
-/** Choosing banks, kind and number, then starting (UI-13, JY-07). */
-export function StudySetupScreen() {
-  const { t } = useI18n();
+/** Starts the chosen session and opens it: the Tutor screen, or the exam. */
+function useStart(setup: Setup) {
   const navigate = useNavigate();
-  const [params] = useSearchParams();
-  const setup = useStudySetup(params.get('bank'));
-  const start = useAction(async () => {
+  return useAction(async () => {
+    if (setup.mode === 'exam') {
+      const exam = await startExam(
+        setup.scope,
+        setup.kind,
+        setup.size,
+        timingOf(setup.timing, setup.amount),
+      );
+      return void navigate(`/exam/sessions/${exam.id}`);
+    }
     const session = await startStudy(setup.scope, setup.kind, setup.size);
     void navigate(`/study/sessions/${session.id}`);
   });
+}
+
+/** Tutor (answers as you go) or exam (answers at the end). */
+function ModeField({ setup }: { setup: Setup }) {
+  const { t } = useI18n();
+  const modes = [
+    { value: 'tutor', label: t('exam.mode.tutor') },
+    { value: 'exam', label: t('exam.mode.exam') },
+  ];
+  return (
+    <SelectField
+      label={t('exam.mode')}
+      value={setup.mode}
+      options={modes}
+      onChange={(e) => setup.setMode(e.target.value as 'tutor' | 'exam')}
+    />
+  );
+}
+
+/** Choosing banks, kind and number, then starting (UI-13, JY-07). */
+export function StudySetupScreen() {
+  const { t } = useI18n();
+  const [params] = useSearchParams();
+  const setup = useStudySetup(params.get('bank'));
+  const start = useStart(setup);
   const submit = (event: FormEvent) => {
     event.preventDefault();
     void start.run();
@@ -114,7 +146,16 @@ export function StudySetupScreen() {
       <Heading>{t('study.setup.title')}</Heading>
       <Card>
         <form className="qb-stack" onSubmit={submit} noValidate>
+          <ModeField setup={setup} />
           <SetupFields setup={setup} />
+          {setup.mode === 'exam' && (
+            <ExamOptions
+              timing={setup.timing}
+              amount={setup.amount}
+              onTiming={setup.setTiming}
+              onAmount={setup.setAmount}
+            />
+          )}
           <Availability
             available={setup.available}
             size={setup.size}
@@ -122,7 +163,7 @@ export function StudySetupScreen() {
           />
           {start.error && <Alert tone="error">{t(start.error)}</Alert>}
           <Button type="submit" busy={start.busy} disabled={!ready}>
-            {t('study.setup.start')}
+            {t(setup.mode === 'exam' ? 'exam.start' : 'study.setup.start')}
           </Button>
         </form>
       </Card>

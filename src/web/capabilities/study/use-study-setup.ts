@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { StudyKind, StudyScope } from '../../../contracts/study.js';
 import { previewStudy } from './api.js';
+import type { TimingKind } from './ExamOptions.js';
 
 /** The setup's choices and the live count of questions ready in them (FR-03-006, UI-13). */
 export function useStudySetup(initialBank: string | null) {
@@ -8,6 +9,9 @@ export function useStudySetup(initialBank: string | null) {
   const [kind, setKind] = useState<StudyKind>('random');
   const [size, setSize] = useState(20);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
+  const [mode, setMode] = useState<'tutor' | 'exam'>('tutor');
+  const [timing, setTiming] = useState<TimingKind>('none');
+  const [amount, setAmount] = useState(30);
   const [available, setAvailable] = useState<number | null>(null);
   const scope = useMemo<StudyScope>(
     () => ({ bankIds, ...(favoritesOnly ? { favoritesOnly } : {}) }),
@@ -38,5 +42,11 @@ export function useStudySetup(initialBank: string | null) {
     setFavoritesOnly,
     available,
     scope,
+    mode,
+    setMode,
+    timing,
+    setTiming,
+    amount,
+    setAmount,
   };
 }
