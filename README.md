@@ -31,6 +31,11 @@ qbank                                  # starts QBank and opens http://127.0.0.1
   devices. Anyone with that link can open your QBank: "Sign out every other device" cuts it off.
 - `qbank --no-open` starts without opening a browser.
 
+## Guides and reports
+
+- User guide: [`docs/USER-GUIDE.ar.md`](docs/USER-GUIDE.ar.md) (العربية) · [`docs/USER-GUIDE.md`](docs/USER-GUIDE.md) (English).
+- Acceptance, security, performance and handoff: `docs/reports/`.
+
 ## For developers
 
 The engineering contract is `AGENTS.md`; the owner map is `BLUEPRINT.md`; decisions are in
