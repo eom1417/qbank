@@ -1,6 +1,7 @@
 import { localEn } from './catalog-local-en.js';
 import { reviewEn } from './catalog-review-en.js';
 import { duplicatesEn } from './catalog-duplicates-en.js';
+import { studyEn } from './catalog-study-en.js';
 import { providersEn } from './catalog-providers-en.js';
 
 /** English UI strings. catalog-ar.ts must define exactly the same keys (enforced by its type). */
@@ -9,6 +10,7 @@ export const en = {
   ...localEn,
   ...reviewEn,
   ...duplicatesEn,
+  ...studyEn,
   'app.name': 'QBank Engine',
   'shell.language': 'العربية',
   'shell.theme.system': 'Theme: system',
@@ -56,6 +58,11 @@ export const en = {
     'This question cannot be approved yet: it needs a stem, at least two options and its answer.',
   'error.answers_differ':
     'These two questions have different approved answers. Confirm that you want this one as the reference.',
+  'error.not_enough_questions':
+    'There are fewer questions than you asked for. Ask for fewer, or widen the choice.',
+  'error.already_answered':
+    'This question was already answered in this session; the first answer counts.',
+  'error.nothing_to_retry': 'There were no wrong answers in this session.',
   'error.pairing_required':
     'That pairing code is not right. Copy it again from the computer running QBank.',
   'error.invalid_credentials': 'The email or password is not correct.',

@@ -12,6 +12,10 @@ import { DuplicatesScreen } from '../capabilities/duplicates/DuplicatesScreen.js
 import { ReimportCard } from '../capabilities/duplicates/ReimportCard.js';
 import { TransferCard } from '../capabilities/duplicates/TransferCard.js';
 import { QuestionScreen } from '../capabilities/review/QuestionScreen.js';
+import { StudyLink } from '../capabilities/study/StudyLink.js';
+import { StudySetupScreen } from '../capabilities/study/StudySetupScreen.js';
+import { SummaryScreen } from '../capabilities/study/SummaryScreen.js';
+import { TutorScreen } from '../capabilities/study/TutorScreen.js';
 import { ReviewLink } from '../capabilities/review/ReviewLink.js';
 import { ReviewScreen } from '../capabilities/review/ReviewScreen.js';
 import { ImportReportScreen } from '../capabilities/sources/ImportReportScreen.js';
@@ -33,6 +37,7 @@ export const router = createBrowserRouter([
             <BankScreen
               sources={(bankId) => (
                 <>
+                  <StudyLink bankId={bankId} />
                   <ReviewLink bankId={bankId} />
                   <DuplicatesLink bankId={bankId} />
                   <SourcesCard bankId={bankId} />
@@ -47,6 +52,30 @@ export const router = createBrowserRouter([
         element: (
           <Private>
             <ReviewScreen />
+          </Private>
+        ),
+      },
+      {
+        path: '/study',
+        element: (
+          <Private>
+            <StudySetupScreen />
+          </Private>
+        ),
+      },
+      {
+        path: '/study/sessions/:id',
+        element: (
+          <Private>
+            <TutorScreen />
+          </Private>
+        ),
+      },
+      {
+        path: '/study/sessions/:id/summary',
+        element: (
+          <Private>
+            <SummaryScreen />
           </Private>
         ),
       },

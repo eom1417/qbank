@@ -1,7 +1,7 @@
 import type { FastifyInstance, InjectOptions } from 'fastify';
 import { ORIGIN } from './test-app.js';
 
-type Method = 'GET' | 'POST' | 'PATCH' | 'DELETE';
+type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 /** A cookie-carrying API client, like one browser profile. */
 export function createClient(app: FastifyInstance) {
@@ -20,6 +20,7 @@ export function createClient(app: FastifyInstance) {
     get: (url: string) => request('GET', url),
     post: (url: string, payload?: object, origin?: string) => request('POST', url, payload, origin),
     patch: (url: string, payload: object) => request('PATCH', url, payload),
+    put: (url: string, payload: object) => request('PUT', url, payload),
     delete: (url: string) => request('DELETE', url),
   };
 }

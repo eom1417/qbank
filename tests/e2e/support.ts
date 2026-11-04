@@ -44,3 +44,31 @@ export function usePdfFixtures() {
     return fx;
   };
 }
+
+/** A new learner's bank with the English fixture imported (8 questions, 7 to review). */
+export async function importedEnglishBank(page: Page, tag: string, file: string) {
+  await signUp(page, newLearner(tag), AR);
+  await page.getByLabel('اسم البنك').fill('Medicine');
+  await page.getByRole('button', { name: 'إنشاء البنك' }).click();
+  await page.getByRole('link', { name: 'فتح البنك' }).click();
+  await page.getByRole('link', { name: 'استورد ملفات' }).click();
+  await page.getByLabel('ملفات PDF').setInputFiles(file);
+  await page.getByLabel('أؤكد أنه يحق لي استخدام هذه الملفات لمذاكرتي الشخصية.').check();
+  await page.getByRole('button', { name: 'ارفع وابدأ' }).click();
+  const row = page.getByRole('listitem').filter({ hasText: 'english.pdf' });
+  await expect(row.getByText('يحتاج مراجعتك')).toBeVisible({ timeout: 60_000 });
+  await page.getByRole('link', { name: 'العودة إلى البنك' }).click();
+}
+
+/** In the open question: makes its first option the answer, saves, and approves if still needed. */
+export async function answerAndApprove(page: Page) {
+  const answers = page.getByLabel('الإجابة الصحيحة');
+  for (let i = 0; i < (await answers.count()); i++) await answers.nth(i).uncheck();
+  await answers.first().check();
+  await page.getByRole('button', { name: 'احفظ' }).click();
+  await expect(page.getByText('مصدر الإجابة: أنت')).toBeVisible();
+  // Choosing the answer settles a missing key; anything else still needs the approval.
+  const approve = page.getByRole('button', { name: 'اعتمد', exact: true });
+  if (await approve.isVisible()) await approve.click();
+  await expect(page.getByText('الحالة: جاهز للدراسة')).toBeVisible();
+}

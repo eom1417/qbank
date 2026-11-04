@@ -37,7 +37,7 @@ export const apiRaw = (method: 'GET' | 'POST', path: string, body?: unknown) =>
 
 /** The one HTTP client of the SPA: responses are validated against the shared contracts. */
 export async function apiRequest<S extends z.ZodType>(
-  method: 'GET' | 'POST' | 'PATCH' | 'DELETE',
+  method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   path: string,
   schema: S,
   body?: unknown,

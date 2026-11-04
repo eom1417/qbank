@@ -4,6 +4,7 @@ import { LandingScreen } from '../capabilities/about/LandingScreen.js';
 import { PairScreen } from '../capabilities/identity/PairScreen.js';
 import { useSession } from '../capabilities/identity/session.js';
 import { LibraryScreen } from '../capabilities/library/LibraryScreen.js';
+import { ActiveSessionsCard } from '../capabilities/study/ActiveSessionsCard.js';
 import { MutedText } from '../design-system/index.js';
 import { useI18n } from '../platform/i18n/i18n.js';
 
@@ -37,6 +38,12 @@ export function Public({ children }: { children: ReactNode }) {
 export function Home() {
   const { state, mode } = useSession();
   if (state.status === 'loading') return <Loading />;
-  if (state.status === 'signed-in') return <LibraryScreen />;
+  if (state.status === 'signed-in')
+    return (
+      <>
+        <ActiveSessionsCard />
+        <LibraryScreen />
+      </>
+    );
   return mode === 'local' ? <PairScreen /> : <LandingScreen />;
 }

@@ -5,6 +5,7 @@ import { createLibrary } from './capabilities/library/index.js';
 import { createProviders } from './capabilities/providers/index.js';
 import { createQuestions } from './capabilities/questions/index.js';
 import { createSources } from './capabilities/sources/index.js';
+import { createStudy } from './capabilities/study/index.js';
 import type { Clock } from './platform/clock.js';
 import type { AppConfig } from './platform/config/index.js';
 import type { Db } from './platform/db/index.js';
@@ -59,6 +60,14 @@ function registerContent(
     originalRetentionDays: config.imports.originalRetentionDays,
   });
   sources.register(app);
+  createStudy({
+    db,
+    clock,
+    requireActor,
+    questions,
+    ownsBank: library.ownsBank,
+    ai: providers.importAi,
+  }).register(app);
   if (config.imports.worker) {
     sources.worker.start();
     app.addHook('onClose', async () => sources.worker.stop());

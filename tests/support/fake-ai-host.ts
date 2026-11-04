@@ -12,7 +12,16 @@ export const FAKE_INSTANCES = {
   disabled: 'fake-disabled',
   /** Fixes the misread unit of the review tests' question (M7.4). */
   fixer: 'fake-fixer',
+  /** Explains an answered study question (M9.4). */
+  explainer: 'fake-explainer',
 } as const;
+
+const EXPLAIN_ANSWER = JSON.stringify({
+  explanation: 'B is right because the keyed finding fits; the others do not.',
+  options: [{ letter: 'A', why: 'Does not fit.' }],
+  confidence: 'medium',
+  caveats: 'Check your textbook.',
+});
 
 /** The fixer's reply: the unit read right, with words copied from the page. */
 const FIX_ANSWER = JSON.stringify({
@@ -62,7 +71,11 @@ export async function startFakeAiHost() {
         422,
         { error: { _tag: 'AskFailed', reason: 'provider_error', detail: 'signed out' } },
       ];
-    const reply = body.instanceId === FAKE_INSTANCES.fixer ? FIX_ANSWER : MARK_ANSWER;
+    const replies: Record<string, string> = {
+      [FAKE_INSTANCES.fixer]: FIX_ANSWER,
+      [FAKE_INSTANCES.explainer]: EXPLAIN_ANSWER,
+    };
+    const reply = replies[body.instanceId ?? ''] ?? MARK_ANSWER;
     return [200, { text: `Here it is: ${reply}` }];
   };
   const server = createServer((request, response) => {
@@ -75,6 +88,7 @@ export async function startFakeAiHost() {
           instance(FAKE_INSTANCES.refusing, true),
           instance(FAKE_INSTANCES.disabled, false),
           instance(FAKE_INSTANCES.fixer, true),
+          instance(FAKE_INSTANCES.explainer, true),
         ];
         return respond(response, 200, { providers, settings: { providerInstances: {} } });
       }

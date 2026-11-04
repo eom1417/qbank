@@ -1,43 +1,20 @@
-import { expect, test, type Page } from '@playwright/test';
-import { AR, newLearner, signUp, usePdfFixtures } from './support.js';
+import { expect, test } from '@playwright/test';
+import { answerAndApprove, importedEnglishBank, usePdfFixtures } from './support.js';
 
 const fixtures = usePdfFixtures();
-
-/** A new learner's bank with the English fixture imported (8 questions, 7 to review). */
-async function importedBank(page: Page, tag: string) {
-  await signUp(page, newLearner(tag), AR);
-  await page.getByLabel('اسم البنك').fill('Medicine');
-  await page.getByRole('button', { name: 'إنشاء البنك' }).click();
-  await page.getByRole('link', { name: 'فتح البنك' }).click();
-  await page.getByRole('link', { name: 'استورد ملفات' }).click();
-  await page.getByLabel('ملفات PDF').setInputFiles(fixtures().english);
-  await page.getByLabel('أؤكد أنه يحق لي استخدام هذه الملفات لمذاكرتي الشخصية.').check();
-  await page.getByRole('button', { name: 'ارفع وابدأ' }).click();
-  const row = page.getByRole('listitem').filter({ hasText: 'english.pdf' });
-  await expect(row.getByText('يحتاج مراجعتك')).toBeVisible({ timeout: 60_000 });
-  await page.getByRole('link', { name: 'العودة إلى البنك' }).click();
-}
 
 test('review: open a question from the queue, set its answer, see the change, approve it (UI-10, UI-11)', async ({
   page,
 }) => {
-  await importedBank(page, 'review');
+  await importedEnglishBank(page, 'review', fixtures().english);
   await page.getByRole('link', { name: 'راجع الأسئلة' }).click();
   await expect(page.getByRole('heading', { name: 'المراجعة' })).toBeVisible();
   await expect(page.getByText('ينتظرك: 7')).toBeVisible();
   await page.getByRole('link', { name: 'افتح' }).first().click();
   await expect(page.getByRole('heading', { name: /^السؤال/ })).toBeVisible();
-  const answers = page.getByLabel('الإجابة الصحيحة');
-  for (let i = 0; i < (await answers.count()); i++) await answers.nth(i).uncheck();
-  await answers.first().check();
-  await page.getByRole('button', { name: 'احفظ' }).click();
-  await expect(page.getByText('مصدر الإجابة: أنت')).toBeVisible();
+  await answerAndApprove(page);
   await expect(page.getByText('تعديلك').first()).toBeVisible();
   await expect(page.locator('.qb-diff ins').first()).toBeVisible();
-  // Choosing the answer settles a missing key; anything else still needs the approval.
-  const approve = page.getByRole('button', { name: 'اعتمد', exact: true });
-  if (await approve.isVisible()) await approve.click();
-  await expect(page.getByText('الحالة: جاهز للدراسة')).toBeVisible();
   await page.getByRole('link', { name: 'المراجعة' }).click();
   await expect(page.getByText('ينتظرك: 6')).toBeVisible();
 });
@@ -45,7 +22,7 @@ test('review: open a question from the queue, set its answer, see the change, ap
 test('review: hide a question, bring it back, write a private note, and bulk-approve only safe ones', async ({
   page,
 }) => {
-  await importedBank(page, 'review-hide');
+  await importedEnglishBank(page, 'review-hide', fixtures().english);
   await page.getByRole('link', { name: 'راجع الأسئلة' }).click();
   await page.getByRole('link', { name: 'افتح' }).first().click();
   await expect(page.getByRole('heading', { name: /^السؤال/ })).toBeVisible();

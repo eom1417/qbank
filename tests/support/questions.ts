@@ -121,8 +121,8 @@ export async function seedQuestions(
 }
 
 /** A test app for review suites, with a seeding shortcut bound to its database. */
-export function useReviewSuite() {
-  const app = useTestApp();
+export function useReviewSuite(options?: Parameters<typeof useTestApp>[0]) {
+  const app = useTestApp(options);
   const seed = (owner: Browser, bankId: string, questions: readonly SeedQuestion[]) =>
     seedQuestions(app.db(), owner, bankId, questions);
   return { app, seed };

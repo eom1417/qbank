@@ -2,6 +2,7 @@ import type { MessageKey } from './catalog-en.js';
 import { localAr } from './catalog-local-ar.js';
 import { reviewAr } from './catalog-review-ar.js';
 import { duplicatesAr } from './catalog-duplicates-ar.js';
+import { studyAr } from './catalog-study-ar.js';
 import { providersAr } from './catalog-providers-ar.js';
 
 export const ar: Record<MessageKey, string> = {
@@ -9,6 +10,7 @@ export const ar: Record<MessageKey, string> = {
   ...localAr,
   ...reviewAr,
   ...duplicatesAr,
+  ...studyAr,
   'app.name': 'محرك بنك الأسئلة',
   'shell.language': 'English',
   'shell.theme.system': 'المظهر: حسب الجهاز',
@@ -51,6 +53,9 @@ export const ar: Record<MessageKey, string> = {
   'error.not_approvable': 'لا يمكن اعتماد هذا السؤال بعد: يحتاج متناً وخيارين على الأقل وإجابته.',
   'error.answers_differ':
     'لهذين السؤالين إجابتان معتمدتان مختلفتان. أكّد أنك تريد هذا السؤال مرجعاً.',
+  'error.not_enough_questions': 'الأسئلة المتاحة أقل مما طلبت. اطلب عدداً أقل، أو وسّع الاختيار.',
+  'error.already_answered': 'أُجيب عن هذا السؤال في هذه الجلسة؛ الإجابة الأولى هي المحسوبة.',
+  'error.nothing_to_retry': 'لم تكن في هذه الجلسة إجابات خاطئة.',
   'error.pairing_required': 'رمز الربط غير صحيح. انسخه من جديد من الجهاز الذي يشغّل QBank.',
   'error.invalid_credentials': 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
   'error.email_taken': 'يوجد حساب بهذا البريد الإلكتروني.',

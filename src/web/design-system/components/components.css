@@ -300,3 +300,30 @@
   min-block-size: calc(var(--size-touch-target) * 2);
   resize: vertical;
 }
+
+.qb-choices {
+  display: grid;
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.qb-choice {
+  display: flex;
+  gap: var(--space-sm);
+  align-items: center;
+  min-block-size: var(--size-touch-target);
+  padding: var(--space-sm) var(--space-md);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-control);
+  background: var(--color-surface);
+  cursor: pointer;
+}
+.qb-choice--right {
+  border-color: var(--color-success);
+  background: var(--color-success-soft);
+}
+.qb-choice--wrong {
+  border-color: var(--color-danger);
+  background: var(--color-danger-soft);
+}

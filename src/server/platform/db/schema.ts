@@ -244,6 +244,42 @@ interface MediaTable {
   created_at: Date;
 }
 
+export type StudyKind = 'random' | 'new' | 'wrong' | 'due' | 'flagged' | 'retry';
+
+interface StudySessionTable {
+  id: string;
+  owner_id: string;
+  mode: 'tutor' | 'exam';
+  kind: StudyKind;
+  scope: ColumnType<unknown, string, string>;
+  size: number;
+  status: 'active' | 'finished';
+  position: ColumnType<number, number | undefined, number>;
+  created_at: Date;
+  updated_at: Date;
+  finished_at: Date | null;
+}
+
+interface StudyItemTable {
+  session_id: string;
+  position: number;
+  owner_id: string;
+  question_id: string | null;
+  snapshot: ColumnType<unknown, string, string>;
+  chosen: string[] | null;
+  correct: boolean | null;
+  seconds: number | null;
+  answered_at: Date | null;
+}
+
+interface QuestionMarkTable {
+  owner_id: string;
+  question_id: string;
+  flagged: boolean;
+  favorite: boolean;
+  updated_at: Date;
+}
+
 export interface Database {
   account: AccountTable;
   auth_session: AuthSessionTable;
@@ -263,4 +299,7 @@ export interface Database {
   question_note: QuestionNoteTable;
   question_report: QuestionReportTable;
   question_pair: QuestionPairTable;
+  study_session: StudySessionTable;
+  study_item: StudyItemTable;
+  question_mark: QuestionMarkTable;
 }

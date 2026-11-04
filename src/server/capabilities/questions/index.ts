@@ -7,7 +7,9 @@ import { registerEditRoutes } from './http/edit-routes.js';
 import { registerNoteRoutes } from './http/note-routes.js';
 import { registerReviewRoutes } from './http/review-routes.js';
 import { registerDuplicateRoutes } from './http/duplicate-routes.js';
+import { registerMarkRoutes } from './http/mark-routes.js';
 import { createPairRepository } from './adapters/pair-repository.js';
+import { createMarkRepository, studyPool, type PoolFilter } from './adapters/study-pool.js';
 import { detectDuplicates } from './use-cases/duplicates.js';
 import type { ImportedQuestion } from './domain/imported.js';
 import type { Place } from './adapters/question-writes.js';
@@ -19,6 +21,7 @@ import { createMediaRepository } from './adapters/media-repository.js';
 import { createQuestionRepository } from './adapters/question-repository.js';
 import type { ChapterNames } from './domain/classify.js';
 
+export type { PoolFilter, PoolQuestion } from './adapters/study-pool.js';
 export {
   occurrencesOf,
   type ImportedMedia,
@@ -63,9 +66,13 @@ export function createQuestions(settings: QuestionsSettings) {
     const added = await repository.saveImported(place, questions, now);
     await detectDuplicates(deps, place, added, now);
   };
+  const marks = createMarkRepository(settings.db);
   return {
     ...repository,
     saveImported,
+    /** The owner's eligible questions in a study scope, ready to snapshot (M9). */
+    studyPool: (ownerId: string, filter: PoolFilter) => studyPool(settings.db, ownerId, filter),
+    marksOf: marks.marksOf,
     ...media,
     register: (app: FastifyInstance) => {
       registerQuestionRoutes(app, deps, settings.requireActor);
@@ -73,6 +80,7 @@ export function createQuestions(settings: QuestionsSettings) {
       registerEditRoutes(app, deps, settings.requireActor);
       registerNoteRoutes(app, deps, settings.requireActor);
       registerDuplicateRoutes(app, deps, settings.requireActor);
+      registerMarkRoutes(app, { ...deps, marks }, settings.requireActor);
     },
   };
 }

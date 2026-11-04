@@ -1,5 +1,10 @@
 import { z } from 'zod';
 
+/** One printed option of a question: its letter, the label as printed, and its text. */
+export const QuestionOption = z
+  .object({ letter: z.string(), label: z.string(), text: z.string() })
+  .strict();
+
 /** One question with its answer, where the answer came from and where it stands (M6). */
 export const QuestionResponse = z
   .object({
@@ -10,9 +15,7 @@ export const QuestionResponse = z
     page: z.number().int(),
     kind: z.enum(['mcq', 'essay']),
     stem: z.string(),
-    options: z.array(
-      z.object({ letter: z.string(), label: z.string(), text: z.string() }).strict(),
-    ),
+    options: z.array(QuestionOption),
     multiSelect: z.boolean(),
     answers: z.array(z.string()),
     /** source, manual, ai_suggested (a permanent badge, DEC-03), conflict or missing. */

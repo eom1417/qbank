@@ -21,9 +21,9 @@
 | UI-10   | طابور المراجعة        | M7.1   | done    | `tests/e2e/review.spec.ts`          |
 | UI-11   | محرر السؤال           | M7.2   | partial | `tests/e2e/review.spec.ts`          |
 | UI-12   | عرض التكرارات         | M8.3   | done    | `tests/e2e/duplicates.spec.ts`      |
-| UI-13   | إعداد Tutor           | M9.2   | planned | —                                   |
-| UI-14   | سؤال Tutor            | M9.4   | planned | —                                   |
-| UI-15   | نهاية Tutor           | M9.8   | planned | —                                   |
+| UI-13   | إعداد Tutor           | M9.2   | done    | `tests/e2e/study.spec.ts`           |
+| UI-14   | سؤال Tutor            | M9.4   | done    | `tests/e2e/study.spec.ts`           |
+| UI-15   | نهاية Tutor           | M9.8   | done    | `tests/e2e/study.spec.ts`           |
 | UI-16   | إعداد Exam            | M10.1  | planned | —                                   |
 | UI-17   | شاشة Exam             | M10.2  | planned | —                                   |
 | UI-18   | مراجعة قبل تسليم Exam | M10.5  | planned | —                                   |
@@ -40,27 +40,27 @@
 
 ## الرحلات (JY)
 
-| المعرّف | العنوان                     | الخطوة | الحالة  | الدليل                                    |
-| ------- | --------------------------- | ------ | ------- | ----------------------------------------- |
-| JY-01   | التحويل الكامل من PDF مصوّر | M6.12  | partial | `tests/integration/answers.test.ts`       |
-| JY-02   | ملف بلا حلول                | M6.4   | done    | `tests/integration/answers.test.ts`       |
-| JY-03   | مفتاح حلول منفصل            | M6.3   | done    | `tests/integration/answers.test.ts`       |
-| JY-04   | كتاب ذو عمودين              | M4.6   | done    | `tests/integration/imports.test.ts`       |
-| JY-05   | سؤال بصورتي ECG             | M5.3   | done    | `tests/integration/imports-media.test.ts` |
-| JY-06   | تكرارات مع اختلاف except    | M8.4   | done    | `tests/e2e/duplicates.spec.ts`            |
-| JY-07   | تدريب Tutor                 | M9.8   | planned | —                                         |
-| JY-08   | امتحان بوقت إجمالي          | M10.6  | planned | —                                         |
-| JY-09   | امتحان بوقت لكل سؤال        | M10.6  | planned | —                                         |
-| JY-10   | انقطاع أثناء امتحان         | M10.7  | planned | —                                         |
-| JY-11   | Smart Mix عند الوفرة        | M11.6  | planned | —                                         |
-| JY-12   | Smart Mix عند نقص الجديد    | M11.6  | planned | —                                         |
-| JY-13   | مراجعة متباعدة              | M11.3  | planned | —                                         |
-| JY-14   | فشل AI في منتصف الاستيراد   | M4.7   | done    | `tests/integration/imports-rules.test.ts` |
-| JY-15   | تعارض إجابة بعد امتحان      | M10.9  | planned | —                                         |
-| JY-16   | تصدير ثم حذف بنك            | M13.5  | planned | —                                         |
-| JY-17   | تبديل اللغة والجهاز         | M9.7   | planned | —                                         |
-| JY-18   | تصفح دون درجة               | M12.12 | planned | —                                         |
-| JY-19   | كتاب مع صورة مريض معرّف     | M14.1  | planned | —                                         |
+| المعرّف | العنوان                     | الخطوة | الحالة  | الدليل                                     |
+| ------- | --------------------------- | ------ | ------- | ------------------------------------------ |
+| JY-01   | التحويل الكامل من PDF مصوّر | M6.12  | partial | `tests/integration/answers.test.ts`        |
+| JY-02   | ملف بلا حلول                | M6.4   | done    | `tests/integration/answers.test.ts`        |
+| JY-03   | مفتاح حلول منفصل            | M6.3   | done    | `tests/integration/answers.test.ts`        |
+| JY-04   | كتاب ذو عمودين              | M4.6   | done    | `tests/integration/imports.test.ts`        |
+| JY-05   | سؤال بصورتي ECG             | M5.3   | done    | `tests/integration/imports-media.test.ts`  |
+| JY-06   | تكرارات مع اختلاف except    | M8.4   | done    | `tests/e2e/duplicates.spec.ts`             |
+| JY-07   | تدريب Tutor                 | M9.8   | done    | `tests/e2e/study.spec.ts`                  |
+| JY-08   | امتحان بوقت إجمالي          | M10.6  | planned | —                                          |
+| JY-09   | امتحان بوقت لكل سؤال        | M10.6  | planned | —                                          |
+| JY-10   | انقطاع أثناء امتحان         | M10.7  | planned | —                                          |
+| JY-11   | Smart Mix عند الوفرة        | M11.6  | planned | —                                          |
+| JY-12   | Smart Mix عند نقص الجديد    | M11.6  | planned | —                                          |
+| JY-13   | مراجعة متباعدة              | M11.3  | planned | —                                          |
+| JY-14   | فشل AI في منتصف الاستيراد   | M4.7   | done    | `tests/integration/imports-rules.test.ts`  |
+| JY-15   | تعارض إجابة بعد امتحان      | M10.9  | planned | —                                          |
+| JY-16   | تصدير ثم حذف بنك            | M13.5  | planned | —                                          |
+| JY-17   | تبديل اللغة والجهاز         | M9.7   | partial | `tests/integration/study-progress.test.ts` |
+| JY-18   | تصفح دون درجة               | M12.12 | planned | —                                          |
+| JY-19   | كتاب مع صورة مريض معرّف     | M14.1  | planned | —                                          |
 
 ## حالات القبول (UAT)
 
@@ -105,14 +105,14 @@
 | UAT-037 | نفس الملف مرتين       | M8.1   | done    | `tests/integration/duplicates.test.ts`       |
 | UAT-038 | سؤال Except           | M8.2   | done    | `tests/integration/duplicates.test.ts`       |
 | UAT-039 | اختلاف مفتاح          | M8.3   | done    | `tests/integration/duplicates.test.ts`       |
-| UAT-040 | امتحان مع نسخ متطابقة | M9.9   | planned | —                                            |
-| UAT-041 | جواب قبل الإرسال      | M9.4   | planned | —                                            |
-| UAT-042 | جواب خاطئ             | M9.4   | planned | —                                            |
-| UAT-043 | شرح AI                | M9.4   | planned | —                                            |
-| UAT-044 | مراجعة Flag           | M9.6   | planned | —                                            |
-| UAT-045 | الرجوع لسؤال          | M9.5   | planned | —                                            |
-| UAT-046 | ثلاثة أخطاء           | M9.8   | planned | —                                            |
-| UAT-047 | انقطاع عابر           | M9.7   | planned | —                                            |
+| UAT-040 | امتحان مع نسخ متطابقة | M9.9   | partial | `tests/integration/study-tutor.test.ts`      |
+| UAT-041 | جواب قبل الإرسال      | M9.4   | done    | `tests/integration/study-tutor.test.ts`      |
+| UAT-042 | جواب خاطئ             | M9.4   | done    | `tests/integration/study-tutor.test.ts`      |
+| UAT-043 | شرح AI                | M9.4   | done    | `tests/integration/study-progress.test.ts`   |
+| UAT-044 | مراجعة Flag           | M9.6   | done    | `tests/integration/study-progress.test.ts`   |
+| UAT-045 | الرجوع لسؤال          | M9.5   | done    | `tests/integration/study-tutor.test.ts`      |
+| UAT-046 | ثلاثة أخطاء           | M9.8   | done    | `tests/integration/study-progress.test.ts`   |
+| UAT-047 | انقطاع عابر           | M9.7   | done    | `tests/integration/study-progress.test.ts`   |
 | UAT-048 | بدون زمن              | M10.1  | planned | —                                            |
 | UAT-049 | زمن إجمالي            | M10.1  | planned | —                                            |
 | UAT-050 | زمن لكل سؤال          | M10.1  | planned | —                                            |
@@ -124,7 +124,7 @@
 | UAT-056 | تقرير نهائي           | M10.8  | planned | —                                            |
 | UAT-057 | وفرة المجموعات        | M11.6  | planned | —                                            |
 | UAT-058 | نقص الجديد            | M11.6  | planned | —                                            |
-| UAT-059 | لا تكرار              | M9.9   | planned | —                                            |
+| UAT-059 | لا تكرار              | M9.9   | done    | `tests/integration/study-tutor.test.ts`      |
 | UAT-060 | محاولة صحيحة واحدة    | M11.2  | planned | —                                            |
 | UAT-061 | تكرر نجاح             | M11.2  | planned | —                                            |
 | UAT-062 | خطأ بعد نجاح          | M11.3  | planned | —                                            |
