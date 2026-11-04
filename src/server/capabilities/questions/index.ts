@@ -10,6 +10,7 @@ import { registerDuplicateRoutes } from './http/duplicate-routes.js';
 import { registerMarkRoutes } from './http/mark-routes.js';
 import { createPairRepository } from './adapters/pair-repository.js';
 import { createInsights } from './adapters/insights.js';
+import { createPortability, type RestoredQuestion } from './adapters/portability.js';
 import { searchQuestions, type SearchFilter } from './adapters/search.js';
 import { createMarkRepository, studyPool, type PoolFilter } from './adapters/study-pool.js';
 import { detectDuplicates } from './use-cases/duplicates.js';
@@ -23,8 +24,8 @@ import { createMediaRepository } from './adapters/media-repository.js';
 import { createQuestionRepository } from './adapters/question-repository.js';
 import type { ChapterNames } from './domain/classify.js';
 
-export type { PoolFilter, PoolQuestion } from './adapters/study-pool.js';
-export type { SearchFilter } from './adapters/search.js';
+export type { PoolQuestion } from './adapters/study-pool.js';
+export type { RestoredQuestion } from './adapters/portability.js';
 export {
   occurrencesOf,
   type ImportedMedia,
@@ -47,12 +48,11 @@ interface QuestionsSettings {
   deleteBlob(key: string): Promise<void>;
 }
 
-export function createQuestions(settings: QuestionsSettings) {
-  const repository = createQuestionRepository(settings.db, newId, settings);
-  const media = createMediaRepository(settings.db, newId);
-  const deps = {
-    questions: repository,
-    media,
+/** The repositories and lookups every questions use case receives. */
+function questionDeps(settings: QuestionsSettings) {
+  return {
+    questions: createQuestionRepository(settings.db, newId, settings),
+    media: createMediaRepository(settings.db, newId),
     clock: settings.clock,
     review: createReviewRepository(settings.db),
     notes: createNoteRepository(settings.db),
@@ -64,23 +64,49 @@ export function createQuestions(settings: QuestionsSettings) {
     chaptersOf: settings.chaptersOf,
     tagsOf: settings.tagsOf,
   };
-  /** An import's questions, then the duplicates they bring into the bank (M8.1). */
-  const saveImported = async (place: Place, questions: readonly ImportedQuestion[], now: Date) => {
-    const added = await repository.saveImported(place, questions, now);
-    await detectDuplicates(deps, place, added, now);
-  };
-  const marks = createMarkRepository(settings.db);
+}
+
+type Deps = ReturnType<typeof questionDeps>;
+
+/** What study, analytics and portability read and write through (M9–M13). */
+function sharedInterface(settings: QuestionsSettings, deps: Deps) {
+  const portability = createPortability(settings.db, newId);
   return {
-    ...repository,
-    saveImported,
     /** The owner's eligible questions in a study scope, ready to snapshot (M9). */
     studyPool: (ownerId: string, filter: PoolFilter) => studyPool(settings.db, ownerId, filter),
-    marksOf: marks.marksOf,
+    marksOf: createMarkRepository(settings.db).marksOf,
     ...createInsights(settings.db),
+    questionsOfBank: portability.questionsOfBank,
+    extrasOf: portability.extrasOf,
+    bankFootprint: portability.bankFootprint,
+    /** Restored questions, then the duplicates they bring into the bank (FR-18-005). */
+    restoreQuestions: async (
+      owner: { ownerId: string; bankId: string; now: Date },
+      questions: readonly RestoredQuestion[],
+    ) => {
+      const added = await portability.restoreQuestions(owner, questions);
+      await detectDuplicates(deps, owner, added, owner.now);
+      return added.length;
+    },
     /** The owner's questions by words and filters (FR-17-001, UI-22). */
     searchQuestions: (ownerId: string, filter: SearchFilter) =>
       searchQuestions(settings.db, ownerId, filter),
-    ...media,
+  };
+}
+
+export function createQuestions(settings: QuestionsSettings) {
+  const deps = questionDeps(settings);
+  const marks = createMarkRepository(settings.db);
+  /** An import's questions, then the duplicates they bring into the bank (M8.1). */
+  const saveImported = async (place: Place, questions: readonly ImportedQuestion[], now: Date) => {
+    const added = await deps.questions.saveImported(place, questions, now);
+    await detectDuplicates(deps, place, added, now);
+  };
+  return {
+    ...deps.questions,
+    saveImported,
+    ...sharedInterface(settings, deps),
+    ...deps.media,
     register: (app: FastifyInstance) => {
       registerQuestionRoutes(app, deps, settings.requireActor);
       registerReviewRoutes(app, deps, settings.requireActor);

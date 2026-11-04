@@ -17,6 +17,8 @@ export { loadPairingToken } from './adapters/pairing-token.js';
 
 export interface IdentityModule {
   requireActor: RequireActor;
+  /** Deletes the account and all it owns (FR-19-006); the caller erases stored files first. */
+  deleteAccount(accountId: string): Promise<boolean>;
   register(app: FastifyInstance): void;
 }
 
@@ -44,6 +46,7 @@ export function createIdentity(settings: IdentitySettings): IdentityModule {
   const requireActor = createRequireActor(deps);
   return {
     requireActor,
+    deleteAccount: (accountId) => deps.accounts.delete(accountId),
     register: (app) =>
       registerIdentityRoutes(app, {
         deps,

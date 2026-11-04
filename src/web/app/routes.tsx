@@ -8,6 +8,8 @@ import { SignInScreen } from '../capabilities/identity/SignInScreen.js';
 import { SignUpScreen } from '../capabilities/identity/SignUpScreen.js';
 import { BankScreen } from '../capabilities/library/BankScreen.js';
 import { AnalyticsScreen } from '../capabilities/analytics/AnalyticsScreen.js';
+import { BankDangerCard } from '../capabilities/portability/BankDangerCard.js';
+import { ExportScreen } from '../capabilities/portability/ExportScreen.js';
 import { SearchScreen } from '../capabilities/analytics/SearchScreen.js';
 import { ReadQuestionScreen } from '../capabilities/review/ReadQuestionScreen.js';
 import { DuplicatesLink } from '../capabilities/duplicates/DuplicatesLink.js';
@@ -47,6 +49,7 @@ export const router = createBrowserRouter([
                   <ReviewLink bankId={bankId} />
                   <DuplicatesLink bankId={bankId} />
                   <SourcesCard bankId={bankId} />
+                  <BankDangerCard bankId={bankId} />
                 </>
               )}
             />
@@ -66,6 +69,14 @@ export const router = createBrowserRouter([
         element: (
           <Private>
             <StudySetupScreen />
+          </Private>
+        ),
+      },
+      {
+        path: '/banks/:bankId/export',
+        element: (
+          <Private>
+            <ExportScreen />
           </Private>
         ),
       },

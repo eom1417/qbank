@@ -9,6 +9,7 @@ import { createTaxonomyRepository } from './adapters/taxonomy-repository.js';
 import { registerBankRoutes } from './http/routes.js';
 import { registerTagRoutes } from './http/tag-routes.js';
 import { registerTaxonomyRoutes } from './http/taxonomy-routes.js';
+import { restoreLibrary, type RestoredLibrary } from './use-cases/portability.js';
 
 export { toBankResponse } from './http/presenters.js';
 
@@ -36,6 +37,13 @@ export function createLibrary(settings: LibrarySettings) {
     /** Whether the bank is the account's (questions' review lists are per bank). */
     ownsBank: async (ownerId: string, bankId: string) =>
       (await deps.banks.findOwned(ownerId, bankId)) !== undefined,
+    /** One of the account's banks, for an export (M13). */
+    findBank: (ownerId: string, bankId: string) => deps.banks.findOwned(ownerId, bankId),
+    /** Restores an exported bank as a new one, with its chapters, topics and tags (FR-18-005). */
+    restoreLibrary: (ownerId: string, input: RestoredLibrary) =>
+      restoreLibrary(deps, ownerId, input),
+    /** Deletes one bank with everything in it; other banks are untouched (FR-19-005). */
+    deleteBank: (ownerId: string, bankId: string) => deps.banks.delete(ownerId, bankId),
     /** The account's tags, for questions' tag suggestions (FR-11-004). */
     tagsOf: (ownerId: string) => deps.tags.list(ownerId),
     register: (app: FastifyInstance) => {

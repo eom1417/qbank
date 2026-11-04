@@ -14,7 +14,7 @@ import { groupOf, mixGroups } from '../domain/selection.js';
 import type { StudyDeps } from './deps.js';
 
 /** The banks a figure covers: one of the account's, or all of them (FR-16-008, UAT-066). */
-async function banksOf(deps: StudyDeps, actor: Actor, bankId: string | undefined) {
+export async function banksOf(deps: StudyDeps, actor: Actor, bankId: string | undefined) {
   if (bankId === undefined || bankId === '') return deps.bankIdsOf(actor.accountId);
   if (!isId(bankId) || !(await deps.ownsBank(actor.accountId, bankId))) throw notFound();
   return [bankId];

@@ -10,6 +10,8 @@ export interface BankRepository {
   findOwned(ownerId: string, id: string): Promise<Bank | undefined>;
   /** Applies changes and returns the updated bank, or undefined when it is not the owner's. */
   update(ownerId: string, id: string, changes: BankChanges): Promise<Bank | undefined>;
+  /** Deletes the bank; its chapters, sources and questions go with it (database cascades). */
+  delete(ownerId: string, id: string): Promise<boolean>;
 }
 
 type BankChanges = UpdateBankRequest & { archivedAt?: Date | null; updatedAt: Date };
@@ -49,6 +51,14 @@ export function createBankRepository(db: Db): BankRepository {
         .returningAll()
         .executeTakeFirst();
       return row && fromBankRow(row);
+    },
+    async delete(ownerId, id) {
+      const result = await db
+        .deleteFrom('bank')
+        .where('owner_id', '=', ownerId)
+        .where('id', '=', id)
+        .executeTakeFirst();
+      return result.numDeletedRows > 0n;
     },
   };
 }

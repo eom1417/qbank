@@ -8,6 +8,7 @@ import { TopicsCard } from '../study/TopicsCard.js';
 import { fetchSummary } from './api.js';
 import { HistoryCard, ImportsCard, SuggestionCard, TrendCard } from './ReportCards.js';
 import { SummaryCards } from './SummaryCards.js';
+import { ReportCard } from '../portability/ReportCard.js';
 
 /** The figures of one bank or all; changing the filter changes every figure (UAT-066). */
 function Figures({
@@ -30,6 +31,7 @@ function Figures({
       <TrendCard bankId={bankId} />
       {bankIds.length > 0 && <TopicsCard bankIds={bankIds} />}
       <HistoryCard bankId={bankId} mode={mode} />
+      <ReportCard />
       {bankId && <ImportsCard bankId={bankId} />}
     </>
   );

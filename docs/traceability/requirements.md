@@ -23,7 +23,7 @@
 | FR-02-004 | الخصوصية الافتراضية           | مقترح  | M14.3  | partial | `tests/integration/library.test.ts`              |
 | FR-02-005 | إدارة الحساب                  | مقترح  | M1.6   | partial | `tests/integration/account.test.ts`              |
 | FR-02-006 | الفصل بين الدعم والمراجعة     | مقترح  | M14.6  | planned | —                                                |
-| FR-02-007 | حذف محدد النطاق               | مقترح  | M13.5  | planned | —                                                |
+| FR-02-007 | حذف محدد النطاق               | مقترح  | M13.5  | done    | `tests/e2e/portability.spec.ts`                  |
 | FR-03-001 | بنك أسئلة مستقل               | سابق   | M0.3   | partial | `tests/integration/library.test.ts`              |
 | FR-03-002 | مصادر متعددة                  | مقترح  | M4.9   | done    | `tests/integration/imports.test.ts`              |
 | FR-03-003 | مجلدات وتصنيفات               | مقترح  | M1.4   | partial | `tests/integration/taxonomy.test.ts`             |
@@ -162,26 +162,26 @@
 | FR-16-008 | فلاتر التقارير                | مقترح  | M12.7  | done    | `tests/integration/analytics.test.ts`            |
 | FR-16-009 | أسباب الضعف المحتملة          | مقترح  | M12.8  | partial | `tests/integration/analytics.test.ts`            |
 | FR-16-010 | اقتراح جلسة مفيدة             | مقترح  | M12.9  | done    | `tests/integration/analytics.test.ts`            |
-| FR-16-011 | تصدير تقرير الدراسة           | مقترح  | M13.2  | planned | —                                                |
+| FR-16-011 | تصدير تقرير الدراسة           | مقترح  | M13.2  | done    | `tests/e2e/portability.spec.ts`                  |
 | FR-17-001 | بحث متقدم                     | مقترح  | M12.11 | done    | `tests/integration/analytics.test.ts`            |
 | FR-17-002 | Flags شخصية                   | سابق   | M12.12 | done    | `tests/integration/study-progress.test.ts`       |
 | FR-17-003 | مفضلة                         | مقترح  | M12.12 | done    | `tests/integration/study-progress.test.ts`       |
 | FR-17-004 | ملاحظات الطالب                | مقترح  | M12.12 | done    | `tests/e2e/analytics.spec.ts`                    |
 | FR-17-005 | تصفح دون تقييم                | مقترح  | M12.12 | done    | `tests/e2e/analytics.spec.ts`                    |
 | FR-17-006 | فلاتر المراجعة                | مقترح  | M12.12 | done    | `tests/integration/analytics.test.ts`            |
-| FR-18-001 | تصدير بنك كامل                | سابق   | M13.1  | planned | —                                                |
-| FR-18-002 | تصدير نتائج                   | سابق   | M13.2  | planned | —                                                |
-| FR-18-003 | نطاق التصدير                  | مقترح  | M13.1  | planned | —                                                |
-| FR-18-004 | عدم تصدير الأسرار             | مقترح  | M13.1  | planned | —                                                |
-| FR-18-005 | الاستعادة المنظمة             | مقترح  | M13.3  | planned | —                                                |
-| FR-18-006 | إشعار المحتوى الذي لا يُنقل   | مقترح  | M13.1  | planned | —                                                |
+| FR-18-001 | تصدير بنك كامل                | سابق   | M13.1  | done    | `tests/integration/portability.test.ts`          |
+| FR-18-002 | تصدير نتائج                   | سابق   | M13.2  | done    | `tests/e2e/portability.spec.ts`                  |
+| FR-18-003 | نطاق التصدير                  | مقترح  | M13.1  | done    | `tests/integration/portability.test.ts`          |
+| FR-18-004 | عدم تصدير الأسرار             | مقترح  | M13.1  | done    | `tests/integration/portability.test.ts`          |
+| FR-18-005 | الاستعادة المنظمة             | مقترح  | M13.3  | done    | `tests/integration/portability.test.ts`          |
+| FR-18-006 | إشعار المحتوى الذي لا يُنقل   | مقترح  | M13.1  | done    | `tests/integration/portability.test.ts`          |
 | FR-19-001 | حذف PDF بعد تحقق الاكتمال     | سابق   | M6.12  | done    | `tests/integration/answers.test.ts`              |
 | FR-19-002 | الملف الجزئي أو الفاشل        | مقترح  | M6.12  | done    | `tests/integration/imports-failure.test.ts`      |
 | FR-19-003 | تنظيف بقايا المعالجة          | مقترح  | M6.12  | done    | `tests/integration/imports-rules.test.ts`        |
-| FR-19-004 | حذف سؤال                      | مقترح  | M13.4  | planned | —                                                |
-| FR-19-005 | حذف بنك                       | مقترح  | M13.5  | planned | —                                                |
-| FR-19-006 | حذف الحساب                    | مقترح  | M13.6  | planned | —                                                |
-| FR-19-007 | نتيجة الحذف الفعلية           | مقترح  | M13.6  | planned | —                                                |
+| FR-19-004 | حذف سؤال                      | مقترح  | M13.4  | done    | `tests/integration/question-editing.test.ts`     |
+| FR-19-005 | حذف بنك                       | مقترح  | M13.5  | done    | `tests/integration/portability.test.ts`          |
+| FR-19-006 | حذف الحساب                    | مقترح  | M13.6  | done    | `tests/integration/portability.test.ts`          |
+| FR-19-007 | نتيجة الحذف الفعلية           | مقترح  | M13.6  | done    | `tests/integration/portability.test.ts`          |
 | FR-19-008 | الفرق بين الأرشفة والحذف      | مقترح  | M1.3   | partial | `tests/integration/bank-editing.test.ts`         |
 | FR-20-001 | المحتوى خاص افتراضياً         | سابق   | M14.3  | partial | `tests/integration/library.test.ts`              |
 | FR-20-002 | مفتاح AI لا يُشارك            | سابق   | M2.2   | partial | `tests/integration/providers.test.ts`            |
@@ -217,7 +217,7 @@
 | FR-23-005 | إعادة المحاولة                | مقترح  | M4.7   | done    | `tests/integration/imports-failure.test.ts`      |
 | FR-23-006 | انقطاع أثناء Exam             | مقترح  | M10.7  | done    | `tests/integration/study-exam.test.ts`           |
 | FR-23-007 | تعديل سؤال خلال امتحان        | مقترح  | M9.1   | done    | `tests/integration/study-tutor.test.ts`          |
-| FR-23-008 | حذف بنك خلال جلسة             | مقترح  | M10.10 | planned | —                                                |
+| FR-23-008 | حذف بنك خلال جلسة             | مقترح  | M10.10 | done    | `tests/integration/portability.test.ts`          |
 | FR-23-009 | خروج من خطأ                   | مقترح  | M15.5  | planned | —                                                |
 | FR-24-001 | معيار قبول علمي               | مقترح  | M6.11  | partial | `tests/unit/questions/eligibility.test.ts`       |
 | FR-24-002 | العناية بالمعلومة الحديثة     | مقترح  | M7.10  | done    | `tests/integration/question-editing.test.ts`     |

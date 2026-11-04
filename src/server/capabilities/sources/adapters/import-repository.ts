@@ -160,6 +160,16 @@ const pageOfSource = (db: Db, ownerId: string, sourceId: string, page: number) =
     .orderBy('import_job.created_at', 'desc')
     .executeTakeFirst();
 
+/** Every source row of a bank, imported or restored (M13). */
+const sourcesOfBank = (db: Db, ownerId: string, bankId: string) =>
+  db
+    .selectFrom('source')
+    .selectAll()
+    .where('owner_id', '=', ownerId)
+    .where('bank_id', '=', bankId)
+    .orderBy('created_at')
+    .execute();
+
 /** Owner-scoped store of sources, import jobs and their per-page checkpoints. */
 export function createImportRepository(db: Db) {
   return {
@@ -205,6 +215,7 @@ export function createImportRepository(db: Db) {
     removeSource: (ownerId: string, sourceId: string) =>
       db.deleteFrom('source').where('owner_id', '=', ownerId).where('id', '=', sourceId).execute(),
     countPages: (jobId: string) => countPages(db, jobId),
+    sourcesOfBank: (ownerId: string, bankId: string) => sourcesOfBank(db, ownerId, bankId),
     pageOfSource: (ownerId: string, sourceId: string, page: number) =>
       pageOfSource(db, ownerId, sourceId, page),
   };

@@ -17,6 +17,8 @@ export interface AccountRepository {
   findById(id: string): Promise<Account | undefined>;
   update(id: string, changes: UpdateAccountRequest): Promise<void>;
   setPasswordHash(id: string, passwordHash: string): Promise<void>;
+  /** Deletes the account; everything it owns goes with it (database cascades). */
+  delete(id: string): Promise<boolean>;
 }
 
 type AccountRow = Selectable<Database['account']>;
@@ -96,6 +98,10 @@ export function createAccountRepository(db: Db): AccountRepository {
         .set({ password_hash: passwordHash })
         .where('id', '=', id)
         .execute();
+    },
+    async delete(id) {
+      const result = await db.deleteFrom('account').where('id', '=', id).executeTakeFirst();
+      return result.numDeletedRows > 0n;
     },
   };
 }

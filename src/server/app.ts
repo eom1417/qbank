@@ -1,6 +1,11 @@
 import cookie from '@fastify/cookie';
 import Fastify, { type FastifyInstance } from 'fastify';
-import { createIdentity, type RequireActor } from './capabilities/identity/index.js';
+import {
+  createIdentity,
+  type IdentityModule,
+  type RequireActor,
+} from './capabilities/identity/index.js';
+import { createPortability } from './capabilities/portability/index.js';
 import { createLibrary } from './capabilities/library/index.js';
 import { createProviders } from './capabilities/providers/index.js';
 import { createQuestions } from './capabilities/questions/index.js';
@@ -24,56 +29,88 @@ export interface AppDeps {
   pairingToken: string | null;
 }
 
-/**
- * The study content: banks, their questions, the user's AI (the providers kit), and imports. Each capability gets
- * only the others' public interfaces.
- */
-function registerContent(
+type ContentDeps = Omit<AppDeps, 'pairingToken'>;
+
+/** The library and the questions in it; each capability gets the others' public interfaces. */
+function registerLibrary(
   app: FastifyInstance,
-  { config, db, clock }: Omit<AppDeps, 'pairingToken'>,
+  { config, db, clock }: ContentDeps,
   requireActor: RequireActor,
 ) {
-  const library = createLibrary({ db, clock, requireActor: requireActor });
+  const library = createLibrary({ db, clock, requireActor });
   library.register(app);
   const blobs = createDiskBlobStore(config.imports.dataDir);
   const questions = createQuestions({
     db,
     clock,
-    requireActor: requireActor,
+    requireActor,
     chaptersOf: library.chaptersOf,
     tagsOf: library.tagsOf,
     ownsBank: library.ownsBank,
     deleteBlob: (key) => blobs.remove(key),
   });
   questions.register(app);
+  return { library, blobs, questions };
+}
+
+/** Imports through the user's AI (the providers kit), and the worker that runs them. */
+function registerImports(
+  app: FastifyInstance,
+  deps: ContentDeps,
+  requireActor: RequireActor,
+  parts: ReturnType<typeof registerLibrary>,
+) {
+  const { config, db, clock } = deps;
   const providers = createProviders({ aiHost: config.aiHost, requireActor });
   providers.register(app);
   const sources = createSources({
     db,
     clock,
-    blobs,
-    questions,
+    blobs: parts.blobs,
+    questions: parts.questions,
     ai: providers.importAi,
-    requireActor: requireActor,
+    requireActor,
     maxUploadBytes: config.imports.maxUploadBytes,
     maxPages: config.imports.maxPages,
     originalRetentionDays: config.imports.originalRetentionDays,
   });
   sources.register(app);
-  createStudy({
-    db,
-    clock,
-    requireActor,
-    questions,
-    ownsBank: library.ownsBank,
-    bankIdsOf: library.bankIdsOf,
-    ai: providers.importAi,
-  }).register(app);
   if (config.imports.worker) {
     sources.worker.start();
     app.addHook('onClose', async () => sources.worker.stop());
   }
   app.decorate('importWorker', sources.worker);
+  return { providers, sources };
+}
+
+/** Study, then export, restore and deletion across everything (M9–M13). */
+function registerContent(app: FastifyInstance, deps: ContentDeps, identity: IdentityModule) {
+  const parts = registerLibrary(app, deps, identity.requireActor);
+  const { providers, sources } = registerImports(app, deps, identity.requireActor, parts);
+  const { library, questions, blobs } = parts;
+  const study = createStudy({
+    db: deps.db,
+    clock: deps.clock,
+    requireActor: identity.requireActor,
+    questions,
+    ownsBank: library.ownsBank,
+    bankIdsOf: library.bankIdsOf,
+    ai: providers.importAi,
+  });
+  study.register(app);
+  createPortability(
+    {
+      library,
+      sources,
+      questions,
+      study,
+      blobs,
+      deleteAccount: identity.deleteAccount,
+      clock: deps.clock,
+      maxUploadBytes: deps.config.imports.maxUploadBytes,
+    },
+    identity.requireActor,
+  ).register(app);
 }
 
 /** Composition root: wires platform owners and capabilities into one Fastify instance. */
@@ -97,7 +134,7 @@ export function buildApp({ config, db, clock, pairingToken }: AppDeps): FastifyI
     pairingToken,
   });
   identity.register(app);
-  registerContent(app, { config, db, clock }, identity.requireActor);
+  registerContent(app, { config, db, clock }, identity);
   if (config.devOutbox) registerOutboxRoute(app, db);
   app.get('/api/health', async () => ({ status: 'ok' }));
   return app;

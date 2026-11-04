@@ -7,7 +7,7 @@ import { buildPdfFixtures, type PdfFixtures } from './pdf-fixtures.js';
 import { ORIGIN, useTestApp } from './test-app.js';
 
 /** A multipart body: the form fields first, then one file, as the upload screen sends it. */
-function multipart(fields: Record<string, string>, fileName: string, data: Buffer) {
+export function multipart(fields: Record<string, string>, fileName: string, data: Buffer) {
   const boundary = `----qbank${Date.now().toString(16)}`;
   const parts = Object.entries(fields).map(
     ([name, value]) =>

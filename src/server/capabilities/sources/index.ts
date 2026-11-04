@@ -8,6 +8,12 @@ import type { ImportAi } from '../providers/index.js';
 import type { RequireActor } from '../identity/index.js';
 import type { Questions } from '../questions/index.js';
 import { createImportRepository } from './adapters/import-repository.js';
+import {
+  originalsOfBank,
+  restoreSources,
+  sourcesOfBank,
+  type PortableSource,
+} from './use-cases/portability.js';
 import { registerImportRoutes, registerSourceRoutes } from './http/routes.js';
 import type { SourcesDeps } from './use-cases/deps.js';
 import { createImportWorker } from './worker.js';
@@ -43,6 +49,13 @@ export function createSources(settings: SourcesSettings) {
   };
   return {
     worker: createImportWorker(deps),
+    /** The bank's sources for an export, without originals (M13). */
+    sourcesOfBank: (ownerId: string, bankId: string) => sourcesOfBank(deps, ownerId, bankId),
+    /** The stored originals of a bank, erased with it (FR-19-005). */
+    originalsOfBank: (ownerId: string, bankId: string) => originalsOfBank(deps, ownerId, bankId),
+    /** Recreates exported sources in a restored bank (FR-18-005). */
+    restoreSources: (ownerId: string, bankId: string, sources: readonly PortableSource[]) =>
+      restoreSources(deps, ownerId, bankId, sources),
     register: (app: FastifyInstance) => {
       void app.register(async (scope) => {
         await scope.register(multipart);

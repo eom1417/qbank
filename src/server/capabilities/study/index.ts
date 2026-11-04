@@ -7,6 +7,7 @@ import type { RequireActor } from '../identity/index.js';
 import type { ImportAi } from '../providers/index.js';
 import { createSessionRepository } from './adapters/session-repository.js';
 import { registerStudyRoutes } from './http/routes.js';
+import { resultsReport } from './use-cases/report.js';
 import type { StudyDeps } from './use-cases/deps.js';
 
 interface StudySettings {
@@ -37,6 +38,15 @@ export function createStudy(settings: StudySettings) {
     random: settings.random ?? secureRandom,
   };
   return {
+    /** The sessions that asked these questions, before deleting them (FR-19-005). */
+    sessionsTouching: deps.sessions.sessionsTouching,
+    /** Removes these questions' answers from every session (DEC-20 assumed). */
+    forgetQuestions: deps.sessions.forgetQuestions,
+    /** A readable results report for personal use (FR-18-002, FR-16-011). */
+    resultsReport: (
+      ownerId: string,
+      filter: { bankId?: string | undefined; from: Date; to: Date },
+    ) => resultsReport(deps, ownerId, filter),
     register: (app: FastifyInstance) => registerStudyRoutes(app, deps, settings.requireActor),
   };
 }

@@ -45,7 +45,7 @@ test('chapters and topics: add, rename and delete with confirmation', async ({ p
   await page.getByRole('button', { name: 'حفظ' }).click();
   await expect(page.getByText('Endocrinology')).toBeVisible();
 
-  const remove = page.getByRole('button', { name: 'حذف' }).first();
+  const remove = page.getByRole('button', { name: 'حذف', exact: true }).first();
   await remove.click();
   await page.getByRole('button', { name: 'تأكيد الحذف' }).click();
   await expect(page.getByText('لا توجد فصول بعد.')).toBeVisible();

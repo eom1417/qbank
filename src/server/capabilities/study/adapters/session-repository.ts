@@ -235,6 +235,49 @@ async function sessionHistory(db: Db, ownerId: string) {
     .execute();
 }
 
+/** The sessions that asked any of these questions, and how many are still open (FR-19-005). */
+async function sessionsTouching(db: Db, ownerId: string, questionIds: readonly string[]) {
+  if (questionIds.length === 0) return { sessions: 0, active: 0 };
+  const rows = await db
+    .selectFrom('study_item as i')
+    .innerJoin('study_session as s', 's.id', 'i.session_id')
+    .select(['s.id', 's.status'])
+    .distinct()
+    .where('i.owner_id', '=', ownerId)
+    .where('i.question_id', 'in', questionIds)
+    .execute();
+  return { sessions: rows.length, active: rows.filter((r) => r.status === 'active').length };
+}
+
+/**
+ * Removes these questions from every session (DEC-20 assumed): their items go, and a session
+ * left with none goes too. Other questions' results are untouched (UAT-074).
+ */
+async function forgetQuestions(db: Db, ownerId: string, questionIds: readonly string[]) {
+  if (questionIds.length === 0) return;
+  await db.transaction().execute(async (tx) => {
+    await tx
+      .deleteFrom('study_item')
+      .where('owner_id', '=', ownerId)
+      .where('question_id', 'in', questionIds)
+      .execute();
+    await tx
+      .deleteFrom('study_session')
+      .where('owner_id', '=', ownerId)
+      .where((eb) =>
+        eb.not(
+          eb.exists(
+            eb
+              .selectFrom('study_item')
+              .select('position')
+              .whereRef('study_item.session_id', '=', 'study_session.id'),
+          ),
+        ),
+      )
+      .execute();
+  });
+}
+
 /** Owner-scoped store of study sessions and their answered items (M9). */
 export function createSessionRepository(db: Db) {
   const update = (ownerId: string, id: string, changes: Record<string, unknown>) =>
@@ -256,6 +299,10 @@ export function createSessionRepository(db: Db) {
       update(ownerId, id, { status: 'finished', finished_at: now, updated_at: now }),
     attemptHistory: (ownerId: string) => attemptHistory(db, ownerId),
     sessionHistory: (ownerId: string) => sessionHistory(db, ownerId),
+    sessionsTouching: (ownerId: string, questionIds: readonly string[]) =>
+      sessionsTouching(db, ownerId, questionIds),
+    forgetQuestions: (ownerId: string, questionIds: readonly string[]) =>
+      forgetQuestions(db, ownerId, questionIds),
     activeSessions: (ownerId: string) => activeSessions(db, ownerId),
     saveChoice: (key: ItemKey, chosen: string[], now: Date) => saveChoice(db, key, chosen, now),
     setItemFlag: (key: ItemKey, flagged: boolean) => setItemFlag(db, key, flagged),

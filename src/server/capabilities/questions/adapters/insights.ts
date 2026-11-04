@@ -1,5 +1,6 @@
 import { sql } from 'kysely';
 import type { Db } from '../../../platform/db/index.js';
+import { NO_ID } from '../../../platform/ids.js';
 
 const n = (value: string | number | null | undefined) => Number(value ?? 0);
 
@@ -19,7 +20,7 @@ async function statusCounts(db: Db, ownerId: string, bankIds: readonly string[] 
       sql<string>`count(*) filter (where 'duplicate' = any(review_reasons))`.as('duplicates'),
     ])
     .where('owner_id', '=', ownerId);
-  if (bankIds) query = query.where('bank_id', 'in', bankIds.length > 0 ? bankIds : ['']);
+  if (bankIds) query = query.where('bank_id', 'in', bankIds.length > 0 ? bankIds : [NO_ID]);
   const row = await query.executeTakeFirstOrThrow();
   return {
     total: n(row.total),

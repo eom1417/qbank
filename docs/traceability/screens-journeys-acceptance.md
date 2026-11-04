@@ -34,8 +34,8 @@
 | UI-23   | إدارة المصادر         | M4.9   | done    | `tests/e2e/import.spec.ts`          |
 | UI-24   | إعدادات المفاتيح      | M2.2   | done    | `tests/e2e/providers.spec.ts`       |
 | UI-25   | إعدادات الدراسة       | M1.6   | partial | `tests/e2e/account.spec.ts`         |
-| UI-26   | التصدير               | M13.1  | planned | —                                   |
-| UI-27   | الحذف والخصوصية       | M13.6  | planned | —                                   |
+| UI-26   | التصدير               | M13.1  | done    | `tests/e2e/portability.spec.ts`     |
+| UI-27   | الحذف والخصوصية       | M13.6  | done    | `tests/e2e/portability.spec.ts`     |
 | UI-28   | مركز الدعم            | M14.5  | planned | —                                   |
 
 ## الرحلات (JY)
@@ -57,7 +57,7 @@
 | JY-13   | مراجعة متباعدة              | M11.3  | done    | `tests/integration/study-plan.test.ts`     |
 | JY-14   | فشل AI في منتصف الاستيراد   | M4.7   | done    | `tests/integration/imports-rules.test.ts`  |
 | JY-15   | تعارض إجابة بعد امتحان      | M10.9  | done    | `tests/integration/study-exam.test.ts`     |
-| JY-16   | تصدير ثم حذف بنك            | M13.5  | planned | —                                          |
+| JY-16   | تصدير ثم حذف بنك            | M13.5  | done    | `tests/e2e/portability.spec.ts`            |
 | JY-17   | تبديل اللغة والجهاز         | M9.7   | partial | `tests/integration/study-progress.test.ts` |
 | JY-18   | تصفح دون درجة               | M12.12 | done    | `tests/e2e/analytics.spec.ts`              |
 | JY-19   | كتاب مع صورة مريض معرّف     | M14.1  | planned | —                                          |
@@ -134,13 +134,13 @@
 | UAT-066 | فلترة بنك             | M12.7  | done    | `tests/integration/analytics.test.ts`        |
 | UAT-067 | جودة الاستيراد        | M12.6  | done    | `tests/integration/analytics.test.ts`        |
 | UAT-068 | تقرير جلسة قديمة      | M12.5  | done    | `tests/integration/analytics.test.ts`        |
-| UAT-069 | بنك مصور              | M13.1  | planned | —                                            |
-| UAT-070 | إخفاء الأسرار         | M13.1  | planned | —                                            |
-| UAT-071 | نطاق فصل              | M13.1  | planned | —                                            |
+| UAT-069 | بنك مصور              | M13.1  | done    | `tests/integration/portability.test.ts`      |
+| UAT-070 | إخفاء الأسرار         | M13.1  | done    | `tests/integration/portability.test.ts`      |
+| UAT-071 | نطاق فصل              | M13.1  | done    | `tests/integration/portability.test.ts`      |
 | UAT-072 | PDF مكتمل             | M6.12  | done    | `tests/integration/answers.test.ts`          |
 | UAT-073 | فشل قبل الاكتمال      | M6.12  | done    | `tests/integration/imports-failure.test.ts`  |
-| UAT-074 | حذف بنك A             | M13.5  | planned | —                                            |
-| UAT-075 | حذف حساب              | M13.6  | planned | —                                            |
+| UAT-074 | حذف بنك A             | M13.5  | done    | `tests/integration/portability.test.ts`      |
+| UAT-075 | حذف حساب              | M13.6  | done    | `tests/integration/portability.test.ts`      |
 | UAT-076 | رابط غير مصرح         | M0.3   | partial | `tests/integration/library.test.ts`          |
 | UAT-077 | مزود AI خارجي         | M2.6   | partial | `tests/e2e/providers.spec.ts`                |
 | UAT-078 | صورة مريض معرف        | M14.1  | planned | —                                            |
