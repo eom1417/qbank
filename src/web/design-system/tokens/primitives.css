@@ -59,6 +59,7 @@
   --qb-size-viewport: 100vh;
   --qb-size-thumb: 10rem;
   --qb-size-skin-min: 11rem;
+  --qb-size-qr: 13rem;
   --qb-size-skin-preview: 6rem;
   --qb-blur-nav: 12px;
   --qb-shadow-1: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 3px rgb(15 23 42 / 0.1);

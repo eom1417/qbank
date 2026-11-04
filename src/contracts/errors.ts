@@ -27,6 +27,7 @@ export const ErrorCode = z.enum([
   'exam_ended',
   'question_locked',
   'original_deleted',
+  'too_many_attempts',
   'ai_host_unavailable',
   'internal',
 ]);

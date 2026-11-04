@@ -14,6 +14,10 @@ test('a pairing link opens the local QBank, with no sign-up anywhere', async ({ 
   await expect(page.getByRole('button', { name: 'تسجيل الخروج' })).toHaveCount(0);
   await page.getByRole('link', { name: 'الإعدادات' }).click();
   await expect(page.getByText(`#pair=${code()}`)).toBeVisible();
+  // From this computer the phone needs the network address: QBank says how to share it.
+  await expect(page.getByText('npm run qbank -- --lan')).toBeVisible();
+  for (const file of ['/manifest.json', '/sw.js', '/icon-192.png'])
+    expect((await page.request.get(`${LOCAL_WEB_URL}${file}`)).status()).toBe(200);
   await page.goto(`${LOCAL_WEB_URL}/sign-up`);
   await expect(page).toHaveURL(`${LOCAL_WEB_URL}/`);
 });

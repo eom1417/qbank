@@ -359,3 +359,16 @@
   margin-inline-start: auto;
   font-weight: var(--weight-strong);
 }
+
+/* A QR code stays dark on light in every theme: phone cameras read it that way. */
+.qb-qr {
+  inline-size: var(--size-qr);
+  block-size: var(--size-qr);
+  border-radius: var(--radius-control);
+}
+.qb-qr__light {
+  fill: var(--color-qr-light);
+}
+.qb-qr__dark {
+  fill: var(--color-qr-dark);
+}

@@ -11,4 +11,9 @@ export const localEn = {
   'local.devices.code': 'Pairing code',
   'local.devices.copy': 'Copy link',
   'local.devices.copied': 'Copied',
+  'local.devices.qr': 'QR code of the link to your QBank: scan it with your phone camera',
+  'local.devices.lanOff':
+    'Your phone cannot open this computer’s own address. Start QBank with npm run qbank -- --lan, then scan the code shown here (same Wi-Fi only).',
+  'local.devices.install':
+    'On the phone, choose “Add to Home Screen” to open QBank like an app. It installs fully over a secure (https) address.',
 };

@@ -26,6 +26,7 @@ const STATUS: Record<ErrorCode, number> = {
   exam_ended: 409,
   question_locked: 409,
   original_deleted: 409,
+  too_many_attempts: 429,
   ai_host_unavailable: 503,
   internal: 500,
 };

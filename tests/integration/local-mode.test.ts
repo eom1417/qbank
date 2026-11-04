@@ -41,7 +41,7 @@ describe('local mode', () => {
       url: '/api/local/pairing',
       headers: { cookie: second.cookie },
     });
-    expect(code.json()).toEqual({ code: TEST_PAIRING_TOKEN });
+    expect(code.json()).toEqual({ code: TEST_PAIRING_TOKEN, lanOrigin: null });
   });
 
   it('needs the pairing code through a proxy or another network address', async () => {

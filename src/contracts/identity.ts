@@ -108,5 +108,8 @@ export const PairRequest = z
 export type PairRequest = z.infer<typeof PairRequest>;
 
 /** The pairing code, shown only to an already paired browser (to open QBank on another device). */
-export const PairingCodeResponse = z.object({ code: z.string() }).strict();
+/** The pairing code, and where a phone on the same network opens QBank (`--lan` only). */
+export const PairingCodeResponse = z
+  .object({ code: z.string(), lanOrigin: z.string().nullable() })
+  .strict();
 export type PairingCodeResponse = z.infer<typeof PairingCodeResponse>;

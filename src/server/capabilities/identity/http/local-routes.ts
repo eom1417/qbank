@@ -1,5 +1,8 @@
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { PairRequest, type PairingCodeResponse } from '../../../../contracts/identity.js';
+import { AppError } from '../../../platform/errors/index.js';
+import { createAttemptLimiter } from '../../../platform/http/attempts.js';
+import { lanOrigin } from '../../../platform/http/lan.js';
 import { parseInput } from '../../../platform/http/validate.js';
 import type { IdentityDeps } from '../use-cases/deps.js';
 import { pairBrowser } from '../use-cases/local-owner.js';
@@ -28,21 +31,31 @@ interface LocalRouteOptions {
   cookieSecure: boolean;
 }
 
+/** A wrong pairing code may be tried this often per address before a pause. */
+const PAIRING_ATTEMPTS = { max: 10, windowMs: 15 * 60_000 };
+
 /** Local mode (DEC-31): browsers pair with the install instead of signing in. */
 export function registerLocalRoutes(app: FastifyInstance, options: LocalRouteOptions) {
   const { deps, requireActor, pairingToken, cookieSecure } = options;
+  const attempts = createAttemptLimiter({ ...PAIRING_ATTEMPTS, now: () => deps.clock.now() });
   app.get('/api/local/pairing', async (request): Promise<PairingCodeResponse> => {
     await requireActor(request);
-    return { code: pairingToken };
+    return { code: pairingToken, lanOrigin: lanOrigin(app.server) };
   });
   app.post('/api/local/pair', async (request, reply) => {
     const { token, locale } = parseInput(PairRequest, request.body ?? {});
+    if (attempts.blocked(request.ip)) throw new AppError('too_many_attempts');
     const proof = {
       fromThisComputer: isFromThisComputer(request),
       presented: token,
       expected: pairingToken,
     };
-    const { account, session } = await pairBrowser(deps, proof, locale);
+    const paired = await pairBrowser(deps, proof, locale).catch((error: unknown) => {
+      if (error instanceof AppError && error.code === 'pairing_required') attempts.fail(request.ip);
+      throw error;
+    });
+    attempts.clear(request.ip);
+    const { account, session } = paired;
     setSessionCookie(reply, session, cookieSecure);
     return toAccountResponse(account);
   });

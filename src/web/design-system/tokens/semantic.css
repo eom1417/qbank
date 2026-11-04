@@ -73,6 +73,7 @@
   --size-viewport: var(--qb-size-viewport);
   --size-thumb: var(--qb-size-thumb);
   --size-skin-min: var(--qb-size-skin-min);
+  --size-qr: var(--qb-size-qr);
   --size-skin-preview: var(--qb-size-skin-preview);
   --blur-nav: var(--qb-blur-nav);
   --shadow-card: var(--qb-shadow-1);
@@ -84,4 +85,7 @@
   --color-nav-text: var(--color-text);
   --color-nav-active: var(--color-accent-soft);
   --canvas-glow: none;
+  /* A QR code is dark on light in every theme and skin: cameras read it that way. */
+  --color-qr-light: var(--qb-white);
+  --color-qr-dark: var(--qb-ink-950);
 }

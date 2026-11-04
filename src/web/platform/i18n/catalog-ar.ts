@@ -73,6 +73,7 @@ export const ar: Record<MessageKey, string> = {
   'error.exam_ended': 'انتهى هذا الامتحان؛ وسُلِّمت إجاباتك المحفوظة.',
   'error.question_locked': 'انتهى وقت هذا السؤال؛ لم يعد بالإمكان تغيير إجابته.',
   'error.pairing_required': 'رمز الربط غير صحيح. انسخه من جديد من الجهاز الذي يشغّل QBank.',
+  'error.too_many_attempts': 'محاولات خاطئة كثيرة. انتظر 15 دقيقة ثم انسخ الرمز من جديد.',
   'error.invalid_credentials': 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
   'error.email_taken': 'يوجد حساب بهذا البريد الإلكتروني.',
   'error.not_found': 'هذه الصفحة غير موجودة أو غير متاحة لحسابك.',

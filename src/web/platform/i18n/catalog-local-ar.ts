@@ -12,5 +12,10 @@ export const localAr: Record<keyof typeof localEn, string> = {
     'افتح هذا الرابط في جوالك أو في متصفح آخر لتستخدم QBank نفسه هناك. من يملك الرابط يستطيع فتح QBank الخاص بك، فلا تعطه إلا لأجهزتك.',
   'local.devices.code': 'رمز الربط',
   'local.devices.copy': 'انسخ الرابط',
+  'local.devices.qr': 'رمز QR لرابط QBank الخاص بك: امسحه بكاميرا الجوال',
+  'local.devices.lanOff':
+    'لا يستطيع الجوال فتح عنوان هذا الجهاز الداخلي. شغّل QBank بالأمر npm run qbank -- --lan ثم امسح الرمز الذي يظهر هنا (على نفس شبكة الواي فاي فقط).',
+  'local.devices.install':
+    'من الجوال اختر «إضافة إلى الشاشة الرئيسية» ليفتح QBank كتطبيق. التثبيت الكامل يعمل على العناوين الآمنة (https).',
   'local.devices.copied': 'نُسخ',
 };

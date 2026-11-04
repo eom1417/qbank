@@ -21,3 +21,8 @@ createRoot(root).render(
     </I18nProvider>
   </StrictMode>,
 );
+
+// Installable on a phone (PWA). Only for the built app on a secure address: in development a
+// worker would keep stale files, and browsers refuse workers on plain http (except localhost).
+if (import.meta.env.PROD && 'serviceWorker' in navigator && window.isSecureContext)
+  void navigator.serviceWorker.register('/sw.js');

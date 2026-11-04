@@ -81,6 +81,7 @@ export const en = {
   'error.question_locked': 'The time for this question is over; its answer can no longer change.',
   'error.pairing_required':
     'That pairing code is not right. Copy it again from the computer running QBank.',
+  'error.too_many_attempts': 'Too many wrong codes. Wait 15 minutes, then copy the code again.',
   'error.invalid_credentials': 'The email or password is not correct.',
   'error.email_taken': 'An account with this email already exists.',
   'error.not_found': 'This page does not exist or is not available to your account.',
