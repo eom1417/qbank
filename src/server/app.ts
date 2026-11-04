@@ -5,6 +5,7 @@ import {
   type IdentityModule,
   type RequireActor,
 } from './capabilities/identity/index.js';
+import { createBackups, type Backups } from './capabilities/backup/index.js';
 import { createPortability } from './capabilities/portability/index.js';
 import { createLibrary } from './capabilities/library/index.js';
 import { createProviders } from './capabilities/providers/index.js';
@@ -138,6 +139,9 @@ export function buildApp({ config, db, clock, pairingToken }: AppDeps): FastifyI
   identity.register(app);
   registerContent(app, { config, db, clock }, identity);
   if (config.devOutbox) registerOutboxRoute(app, db);
+  const backups = createBackups({ db, clock, dataDir: config.imports.dataDir });
+  if (config.mode === 'local') backups.register(app, identity.requireActor);
+  app.decorate('backups', backups);
   app.get('/api/health', async () => ({ status: 'ok' }));
   return app;
 }
@@ -146,5 +150,7 @@ declare module 'fastify' {
   interface FastifyInstance {
     /** Runs queued imports now (tests drive the worker through this). */
     importWorker: { drain(): Promise<number> };
+    /** The daily backup (local mode): main.ts runs it on a timer, tests call it directly. */
+    backups: Backups;
   }
 }

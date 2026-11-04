@@ -27,6 +27,7 @@ const STATUS: Record<ErrorCode, number> = {
   question_locked: 409,
   original_deleted: 409,
   too_many_attempts: 429,
+  backup_too_new: 409,
   ai_host_unavailable: 503,
   internal: 500,
 };

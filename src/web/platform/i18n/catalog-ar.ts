@@ -10,6 +10,7 @@ import { portabilityAr } from './catalog-portability-ar.js';
 import { helpAr } from './catalog-help-ar.js';
 import { skinsAr } from './catalog-skins-ar.js';
 import { cliLoginAr } from './catalog-cli-login-ar.js';
+import { backupAr } from './catalog-backup-ar.js';
 import { providersAr } from './catalog-providers-ar.js';
 
 export const ar: Record<MessageKey, string> = {
@@ -25,6 +26,7 @@ export const ar: Record<MessageKey, string> = {
   ...helpAr,
   ...skinsAr,
   ...cliLoginAr,
+  ...backupAr,
   'app.name': 'محرك بنك الأسئلة',
   'shell.language': 'English',
   'shell.theme.system': 'المظهر: حسب الجهاز',
@@ -73,6 +75,7 @@ export const ar: Record<MessageKey, string> = {
   'error.exam_ended': 'انتهى هذا الامتحان؛ وسُلِّمت إجاباتك المحفوظة.',
   'error.question_locked': 'انتهى وقت هذا السؤال؛ لم يعد بالإمكان تغيير إجابته.',
   'error.pairing_required': 'رمز الربط غير صحيح. انسخه من جديد من الجهاز الذي يشغّل QBank.',
+  'error.backup_too_new': 'هذه النسخة من إصدار أحدث من QBank. حدّث QBank ثم استرجعها.',
   'error.too_many_attempts': 'محاولات خاطئة كثيرة. انتظر 15 دقيقة ثم انسخ الرمز من جديد.',
   'error.invalid_credentials': 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
   'error.email_taken': 'يوجد حساب بهذا البريد الإلكتروني.',

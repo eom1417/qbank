@@ -28,6 +28,7 @@ export const ErrorCode = z.enum([
   'question_locked',
   'original_deleted',
   'too_many_attempts',
+  'backup_too_new',
   'ai_host_unavailable',
   'internal',
 ]);

@@ -32,3 +32,27 @@ test('another browser is asked for the code, and a wrong one is refused', async 
   await page.getByRole('button', { name: 'اربط هذا المتصفح' }).click();
   await expect(page.getByRole('heading', { name: 'مكتبتك فارغة' })).toBeVisible();
 });
+
+test('backs up now, and previews a restore before anything changes (M17.2)', async ({ page }) => {
+  await page.goto(`${LOCAL_WEB_URL}/#pair=${code()}`);
+  await page.getByRole('link', { name: 'الإعدادات' }).click();
+  await page.getByRole('button', { name: 'انسخ الآن' }).click();
+  await expect(page.getByText('صنعتها أنت').first()).toBeVisible();
+  await page.getByRole('button', { name: 'استرجاع…' }).first().click();
+  await expect(page.getByText('في هذه النسخة')).toBeVisible();
+  await expect(page.getByText('الموجود الآن')).toBeVisible();
+  // A bank made after the backup is gone once the backup is restored (PGlite, as installed).
+  await page.goto(`${LOCAL_WEB_URL}/`);
+  await page.getByLabel('اسم البنك').fill('Made after the backup');
+  await page.getByRole('button', { name: 'إنشاء البنك' }).click();
+  await expect(page.getByText('Made after the backup')).toBeVisible();
+  await page.goto(`${LOCAL_WEB_URL}/settings`);
+  // Newest first: the backup this test made before the bank.
+  await page.getByRole('button', { name: 'استرجاع…' }).first().click();
+  await page.getByRole('button', { name: 'استرجع هذه النسخة' }).click();
+  const reloaded = page.waitForEvent('load');
+  await page.getByRole('button', { name: 'استبدل كل شيء بهذه النسخة' }).click();
+  await reloaded;
+  await page.getByRole('link', { name: 'المكتبة' }).click();
+  await expect(page.getByRole('heading', { name: 'مكتبتك فارغة' })).toBeVisible();
+});

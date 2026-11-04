@@ -9,6 +9,7 @@ import { portabilityEn } from './catalog-portability-en.js';
 import { helpEn } from './catalog-help-en.js';
 import { skinsEn } from './catalog-skins-en.js';
 import { cliLoginEn } from './catalog-cli-login-en.js';
+import { backupEn } from './catalog-backup-en.js';
 import { providersEn } from './catalog-providers-en.js';
 
 /** English UI strings. catalog-ar.ts must define exactly the same keys (enforced by its type). */
@@ -25,6 +26,7 @@ export const en = {
   ...helpEn,
   ...skinsEn,
   ...cliLoginEn,
+  ...backupEn,
   'app.name': 'QBank Engine',
   'shell.language': 'العربية',
   'shell.theme.system': 'Theme: system',
@@ -81,6 +83,7 @@ export const en = {
   'error.question_locked': 'The time for this question is over; its answer can no longer change.',
   'error.pairing_required':
     'That pairing code is not right. Copy it again from the computer running QBank.',
+  'error.backup_too_new': 'This backup comes from a newer QBank. Update QBank, then restore it.',
   'error.too_many_attempts': 'Too many wrong codes. Wait 15 minutes, then copy the code again.',
   'error.invalid_credentials': 'The email or password is not correct.',
   'error.email_taken': 'An account with this email already exists.',

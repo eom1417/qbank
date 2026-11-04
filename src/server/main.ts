@@ -20,6 +20,12 @@ process.once('SIGTERM', shutdown);
 process.once('SIGINT', shutdown);
 
 await app.listen({ host: config.host, port: config.port });
+if (config.mode === 'local') {
+  // The daily backup (M17.2): checked at start and every hour; it runs once a day.
+  const backUp = () => void app.backups.runDue().catch((error: unknown) => app.log.error(error));
+  backUp();
+  setInterval(backUp, 60 * 60_000).unref();
+}
 if (pairingToken) {
   app.log.info(
     `QBank is running for you only. To pair another browser (a phone), open #pair=<code> with the code in ${config.imports.dataDir}/pairing-token`,
