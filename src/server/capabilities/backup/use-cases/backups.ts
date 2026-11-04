@@ -2,6 +2,7 @@ import type { Clock } from '../../../platform/clock.js';
 import type { Db } from '../../../platform/db/index.js';
 import { AppError } from '../../../platform/errors/index.js';
 import { isBackupId, type BackupFiles, type BackupMeta } from '../adapters/backup-files.js';
+import type { CopyTarget } from '../adapters/copy-target.js';
 import {
   countRows,
   dumpTable,
@@ -15,6 +16,8 @@ export interface BackupDeps {
   db: Db;
   clock: Clock;
   files: BackupFiles;
+  /** A folder off the QBank data where every backup is also copied (M16.5). */
+  copies: CopyTarget;
 }
 
 /** What a person recognises in a backup: banks, questions, sessions and pictures. */
@@ -40,6 +43,10 @@ export async function createBackup(deps: BackupDeps, reason: BackupMeta['reason'
   const id = await deps.files.write(meta, data);
   // Before a restore nothing is pruned: the backup being restored may be an old one.
   if (reason !== 'before_restore') await prune(deps);
+  await deps.copies.copy(
+    id,
+    (await deps.files.list()).map((b) => b.id),
+  );
   return id;
 }
 

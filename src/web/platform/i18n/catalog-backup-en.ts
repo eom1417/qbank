@@ -20,4 +20,16 @@ export const backupEn = {
     'Everything here now is replaced by this backup. QBank backs up today’s state first, so you can go back.',
   'backup.restore': 'Restore this backup',
   'backup.restore.confirm': 'Replace everything with this backup',
+  'backup.copy.label': 'Also copy every backup to this folder',
+  'backup.copy.hint':
+    'A folder your cloud app syncs (Google Drive, iCloud, OneDrive), so a copy lives off this computer. Full path, e.g. /Users/you/Google Drive/QBank.',
+  'backup.copy.save': 'Use this folder',
+  'backup.copy.stop': 'Stop copying',
+  'backup.copy.none': 'Backups stay on this computer only.',
+  'backup.copy.last': 'Last copied:',
+  'backup.copy.failed': 'The last copy failed: check the folder still exists and has space.',
+  'backup.copy.problem.not_absolute': 'Write the full path, starting from the top folder.',
+  'backup.copy.problem.not_a_folder': 'There is no folder at this path.',
+  'backup.copy.problem.inside_data': 'Choose a folder outside QBank’s own data.',
+  'backup.copy.problem.not_writable': 'QBank cannot write into this folder.',
 };

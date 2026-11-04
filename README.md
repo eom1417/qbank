@@ -7,27 +7,29 @@ provider you chose.
 
 > **بالعربي:** QBank يحوّل كتبك وملفات أسئلتك إلى بنك أسئلة خاص بك، على جهازك أنت. مفتوح المصدر
 > (MIT)، بلا حساب ولا خادم ولا اشتراك عندنا. تربط اشتراكك أو مفتاحك في Claude أو ChatGPT أو غيرهما.
-> التشغيل: الأوامر أدناه، ثم `npm run qbank` ويفتح في المتصفح.
+> التثبيت بأمر واحد: `bash scripts/install.sh` ثم `qbank` ويفتح في المتصفح. على ويندوز داخل WSL.
 
-## Run it
+## Install and run
 
-Tested on Linux (Debian/Ubuntu). Needs Node.js 22+ and `git`.
+One command on macOS (Homebrew) and Linux (apt or dnf). It needs Node.js 24.10+ (on macOS it
+installs it with Homebrew), and it is safe to run again: it only adds what is missing.
 
 ```bash
 git clone <this repository> qbank && cd qbank
-npm ci
-bash scripts/setup-reading-tools.sh   # PDF and OCR tools (poppler, MuPDF, Tesseract ar+en)
-bash scripts/setup-ai-host.sh         # Node 24 and the AI providers kit (for AI features)
-npm run qbank                          # builds once, starts, opens http://127.0.0.1:3000
+bash scripts/install.sh                # reading tools, packages, the AI kit, the build, a `qbank` command
+qbank                                  # starts QBank and opens http://127.0.0.1:3000
 ```
 
-- **Your data** stays in `.data/app/` (database, files, AI provider settings). Back it up by copying
-  that folder while QBank is stopped.
-- **AI:** open Settings → AI providers. Claude Code and Codex use the sign-in already on this computer
-  (`claude auth login`, `codex login`); other providers can be added there.
-- **Phone on the same Wi-Fi:** `npm run qbank -- --lan` prints a pairing link for your phone. Anyone
-  with that link can open your QBank, so keep it to your own devices.
-- `npm run qbank -- --no-open` starts without opening a browser.
+- **Windows:** QBank runs inside WSL, with the browser on Windows. In PowerShell run `wsl --install`
+  once (restart when asked), then, in this folder, `wsl bash scripts/install.sh` and `wsl qbank`.
+- `bash scripts/install.sh --check` lists what is missing and changes nothing;
+  `--with-ai-clis` also installs the official Codex and Claude Code CLIs.
+- **Your data** stays in `.data/app/` (database, files, AI provider settings). QBank backs it up
+  every day (Settings → Backups), and can copy each backup to a folder your cloud app syncs.
+- **AI:** Settings → AI providers. Sign in to Codex (ChatGPT) or Claude from there, from any device.
+- **Phone on the same Wi-Fi:** `qbank --lan`, then scan the QR code in Settings → Your other
+  devices. Anyone with that link can open your QBank: "Sign out every other device" cuts it off.
+- `qbank --no-open` starts without opening a browser.
 
 ## For developers
 

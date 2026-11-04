@@ -30,3 +30,17 @@ export type RestorePreviewResponse = z.infer<typeof RestorePreviewResponse>;
 export const RestoreBackupResponse = z
   .object({ restored: z.string(), safety: z.string() })
   .strict();
+
+/** A folder off the QBank data for a copy of every backup (M16.5), or none. */
+export const CopyFolderRequest = z
+  .object({ folder: z.string().trim().min(1).max(1000).nullable() })
+  .strict();
+
+export const CopySettingsResponse = z
+  .object({
+    folder: z.string().nullable(),
+    lastCopyAt: z.string().nullable(),
+    lastError: z.string().nullable(),
+  })
+  .strict();
+export type CopySettingsResponse = z.infer<typeof CopySettingsResponse>;

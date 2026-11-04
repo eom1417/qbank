@@ -7,6 +7,11 @@ export function errorMessageKey(error: unknown): MessageKey {
 }
 
 const FIELD_MESSAGES: Record<string, MessageKey> = {
+  // Backup copy folder (M16.5).
+  not_absolute: 'backup.copy.problem.not_absolute',
+  not_a_folder: 'backup.copy.problem.not_a_folder',
+  inside_data: 'backup.copy.problem.inside_data',
+  not_writable: 'backup.copy.problem.not_writable',
   too_small: 'field.tooShort',
   too_big: 'field.tooLong',
   invalid_value: 'field.required',

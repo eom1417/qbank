@@ -1,5 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import { ConfirmRequest } from '../../../../contracts/portability.js';
+import { CopyFolderRequest } from '../../../../contracts/backup.js';
+import { AppError } from '../../../platform/errors/index.js';
 import { parseInput } from '../../../platform/http/validate.js';
 import type { RequireActor } from '../../identity/index.js';
 import {
@@ -29,6 +31,18 @@ export function registerBackupRoutes(
   app.get<IdParams>('/api/backups/:id/preview', async (request) => {
     await requireActor(request);
     return previewRestore(deps, request.params.id);
+  });
+  app.get('/api/backups/copy', async (request) => {
+    await requireActor(request);
+    return deps.copies.read();
+  });
+  app.put('/api/backups/copy', async (request) => {
+    await requireActor(request);
+    const { folder } = parseInput(CopyFolderRequest, request.body);
+    const problem = folder === null ? null : await deps.copies.problemWith(folder);
+    if (problem) throw new AppError('validation_failed', { folder: problem });
+    await deps.copies.choose(folder);
+    return deps.copies.read();
   });
   app.post<IdParams>('/api/backups/:id/restore', async (request) => {
     await requireActor(request);

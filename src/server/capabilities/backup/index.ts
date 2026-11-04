@@ -3,6 +3,7 @@ import type { Clock } from '../../platform/clock.js';
 import type { Db } from '../../platform/db/index.js';
 import type { RequireActor } from '../identity/index.js';
 import { createBackupFiles } from './adapters/backup-files.js';
+import { createCopyTarget } from './adapters/copy-target.js';
 import { registerBackupRoutes } from './http/routes.js';
 import { backupIfDue } from './use-cases/backups.js';
 
@@ -15,6 +16,7 @@ export function createBackups(settings: { db: Db; clock: Clock; dataDir: string 
     db: settings.db,
     clock: settings.clock,
     files: createBackupFiles(settings.dataDir),
+    copies: createCopyTarget(settings.dataDir),
   };
   return {
     runDue: () => backupIfDue(deps),

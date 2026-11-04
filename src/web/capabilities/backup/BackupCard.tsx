@@ -6,6 +6,7 @@ import { useAction } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { useSession } from '../identity/session.js';
 import { backUpNow, fetchBackups } from './api.js';
+import { CopyFolderForm } from './CopyFolderForm.js';
 import { RestorePanel } from './RestorePanel.js';
 
 type Backup = BackupListResponse['backups'][number];
@@ -55,6 +56,7 @@ function Backups() {
           {t('backup.now.make')}
         </Button>
         {now.error && <Alert tone="error">{t(now.error)}</Alert>}
+        <CopyFolderForm />
         {state.status === 'ready' && backups.length === 0 && (
           <MutedText>{t('backup.none')}</MutedText>
         )}

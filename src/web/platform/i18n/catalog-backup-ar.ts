@@ -22,4 +22,16 @@ export const backupAr: Record<keyof typeof backupEn, string> = {
     'كل ما هو موجود الآن يُستبدل بهذه النسخة. يحفظ QBank نسخة من الوضع الحالي أولاً، فتستطيع الرجوع.',
   'backup.restore': 'استرجع هذه النسخة',
   'backup.restore.confirm': 'استبدل كل شيء بهذه النسخة',
+  'backup.copy.label': 'انسخ كل نسخة احتياطية أيضاً إلى هذا المجلد',
+  'backup.copy.hint':
+    'مجلد يزامنه تطبيقك السحابي (Google Drive أو iCloud أو OneDrive) لتبقى نسخة خارج هذا الجهاز. اكتب المسار الكامل، مثل /Users/you/Google Drive/QBank.',
+  'backup.copy.save': 'استخدم هذا المجلد',
+  'backup.copy.stop': 'أوقف النسخ',
+  'backup.copy.none': 'النسخ الاحتياطية على هذا الجهاز فقط.',
+  'backup.copy.last': 'آخر نسخ:',
+  'backup.copy.failed': 'فشل آخر نسخ: تأكد أن المجلد ما زال موجوداً وفيه مساحة.',
+  'backup.copy.problem.not_absolute': 'اكتب المسار الكامل بدءاً من المجلد الأعلى.',
+  'backup.copy.problem.not_a_folder': 'لا يوجد مجلد في هذا المسار.',
+  'backup.copy.problem.inside_data': 'اختر مجلداً خارج بيانات QBank نفسها.',
+  'backup.copy.problem.not_writable': 'لا يستطيع QBank الكتابة في هذا المجلد.',
 };
