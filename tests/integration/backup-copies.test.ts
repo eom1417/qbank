@@ -3,12 +3,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { pairedBrowser } from '../support/client.js';
-import { useTestApp } from '../support/test-app.js';
+import { useLocalAppOnClock } from '../support/test-app.js';
 
 // A copy of every backup in a folder off the QBank data, such as a synced cloud folder (M16.5).
-let now = new Date('2026-11-04T08:00:00Z');
-const app = useTestApp({ local: true, clock: { now: () => now } });
-const DATA = `.data/test-app/${process.pid}`;
+const { app, clock, dataDir: DATA } = useLocalAppOnClock(new Date('2026-11-04T08:00:00Z'));
 const cloud = mkdtempSync(join(tmpdir(), 'qbank-cloud-'));
 let browser: Awaited<ReturnType<typeof pairedBrowser>>['browser'];
 
@@ -41,7 +39,7 @@ describe('copying backups off this computer', () => {
     expect((await browser.get('/api/backups/copy')).json().lastCopyAt).not.toBeNull();
     // 25 days: old backups are pruned here (sessions last 30 days in tests).
     for (let day = 1; day <= 25; day++) {
-      now = new Date(now.getTime() + 24 * 3600_000);
+      clock.advance(24 * 3600_000);
       await app().backups.runDue();
     }
     const here = (await browser.get('/api/backups'))

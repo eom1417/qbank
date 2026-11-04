@@ -1,12 +1,10 @@
 import { rmSync, writeFileSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { ORIGIN, useTestApp } from '../support/test-app.js';
+import { ORIGIN, useLocalAppOnClock } from '../support/test-app.js';
 
 // Full local backups (M17.2): automatic, on demand, previewed and restored all or nothing.
-let now = new Date('2026-11-04T08:00:00Z');
-const app = useTestApp({ local: true, clock: { now: () => now } });
-const DATA = `.data/test-app/${process.pid}`;
+const { app, clock, dataDir: DATA } = useLocalAppOnClock(new Date('2026-11-04T08:00:00Z'));
 let cookie = '';
 
 const call = (method: 'GET' | 'POST', url: string, payload?: object) =>
@@ -42,7 +40,7 @@ describe('backups of the whole install', () => {
     const preview = (await call('GET', `/api/backups/${id}/preview`)).json();
     expect(preview).toMatchObject({ backup: { banks: 1 }, now: { banks: 2 }, compatible: true });
 
-    now = new Date(now.getTime() + 60_000);
+    clock.advance(60_000);
     const restored = await call('POST', `/api/backups/${id}/restore`, { confirm: true });
     expect(restored.statusCode).toBe(200);
     expect(await banks()).toEqual(['Cardiology']);
@@ -59,7 +57,7 @@ describe('automatic backups and their limits', () => {
   it('makes one automatic backup a day and keeps 7 newest plus one per earlier week', async () => {
     rmSync(join(DATA, 'backups'), { recursive: true, force: true });
     for (let day = 0; day < 40; day++) {
-      now = new Date(Date.UTC(2026, 9, 1 + day, 3));
+      clock.set(new Date(Date.UTC(2026, 9, 1 + day, 3)));
       await app().backups.runDue();
       await app().backups.runDue();
     }

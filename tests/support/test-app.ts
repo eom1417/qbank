@@ -96,3 +96,21 @@ export function useTestApp(options: TestAppOptions = {}) {
   const db = (): Db => started().db;
   return Object.assign((): FastifyInstance => started().app, { db });
 }
+
+/**
+ * A local-mode app on a clock the test moves (backups, schedules), and its data folder.
+ * `clock.advance(ms)` moves time on; `clock.now()` is the time the app sees.
+ */
+export function useLocalAppOnClock(start: Date) {
+  let now = start;
+  const clock = {
+    now: () => now,
+    advance: (ms: number) => void (now = new Date(now.getTime() + ms)),
+    set: (date: Date) => void (now = date),
+  };
+  return {
+    app: useTestApp({ local: true, clock }),
+    clock,
+    dataDir: `.data/test-app/${process.pid}`,
+  };
+}
