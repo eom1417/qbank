@@ -20,7 +20,14 @@ function e2eDatabaseUrl(): string {
   return url;
 }
 
+const LOCAL_API_PORT = '3102';
+const LOCAL_WEB_PORT = 5181;
+/** The local-mode install of tests/e2e/local-mode.spec.ts (PGlite, emptied per run). */
+export const LOCAL_DATA_DIR = '.data/e2e-local';
+export const LOCAL_WEB_URL = `http://127.0.0.1:${LOCAL_WEB_PORT}`;
+
 const apiEnv = {
+  QBANK_MODE: 'accounts',
   DATABASE_URL: e2eDatabaseUrl(),
   QBANK_API_PORT: API_PORT,
   QBANK_COOKIE_SECURE: 'false',
@@ -65,6 +72,29 @@ export default defineConfig({
       command: 'node --import tsx src/server/migrate.ts && node --import tsx src/server/main.ts',
       url: `http://127.0.0.1:${API_PORT}/api/health`,
       env: apiEnv,
+      reuseExistingServer: false,
+      timeout: 60_000,
+    },
+    {
+      // Local mode (DEC-31): no sign-up; the browser pairs through Vite's proxy with the code.
+      command: `rm -rf ${LOCAL_DATA_DIR} && node --import tsx src/server/main.ts`,
+      url: `http://127.0.0.1:${LOCAL_API_PORT}/api/health`,
+      env: {
+        PATH: process.env['PATH'] ?? '',
+        QBANK_MODE: 'local',
+        QBANK_API_PORT: LOCAL_API_PORT,
+        QBANK_DATA_DIR: LOCAL_DATA_DIR,
+        QBANK_TRUST_PROXY: 'true',
+        QBANK_LOG_LEVEL: 'warn',
+        QBANK_WEB_DIR: 'none',
+      },
+      reuseExistingServer: false,
+      timeout: 60_000,
+    },
+    {
+      command: `npx vite --port ${LOCAL_WEB_PORT} --strictPort`,
+      url: LOCAL_WEB_URL,
+      env: { QBANK_API_PORT: LOCAL_API_PORT },
       reuseExistingServer: false,
       timeout: 60_000,
     },

@@ -2,6 +2,7 @@
   "name": "qbank-engine",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "type": "module",
   "engines": {
     "node": ">=22.12"
@@ -13,7 +14,8 @@
     "build": "tsc -p tsconfig.json --outDir dist && vite build",
     "start": "node --env-file-if-exists=.env.local dist/src/server/main.js",
     "test": "vitest run",
-    "bench:extraction": "node --import tsx src/server/tools/extraction-bench/main.ts"
+    "bench:extraction": "node --import tsx src/server/tools/extraction-bench/main.ts",
+    "qbank": "node scripts/qbank.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
@@ -38,8 +40,10 @@
     "vitest": "5.0.5"
   },
   "dependencies": {
+    "@electric-sql/pglite": "0.5.15",
     "@fastify/cookie": "11.1.5",
     "@fastify/multipart": "10.1.7",
+    "@fastify/static": "10.1.8",
     "@node-rs/argon2": "2.2.2",
     "fastify": "5.12.8",
     "kysely": "0.29.8",

@@ -42,6 +42,7 @@
   --qb-border-2: 2px;
 
   --qb-font-sans: system-ui, 'Segoe UI', 'Noto Sans Arabic', Tahoma, 'Helvetica Neue', sans-serif;
+  --qb-font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   --qb-text-sm: 0.875rem;
   --qb-text-md: 1rem;
   --qb-text-lg: 1.25rem;

@@ -57,6 +57,7 @@
   --border-width: var(--qb-border-1);
   --focus-ring-width: var(--qb-border-2);
   --font-body: var(--qb-font-sans);
+  --font-code: var(--qb-font-mono);
   --text-small: var(--qb-text-sm);
   --text-body: var(--qb-text-md);
   --text-title: var(--qb-text-lg);

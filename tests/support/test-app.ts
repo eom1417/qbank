@@ -28,8 +28,15 @@ interface TestApp {
 /** No AI host unless a suite starts one (tests/support/ai-host.ts). */
 const NO_AI_HOST = { url: 'http://127.0.0.1:9', token: null };
 
+/** The pairing code of a local-mode test app (fixed, not a secret). */
+export const TEST_PAIRING_TOKEN = 'test-pairing-code-not-a-secret-0001';
+
 interface TestAppOptions {
   clock?: Clock;
+  /** Local mode (DEC-31) instead of accounts mode. */
+  local?: boolean;
+  /** A built web app for the API to serve. */
+  webDir?: string;
   aiHost?: () => { url: string; token: string | null };
 }
 
@@ -40,6 +47,7 @@ async function startTestApp(options: TestAppOptions = {}): Promise<TestApp> {
   // Test database only (TEST_DATABASE_URL); every owned table cascades from account.
   await sql`truncate table account cascade`.execute(db);
   const config = {
+    mode: options.local ? ('local' as const) : ('accounts' as const),
     databaseUrl: '',
     host: '127.0.0.1',
     port: 0,
@@ -58,8 +66,10 @@ async function startTestApp(options: TestAppOptions = {}): Promise<TestApp> {
       originalRetentionDays: 7,
     },
     aiHost: options.aiHost?.() ?? NO_AI_HOST,
+    webDir: options.webDir ?? null,
   };
-  const app = buildApp({ config, db, clock });
+  const pairingToken = options.local ? TEST_PAIRING_TOKEN : null;
+  const app = buildApp({ config, db, clock, pairingToken });
   await app.ready();
   const close = async () => {
     await app.close();

@@ -273,3 +273,12 @@
   inline-size: calc(var(--qb-meter, 0) * 1%);
   background: var(--color-accent);
 }
+
+.qb-code {
+  display: block;
+  padding: var(--space-sm);
+  border-radius: var(--radius-control);
+  background: var(--color-border);
+  font-size: var(--text-small);
+  overflow-wrap: anywhere;
+}

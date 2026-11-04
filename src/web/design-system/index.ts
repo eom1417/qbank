@@ -6,6 +6,7 @@ export { ConfirmButton } from './components/ConfirmButton.js';
 export { Dialog } from './components/Dialog.js';
 export { SelectField } from './components/SelectField.js';
 export { Checkbox } from './components/Checkbox.js';
+export { CodeText } from './components/CodeText.js';
 export { Alert, EmptyState } from './components/Feedback.js';
 export {
   Badge,

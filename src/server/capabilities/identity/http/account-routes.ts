@@ -17,15 +17,19 @@ import { toAccountResponse } from './presenters.js';
 import type { IdentityRouteOptions } from './routes.js';
 import { readSessionToken } from './session-cookie.js';
 
-/** Account settings and password management (FR-02-005, UI-02, UI-25). */
+/** Account settings (FR-02-005, UI-25), in both modes. */
 export function registerAccountRoutes(app: FastifyInstance, options: IdentityRouteOptions) {
   const { deps, requireActor } = options;
-
   app.patch('/api/account', async (request) => {
     const actor = await requireActor(request);
     const changes = parseInput(UpdateAccountRequest, request.body);
     return toAccountResponse(await updateAccount(deps, actor, changes));
   });
+}
+
+/** Password management (UI-02): accounts mode only; a local install has no passwords. */
+export function registerPasswordRoutes(app: FastifyInstance, options: IdentityRouteOptions) {
+  const { deps, requireActor } = options;
 
   app.post('/api/account/password', async (request, reply) => {
     const actor = await requireActor(request);

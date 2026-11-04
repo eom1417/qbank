@@ -4,6 +4,7 @@ const STATUS: Record<ErrorCode, number> = {
   validation_failed: 400,
   unauthenticated: 401,
   invalid_credentials: 401,
+  pairing_required: 401,
   forbidden_origin: 403,
   not_found: 404,
   email_taken: 409,

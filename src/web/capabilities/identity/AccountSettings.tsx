@@ -135,7 +135,7 @@ function PasswordCard() {
 
 /** Account settings (UI-25): every value is saved on the server, so it follows the user's devices. */
 export function AccountSettings() {
-  const { state } = useSession();
+  const { state, mode } = useSession();
   if (state.status !== 'signed-in') return null;
   const { account } = state;
   return (
@@ -143,7 +143,7 @@ export function AccountSettings() {
       <ProfileCard displayName={account.displayName} />
       <AppearanceCard preferences={account.preferences} />
       <StudyCard preferences={account.preferences} />
-      <PasswordCard />
+      {mode === 'accounts' && <PasswordCard />}
     </>
   );
 }

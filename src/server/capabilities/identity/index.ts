@@ -13,6 +13,7 @@ import { registerIdentityRoutes } from './http/routes.js';
 export type { Actor } from './domain/account.js';
 export type { RequireActor } from './http/require-actor.js';
 export { toAccountResponse } from './http/presenters.js';
+export { loadPairingToken } from './adapters/pairing-token.js';
 
 export interface IdentityModule {
   requireActor: RequireActor;
@@ -25,6 +26,8 @@ interface IdentitySettings {
   mailer: Mailer;
   sessionTtlDays: number;
   cookieSecure: boolean;
+  /** Local mode (DEC-31): the install's pairing code. Null runs accounts mode. */
+  pairingToken: string | null;
 }
 
 export function createIdentity(settings: IdentitySettings): IdentityModule {
@@ -42,6 +45,11 @@ export function createIdentity(settings: IdentitySettings): IdentityModule {
   return {
     requireActor,
     register: (app) =>
-      registerIdentityRoutes(app, { deps, requireActor, cookieSecure: settings.cookieSecure }),
+      registerIdentityRoutes(app, {
+        deps,
+        requireActor,
+        cookieSecure: settings.cookieSecure,
+        pairingToken: settings.pairingToken,
+      }),
   };
 }

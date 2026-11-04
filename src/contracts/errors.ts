@@ -5,6 +5,7 @@ export const ErrorCode = z.enum([
   'validation_failed',
   'unauthenticated',
   'invalid_credentials',
+  'pairing_required',
   'email_taken',
   'name_taken',
   'invalid_token',

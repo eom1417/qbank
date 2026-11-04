@@ -8,8 +8,9 @@ import { createSources } from './capabilities/sources/index.js';
 import type { Clock } from './platform/clock.js';
 import type { AppConfig } from './platform/config/index.js';
 import type { Db } from './platform/db/index.js';
-import { handleError, handleNotFound } from './platform/http/error-handler.js';
+import { handleError } from './platform/http/error-handler.js';
 import { createOriginGuard } from './platform/http/origin-guard.js';
+import { registerWebApp } from './platform/http/web-app.js';
 import { newId } from './platform/ids.js';
 import { createDiskBlobStore } from './platform/storage/blob-store.js';
 import { createOutboxMailer, registerOutboxRoute } from './platform/mail/index.js';
@@ -18,6 +19,8 @@ export interface AppDeps {
   config: AppConfig;
   db: Db;
   clock: Clock;
+  /** Local mode: the install's pairing code (identity `loadPairingToken`). Null in accounts mode. */
+  pairingToken: string | null;
 }
 
 /**
@@ -26,7 +29,7 @@ export interface AppDeps {
  */
 function registerContent(
   app: FastifyInstance,
-  { config, db, clock }: AppDeps,
+  { config, db, clock }: Omit<AppDeps, 'pairingToken'>,
   requireActor: RequireActor,
 ) {
   const library = createLibrary({ db, clock, requireActor: requireActor });
@@ -61,7 +64,7 @@ function registerContent(
 }
 
 /** Composition root: wires platform owners and capabilities into one Fastify instance. */
-export function buildApp({ config, db, clock }: AppDeps): FastifyInstance {
+export function buildApp({ config, db, clock, pairingToken }: AppDeps): FastifyInstance {
   const app = Fastify({
     logger: { level: config.logLevel, redact: ['req.headers.cookie', 'req.headers.authorization'] },
     bodyLimit: 1024 * 1024,
@@ -70,7 +73,7 @@ export function buildApp({ config, db, clock }: AppDeps): FastifyInstance {
   app.register(cookie);
   app.addHook('onRequest', createOriginGuard(config.allowedOrigins));
   app.setErrorHandler(handleError);
-  app.setNotFoundHandler(handleNotFound);
+  registerWebApp(app, config.webDir);
 
   const identity = createIdentity({
     db,
@@ -78,6 +81,7 @@ export function buildApp({ config, db, clock }: AppDeps): FastifyInstance {
     mailer: createOutboxMailer(db, newId),
     sessionTtlDays: config.sessionTtlDays,
     cookieSecure: config.cookieSecure,
+    pairingToken,
   });
   identity.register(app);
   registerContent(app, { config, db, clock }, identity.requireActor);

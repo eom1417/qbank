@@ -1,14 +1,17 @@
 import { z } from 'zod';
+import { AppMode } from '../../../contracts/identity.js';
 
 const Env = z.object({
-  DATABASE_URL: z.string().min(1),
+  QBANK_MODE: AppMode.default('local'),
+  /** Unset in local mode: the bundled PGlite database under QBANK_DATA_DIR. */
+  DATABASE_URL: z.string().min(1).optional(),
   QBANK_API_HOST: z.string().default('127.0.0.1'),
   QBANK_API_PORT: z.coerce.number().int().min(1).max(65535).default(3000),
-  QBANK_COOKIE_SECURE: z.enum(['true', 'false']).default('true'),
+  QBANK_COOKIE_SECURE: z.enum(['true', 'false']).optional(),
   QBANK_TRUST_PROXY: z.enum(['true', 'false']).default('false'),
   QBANK_DEV_OUTBOX: z.enum(['true', 'false']).default('false'),
   QBANK_ALLOWED_ORIGINS: z.string().default(''),
-  QBANK_SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
+  QBANK_SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(400).optional(),
   QBANK_LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'silent']).default('info'),
   QBANK_DATA_DIR: z.string().min(1).default('.data/app'),
   QBANK_MAX_UPLOAD_MB: z.coerce.number().int().min(1).max(2000).default(200),
@@ -17,9 +20,13 @@ const Env = z.object({
   QBANK_ORIGINAL_RETENTION_DAYS: z.coerce.number().int().min(0).max(365).default(7),
   QBANK_AI_HOST_URL: z.url({ protocol: /^http$/ }).default('http://127.0.0.1:3790'),
   QBANK_AI_HOST_TOKEN: z.string().min(32).optional(),
+  /** The built web app the API serves (`npm run build`); `none` leaves it to a dev server. */
+  QBANK_WEB_DIR: z.string().min(1).default('dist/web'),
 });
 
 export interface AppConfig {
+  /** `local`: one owner, paired browsers, no sign-up (DEC-31). `accounts`: hosted accounts. */
+  mode: AppMode;
   databaseUrl: string;
   host: string;
   port: number;
@@ -47,22 +54,37 @@ export interface AppConfig {
    * the providers screens report it as unavailable.
    */
   aiHost: { url: string; token: string | null };
+  /** Served at `/` when it holds a build; null serves the API only. */
+  webDir: string | null;
 }
+
+/** A local install starts with nothing to set up: PGlite in its data directory. */
+function databaseUrlOf(parsed: z.infer<typeof Env>): string {
+  if (parsed.DATABASE_URL) return parsed.DATABASE_URL;
+  if (parsed.QBANK_MODE === 'local') return `pglite:${parsed.QBANK_DATA_DIR}/db`;
+  throw new Error('DATABASE_URL is required in accounts mode');
+}
+
+/** Local defaults: plain http on this computer or its network, and a paired browser stays paired. */
+const LOCAL_DEFAULTS = { cookieSecure: 'false', sessionTtlDays: 400 } as const;
+const ACCOUNTS_DEFAULTS = { cookieSecure: 'true', sessionTtlDays: 30 } as const;
 
 /** The only place that reads the process environment; fails fast on invalid values. */
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const parsed = Env.parse(env);
+  const defaults = parsed.QBANK_MODE === 'local' ? LOCAL_DEFAULTS : ACCOUNTS_DEFAULTS;
   return {
-    databaseUrl: parsed.DATABASE_URL,
+    mode: parsed.QBANK_MODE,
+    databaseUrl: databaseUrlOf(parsed),
     host: parsed.QBANK_API_HOST,
     port: parsed.QBANK_API_PORT,
-    cookieSecure: parsed.QBANK_COOKIE_SECURE === 'true',
+    cookieSecure: (parsed.QBANK_COOKIE_SECURE ?? defaults.cookieSecure) === 'true',
     trustProxy: parsed.QBANK_TRUST_PROXY === 'true',
     devOutbox: parsed.QBANK_DEV_OUTBOX === 'true',
     allowedOrigins: parsed.QBANK_ALLOWED_ORIGINS.split(',')
       .map((origin) => origin.trim())
       .filter(Boolean),
-    sessionTtlDays: parsed.QBANK_SESSION_TTL_DAYS,
+    sessionTtlDays: parsed.QBANK_SESSION_TTL_DAYS ?? defaults.sessionTtlDays,
     logLevel: parsed.QBANK_LOG_LEVEL,
     imports: {
       dataDir: parsed.QBANK_DATA_DIR,
@@ -72,6 +94,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       originalRetentionDays: parsed.QBANK_ORIGINAL_RETENTION_DAYS,
     },
     aiHost: { url: parsed.QBANK_AI_HOST_URL, token: parsed.QBANK_AI_HOST_TOKEN ?? null },
+    webDir: parsed.QBANK_WEB_DIR === 'none' ? null : parsed.QBANK_WEB_DIR,
   };
 }
 

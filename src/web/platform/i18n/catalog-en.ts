@@ -1,8 +1,10 @@
+import { localEn } from './catalog-local-en.js';
 import { providersEn } from './catalog-providers-en.js';
 
 /** English UI strings. catalog-ar.ts must define exactly the same keys (enforced by its type). */
 export const en = {
   ...providersEn,
+  ...localEn,
   'app.name': 'QBank Engine',
   'shell.language': 'العربية',
   'shell.theme.system': 'Theme: system',
@@ -44,6 +46,8 @@ export const en = {
   'bank.created': 'Created',
   'error.validation_failed': 'Please check the highlighted fields.',
   'error.unauthenticated': 'Please sign in to continue.',
+  'error.pairing_required':
+    'That pairing code is not right. Copy it again from the computer running QBank.',
   'error.invalid_credentials': 'The email or password is not correct.',
   'error.email_taken': 'An account with this email already exists.',
   'error.not_found': 'This page does not exist or is not available to your account.',

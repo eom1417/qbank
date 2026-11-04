@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import { buttonClass, Heading, NarrowColumn } from '../design-system/index.js';
 import { AccountSettings } from '../capabilities/identity/AccountSettings.js';
+import { DevicesCard } from '../capabilities/identity/DevicesCard.js';
 import { TagsCard } from '../capabilities/library/TagsCard.js';
 import { useI18n } from '../platform/i18n/i18n.js';
 
@@ -14,6 +15,7 @@ export function SettingsPage() {
         {t('providers.title')}
       </Link>
       <AccountSettings />
+      <DevicesCard />
       <TagsCard />
     </NarrowColumn>
   );

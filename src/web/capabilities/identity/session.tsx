@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { z } from 'zod';
 import {
   AccountResponse,
+  AppMetaResponse,
+  type AppMode,
   type SignInRequest,
   type SignUpRequest,
   type UpdateAccountRequest,
@@ -17,6 +19,10 @@ type SessionState =
 
 interface Session {
   state: SessionState;
+  /** Local install (DEC-31) or accounts; null until the server says. */
+  mode: AppMode | null;
+  /** Local mode: pairs this browser with the install's pairing code. */
+  pair(token: string): Promise<void>;
   signIn(input: SignInRequest): Promise<void>;
   signUp(input: SignUpRequest): Promise<void>;
   signOut(): Promise<void>;
@@ -25,6 +31,32 @@ interface Session {
 }
 
 const SessionContext = createContext<Session | null>(null);
+
+/**
+ * A pairing link carries its code after `#pair=`. It is read once per page load (not in an
+ * effect, which may run twice) and removed from the address.
+ */
+function takePairingCode(): string | undefined {
+  const match = /^#pair=([\w-]+)$/.exec(window.location.hash);
+  if (!match) return undefined;
+  window.history.replaceState(null, '', window.location.pathname + window.location.search);
+  return match[1];
+}
+const pairingCodeOnLoad = takePairingCode();
+
+const pairWith = (token?: string) =>
+  apiRequest('POST', '/api/local/pair', AccountResponse, token ? { token } : {});
+
+/** Local mode: an unpaired browser pairs itself (this computer, or a pairing link). */
+async function loadLocal(): Promise<SessionState> {
+  const signedIn = await loadAccount();
+  if (signedIn.status === 'signed-in') return signedIn;
+  try {
+    return { status: 'signed-in', account: await pairWith(pairingCodeOnLoad) };
+  } catch {
+    return { status: 'signed-out' };
+  }
+}
 
 async function loadAccount(): Promise<SessionState> {
   try {
@@ -53,14 +85,22 @@ function useApplySavedPreferences(state: SessionState) {
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<SessionState>({ status: 'loading' });
+  const [mode, setMode] = useState<AppMode | null>(null);
   useApplySavedPreferences(state);
   useEffect(() => {
-    loadAccount().then(setState, () => setState({ status: 'signed-out' }));
+    apiRequest('GET', '/api/meta', AppMetaResponse)
+      .then(({ mode: current }) => {
+        setMode(current);
+        return current === 'local' ? loadLocal() : loadAccount();
+      })
+      .then(setState, () => setState({ status: 'signed-out' }));
   }, []);
   const signedIn = (account: AccountResponse) => setState({ status: 'signed-in', account });
   const post = (path: string, body: unknown) => apiRequest('POST', path, AccountResponse, body);
   const session: Session = {
     state,
+    mode,
+    pair: async (token) => signedIn(await pairWith(token)),
     signIn: async (input) => signedIn(await post('/api/auth/sign-in', input)),
     signUp: async (input) => signedIn(await post('/api/auth/sign-up', input)),
     signOut: async () => {

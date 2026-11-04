@@ -76,3 +76,20 @@ export const AccountResponse = z
   })
   .strict();
 export type AccountResponse = z.infer<typeof AccountResponse>;
+
+/** How this install runs: one local owner with paired browsers, or accounts (DEC-31). */
+export const AppMode = z.enum(['local', 'accounts']);
+export type AppMode = z.infer<typeof AppMode>;
+
+export const AppMetaResponse = z.object({ mode: AppMode }).strict();
+export type AppMetaResponse = z.infer<typeof AppMetaResponse>;
+
+/** Pairs this browser with a local install: by its pairing code, or by being the computer itself. */
+export const PairRequest = z
+  .object({ token: z.string().trim().min(1).max(200).optional(), locale: Locale.optional() })
+  .strict();
+export type PairRequest = z.infer<typeof PairRequest>;
+
+/** The pairing code, shown only to an already paired browser (to open QBank on another device). */
+export const PairingCodeResponse = z.object({ code: z.string() }).strict();
+export type PairingCodeResponse = z.infer<typeof PairingCodeResponse>;

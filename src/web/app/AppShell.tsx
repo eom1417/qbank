@@ -35,20 +35,23 @@ function PreferenceSwitches() {
   );
 }
 
+/** Navigation; a local install has no sign-in or sign-out, only paired browsers (DEC-31). */
 function AccountLinks() {
   const { t } = useI18n();
-  const { state, signOut } = useSession();
-  if (state.status === 'loading') return null;
+  const { state, mode, signOut } = useSession();
+  if (state.status === 'loading' || mode === null) return null;
   if (state.status === 'signed-out') {
-    return <Link to="/sign-in">{t('shell.nav.signIn')}</Link>;
+    return mode === 'local' ? null : <Link to="/sign-in">{t('shell.nav.signIn')}</Link>;
   }
   return (
     <>
       <Link to="/">{t('shell.nav.library')}</Link>
       <Link to="/settings">{t('shell.nav.settings')}</Link>
-      <Button variant="secondary" onClick={() => void signOut()}>
-        {t('shell.signOut')}
-      </Button>
+      {mode === 'accounts' && (
+        <Button variant="secondary" onClick={() => void signOut()}>
+          {t('shell.signOut')}
+        </Button>
+      )}
     </>
   );
 }
