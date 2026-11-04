@@ -17,6 +17,15 @@ export interface FoundPair {
   differences: string[];
 }
 
+/**
+ * Pairs kept per new question: exact copies first, then the most alike. A question "like" 500
+ * others helps no one in review, and a templated book would otherwise yield millions (M17.5).
+ */
+const MAX_PAIRS_PER_QUESTION = 5;
+
+const strongestFirst = (a: FoundPair, b: FoundPair) =>
+  Number(b.kind === 'exact') - Number(a.kind === 'exact') || b.similarity - a.similarity;
+
 /** A word in this share of the bank's questions says nothing about which ones are alike. */
 const COMMON_SHARE = 0.3;
 const MIN_BANK_FOR_COMMON = 20;
@@ -86,10 +95,8 @@ export function findPairs(
   for (const item of items) byKey.set(item.key, [...(byKey.get(item.key) ?? []), item]);
   const pairs: FoundPair[] = [];
   for (const item of items.slice(earlier.length)) {
-    for (const other of candidates(item, index, byKey)) {
-      const pair = pairOf(other, item);
-      if (pair) pairs.push(pair);
-    }
+    const found = candidates(item, index, byKey).flatMap((other) => pairOf(other, item) ?? []);
+    pairs.push(...found.sort(strongestFirst).slice(0, MAX_PAIRS_PER_QUESTION));
   }
   return pairs;
 }

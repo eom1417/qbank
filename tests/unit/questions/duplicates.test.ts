@@ -62,3 +62,20 @@ describe('finding duplicates within one import', () => {
     expect(pairs).toEqual([{ a: 'a', b: 'b', kind: 'exact', similarity: 1, differences: [] }]);
   });
 });
+
+describe('a templated book (M17.5)', () => {
+  it('keeps at most five pairs per new question, exact copies first', () => {
+    const same = (id: string) => ({
+      id,
+      stem: 'Serum potassium is abnormal. What is the next step?',
+      options: [
+        { letter: 'A', text: 'Repeat the test' },
+        { letter: 'B', text: 'Treat now' },
+      ],
+    });
+    const earlier = Array.from({ length: 40 }, (_, i) => same(`e${i}`));
+    const pairs = findPairs(earlier, [same('new')]);
+    expect(pairs).toHaveLength(5);
+    expect(pairs.every((p) => p.kind === 'exact' && p.b === 'new')).toBe(true);
+  });
+});

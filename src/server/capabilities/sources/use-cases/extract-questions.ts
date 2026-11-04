@@ -83,11 +83,24 @@ async function answerOf(
 const modeOf = (page: PageText | undefined): ReadingMode => (page?.visual ? 'text' : 'ocr');
 
 /** Page images rendered once per file, shared by mark and figure detection. */
-export function rasterCache(file: string) {
+/** Page renders kept at once: about 1 MB each, so a 1500-page book never holds them all (M17.5). */
+const RASTERS_KEPT = 4;
+
+/**
+ * Renders a page once while it is in use: the few most recent stay, older ones are rendered
+ * again if a later step needs them.
+ */
+export function rasterCache(file: string, render = renderPage) {
   const rasters = new Map<number, Promise<Raster>>();
   return (page: number) => {
-    if (!rasters.has(page)) rasters.set(page, renderPage(file, page));
-    return rasters.get(page) as Promise<Raster>;
+    const kept = rasters.get(page) ?? render(file, page);
+    rasters.delete(page);
+    rasters.set(page, kept);
+    for (const oldest of rasters.keys()) {
+      if (RASTERS_KEPT >= rasters.size) break;
+      rasters.delete(oldest);
+    }
+    return kept;
   };
 }
 

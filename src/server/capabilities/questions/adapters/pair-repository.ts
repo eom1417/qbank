@@ -13,6 +13,9 @@ const bankTexts = (db: Db, ownerId: string, bankId: string) =>
     .orderBy('source_seq')
     .execute();
 
+/** Rows per insert: Postgres takes at most 65,535 parameters in one statement. */
+const PAIRS_PER_INSERT = 1000;
+
 async function savePairs(
   db: Db,
   ids: { ownerId: string; bankId: string },
@@ -20,26 +23,26 @@ async function savePairs(
   newId: () => string,
   now: Date,
 ) {
-  if (pairs.length === 0) return;
-  await db
-    .insertInto('question_pair')
-    .values(
-      pairs.map((pair) => ({
-        id: newId(),
-        owner_id: ids.ownerId,
-        bank_id: ids.bankId,
-        question_a: pair.a,
-        question_b: pair.b,
-        kind: pair.kind,
-        similarity: pair.similarity,
-        differences: pair.differences,
-        decision: null,
-        decided_at: null,
-        created_at: now,
-      })),
-    )
-    .onConflict((conflict) => conflict.columns(['question_a', 'question_b']).doNothing())
-    .execute();
+  for (let start = 0; start < pairs.length; start += PAIRS_PER_INSERT) {
+    const rows = pairs.slice(start, start + PAIRS_PER_INSERT).map((pair) => ({
+      id: newId(),
+      owner_id: ids.ownerId,
+      bank_id: ids.bankId,
+      question_a: pair.a,
+      question_b: pair.b,
+      kind: pair.kind,
+      similarity: pair.similarity,
+      differences: pair.differences,
+      decision: null,
+      decided_at: null,
+      created_at: now,
+    }));
+    await db
+      .insertInto('question_pair')
+      .values(rows)
+      .onConflict((conflict) => conflict.columns(['question_a', 'question_b']).doNothing())
+      .execute();
+  }
 }
 
 /** One side of a pair as the comparison card shows it (UI-12, FR-10-003). */
