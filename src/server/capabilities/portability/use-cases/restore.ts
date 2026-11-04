@@ -8,18 +8,27 @@ import { EXPORT_JSON, ExportFile, type ExportQuestion } from '../domain/export-f
 import type { PortabilityDeps } from './deps.js';
 
 const MAX_ENTRY_BYTES = 50 * 1024 * 1024;
-const MAX_TOTAL_BYTES = 1024 * 1024 * 1024;
+/** Everything a restore may unpack into memory at once (M17.4: was 1 GB). */
+const MAX_TOTAL_BYTES = 512 * 1024 * 1024;
+/** Pictures one file may hold: far beyond a real bank, far below a flood of tiny entries. */
+const MAX_ENTRIES = 20_000;
 const ALLOWED = /^(qbank-export\.json|media\/[A-Za-z0-9-]{1,64}\.png)$/;
 
 /** Unpacks only the expected entries, refusing a file that would expand beyond the limits. */
 function unpack(bytes: Uint8Array): Unzipped {
   let total = 0;
+  let entries = 0;
   try {
     return unzipSync(bytes, {
       filter: (entry) => {
         if (!ALLOWED.test(entry.name)) return false;
         total += entry.originalSize;
-        if (entry.originalSize > MAX_ENTRY_BYTES || total > MAX_TOTAL_BYTES)
+        entries += 1;
+        if (
+          entry.originalSize > MAX_ENTRY_BYTES ||
+          total > MAX_TOTAL_BYTES ||
+          entries > MAX_ENTRIES
+        )
           throw new AppError('payload_too_large');
         return true;
       },
@@ -50,17 +59,22 @@ async function storePictures(
   deps: PortabilityDeps,
   files: Unzipped,
   questions: readonly ExportQuestion[],
+  stored: Set<string>,
 ) {
   const keys = new Map<string, string>();
   let missing = 0;
   for (const picture of questions.flatMap((q) => q.pictures)) {
+    // One stored copy per file in the ZIP, however many questions name it (M17.4).
+    if (keys.has(picture.file)) continue;
     const bytes = files[picture.file];
     if (!bytes) {
       missing += 1;
       continue;
     }
-    const stored = await deps.blobs.put(Readable.from(Buffer.from(bytes)), MAX_ENTRY_BYTES);
-    if (stored !== 'too_large') keys.set(picture.file, stored.key);
+    const blob = await deps.blobs.put(Readable.from(Buffer.from(bytes)), MAX_ENTRY_BYTES);
+    if (blob === 'too_large') continue;
+    stored.add(blob.key);
+    keys.set(picture.file, blob.key);
   }
   return { keys, missing };
 }
@@ -116,14 +130,37 @@ export async function restoreBank(
   const files = unpack(bytes);
   const file = exportOf(files);
   const owner = actor.accountId;
-  const tagNames = new Map(file.tags.map((t) => [t.id, t.name.toLocaleLowerCase()]));
   const library = await deps.library.restoreLibrary(owner, {
     bank: file.bank,
     chapters: file.chapters,
     tagNames: file.tags.map((t) => t.name),
   });
+  const stored = new Set<string>();
+  try {
+    return await fillBank(deps, { owner, library, files, file, stored });
+  } catch (error) {
+    // Nothing half-restored stays behind: the new bank and every file stored for it go.
+    await deps.library.deleteBank(owner, library.bankId).catch(() => false);
+    await Promise.all([...stored].map((key) => deps.blobs.remove(key).catch(() => undefined)));
+    throw error;
+  }
+}
+
+interface Filling {
+  owner: string;
+  library: Awaited<ReturnType<PortabilityDeps['library']['restoreLibrary']>>;
+  files: Unzipped;
+  file: ExportFile;
+  /** Every file stored so far, so a failure can remove them. */
+  stored: Set<string>;
+}
+
+/** The new bank's sources, pictures and questions, from the checked export. */
+async function fillBank(deps: PortabilityDeps, filling: Filling): Promise<RestoreResponse> {
+  const { owner, library, files, file } = filling;
+  const tagNames = new Map(file.tags.map((t) => [t.id, t.name.toLocaleLowerCase()]));
   const sources = await deps.sources.restoreSources(owner, library.bankId, file.sources);
-  const pictures = await storePictures(deps, files, file.questions);
+  const pictures = await storePictures(deps, files, file.questions, filling.stored);
   const tags = new Map(
     [...tagNames].flatMap(([id, name]) =>
       library.tags.has(name) ? [[id, library.tags.get(name) as string]] : [],

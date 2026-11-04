@@ -43,7 +43,19 @@ const KIT_METHODS = [
 /** Methods whose reply is a live stream of states (a sign-in flow, an install). */
 const KIT_STREAMS = ['provider.auth.subscribe', 'provider.install.subscribe'] as const;
 
+/**
+ * What any signed-in account may call when the AI host is shared (accounts mode): look, never
+ * change. Settings, installs and sign-ins belong to the person who runs the install (M17.4).
+ */
+const KIT_READ_METHODS = [
+  'server.refreshProviders',
+  'server.getUsageSummary',
+  'server.refreshUsageRates',
+  'server.searchAcpRegistry',
+] as const satisfies readonly (typeof KIT_METHODS)[number][];
+
 export const KitMethod = z.enum(KIT_METHODS);
+export const KitReadMethod = z.enum(KIT_READ_METHODS);
 export const KitStream = z.enum(KIT_STREAMS);
 export type KitMethod = z.infer<typeof KitMethod>;
 export type KitStream = z.infer<typeof KitStream>;

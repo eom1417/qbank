@@ -15,6 +15,7 @@ const STATUS: Record<ErrorCode, number> = {
   file_corrupt: 422,
   file_protected: 422,
   too_many_pages: 422,
+  page_too_large: 422,
   approval_required: 409,
   not_retryable: 409,
   version_conflict: 409,

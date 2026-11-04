@@ -76,6 +76,8 @@ export const ar: Record<MessageKey, string> = {
   'error.question_locked': 'انتهى وقت هذا السؤال؛ لم يعد بالإمكان تغيير إجابته.',
   'error.pairing_required': 'رمز الربط غير صحيح. انسخه من جديد من الجهاز الذي يشغّل QBank.',
   'error.backup_too_new': 'هذه النسخة من إصدار أحدث من QBank. حدّث QBank ثم استرجعها.',
+  'error.page_too_large':
+    'في الملف صفحة أكبر من أي صفحة كتاب (أكثر من 70 سم). صدّره من جديد بحجم صفحة عادي.',
   'error.too_many_attempts': 'محاولات خاطئة كثيرة. انتظر 15 دقيقة ثم انسخ الرمز من جديد.',
   'error.invalid_credentials': 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
   'error.email_taken': 'يوجد حساب بهذا البريد الإلكتروني.',

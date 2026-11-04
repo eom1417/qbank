@@ -11,6 +11,10 @@ export const localEn = {
   'local.devices.code': 'Pairing code',
   'local.devices.copy': 'Copy link',
   'local.devices.copied': 'Copied',
+  'local.devices.revokeLead':
+    'Lost a phone, or shared the link by mistake? Sign every other device out: the old link stops working and a new one replaces it.',
+  'local.devices.revoke': 'Sign out every other device',
+  'local.devices.revoke.confirm': 'Sign them out and make a new link',
   'local.devices.qr': 'QR code of the link to your QBank: scan it with your phone camera',
   'local.devices.lanOff':
     'Your phone cannot open this computer’s own address. Start QBank with npm run qbank -- --lan, then scan the code shown here (same Wi-Fi only).',

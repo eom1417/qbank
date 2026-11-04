@@ -9,6 +9,8 @@ const Env = z.object({
   QBANK_API_PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   QBANK_COOKIE_SECURE: z.enum(['true', 'false']).optional(),
   QBANK_TRUST_PROXY: z.enum(['true', 'false']).default('false'),
+  /** 'true': this computer pairs with the code too (QBank reached through a TCP tunnel). */
+  QBANK_REQUIRE_PAIRING_CODE: z.enum(['true', 'false']).default('false'),
   QBANK_DEV_OUTBOX: z.enum(['true', 'false']).default('false'),
   QBANK_ALLOWED_ORIGINS: z.string().default(''),
   QBANK_SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(400).optional(),
@@ -33,6 +35,7 @@ export interface AppConfig {
   cookieSecure: boolean;
   /** True only when a local reverse proxy (Vite dev, nginx) sets X-Forwarded-Host. */
   trustProxy: boolean;
+  requirePairingCode: boolean;
   /** Exposes GET /api/dev/outbox (local mail adapter). Local development and tests only. */
   devOutbox: boolean;
   /** Extra origins allowed to send mutating requests besides the request's own host. */
@@ -80,6 +83,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     port: parsed.QBANK_API_PORT,
     cookieSecure: (parsed.QBANK_COOKIE_SECURE ?? defaults.cookieSecure) === 'true',
     trustProxy: parsed.QBANK_TRUST_PROXY === 'true',
+    requirePairingCode: parsed.QBANK_REQUIRE_PAIRING_CODE === 'true',
     devOutbox: parsed.QBANK_DEV_OUTBOX === 'true',
     allowedOrigins: parsed.QBANK_ALLOWED_ORIGINS.split(',')
       .map((origin) => origin.trim())

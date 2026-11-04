@@ -34,6 +34,8 @@ const apiEnv = {
   QBANK_TRUST_PROXY: 'true',
   QBANK_LOG_LEVEL: 'warn',
   QBANK_DEV_OUTBOX: 'true',
+  // Reset links point here, never at a request's Host (M17.4).
+  QBANK_ALLOWED_ORIGINS: `http://127.0.0.1:${WEB_PORT}`,
   QBANK_AI_HOST_URL: `http://127.0.0.1:${AI_HOST_PORT}`,
   QBANK_AI_HOST_TOKEN: AI_HOST_TOKEN,
   // Uploaded originals of the E2E runs, apart from the development data.
@@ -87,6 +89,9 @@ export default defineConfig({
         QBANK_TRUST_PROXY: 'true',
         QBANK_LOG_LEVEL: 'warn',
         QBANK_WEB_DIR: 'none',
+        // The providers screen is the install owner's: it is tested here, in local mode.
+        QBANK_AI_HOST_URL: `http://127.0.0.1:${AI_HOST_PORT}`,
+        QBANK_AI_HOST_TOKEN: AI_HOST_TOKEN,
       },
       reuseExistingServer: false,
       timeout: 60_000,

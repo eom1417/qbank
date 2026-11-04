@@ -4,6 +4,8 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { afterAll, beforeAll } from 'vitest';
+import { useTestApp } from './test-app.js';
 
 /** The AI host needs Node >= 24.10 (scripts/setup-ai-host.sh installs it here). */
 const NODE24 = process.env['QBANK_NODE24'] ?? '/opt/node24/bin/node';
@@ -35,7 +37,7 @@ async function waitForHealth(url: string, token: string) {
  * A real ai-host for a test suite: its own temporary home (so no real account on this machine is
  * read or refreshed), a random port and token, and only PATH from this process.
  */
-export async function startAiHost(options: { binDir?: string } = {}) {
+async function startAiHost(options: { binDir?: string } = {}) {
   const home = mkdtempSync(join(tmpdir(), 'qbank-ai-host-'));
   const port = await freePort();
   const token = randomBytes(32).toString('hex');
@@ -58,4 +60,21 @@ export async function startAiHost(options: { binDir?: string } = {}) {
     rmSync(home, { recursive: true, force: true });
   };
   return { url, token, stop };
+}
+
+/**
+ * A local-mode test app on a real ai-host for the suite file (providers belong to the install's
+ * owner). `binDir` names stand-in CLIs a hook registered before this one has written.
+ */
+export function useLocalAppOnAiHost(options: { binDir?: () => string } = {}) {
+  let host: Awaited<ReturnType<typeof startAiHost>> | undefined;
+  beforeAll(async () => {
+    const binDir = options.binDir?.();
+    host = await startAiHost(binDir ? { binDir } : {});
+  }, 90_000);
+  afterAll(() => host?.stop());
+  return useTestApp({
+    local: true,
+    aiHost: () => ({ url: host?.url ?? '', token: host?.token ?? null }),
+  });
 }

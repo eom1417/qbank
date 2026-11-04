@@ -30,7 +30,8 @@ async function storeReadablePdf(deps: SourcesDeps, upload: Upload) {
   const blob = await deps.blobs.put(upload.data, deps.maxUploadBytes);
   if (blob === 'too_large') throw new AppError('payload_too_large');
   const refuse = async (
-    code: 'file_unsupported' | 'file_corrupt' | 'file_protected' | 'too_many_pages',
+    code:
+      'file_unsupported' | 'file_corrupt' | 'file_protected' | 'too_many_pages' | 'page_too_large',
   ) => {
     await deps.blobs.remove(blob.key);
     return new AppError(code);

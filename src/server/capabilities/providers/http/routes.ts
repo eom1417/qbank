@@ -1,6 +1,6 @@
 import { Readable } from 'node:stream';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import { KitMethod, KitStream } from '../../../../contracts/providers.js';
+import { KitMethod, KitReadMethod, KitStream } from '../../../../contracts/providers.js';
 import { AppError, notFound } from '../../../platform/errors/index.js';
 import type { AiHostClient } from '../../../platform/ai-host/client.js';
 import type { RequireActor } from '../../identity/index.js';
@@ -42,6 +42,8 @@ export function registerProviderRoutes(
   app: FastifyInstance,
   client: AiHostClient,
   requireActor: RequireActor,
+  /** Settings, installs and sign-in flows: only where the account runs the install (local). */
+  manage: boolean,
 ) {
   app.get('/api/providers/state', async (request, reply) => {
     const result = await client.read('/state', await ownerOf(requireActor, request));
@@ -59,7 +61,7 @@ export function registerProviderRoutes(
 
   app.post<MethodParams>('/api/providers/rpc/:method', async (request, reply) => {
     const owner = await ownerOf(requireActor, request);
-    const method = KitMethod.safeParse(request.params.method);
+    const method = (manage ? KitMethod : KitReadMethod).safeParse(request.params.method);
     if (!method.success) throw notFound();
     const result = await client.call(method.data, request.body ?? {}, owner);
     return reply.status(result.status).send(result.body);
@@ -68,7 +70,7 @@ export function registerProviderRoutes(
   app.get<MethodParams>('/api/providers/events/:method', async (request, reply) => {
     const owner = await ownerOf(requireActor, request);
     const method = KitStream.safeParse(request.params.method);
-    if (!method.success) throw notFound();
+    if (!manage || !method.success) throw notFound();
     const input = encodeURIComponent(request.query.input ?? '{}');
     return relayEvents(client, request, reply, `/events/${method.data}?input=${input}`, owner);
   });

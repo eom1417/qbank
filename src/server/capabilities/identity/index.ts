@@ -9,6 +9,7 @@ import { createPasswordResetRepository } from './adapters/password-reset-reposit
 import { createSessionRepository } from './adapters/session-repository.js';
 import { createRequireActor, type RequireActor } from './http/require-actor.js';
 import { registerIdentityRoutes } from './http/routes.js';
+import { createPairingCode, savePairingToken } from './adapters/pairing-token.js';
 
 export type { Actor } from './domain/account.js';
 export type { RequireActor } from './http/require-actor.js';
@@ -30,6 +31,10 @@ interface IdentitySettings {
   cookieSecure: boolean;
   /** Local mode (DEC-31): the install's pairing code. Null runs accounts mode. */
   pairingToken: string | null;
+  /** Where a replaced pairing code is saved (the data directory). */
+  dataDir: string;
+  requirePairingCode: boolean;
+  publicOrigin: string | null;
 }
 
 export function createIdentity(settings: IdentitySettings): IdentityModule {
@@ -52,7 +57,14 @@ export function createIdentity(settings: IdentitySettings): IdentityModule {
         deps,
         requireActor,
         cookieSecure: settings.cookieSecure,
-        pairingToken: settings.pairingToken,
+        pairing:
+          settings.pairingToken === null
+            ? null
+            : createPairingCode(settings.pairingToken, (code) =>
+                savePairingToken(settings.dataDir, code),
+              ),
+        requirePairingCode: settings.requirePairingCode,
+        publicOrigin: settings.publicOrigin,
       }),
   };
 }

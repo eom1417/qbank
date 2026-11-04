@@ -34,12 +34,16 @@ function launch(method: LoginMethodId) {
   return spawn('script', ['-qfec', command, '/dev/null'], { env });
 }
 
+/** An ended sign-in stays readable this long (the screen shows how it ended), then goes. */
+const KEPT_AFTER_END_MS = 5 * 60_000;
+
 function settle(session: Session, status: LoginStatus, message: string | null) {
   if (!['starting', 'waiting', 'verifying'].includes(session.status)) return;
   session.status = status;
   session.message = message;
   clearTimeout(session.timer);
   if (session.child.exitCode === null) session.child.kill('SIGTERM');
+  setTimeout(() => sessions.delete(session.id), KEPT_AFTER_END_MS).unref();
 }
 
 function watch(session: Session) {

@@ -17,5 +17,9 @@ export const localAr: Record<keyof typeof localEn, string> = {
     'لا يستطيع الجوال فتح عنوان هذا الجهاز الداخلي. شغّل QBank بالأمر npm run qbank -- --lan ثم امسح الرمز الذي يظهر هنا (على نفس شبكة الواي فاي فقط).',
   'local.devices.install':
     'من الجوال اختر «إضافة إلى الشاشة الرئيسية» ليفتح QBank كتطبيق. التثبيت الكامل يعمل على العناوين الآمنة (https).',
+  'local.devices.revokeLead':
+    'فقدت جوالاً أو شاركت الرابط بالخطأ؟ أخرج كل الأجهزة الأخرى: يتوقف الرابط القديم ويحل محله رابط جديد.',
+  'local.devices.revoke': 'أخرج كل الأجهزة الأخرى',
+  'local.devices.revoke.confirm': 'أخرجها واصنع رابطاً جديداً',
   'local.devices.copied': 'نُسخ',
 };

@@ -7,7 +7,7 @@ import { buildPdfFixtures, type PdfFixtures } from './pdf-fixtures.js';
 import { ORIGIN, useTestApp } from './test-app.js';
 
 /** A multipart body: the form fields first, then one file, as the upload screen sends it. */
-export function multipart(fields: Record<string, string>, fileName: string, data: Buffer) {
+function multipart(fields: Record<string, string>, fileName: string, data: Buffer) {
   const boundary = `----qbank${Date.now().toString(16)}`;
   const parts = Object.entries(fields).map(
     ([name, value]) =>
@@ -71,3 +71,14 @@ export const blobCount = () => {
     return 0;
   }
 };
+
+/** Restores an export ZIP as the given browser would upload it (FR-18-005). */
+export function restoreZip(app: FastifyInstance, cookie: string, bytes: Uint8Array) {
+  const body = multipart({}, 'bank.zip', Buffer.from(bytes));
+  return app.inject({
+    method: 'POST',
+    url: '/api/restore',
+    headers: { origin: ORIGIN, cookie, 'content-type': body.contentType },
+    payload: body.payload,
+  });
+}

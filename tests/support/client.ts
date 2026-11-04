@@ -47,6 +47,13 @@ export async function registeredBrowser(app: FastifyInstance) {
   return { browser, payload };
 }
 
+/** A browser of this computer paired with a local install (DEC-31): its one owner. */
+export async function pairedBrowser(app: FastifyInstance) {
+  const browser = createClient(app);
+  await browser.post('/api/local/pair', {});
+  return { browser };
+}
+
 /** A signed-in owner and one bank they created. */
 export async function ownerWithBank(app: FastifyInstance, name = 'Medicine') {
   const { browser } = await registeredBrowser(app);

@@ -4,6 +4,7 @@ import {
   Alert,
   Button,
   Card,
+  ConfirmButton,
   CodeText,
   MutedText,
   QrCode,
@@ -12,6 +13,7 @@ import {
 } from '../../design-system/index.js';
 import { apiRequest } from '../../platform/api/client.js';
 import { useQuery } from '../../platform/api/use-query.js';
+import { useAction } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { useSession } from './session.js';
 
@@ -38,8 +40,13 @@ function originFor(pairing: PairingCodeResponse) {
 function PairingLink() {
   const { t } = useI18n();
   const load = useCallback(() => apiRequest('GET', '/api/local/pairing', PairingCodeResponse), []);
-  const { state } = useQuery(load);
+  const { state, reload } = useQuery(load);
   const [copied, setCopied] = useState(false);
+  const signOutOthers = useAction(async () => {
+    await apiRequest('POST', '/api/local/devices/sign-out-others', PairingCodeResponse);
+    setCopied(false);
+    reload();
+  });
   if (state.status !== 'ready') return null;
   const { origin, reachable } = originFor(state.data);
   const link = `${origin}/#pair=${state.data.code}`;
@@ -59,6 +66,14 @@ function PairingLink() {
           {t(copied ? 'local.devices.copied' : 'local.devices.copy')}
         </Button>
         <MutedText>{t('local.devices.install')}</MutedText>
+        <MutedText>{t('local.devices.revokeLead')}</MutedText>
+        {signOutOthers.error && <Alert tone="error">{t(signOutOthers.error)}</Alert>}
+        <ConfirmButton
+          label={t('local.devices.revoke')}
+          confirmLabel={t('local.devices.revoke.confirm')}
+          busy={signOutOthers.busy}
+          onConfirm={() => void signOutOthers.run()}
+        />
       </Stack>
     </Card>
   );

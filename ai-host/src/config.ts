@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+
 /** What the AI host needs from its launcher (QBank's server or a systemd unit). */
 export interface HostConfig {
   /** Loopback port QBank's server calls. */
@@ -6,7 +8,10 @@ export interface HostConfig {
   readonly token: string;
   /** The kit's home: settings.json, secrets, caches, logs and its sqlite file. */
   readonly home: string;
-  /** Working directory providers run in. */
+  /**
+   * Working directory providers run in: an empty folder of its own, never the kit's home (which
+   * holds its settings and secrets), so a prompt in a user's PDF finds nothing to read there.
+   */
   readonly cwd: string;
 }
 
@@ -22,5 +27,5 @@ export function readConfig(env: NodeJS.ProcessEnv): HostConfig {
   const port = Number(env['AI_HOST_PORT'] ?? 3790);
   if (!Number.isInteger(port) || port <= 0 || port > 65535)
     throw new Error('AI_HOST_PORT is invalid');
-  return { port, token, home, cwd: env['AI_HOST_CWD'] ?? home };
+  return { port, token, home, cwd: env['AI_HOST_CWD'] ?? join(home, 'workdir') };
 }

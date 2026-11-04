@@ -1,3 +1,4 @@
+import { mkdirSync } from 'node:fs';
 import * as Effect from 'effect/Effect';
 
 import { makeProviderInstallation } from './bridge/install.ts';
@@ -11,6 +12,9 @@ import { makeKitRuntime, startSettingsWatcher } from './runtime.ts';
  * serves its provider methods to QBank's server on a loopback port.
  */
 const config = readConfig(process.env);
+// Read once, then gone from the environment: no CLI or turn this host starts inherits it.
+delete process.env['AI_HOST_TOKEN'];
+mkdirSync(config.cwd, { recursive: true, mode: 0o700 });
 const runtime = makeKitRuntime(config);
 await runtime.runPromise(startSettingsWatcher);
 const installation = await runtime.runPromise(makeProviderInstallation());

@@ -62,7 +62,11 @@ function registerImports(
   parts: ReturnType<typeof registerLibrary>,
 ) {
   const { config, db, clock } = deps;
-  const providers = createProviders({ aiHost: config.aiHost, requireActor });
+  const providers = createProviders({
+    aiHost: config.aiHost,
+    requireActor,
+    manage: config.mode === 'local',
+  });
   providers.register(app);
   const sources = createSources({
     db,
@@ -121,7 +125,8 @@ export function buildApp({ config, db, clock, pairingToken }: AppDeps): FastifyI
   const app = Fastify({
     logger: { level: config.logLevel, redact: ['req.headers.cookie', 'req.headers.authorization'] },
     bodyLimit: 1024 * 1024,
-    trustProxy: config.trustProxy,
+    // Only a proxy on this computer (the dev server) may name the visitor's address.
+    trustProxy: config.trustProxy ? ['127.0.0.1', '::1'] : false,
   });
   app.register(cookie);
   app.addHook('onRequest', createOriginGuard(config.allowedOrigins));
@@ -135,6 +140,9 @@ export function buildApp({ config, db, clock, pairingToken }: AppDeps): FastifyI
     sessionTtlDays: config.sessionTtlDays,
     cookieSecure: config.cookieSecure,
     pairingToken,
+    dataDir: config.imports.dataDir,
+    requirePairingCode: config.requirePairingCode,
+    publicOrigin: config.allowedOrigins[0] ?? null,
   });
   identity.register(app);
   registerContent(app, { config, db, clock }, identity);

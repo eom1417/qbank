@@ -13,6 +13,8 @@ export type { AiFailure, AiProvider } from './domain/ai-provider.js';
 interface ProvidersSettings {
   aiHost: { url: string; token: string | null };
   requireActor: RequireActor;
+  /** The account runs this install (local mode): it may change settings and sign in. */
+  manage: boolean;
 }
 
 /**
@@ -26,8 +28,8 @@ export function createProviders(settings: ProvidersSettings) {
     /** The user's AI for imports (sources' `deps.ai`): instances of the kit. */
     importAi: kitImportAi(client),
     register: (app: FastifyInstance) => {
-      registerProviderRoutes(app, client, settings.requireActor);
-      registerLoginRoutes(app, client, settings.requireActor);
+      registerProviderRoutes(app, client, settings.requireActor, settings.manage);
+      if (settings.manage) registerLoginRoutes(app, client, settings.requireActor);
     },
   };
 }

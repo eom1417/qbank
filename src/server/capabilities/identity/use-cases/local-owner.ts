@@ -1,6 +1,6 @@
 import type { Locale } from '../../../../contracts/identity.js';
 import { AppError } from '../../../platform/errors/index.js';
-import { generateToken, sameToken } from '../adapters/tokens.js';
+import { generateToken, hashToken, sameToken } from '../adapters/tokens.js';
 import { defaultPreferences, type Account } from '../domain/account.js';
 import type { IdentityDeps } from './deps.js';
 import { issueSession } from './sessions.js';
@@ -47,4 +47,13 @@ export async function pairBrowser(
   if (!proof.fromThisComputer && !codeMatches) throw new AppError('pairing_required');
   const account = await localOwner(deps, locale);
   return { account, session: await issueSession(deps, account.id) };
+}
+
+/** Every session of the owner but this browser's ends (the pairing code is replaced beside it). */
+export async function signOutOtherDevices(
+  deps: IdentityDeps,
+  accountId: string,
+  currentToken: string | undefined,
+) {
+  await deps.sessions.deleteOthers(accountId, currentToken ? hashToken(currentToken) : null);
 }

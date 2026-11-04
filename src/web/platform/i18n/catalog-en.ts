@@ -84,6 +84,8 @@ export const en = {
   'error.pairing_required':
     'That pairing code is not right. Copy it again from the computer running QBank.',
   'error.backup_too_new': 'This backup comes from a newer QBank. Update QBank, then restore it.',
+  'error.page_too_large':
+    'A page of this file is larger than any book page (over 70 cm). Export it again at a normal page size.',
   'error.too_many_attempts': 'Too many wrong codes. Wait 15 minutes, then copy the code again.',
   'error.invalid_credentials': 'The email or password is not correct.',
   'error.email_taken': 'An account with this email already exists.',

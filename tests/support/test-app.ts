@@ -35,6 +35,8 @@ interface TestAppOptions {
   clock?: Clock;
   /** Local mode (DEC-31) instead of accounts mode. */
   local?: boolean;
+  /** Local mode that pairs this computer only with the code too. */
+  requirePairingCode?: boolean;
   /** A built web app for the API to serve. */
   webDir?: string;
   aiHost?: () => { url: string; token: string | null };
@@ -53,6 +55,7 @@ async function startTestApp(options: TestAppOptions = {}): Promise<TestApp> {
     port: 0,
     cookieSecure: false,
     trustProxy: false,
+    requirePairingCode: options.requirePairingCode ?? false,
     devOutbox: true,
     allowedOrigins: [ORIGIN],
     sessionTtlDays: 30,

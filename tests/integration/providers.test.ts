@@ -1,15 +1,8 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { registeredBrowser } from '../support/client.js';
-import { startAiHost } from '../support/ai-host.js';
-import { useTestApp } from '../support/test-app.js';
+import { describe, expect, it } from 'vitest';
+import { pairedBrowser } from '../support/client.js';
+import { useLocalAppOnAiHost } from '../support/ai-host.js';
 
-let host: Awaited<ReturnType<typeof startAiHost>> | undefined;
-beforeAll(async () => {
-  host = await startAiHost();
-}, 90_000);
-afterAll(() => host?.stop());
-
-const app = useTestApp({ aiHost: () => ({ url: host?.url ?? '', token: host?.token ?? null }) });
+const app = useLocalAppOnAiHost();
 
 type Provider = {
   instanceId: string;
@@ -19,7 +12,7 @@ type Provider = {
   models: unknown[];
   setup?: { canAuthenticate?: boolean };
 };
-const providersOf = async (browser: Awaited<ReturnType<typeof registeredBrowser>>['browser']) =>
+const providersOf = async (browser: Awaited<ReturnType<typeof pairedBrowser>>['browser']) =>
   (await browser.get('/api/providers/state')).json().providers as Provider[];
 
 async function waitFor(check: () => Promise<boolean>) {
@@ -34,7 +27,7 @@ describe('the AI providers kit through QBank (DEC-30)', () => {
   it('lists every driver with status and models, only for a signed-in account', async () => {
     const anonymous = await app().inject({ method: 'GET', url: '/api/providers/state' });
     expect(anonymous.statusCode).toBe(401);
-    const { browser } = await registeredBrowser(app());
+    const { browser } = await pairedBrowser(app());
     const providers = await providersOf(browser);
     expect(providers.map((p) => p.driver)).toEqual(
       expect.arrayContaining([
@@ -52,7 +45,7 @@ describe('the AI providers kit through QBank (DEC-30)', () => {
   });
 
   it('adds or edits an instance as a settings write, checked with the kit schemas', async () => {
-    const { browser } = await registeredBrowser(app());
+    const { browser } = await pairedBrowser(app());
     const enable = {
       operation: 'upsert',
       instanceId: 'cursor',
@@ -72,7 +65,7 @@ describe('the AI providers kit through QBank (DEC-30)', () => {
 
 describe('subscription sign-in through the kit (DEC-30)', () => {
   it('starts a ChatGPT sign-in owned by the account, and cancels it', async () => {
-    const { browser } = await registeredBrowser(app());
+    const { browser } = await pairedBrowser(app());
     const managed = { driver: 'codex', enabled: true, config: { setupMode: 'managed' } };
     await browser.post('/api/providers/rpc/server.updateSettings', {
       patch: {},

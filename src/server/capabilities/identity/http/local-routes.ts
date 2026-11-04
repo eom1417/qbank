@@ -5,10 +5,11 @@ import { createAttemptLimiter } from '../../../platform/http/attempts.js';
 import { lanOrigin } from '../../../platform/http/lan.js';
 import { parseInput } from '../../../platform/http/validate.js';
 import type { IdentityDeps } from '../use-cases/deps.js';
-import { pairBrowser } from '../use-cases/local-owner.js';
+import type { PairingCode } from '../adapters/pairing-token.js';
+import { pairBrowser, signOutOtherDevices } from '../use-cases/local-owner.js';
 import { toAccountResponse } from './presenters.js';
 import type { RequireActor } from './require-actor.js';
-import { setSessionCookie } from './session-cookie.js';
+import { readSessionToken, setSessionCookie } from './session-cookie.js';
 
 const LOOPBACK_ADDRESSES = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
@@ -27,8 +28,10 @@ function isFromThisComputer(request: FastifyRequest): boolean {
 interface LocalRouteOptions {
   deps: IdentityDeps;
   requireActor: RequireActor;
-  pairingToken: string;
+  pairing: PairingCode;
   cookieSecure: boolean;
+  /** Never pair this computer without the code (for installs reached through a TCP tunnel). */
+  requirePairingCode: boolean;
 }
 
 /** A wrong pairing code may be tried this often per address before a pause. */
@@ -36,19 +39,25 @@ const PAIRING_ATTEMPTS = { max: 10, windowMs: 15 * 60_000 };
 
 /** Local mode (DEC-31): browsers pair with the install instead of signing in. */
 export function registerLocalRoutes(app: FastifyInstance, options: LocalRouteOptions) {
-  const { deps, requireActor, pairingToken, cookieSecure } = options;
+  const { deps, requireActor, pairing, cookieSecure } = options;
   const attempts = createAttemptLimiter({ ...PAIRING_ATTEMPTS, now: () => deps.clock.now() });
   app.get('/api/local/pairing', async (request): Promise<PairingCodeResponse> => {
     await requireActor(request);
-    return { code: pairingToken, lanOrigin: lanOrigin(app.server) };
+    return { code: pairing.current(), lanOrigin: lanOrigin(app.server) };
+  });
+  // A lost phone or a shared link: every other device is signed out and the old code stops.
+  app.post('/api/local/devices/sign-out-others', async (request): Promise<PairingCodeResponse> => {
+    const actor = await requireActor(request);
+    await signOutOtherDevices(deps, actor.accountId, readSessionToken(request));
+    return { code: pairing.replace(), lanOrigin: lanOrigin(app.server) };
   });
   app.post('/api/local/pair', async (request, reply) => {
     const { token, locale } = parseInput(PairRequest, request.body ?? {});
     if (attempts.blocked(request.ip)) throw new AppError('too_many_attempts');
     const proof = {
-      fromThisComputer: isFromThisComputer(request),
+      fromThisComputer: !options.requirePairingCode && isFromThisComputer(request),
       presented: token,
-      expected: pairingToken,
+      expected: pairing.current(),
     };
     const paired = await pairBrowser(deps, proof, locale).catch((error: unknown) => {
       if (error instanceof AppError && error.code === 'pairing_required') attempts.fail(request.ip);

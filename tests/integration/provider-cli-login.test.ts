@@ -2,9 +2,8 @@ import { chmodSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { registeredBrowser } from '../support/client.js';
-import { startAiHost } from '../support/ai-host.js';
-import { useTestApp } from '../support/test-app.js';
+import { pairedBrowser } from '../support/client.js';
+import { useLocalAppOnAiHost } from '../support/ai-host.js';
 
 // Stand-ins for the official CLIs: the same prompts, a known good code and key.
 const FAKE_CODEX = `#!/bin/sh
@@ -34,7 +33,6 @@ exit 2
 `;
 
 let bin = '';
-let host: Awaited<ReturnType<typeof startAiHost>> | undefined;
 beforeAll(async () => {
   bin = mkdtempSync(join(tmpdir(), 'qbank-cli-'));
   for (const [name, body] of [
@@ -44,15 +42,11 @@ beforeAll(async () => {
     writeFileSync(join(bin, name), body);
     chmodSync(join(bin, name), 0o755);
   }
-  host = await startAiHost({ binDir: bin });
-}, 90_000);
-afterAll(() => {
-  host?.stop();
-  rmSync(bin, { recursive: true, force: true });
 });
+afterAll(() => rmSync(bin, { recursive: true, force: true }));
 
-const app = useTestApp({ aiHost: () => ({ url: host?.url ?? '', token: host?.token ?? null }) });
-type Browser = Awaited<ReturnType<typeof registeredBrowser>>['browser'];
+const app = useLocalAppOnAiHost({ binDir: () => bin });
+type Browser = Awaited<ReturnType<typeof pairedBrowser>>['browser'];
 
 /** Polls a sign-in until it leaves the given statuses. */
 async function until(browser: Browser, id: string, leave: readonly string[]) {
@@ -66,7 +60,7 @@ async function until(browser: Browser, id: string, leave: readonly string[]) {
 
 describe('signing in through the official CLIs, from any device', () => {
   it('Codex with ChatGPT: shows the link and the one-time code, then finishes', async () => {
-    const { browser } = await registeredBrowser(app());
+    const { browser } = await pairedBrowser(app());
     const started = (
       await browser.post('/api/providers/login', { method: 'codex.chatgpt' })
     ).json();
@@ -81,7 +75,7 @@ describe('signing in through the official CLIs, from any device', () => {
   });
 
   it('Claude: the pasted code finishes it, a wrong one fails with the reason', async () => {
-    const { browser } = await registeredBrowser(app());
+    const { browser } = await pairedBrowser(app());
     for (const [code, status] of [
       ['good-code', 'done'],
       ['bad-code', 'failed'],
@@ -106,7 +100,7 @@ describe('signing in through the official CLIs, from any device', () => {
 
 describe('keys and boundaries of the CLI sign-in', () => {
   it('an API key goes in once and is never shown back', async () => {
-    const { browser } = await registeredBrowser(app());
+    const { browser } = await pairedBrowser(app());
     const start = (secret: string) =>
       browser.post('/api/providers/login', { method: 'codex.apiKey', secret });
     const good = (await start('sk-test-good')).json();
@@ -116,18 +110,18 @@ describe('keys and boundaries of the CLI sign-in', () => {
     expect([bad.status, bad.message]).toEqual(['failed', 'Invalid API key']);
   });
 
-  it("refuses bad input, and another account's sign-in is not found", async () => {
-    const { browser: owner } = await registeredBrowser(app());
-    const { browser: stranger } = await registeredBrowser(app());
+  it('refuses bad input and unknown sign-ins, cancels and signs out', async () => {
+    const { browser: owner } = await pairedBrowser(app());
+    const unknown = '00000000-0000-4000-8000-000000000000';
     expect((await owner.post('/api/providers/login', { method: 'rm -rf' })).statusCode).toBe(400);
     expect((await owner.post('/api/providers/login', { method: 'codex.apiKey' })).statusCode).toBe(
       400,
     );
     const { id } = (await owner.post('/api/providers/login', { method: 'claude.console' })).json();
-    expect((await stranger.get(`/api/providers/login/${id}`)).statusCode).toBe(404);
-    expect((await stranger.post(`/api/providers/login/${id}/code`, { code: 'x' })).statusCode).toBe(
-      404,
-    );
+    expect((await owner.get(`/api/providers/login/${unknown}`)).statusCode).toBe(404);
+    expect(
+      (await owner.post(`/api/providers/login/${unknown}/code`, { code: 'x' })).statusCode,
+    ).toBe(404);
     expect((await owner.post(`/api/providers/login/${id}/cancel`, {})).json().status).toBe(
       'failed',
     );
