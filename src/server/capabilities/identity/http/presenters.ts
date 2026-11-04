@@ -10,5 +10,6 @@ export const toAccountResponse = (account: Account): AccountResponse => ({
     theme: account.preferences.theme,
     defaultSessionSize: account.preferences.defaultSessionSize,
     explanationMode: account.preferences.explanationMode,
+    reviewReminders: account.preferences.reviewReminders,
   },
 });

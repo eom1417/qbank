@@ -23,6 +23,7 @@ describe('account preferences (FR-02-005, FR-21-010)', () => {
       theme: 'dark',
       defaultSessionSize: 40,
       explanationMode: 'on_request',
+      reviewReminders: 'off',
     });
   });
 

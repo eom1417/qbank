@@ -160,6 +160,27 @@ const pageOfSource = (db: Db, ownerId: string, sourceId: string, page: number) =
     .orderBy('import_job.created_at', 'desc')
     .executeTakeFirst();
 
+/** The owner's imports that ended since the given time, newest first (FR-22-003). */
+const recentlyEnded = (db: Db, ownerId: string, since: Date) =>
+  db
+    .selectFrom('import_job')
+    .innerJoin('source', 'source.id', 'import_job.source_id')
+    .select([
+      'import_job.id',
+      'import_job.stage',
+      'import_job.questions_found',
+      'import_job.questions_review',
+      'import_job.finished_at',
+      'source.bank_id',
+      'source.file_name',
+    ])
+    .where('import_job.owner_id', '=', ownerId)
+    .where('import_job.finished_at', '>=', since)
+    .where('source.sha256', 'not like', 'restored:%')
+    .orderBy('import_job.finished_at', 'desc')
+    .limit(20)
+    .execute();
+
 /** Every source row of a bank, imported or restored (M13). */
 const sourcesOfBank = (db: Db, ownerId: string, bankId: string) =>
   db
@@ -216,6 +237,7 @@ export function createImportRepository(db: Db) {
       db.deleteFrom('source').where('owner_id', '=', ownerId).where('id', '=', sourceId).execute(),
     countPages: (jobId: string) => countPages(db, jobId),
     sourcesOfBank: (ownerId: string, bankId: string) => sourcesOfBank(db, ownerId, bankId),
+    recentlyEnded: (ownerId: string, since: Date) => recentlyEnded(db, ownerId, since),
     pageOfSource: (ownerId: string, sourceId: string, page: number) =>
       pageOfSource(db, ownerId, sourceId, page),
   };

@@ -7,6 +7,7 @@ import { examAr } from './catalog-exam-ar.js';
 import { planAr } from './catalog-plan-ar.js';
 import { analyticsAr } from './catalog-analytics-ar.js';
 import { portabilityAr } from './catalog-portability-ar.js';
+import { helpAr } from './catalog-help-ar.js';
 import { providersAr } from './catalog-providers-ar.js';
 
 export const ar: Record<MessageKey, string> = {
@@ -19,6 +20,7 @@ export const ar: Record<MessageKey, string> = {
   ...planAr,
   ...analyticsAr,
   ...portabilityAr,
+  ...helpAr,
   'app.name': 'محرك بنك الأسئلة',
   'shell.language': 'English',
   'shell.theme.system': 'المظهر: حسب الجهاز',
@@ -204,6 +206,8 @@ export const ar: Record<MessageKey, string> = {
   'import.sourceType': 'نوع الملف',
   'import.remove': 'احذف هذا الملف',
   'import.rights': 'أؤكد أنه يحق لي استخدام هذه الملفات لمذاكرتي الشخصية.',
+  'import.patientWarning':
+    'لا ترفع صفحات تكشف هوية مريض (أسماء، أرقام هوية، وجوه). أزلها أولاً، أو اترك تلك الصفحات خارج الرفع.',
   'import.submit': 'ارفع وابدأ',
   'import.progress': 'التقدّم',
   'import.pagesRead': 'الصفحات المقروءة',

@@ -27,6 +27,7 @@ interface SourcesSettings {
   clock: Clock;
   blobs: BlobStore;
   questions: Questions;
+  ownsBank(ownerId: string, bankId: string): Promise<boolean>;
   ai: ImportAi;
   requireActor: RequireActor;
   maxUploadBytes: number;
@@ -37,6 +38,7 @@ interface SourcesSettings {
 /** Uploaded sources and their imports: upload, durable job queue, reading, report (M4). */
 export function createSources(settings: SourcesSettings) {
   const deps: SourcesDeps = {
+    ownsBank: settings.ownsBank,
     imports: createImportRepository(settings.db),
     blobs: settings.blobs,
     questions: settings.questions,

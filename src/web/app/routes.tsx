@@ -8,6 +8,7 @@ import { SignInScreen } from '../capabilities/identity/SignInScreen.js';
 import { SignUpScreen } from '../capabilities/identity/SignUpScreen.js';
 import { BankScreen } from '../capabilities/library/BankScreen.js';
 import { AnalyticsScreen } from '../capabilities/analytics/AnalyticsScreen.js';
+import { HelpScreen } from '../capabilities/help/HelpScreen.js';
 import { BankDangerCard } from '../capabilities/portability/BankDangerCard.js';
 import { ExportScreen } from '../capabilities/portability/ExportScreen.js';
 import { SearchScreen } from '../capabilities/analytics/SearchScreen.js';
@@ -79,6 +80,10 @@ export const router = createBrowserRouter([
             <ExportScreen />
           </Private>
         ),
+      },
+      {
+        path: '/help',
+        element: <HelpScreen />,
       },
       {
         path: '/analytics',

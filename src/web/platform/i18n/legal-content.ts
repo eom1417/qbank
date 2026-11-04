@@ -35,15 +35,15 @@ export const LEGAL: Record<Locale, Record<LegalPage, LegalSection[]>> = {
     privacy: [
       {
         heading: 'Private by default',
-        body: 'Every bank, file, image, question, note, session and report belongs to your account only. Support staff have no default access to your content.',
+        body: 'Every bank, file, image, question, note, session and report belongs to you only. QBank runs on your own computer: nothing is sent to its makers, and there is no support role that can read your content.',
       },
       {
         heading: 'What we keep after an import',
-        body: 'The extracted questions, their options, keys, explanations, needed images and source page references. The original PDF is deleted once that content is verified.',
+        body: 'The extracted questions, their options, keys, explanations, needed images and source page references, in QBank’s data folder on your computer. The original PDF is erased a few days after its import ends (7 by default), or at once when you delete it.',
       },
       {
         heading: 'AI processing',
-        body: 'When you run an AI task, the selected pages are sent to the AI service you chose. Your AI keys are encrypted, never shown in full and never exported.',
+        body: 'When you run an AI task, the pages it needs are sent to the AI provider you signed in to; that provider’s terms apply. Your sign-ins and keys stay with the AI providers part of QBank on your computer and are never exported.',
       },
       {
         heading: 'Deleting and exporting',
@@ -73,15 +73,15 @@ export const LEGAL: Record<Locale, Record<LegalPage, LegalSection[]>> = {
     privacy: [
       {
         heading: 'خاص افتراضياً',
-        body: 'كل بنك وملف وصورة وسؤال وملاحظة وجلسة وتقرير ملك لحسابك وحده. ولا يملك فريق الدعم وصولاً افتراضياً إلى محتواك.',
+        body: 'كل بنك وملف وصورة وسؤال وملاحظة وجلسة وتقرير ملك لك وحدك. يعمل QBank على جهازك: لا يُرسل شيء إلى صانعيه، ولا يوجد دور دعم يستطيع قراءة محتواك.',
       },
       {
         heading: 'ما نحتفظ به بعد الاستيراد',
-        body: 'الأسئلة المستخرجة وخياراتها ومفاتيحها وشروحها، والصور اللازمة، ومرجع صفحة المصدر. ويُحذف ملف PDF الأصلي بعد التحقق من هذا المحتوى.',
+        body: 'الأسئلة المستخرجة وخياراتها ومفاتيحها وشروحها، والصور اللازمة، ومرجع صفحة المصدر، في مجلد بيانات QBank على جهازك. ويُمحى ملف PDF الأصلي بعد أيام من انتهاء استيراده (7 افتراضياً)، أو فوراً عندما تحذفه.',
       },
       {
         heading: 'المعالجة بالذكاء الاصطناعي',
-        body: 'عندما تشغّل مهمة AI تُرسل الصفحات المختارة إلى خدمة AI التي اخترتها. مفاتيح AI الخاصة بك مشفّرة، ولا تُعرض كاملة، ولا تُصدَّر أبداً.',
+        body: 'عندما تشغّل مهمة AI تُرسل الصفحات التي تحتاجها إلى مزوّد AI الذي سجّلت دخولك فيه، وتسري شروطه. تسجيلات دخولك ومفاتيحك تبقى في جزء مزودي AI داخل QBank على جهازك، ولا تُصدَّر أبداً.',
       },
       {
         heading: 'الحذف والتصدير',

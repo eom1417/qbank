@@ -11,6 +11,7 @@ interface AccountTable {
   theme: Generated<'system' | 'light' | 'dark'>;
   default_session_size: Generated<number>;
   explanation_mode: Generated<'after_answer' | 'on_request'>;
+  review_reminders: Generated<'off' | 'daily' | 'weekly'>;
   terms_accepted_at: Date;
   created_at: CreatedAt;
 }

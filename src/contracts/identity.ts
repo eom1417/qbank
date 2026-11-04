@@ -12,6 +12,8 @@ const Email = z.string().trim().toLowerCase().pipe(z.email()).pipe(z.string().ma
 const NewPassword = z.string().min(10).max(200);
 const DisplayName = z.string().trim().min(1).max(80);
 const SessionSize = z.number().int().min(1).max(200);
+/** Reminders of due reviews: off unless the owner turns them on (FR-22-004, DEC-22). */
+const ReviewReminders = z.enum(['off', 'daily', 'weekly']);
 
 export const SignUpRequest = z.object({
   email: Email,
@@ -49,6 +51,7 @@ export const AccountPreferences = z
     theme: Theme,
     defaultSessionSize: SessionSize,
     explanationMode: ExplanationMode,
+    reviewReminders: ReviewReminders,
   })
   .strict();
 export type AccountPreferences = z.infer<typeof AccountPreferences>;
@@ -61,6 +64,7 @@ export const UpdateAccountRequest = z
     theme: Theme,
     defaultSessionSize: SessionSize,
     explanationMode: ExplanationMode,
+    reviewReminders: ReviewReminders,
   })
   .partial()
   .strict()

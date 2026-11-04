@@ -64,6 +64,7 @@ function StudyCard({ preferences }: { preferences: AccountPreferences }) {
   const form = useAccountForm((data) => ({
     defaultSessionSize: Number(text(data, 'defaultSessionSize')),
     explanationMode: text(data, 'explanationMode') as AccountPreferences['explanationMode'],
+    reviewReminders: text(data, 'reviewReminders') as AccountPreferences['reviewReminders'],
   }));
   const modes = (['after_answer', 'on_request'] as const).map((value) => ({
     value,
@@ -86,6 +87,15 @@ function StudyCard({ preferences }: { preferences: AccountPreferences }) {
         label={t('settings.study.explanation')}
         options={modes}
         defaultValue={preferences.explanationMode}
+      />
+      <SelectField
+        name="reviewReminders"
+        label={t('settings.reminders')}
+        options={(['off', 'daily', 'weekly'] as const).map((value) => ({
+          value,
+          label: t(`settings.reminders.${value}`),
+        }))}
+        defaultValue={preferences.reviewReminders}
       />
       <Button variant="ghost" onClick={() => void updateAccount(STUDY_DEFAULTS)}>
         {t('settings.study.reset')}

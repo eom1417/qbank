@@ -18,6 +18,7 @@ import {
   listImportMedia,
   listSources,
   mediaFile,
+  recentImports,
   retryImport,
 } from '../use-cases/manage-imports.js';
 import { startImport } from '../use-cases/start-import.js';
@@ -60,6 +61,9 @@ export function registerImportRoutes(
     return reply.status(201).send(await getImport(deps, actor, jobId));
   });
 
+  app.get('/api/imports/recent', async (request) =>
+    recentImports(deps, await requireActor(request)),
+  );
   app.get<IdParams>('/api/imports/:id', async (request): Promise<ImportResponse> =>
     getImport(deps, await requireActor(request), request.params.id),
   );

@@ -36,7 +36,10 @@ export interface PortabilityDeps {
       sources: readonly PortableSource[],
     ): Promise<Map<string, string>>;
   };
-  questions: Pick<Questions, 'questionsOfBank' | 'extrasOf' | 'bankFootprint' | 'restoreQuestions'>;
+  questions: Pick<
+    Questions,
+    'questionsOfBank' | 'extrasOf' | 'bankFootprint' | 'restoreQuestions' | 'statusCounts'
+  >;
   study: {
     sessionsTouching(
       ownerId: string,
@@ -48,4 +51,6 @@ export interface PortabilityDeps {
   blobs: BlobStore;
   clock: Clock;
   maxUploadBytes: number;
+  /** How this install runs, for the support report. */
+  mode: string;
 }

@@ -8,6 +8,8 @@ export interface SourcesDeps {
   imports: ImportRepository;
   blobs: BlobStore;
   questions: Questions;
+  /** Whether the bank is the account's (from the library): another's is the neutral not-found. */
+  ownsBank(ownerId: string, bankId: string): Promise<boolean>;
   /** The user's own AI connections (opened only for their own jobs). */
   ai: ImportAi;
   clock: Clock;

@@ -1,5 +1,6 @@
 import type {
   ImportResponse,
+  RecentImportsResponse,
   MediaListResponse,
   RetryImportRequest,
   SourceListResponse,
@@ -100,7 +101,7 @@ export async function listSources(
   actor: Actor,
   bankId: string,
 ): Promise<SourceListResponse> {
-  if (!isId(bankId)) throw notFound();
+  if (!isId(bankId) || !(await deps.ownsBank(actor.accountId, bankId))) throw notFound();
   const rows = await deps.imports.listSources(actor.accountId, bankId);
   const counts = new Map(
     (await deps.questions.countsBySource(actor.accountId, bankId)).map((c) => [c.sourceId, c]),
@@ -171,4 +172,26 @@ export async function mediaFile(deps: SourcesDeps, actor: Actor, mediaId: string
   const media = isId(mediaId) ? await deps.questions.findMedia(actor.accountId, mediaId) : null;
   if (!media) throw notFound();
   return deps.blobs.pathOf(media.blob_key);
+}
+
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+
+/** Imports that ended in the last week, for the in-app notice (FR-22-003, M14.4). */
+export async function recentImports(
+  deps: SourcesDeps,
+  actor: Actor,
+): Promise<RecentImportsResponse> {
+  const since = new Date(deps.clock.now().getTime() - WEEK_MS);
+  const rows = await deps.imports.recentlyEnded(actor.accountId, since);
+  return {
+    imports: rows.map((row) => ({
+      id: row.id,
+      bankId: row.bank_id,
+      fileName: row.file_name,
+      stage: row.stage,
+      questionsFound: row.questions_found,
+      needsReview: row.questions_review,
+      finishedAt: (row.finished_at ?? deps.clock.now()).toISOString(),
+    })),
+  };
 }

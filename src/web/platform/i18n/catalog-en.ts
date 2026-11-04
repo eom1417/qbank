@@ -6,6 +6,7 @@ import { examEn } from './catalog-exam-en.js';
 import { planEn } from './catalog-plan-en.js';
 import { analyticsEn } from './catalog-analytics-en.js';
 import { portabilityEn } from './catalog-portability-en.js';
+import { helpEn } from './catalog-help-en.js';
 import { providersEn } from './catalog-providers-en.js';
 
 /** English UI strings. catalog-ar.ts must define exactly the same keys (enforced by its type). */
@@ -19,6 +20,7 @@ export const en = {
   ...planEn,
   ...analyticsEn,
   ...portabilityEn,
+  ...helpEn,
   'app.name': 'QBank Engine',
   'shell.language': 'العربية',
   'shell.theme.system': 'Theme: system',
@@ -220,6 +222,8 @@ export const en = {
   'import.sourceType': 'Kind of file',
   'import.remove': 'Remove this file',
   'import.rights': 'I confirm I am allowed to use these files for my own study.',
+  'import.patientWarning':
+    'Do not upload pages that identify a patient (names, ID numbers, faces). Remove them first, or leave those pages out.',
   'import.submit': 'Upload and start',
   'import.progress': 'Progress',
   'import.pagesRead': 'Pages read',

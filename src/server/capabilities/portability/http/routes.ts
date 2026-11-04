@@ -7,6 +7,7 @@ import { bankDeletionImpact, deleteAccount, deleteBank } from '../use-cases/dele
 import type { PortabilityDeps } from '../use-cases/deps.js';
 import { buildExport, previewExport } from '../use-cases/export.js';
 import { restoreBank } from '../use-cases/restore.js';
+import { supportReport } from '../use-cases/support.js';
 
 type BankParams = { Params: { bankId: string }; Querystring: { chapterIds?: string } };
 
@@ -70,6 +71,9 @@ function registerDeletionRoutes(
     await deleteBank(deps, actor, request.params.bankId);
     return reply.status(204).send();
   });
+  app.get('/api/support/report', async (request) =>
+    supportReport(deps, await requireActor(request)),
+  );
   app.post('/api/account/delete', async (request, reply) => {
     const actor = await requireActor(request);
     parseInput(ConfirmRequest, request.body);

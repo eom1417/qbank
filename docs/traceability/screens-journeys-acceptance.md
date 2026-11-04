@@ -36,7 +36,7 @@
 | UI-25   | إعدادات الدراسة       | M1.6   | partial | `tests/e2e/account.spec.ts`         |
 | UI-26   | التصدير               | M13.1  | done    | `tests/e2e/portability.spec.ts`     |
 | UI-27   | الحذف والخصوصية       | M13.6  | done    | `tests/e2e/portability.spec.ts`     |
-| UI-28   | مركز الدعم            | M14.5  | planned | —                                   |
+| UI-28   | مركز الدعم            | M14.5  | done    | `tests/e2e/help.spec.ts`            |
 
 ## الرحلات (JY)
 
@@ -60,7 +60,7 @@
 | JY-16   | تصدير ثم حذف بنك            | M13.5  | done    | `tests/e2e/portability.spec.ts`            |
 | JY-17   | تبديل اللغة والجهاز         | M9.7   | partial | `tests/integration/study-progress.test.ts` |
 | JY-18   | تصفح دون درجة               | M12.12 | done    | `tests/e2e/analytics.spec.ts`              |
-| JY-19   | كتاب مع صورة مريض معرّف     | M14.1  | planned | —                                          |
+| JY-19   | كتاب مع صورة مريض معرّف     | M14.1  | done    | `tests/e2e/help.spec.ts`                   |
 
 ## حالات القبول (UAT)
 
@@ -141,9 +141,9 @@
 | UAT-073 | فشل قبل الاكتمال      | M6.12  | done    | `tests/integration/imports-failure.test.ts`  |
 | UAT-074 | حذف بنك A             | M13.5  | done    | `tests/integration/portability.test.ts`      |
 | UAT-075 | حذف حساب              | M13.6  | done    | `tests/integration/portability.test.ts`      |
-| UAT-076 | رابط غير مصرح         | M0.3   | partial | `tests/integration/library.test.ts`          |
+| UAT-076 | رابط غير مصرح         | M0.3   | done    | `tests/integration/privacy-audit.test.ts`    |
 | UAT-077 | مزود AI خارجي         | M2.6   | partial | `tests/e2e/providers.spec.ts`                |
-| UAT-078 | صورة مريض معرف        | M14.1  | planned | —                                            |
+| UAT-078 | صورة مريض معرف        | M14.1  | done    | `tests/e2e/help.spec.ts`                     |
 | UAT-079 | واجهة RTL             | M15.1  | partial | `tests/e2e/library.spec.ts`                  |
 | UAT-080 | واجهة LTR             | M15.1  | partial | `tests/e2e/language.spec.ts`                 |
 | UAT-081 | Dark mode             | M15.2  | partial | `tests/e2e/language.spec.ts`                 |

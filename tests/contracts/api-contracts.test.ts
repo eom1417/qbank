@@ -15,6 +15,7 @@ describe('public response contracts', () => {
       theme: 'system',
       defaultSessionSize: 20,
       explanationMode: 'after_answer',
+      reviewReminders: 'off',
     } as const;
     const account = { id: ID, email: 'a@b.test', displayName: 'A', preferences };
     const response = toAccountResponse({ ...account, passwordHash: 'secret' } as typeof account);

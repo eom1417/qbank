@@ -22,6 +22,7 @@ function StartCard({ form }: { form: ImportForm }) {
         approved={ai.approved}
         onApprove={(approved) => setAi((previous) => ({ ...previous, approved }))}
       />
+      <Alert tone="info">{t('import.patientWarning')}</Alert>
       <Checkbox
         checked={rights}
         onChange={(event) => setRights(event.target.checked)}

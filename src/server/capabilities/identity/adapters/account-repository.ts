@@ -32,6 +32,7 @@ const fromRow = (row: AccountRow): Account => ({
     theme: row.theme,
     defaultSessionSize: row.default_session_size,
     explanationMode: row.explanation_mode,
+    reviewReminders: row.review_reminders,
   },
 });
 
@@ -42,6 +43,7 @@ const toChanges = (changes: UpdateAccountRequest): Updateable<Database['account'
   theme: changes.theme,
   default_session_size: changes.defaultSessionSize,
   explanation_mode: changes.explanationMode,
+  review_reminders: changes.reviewReminders,
 });
 
 async function insertAccount(db: Db, account: NewAccount) {
@@ -57,6 +59,7 @@ async function insertAccount(db: Db, account: NewAccount) {
       theme: p.theme,
       default_session_size: p.defaultSessionSize,
       explanation_mode: p.explanationMode,
+      review_reminders: p.reviewReminders,
       terms_accepted_at: account.termsAcceptedAt,
     })
     .execute();

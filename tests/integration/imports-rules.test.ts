@@ -49,7 +49,8 @@ describe('ownership and lifecycle', () => {
     expect((await stranger.get(`/api/imports/${job.id}`)).statusCode).toBe(404);
     expect((await stranger.post(`/api/imports/${job.id}/retry`, {})).statusCode).toBe(404);
     expect((await stranger.delete(`/api/imports/${job.id}`)).statusCode).toBe(404);
-    expect((await stranger.get(`/api/banks/${bankId}/sources`)).json().sources).toEqual([]);
+    expect((await stranger.get(`/api/banks/${bankId}/sources`)).statusCode).toBe(404);
+    expect((await stranger.get('/api/imports/recent')).json().imports).toEqual([]);
   });
 
   it('a file can be removed before its import starts, not after (FR-04-008)', async () => {
@@ -176,5 +177,18 @@ describe("accepting the AI's suggested answer (M6.6, DEC-03)", () => {
     });
     const refused = await owner.post(`/api/questions/${essay?.id}/accept-ai-answer`, {});
     expect(refused.statusCode).toBe(409);
+  });
+});
+
+describe('notices of ended imports (FR-22-003)', () => {
+  it('lists the owner’s ended imports with their honest stage, not a queued one', async () => {
+    const { owner, bankId } = await ownerWithBank(app());
+    const job = (await uploadFile(app(), owner.cookie(), bankId, fixtures().english)).json();
+    expect((await owner.get('/api/imports/recent')).json().imports).toEqual([]);
+    await runImports(app());
+    const { imports } = (await owner.get('/api/imports/recent')).json();
+    expect(imports).toHaveLength(1);
+    expect(imports[0]).toMatchObject({ id: job.id, fileName: expect.any(String) });
+    expect(imports[0].stage).not.toBe('queued');
   });
 });

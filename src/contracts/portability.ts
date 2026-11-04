@@ -52,3 +52,16 @@ export const AccountDeletionResponse = z
   })
   .strict();
 export type AccountDeletionResponse = z.infer<typeof AccountDeletionResponse>;
+
+/** A support report with no content at all (FR-22-007, FR-02-003): counts and environment. */
+export const SupportReportResponse = z
+  .object({
+    mode: z.string(),
+    node: z.string(),
+    platform: z.string(),
+    banks: z.number().int(),
+    questions: z.record(z.string(), z.number().int()),
+    createdAt: z.iso.datetime(),
+  })
+  .strict();
+export type SupportReportResponse = z.infer<typeof SupportReportResponse>;

@@ -150,3 +150,23 @@ const MediaResponse = z
 
 export const MediaListResponse = z.object({ media: z.array(MediaResponse) }).strict();
 export type MediaListResponse = z.infer<typeof MediaListResponse>;
+
+/** Imports that ended lately, for the in-app notice (FR-22-003): partial is said as partial. */
+export const RecentImportsResponse = z
+  .object({
+    imports: z.array(
+      z
+        .object({
+          id: z.uuid(),
+          bankId: z.uuid(),
+          fileName: z.string(),
+          stage: z.string(),
+          questionsFound: z.number().int(),
+          needsReview: z.number().int(),
+          finishedAt: z.iso.datetime(),
+        })
+        .strict(),
+    ),
+  })
+  .strict();
+export type RecentImportsResponse = z.infer<typeof RecentImportsResponse>;

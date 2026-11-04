@@ -68,6 +68,7 @@ function registerImports(
     clock,
     blobs: parts.blobs,
     questions: parts.questions,
+    ownsBank: parts.library.ownsBank,
     ai: providers.importAi,
     requireActor,
     maxUploadBytes: config.imports.maxUploadBytes,
@@ -108,6 +109,7 @@ function registerContent(app: FastifyInstance, deps: ContentDeps, identity: Iden
       deleteAccount: identity.deleteAccount,
       clock: deps.clock,
       maxUploadBytes: deps.config.imports.maxUploadBytes,
+      mode: deps.config.mode,
     },
     identity.requireActor,
   ).register(app);

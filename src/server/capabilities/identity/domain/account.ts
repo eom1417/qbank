@@ -13,6 +13,7 @@ export const defaultPreferences = (locale: AccountPreferences['locale']): Accoun
   theme: 'system',
   defaultSessionSize: 20,
   explanationMode: 'after_answer',
+  reviewReminders: 'off',
 });
 
 /** The authenticated caller. Every owner-scoped query takes its accountId. */

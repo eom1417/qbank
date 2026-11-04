@@ -49,6 +49,7 @@ function AccountLinks() {
       <Link to="/search">{t('nav.search')}</Link>
       <Link to="/analytics">{t('nav.analytics')}</Link>
       <Link to="/settings">{t('shell.nav.settings')}</Link>
+      <Link to="/help">{t('help.link')}</Link>
       {mode === 'accounts' && (
         <Button variant="secondary" onClick={() => void signOut()}>
           {t('shell.signOut')}

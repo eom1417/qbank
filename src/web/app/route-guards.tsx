@@ -5,6 +5,7 @@ import { PairScreen } from '../capabilities/identity/PairScreen.js';
 import { useSession } from '../capabilities/identity/session.js';
 import { LibraryScreen } from '../capabilities/library/LibraryScreen.js';
 import { ActiveSessionsCard } from '../capabilities/study/ActiveSessionsCard.js';
+import { NoticesCard } from '../capabilities/help/NoticesCard.js';
 import { MutedText } from '../design-system/index.js';
 import { useI18n } from '../platform/i18n/i18n.js';
 
@@ -41,6 +42,7 @@ export function Home() {
   if (state.status === 'signed-in')
     return (
       <>
+        <NoticesCard />
         <ActiveSessionsCard />
         <LibraryScreen />
       </>
