@@ -13,6 +13,7 @@ describe('public response contracts', () => {
     const preferences = {
       locale: 'ar',
       theme: 'system',
+      skin: 'clinic',
       defaultSessionSize: 20,
       explanationMode: 'after_answer',
       reviewReminders: 'off',

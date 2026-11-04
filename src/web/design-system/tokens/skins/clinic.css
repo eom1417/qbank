@@ -1,0 +1,55 @@
+/* Clinic Pro (default): exam-grade and dense, like NBME/UWorld. Navy sidebar, teal accent. */
+[data-skin='clinic'] {
+  --color-canvas: #f3f5f8;
+  --color-surface: #ffffff;
+  --color-field: #ffffff;
+  --color-border: #dbe2ea;
+  --color-border-strong: #a9b6c4;
+  --color-text: #1b2733;
+  --color-text-muted: #52637a;
+  --color-accent: #0b6e75;
+  --color-accent-hover: #095c62;
+  --color-accent-soft: #dff1f2;
+  --color-on-accent: #ffffff;
+  --color-danger: #c22626;
+  --color-danger-soft: #fdecec;
+  --color-success: #0f7b4b;
+  --color-success-soft: #e3f4ec;
+  --color-warning: #8a4b00;
+  --color-warning-soft: #fff3e0;
+  --color-focus: #0b6e75;
+  --color-nav: #17324d;
+  --color-nav-text: #e8eef5;
+  --color-nav-active: #284a6d;
+  --font-body: 'IBM Plex Sans', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --radius-control: 0.375rem;
+  --radius-card: 0.5rem;
+  --space-lg: 1.25rem;
+  --text-heading: 1.5rem;
+  --shadow-card: 0 1px 2px rgb(23 50 77 / 0.08);
+  --line-height-body: 1.55;
+}
+[data-theme='dark'][data-skin='clinic'],
+[data-theme='dark'] [data-skin='clinic'] {
+  --color-canvas: #111a24;
+  --color-surface: #1d2a38;
+  --color-field: #16212d;
+  --color-border: #2b3a4b;
+  --color-border-strong: #4a5d72;
+  --color-text: #dfe6ee;
+  --color-text-muted: #9aa9ba;
+  --color-accent: #4fc3c9;
+  --color-accent-hover: #7dd5d9;
+  --color-accent-soft: #12363a;
+  --color-on-accent: #0d1b2a;
+  --color-danger: #ff8787;
+  --color-danger-soft: #3a1a1d;
+  --color-success: #51cf8a;
+  --color-success-soft: #12301f;
+  --color-warning: #ffc266;
+  --color-warning-soft: #3a2a10;
+  --color-focus: #4fc3c9;
+  --color-nav: #0d1b2a;
+  --color-nav-active: #1d3550;
+  --shadow-card: none;
+}

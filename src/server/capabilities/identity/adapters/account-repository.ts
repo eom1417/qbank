@@ -2,7 +2,7 @@ import type { Selectable, Updateable } from 'kysely';
 import { isUniqueViolation } from '../../../platform/db/errors.js';
 import type { Db } from '../../../platform/db/index.js';
 import type { Database } from '../../../platform/db/schema.js';
-import type { UpdateAccountRequest } from '../../../../contracts/identity.js';
+import { skinOf, type UpdateAccountRequest } from '../../../../contracts/identity.js';
 import type { Account } from '../domain/account.js';
 
 interface NewAccount extends Account {
@@ -30,6 +30,7 @@ const fromRow = (row: AccountRow): Account => ({
   preferences: {
     locale: row.locale,
     theme: row.theme,
+    skin: skinOf(row.skin),
     defaultSessionSize: row.default_session_size,
     explanationMode: row.explanation_mode,
     reviewReminders: row.review_reminders,
@@ -41,6 +42,7 @@ const toChanges = (changes: UpdateAccountRequest): Updateable<Database['account'
   display_name: changes.displayName,
   locale: changes.locale,
   theme: changes.theme,
+  skin: changes.skin,
   default_session_size: changes.defaultSessionSize,
   explanation_mode: changes.explanationMode,
   review_reminders: changes.reviewReminders,
@@ -57,6 +59,7 @@ async function insertAccount(db: Db, account: NewAccount) {
       display_name: account.displayName,
       locale: p.locale,
       theme: p.theme,
+      skin: p.skin,
       default_session_size: p.defaultSessionSize,
       explanation_mode: p.explanationMode,
       review_reminders: p.reviewReminders,

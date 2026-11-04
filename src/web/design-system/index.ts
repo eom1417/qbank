@@ -1,5 +1,7 @@
 import './tokens/base.css';
 import './components/components.css';
+import './components/skin-picker.css';
+import './fonts.js';
 
 export { Button, buttonClass } from './components/Button.js';
 export { ConfirmButton } from './components/ConfirmButton.js';
@@ -23,6 +25,7 @@ export {
   Title,
 } from './components/Layout.js';
 export { PageShell } from './components/PageShell.js';
+export { SkinPicker } from './components/SkinPicker.js';
 export { Meter } from './components/Meter.js';
 export { TextArea } from './components/TextArea.js';
 export { TextField } from './components/TextField.js';

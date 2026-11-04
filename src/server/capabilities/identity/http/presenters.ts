@@ -8,6 +8,7 @@ export const toAccountResponse = (account: Account): AccountResponse => ({
   preferences: {
     locale: account.preferences.locale,
     theme: account.preferences.theme,
+    skin: account.preferences.skin,
     defaultSessionSize: account.preferences.defaultSessionSize,
     explanationMode: account.preferences.explanationMode,
     reviewReminders: account.preferences.reviewReminders,

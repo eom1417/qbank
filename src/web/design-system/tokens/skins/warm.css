@@ -1,0 +1,59 @@
+/* Study Warm: soft and rounded, violet accent, big option cards on a gentle glow. */
+[data-skin='warm'] {
+  --color-canvas: #f7f5fb;
+  --color-surface: #ffffff;
+  --color-field: #ffffff;
+  --color-border: #e6e1f1;
+  --color-border-strong: #b9aed6;
+  --color-text: #1d1830;
+  --color-text-muted: #5f5876;
+  --color-accent: #5b3fd1;
+  --color-accent-hover: #4a2fc0;
+  --color-accent-soft: #efeafd;
+  --color-on-accent: #ffffff;
+  --color-danger: #c42b44;
+  --color-danger-soft: #fdecef;
+  --color-success: #137a4b;
+  --color-success-soft: #e5f5ec;
+  --color-warning: #8f5300;
+  --color-warning-soft: #fff3dc;
+  --color-focus: #5b3fd1;
+  --color-nav: rgb(255 255 255 / 0.8);
+  --color-nav-text: #3d2a9c;
+  --color-nav-active: #efeafd;
+  --canvas-glow:
+    radial-gradient(1200px 520px at 85% -10%, #ebe4ff 0%, transparent 60%),
+    radial-gradient(900px 480px at -10% 0%, #fff0e6 0%, transparent 55%);
+  --font-body: 'Inter', 'Noto Sans Arabic', system-ui, sans-serif;
+  --radius-control: 0.875rem;
+  --radius-card: 1.25rem;
+  --shadow-card: 0 1px 2px rgb(45 30 110 / 0.05), 0 6px 20px -6px rgb(45 30 110 / 0.12);
+}
+[data-theme='dark'][data-skin='warm'],
+[data-theme='dark'] [data-skin='warm'] {
+  --color-canvas: #15121f;
+  --color-surface: #1f1a2e;
+  --color-field: #191526;
+  --color-border: #2f2845;
+  --color-border-strong: #5a4f7d;
+  --color-text: #f1eefa;
+  --color-text-muted: #aaa2c4;
+  --color-accent: #a08cf6;
+  --color-accent-hover: #bcaefa;
+  --color-accent-soft: #2c2450;
+  --color-on-accent: #15121f;
+  --color-danger: #ff8a9b;
+  --color-danger-soft: #3a1520;
+  --color-success: #5fd39a;
+  --color-success-soft: #12301f;
+  --color-warning: #ffc061;
+  --color-warning-soft: #3a2a10;
+  --color-focus: #a08cf6;
+  --color-nav: rgb(31 26 46 / 0.8);
+  --color-nav-text: #c9bdfb;
+  --color-nav-active: #2c2450;
+  --canvas-glow:
+    radial-gradient(1200px 520px at 85% -10%, #2a2050 0%, transparent 60%),
+    radial-gradient(900px 480px at -10% 0%, #2a1c22 0%, transparent 55%);
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.3), 0 8px 24px -8px rgb(0 0 0 / 0.5);
+}

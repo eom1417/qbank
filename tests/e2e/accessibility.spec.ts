@@ -4,6 +4,18 @@ import { studyableBank, usePdfFixtures } from './support.js';
 
 // WCAG 2.2 A/AA by axe-core on every main screen (FR-21-009); keyboard and reading checks follow.
 const fixtures = usePdfFixtures();
+// Dozens of full-page audits per test: far longer than one user journey.
+test.describe.configure({ timeout: 240_000 });
+// Every skin (id, label) in light and dark; Clinic light is the default audited above.
+const SKIN_RUNS = [
+  ['clinic', 'Clinic Pro', 'dark'],
+  ['calm', 'Calm Minimal', 'light'],
+  ['calm', 'Calm Minimal', 'dark'],
+  ['native', 'Native Mobile', 'light'],
+  ['native', 'Native Mobile', 'dark'],
+  ['warm', 'Study Warm', 'light'],
+  ['warm', 'Study Warm', 'dark'],
+] as const;
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
 async function expectAccessible(page: Page, url: string) {
@@ -12,6 +24,11 @@ async function expectAccessible(page: Page, url: string) {
   const { violations } = await new AxeBuilder({ page }).withTags(TAGS).analyze();
   const found = violations.flatMap((v) => v.nodes.map((n) => `${v.id} ${n.target.join(' ')}`));
   expect([url, found]).toEqual([url, []]);
+  // Nothing is wider than the screen: a sideways scroll breaks phones and right-to-left layouts.
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect([url, overflow]).toEqual([url, 0]);
 }
 
 /** A Tutor session of two questions, the first one answered, sent from the page like the app. */
@@ -71,4 +88,23 @@ test('every main screen passes WCAG 2.2 AA checks in Arabic, light theme', async
 test('and in English, dark theme', async ({ page }) => {
   await auditEverything(page, 'en', 'dark');
   await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
+});
+
+test('every skin passes the same checks, light and dark, and the choice is kept', async ({
+  page,
+}) => {
+  await studyableBank(page, 'skins', fixtures().english);
+  const bank = new URL(page.url()).pathname;
+  const sessionId = await answeredTutor(page, bank.split('/').pop() ?? '');
+  for (const [skin, label, theme] of SKIN_RUNS) {
+    await page.goto('/settings');
+    await page.getByLabel('المظهر', { exact: true }).selectOption(theme);
+    await page.getByRole('button', { name: 'حفظ' }).nth(1).click();
+    await page.getByRole('radio', { name: label }).check();
+    await expect(page.locator('html')).toHaveAttribute('data-skin', skin);
+    for (const url of ['/', bank, `/study/sessions/${sessionId}`, '/settings'])
+      await expectAccessible(page, url);
+  }
+  await page.reload();
+  await expect(page.getByRole('radio', { name: 'Study Warm' })).toBeChecked();
 });

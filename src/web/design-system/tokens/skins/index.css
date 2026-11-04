@@ -1,0 +1,6 @@
+/* Every skin, registered once. A new skin: one file here + its name in contracts/identity.ts. */
+@import './clinic.css';
+@import './calm.css';
+@import './native.css';
+@import './warm.css';
+@import './layouts.css';

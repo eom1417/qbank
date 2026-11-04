@@ -1,6 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { RouterProvider } from 'react-router';
+import { DEFAULT_SKIN } from '../contracts/identity.js';
 import { router } from './app/routes.js';
 import { SessionProvider } from './capabilities/identity/session.js';
 import { ThemeProvider } from './design-system/index.js';
@@ -12,7 +13,7 @@ if (!root) throw new Error('missing #root');
 createRoot(root).render(
   <StrictMode>
     <I18nProvider>
-      <ThemeProvider>
+      <ThemeProvider defaultSkin={DEFAULT_SKIN}>
         <SessionProvider>
           <RouterProvider router={router} />
         </SessionProvider>

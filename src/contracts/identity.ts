@@ -5,6 +5,17 @@ export type Locale = z.infer<typeof Locale>;
 
 const Theme = z.enum(['system', 'light', 'dark']);
 
+/**
+ * The look-and-feel skins (one engine, several experiences). This list is the single source:
+ * adding a skin = its name here + `src/web/design-system/tokens/skins/<name>.css` + two labels.
+ */
+export const SKINS = ['clinic', 'calm', 'native', 'warm'] as const;
+export const Skin = z.enum(SKINS);
+export type Skin = z.infer<typeof Skin>;
+export const DEFAULT_SKIN: Skin = 'clinic';
+/** A stored skin that is no longer offered falls back to the default instead of failing. */
+export const skinOf = (value: string): Skin => Skin.catch(DEFAULT_SKIN).parse(value);
+
 /** When the source explanation is shown in Tutor mode (FR-22-001). */
 const ExplanationMode = z.enum(['after_answer', 'on_request']);
 
@@ -49,6 +60,7 @@ export const AccountPreferences = z
   .object({
     locale: Locale,
     theme: Theme,
+    skin: Skin,
     defaultSessionSize: SessionSize,
     explanationMode: ExplanationMode,
     reviewReminders: ReviewReminders,
@@ -62,6 +74,7 @@ export const UpdateAccountRequest = z
     displayName: DisplayName,
     locale: Locale,
     theme: Theme,
+    skin: Skin,
     defaultSessionSize: SessionSize,
     explanationMode: ExplanationMode,
     reviewReminders: ReviewReminders,

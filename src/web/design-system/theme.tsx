@@ -3,9 +3,21 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 export type ThemePreference = 'system' | 'light' | 'dark';
 
 const STORAGE_KEY = 'qb.theme';
-const ThemeContext = createContext<{ theme: ThemePreference; setTheme(t: ThemePreference): void }>({
+const SKIN_KEY = 'qb.skin';
+
+interface ThemeState {
+  theme: ThemePreference;
+  setTheme(t: ThemePreference): void;
+  /** The look-and-feel skin, applied as `data-skin` on <html> (tokens/skins). */
+  skin: string;
+  setSkin(skin: string): void;
+}
+
+const ThemeContext = createContext<ThemeState>({
   theme: 'system',
   setTheme: () => undefined,
+  skin: '',
+  setSkin: () => undefined,
 });
 
 function readStored(): ThemePreference {
@@ -18,14 +30,36 @@ function resolve(theme: ThemePreference): 'light' | 'dark' {
   return matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
-/** Applies the theme as `data-theme` on <html>; semantic tokens do the rest. */
-export function ThemeProvider({ children }: { children: ReactNode }) {
+/** The last skin used on this browser, applied before the first paint so nothing flashes. */
+function initialSkin(fallback: string) {
+  const skin = localStorage.getItem(SKIN_KEY) ?? fallback;
+  document.documentElement.dataset['skin'] = skin;
+  return skin;
+}
+
+/** Applies theme and skin on <html>; semantic tokens (and the skin's remap) do the rest. */
+export function ThemeProvider({
+  defaultSkin,
+  children,
+}: {
+  defaultSkin: string;
+  children: ReactNode;
+}) {
   const [theme, setTheme] = useState<ThemePreference>(readStored);
+  const [skin, setSkin] = useState(() => initialSkin(defaultSkin));
   useEffect(() => {
     document.documentElement.dataset['theme'] = resolve(theme);
     localStorage.setItem(STORAGE_KEY, theme);
   }, [theme]);
-  return <ThemeContext.Provider value={{ theme, setTheme }}>{children}</ThemeContext.Provider>;
+  useEffect(() => {
+    document.documentElement.dataset['skin'] = skin;
+    localStorage.setItem(SKIN_KEY, skin);
+  }, [skin]);
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme, skin, setSkin }}>
+      {children}
+    </ThemeContext.Provider>
+  );
 }
 
 export const useTheme = () => useContext(ThemeContext);

@@ -1,0 +1,55 @@
+/* Calm Minimal: monochrome zinc, airy and reading-first, a quiet top bar. */
+[data-skin='calm'] {
+  --color-canvas: #fafafa;
+  --color-surface: #ffffff;
+  --color-field: #ffffff;
+  --color-border: #e4e4e7;
+  --color-border-strong: #a1a1aa;
+  --color-text: #18181b;
+  --color-text-muted: #5f5f68;
+  --color-accent: #18181b;
+  --color-accent-hover: #3f3f46;
+  --color-accent-soft: #f4f4f5;
+  --color-on-accent: #fafafa;
+  --color-danger: #c81e1e;
+  --color-danger-soft: #fef2f2;
+  --color-success: #15803d;
+  --color-success-soft: #f0fdf4;
+  --color-warning: #8f5300;
+  --color-warning-soft: #fefce8;
+  --color-focus: #2a78d6;
+  --color-nav: rgb(250 250 250 / 0.85);
+  --color-nav-text: #18181b;
+  --color-nav-active: #f4f4f5;
+  --font-body: 'Readex Pro Variable', system-ui, sans-serif;
+  --radius-control: 0.5rem;
+  --radius-card: 0.75rem;
+  --space-lg: 1.75rem;
+  --text-heading: 1.75rem;
+  --shadow-card: none;
+  --line-height-body: 1.75;
+}
+[data-theme='dark'][data-skin='calm'],
+[data-theme='dark'] [data-skin='calm'] {
+  --color-canvas: #09090b;
+  --color-surface: #18181b;
+  --color-field: #111113;
+  --color-border: #27272a;
+  --color-border-strong: #52525b;
+  --color-text: #fafafa;
+  --color-text-muted: #a1a1aa;
+  --color-accent: #fafafa;
+  --color-accent-hover: #e4e4e7;
+  --color-accent-soft: #27272a;
+  --color-on-accent: #18181b;
+  --color-danger: #f87171;
+  --color-danger-soft: #2a1215;
+  --color-success: #4ade80;
+  --color-success-soft: #0f2a19;
+  --color-warning: #facc15;
+  --color-warning-soft: #2a250a;
+  --color-focus: #3a8ee6;
+  --color-nav: rgb(9 9 11 / 0.85);
+  --color-nav-text: #fafafa;
+  --color-nav-active: #27272a;
+}

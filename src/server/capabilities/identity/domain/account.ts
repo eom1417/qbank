@@ -1,4 +1,4 @@
-import type { AccountPreferences } from '../../../../contracts/identity.js';
+import { DEFAULT_SKIN, type AccountPreferences } from '../../../../contracts/identity.js';
 
 export interface Account {
   id: string;
@@ -11,6 +11,7 @@ export interface Account {
 export const defaultPreferences = (locale: AccountPreferences['locale']): AccountPreferences => ({
   locale,
   theme: 'system',
+  skin: DEFAULT_SKIN,
   defaultSessionSize: 20,
   explanationMode: 'after_answer',
   reviewReminders: 'off',

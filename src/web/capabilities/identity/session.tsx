@@ -71,16 +71,17 @@ async function loadAccount(): Promise<SessionState> {
   }
 }
 
-/** The account's saved language and theme win over this browser's local choice. */
+/** The account's saved language, theme and skin win over this browser's local choice. */
 function useApplySavedPreferences(state: SessionState) {
   const { setLocale } = useI18n();
-  const { setTheme } = useTheme();
+  const { setTheme, setSkin } = useTheme();
   const preferences = state.status === 'signed-in' ? state.account.preferences : null;
   useEffect(() => {
     if (!preferences) return;
     setLocale(preferences.locale);
     setTheme(preferences.theme);
-  }, [preferences, setLocale, setTheme]);
+    setSkin(preferences.skin);
+  }, [preferences, setLocale, setTheme, setSkin]);
 }
 
 export function SessionProvider({ children }: { children: ReactNode }) {

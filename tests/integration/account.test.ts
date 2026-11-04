@@ -21,6 +21,7 @@ describe('account preferences (FR-02-005, FR-21-010)', () => {
     expect(me.preferences).toEqual({
       locale: 'en',
       theme: 'dark',
+      skin: 'clinic',
       defaultSessionSize: 40,
       explanationMode: 'on_request',
       reviewReminders: 'off',
@@ -60,5 +61,16 @@ describe('change password', () => {
     expect(changed.statusCode).toBe(204);
     expect((await browser.get('/api/auth/me')).statusCode).toBe(200);
     expect((await laptop.get('/api/auth/me')).statusCode).toBe(401);
+  });
+});
+
+describe('skins (one engine, several experiences)', () => {
+  it('starts on the default skin, saves another, and refuses an unknown one', async () => {
+    const { browser } = await registeredBrowser(app());
+    const skin = async () => (await browser.get('/api/auth/me')).json().preferences.skin;
+    expect(await skin()).toBe('clinic');
+    expect((await browser.patch('/api/account', { skin: 'warm' })).statusCode).toBe(200);
+    expect(await skin()).toBe('warm');
+    expect((await browser.patch('/api/account', { skin: 'neon' })).statusCode).toBe(400);
   });
 });

@@ -1,0 +1,53 @@
+/* Native Mobile: the iOS feel. Grouped cards on a grey canvas, large titles, filled fields. */
+[data-skin='native'] {
+  --color-canvas: #f2f2f7;
+  --color-surface: #ffffff;
+  --color-field: #f2f2f7;
+  --color-border: #e5e5ea;
+  --color-border-strong: #aeaeb2;
+  --color-text: #1c1c1e;
+  --color-text-muted: #6c6c70;
+  --color-accent: #0060df;
+  --color-accent-hover: #004fb8;
+  --color-accent-soft: #e5f0ff;
+  --color-on-accent: #ffffff;
+  --color-danger: #d70015;
+  --color-danger-soft: #ffe9eb;
+  --color-success: #1e7a35;
+  --color-success-soft: #e6f6ea;
+  --color-warning: #a14800;
+  --color-warning-soft: #fff2e0;
+  --color-focus: #007aff;
+  --color-nav: rgb(249 249 249 / 0.88);
+  --color-nav-text: #0060df;
+  --color-nav-active: #e5f0ff;
+  --font-body: 'Rubik', -apple-system, 'SF Pro Text', system-ui, sans-serif;
+  --radius-control: 0.75rem;
+  --radius-card: 0.875rem;
+  --text-heading: 2.125rem;
+  --shadow-card: none;
+}
+[data-theme='dark'][data-skin='native'],
+[data-theme='dark'] [data-skin='native'] {
+  --color-canvas: #000000;
+  --color-surface: #1c1c1e;
+  --color-field: #2c2c2e;
+  --color-border: #38383a;
+  --color-border-strong: #636366;
+  --color-text: #ffffff;
+  --color-text-muted: #98989f;
+  --color-accent: #409cff;
+  --color-accent-hover: #70b4ff;
+  --color-accent-soft: #0a2540;
+  --color-on-accent: #000000;
+  --color-danger: #ff6961;
+  --color-danger-soft: #3a1210;
+  --color-success: #30d158;
+  --color-success-soft: #0d2e17;
+  --color-warning: #ffb340;
+  --color-warning-soft: #3a2608;
+  --color-focus: #409cff;
+  --color-nav: rgb(22 22 24 / 0.88);
+  --color-nav-text: #409cff;
+  --color-nav-active: #0a2540;
+}

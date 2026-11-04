@@ -6,6 +6,7 @@ import { text } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { SettingsForm, useAccountForm, useSavedForm } from './settings-form.js';
 import { useSession } from './session.js';
+import { SkinCard } from './SkinCard.js';
 
 const STUDY_DEFAULTS = { defaultSessionSize: 20, explanationMode: 'after_answer' } as const;
 
@@ -151,6 +152,7 @@ export function AccountSettings() {
   return (
     <>
       <ProfileCard displayName={account.displayName} />
+      <SkinCard />
       <AppearanceCard preferences={account.preferences} />
       <StudyCard preferences={account.preferences} />
       {mode === 'accounts' && <PasswordCard />}

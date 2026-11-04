@@ -50,6 +50,7 @@
   --qb-weight-regular: 400;
   --qb-weight-semibold: 600;
   --qb-line-normal: 1.6;
+  --qb-line-tight: 1.25;
 
   --qb-size-touch: 44px;
   --qb-size-content: 72rem;
@@ -57,6 +58,10 @@
   --qb-size-card-min: 18rem;
   --qb-size-viewport: 100vh;
   --qb-size-thumb: 10rem;
+  --qb-size-skin-min: 11rem;
+  --qb-size-skin-preview: 6rem;
+  --qb-blur-nav: 12px;
   --qb-shadow-1: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 3px rgb(15 23 42 / 0.1);
   --qb-duration-fast: 120ms;
+  --qb-layer-nav: 10;
 }

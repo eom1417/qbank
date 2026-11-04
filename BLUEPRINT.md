@@ -67,7 +67,7 @@ Layout: `src/server` (API + worker), `src/web` (SPA), `src/contracts` (the singl
 
 ## 5. Design system (`.genesis/docs/04`)
 
-Tokens `src/web/design-system/tokens/` (primitives → semantic CSS custom properties; light and dark themes via `[data-theme]`) · components `src/web/design-system/components/` (Button, TextField, Card, Alert, EmptyState, PageShell, …) · catalog: the component tests (a gallery screen comes later) · themes: light/dark, `dir` set from the UI language, logical CSS properties only · a11y: WCAG 2.2 AA, visible focus, 44 px touch targets, and never colour as the only signal (FR-21-002, UAT-083) · enforcement: `G design` (`applies.design=true`).
+Tokens `src/web/design-system/tokens/` (primitives → semantic CSS custom properties; light and dark themes via `[data-theme]`) · skins (DEC-32) `tokens/skins/<name>.css` remap the same semantic tokens and shell layout via `[data-skin]`; the one list of skins is `SKINS` in `src/contracts/identity.ts` (validates the account preference, drives the Settings picker `SkinPicker`) · components `src/web/design-system/components/` (Button, TextField, Card, Alert, EmptyState, PageShell, …) · catalog: the component tests (a gallery screen comes later) · themes: light/dark, `dir` set from the UI language, logical CSS properties only · a11y: WCAG 2.2 AA, visible focus, 44 px touch targets, and never colour as the only signal (FR-21-002, UAT-083) · enforcement: `G design` (`applies.design=true`).
 
 ## 6. Security and privacy (`.genesis/docs/05`)
 

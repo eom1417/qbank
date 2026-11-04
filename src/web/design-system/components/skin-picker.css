@@ -1,0 +1,91 @@
+.qb-skins {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--size-skin-min)), 1fr));
+  gap: var(--space-md);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.qb-skin {
+  display: grid;
+  gap: var(--space-sm);
+  align-content: start;
+  padding: var(--space-sm);
+  border: var(--focus-ring-width) solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: border-color var(--motion-fast);
+}
+.qb-skin:hover,
+.qb-skin:has(input:checked) {
+  border-color: var(--color-accent);
+}
+.qb-skin:has(input:focus-visible) {
+  outline: var(--focus-ring-width) solid var(--color-focus);
+  outline-offset: var(--focus-ring-width);
+}
+.qb-skin__text {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: center;
+}
+.qb-skin__name {
+  font-weight: var(--weight-strong);
+  white-space: nowrap;
+}
+.qb-skin__preview {
+  display: grid;
+  grid-template-rows: var(--space-md) 1fr;
+  block-size: var(--size-skin-preview);
+  overflow: hidden;
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-control);
+  background-color: var(--color-canvas);
+  background-image: var(--canvas-glow);
+}
+.qb-skin__bar {
+  background: var(--color-nav);
+  border-block-end: var(--border-width) solid var(--color-border);
+}
+[data-skin='clinic'] > .qb-skin__bar {
+  background: var(--color-nav-active);
+}
+.qb-skin__page {
+  display: grid;
+  gap: var(--space-xs);
+  align-content: start;
+  padding: var(--space-sm);
+}
+.qb-skin__line {
+  inline-size: 50%;
+  block-size: var(--space-sm);
+  border-radius: var(--radius-pill);
+  background: var(--color-text);
+}
+.qb-skin__card {
+  display: grid;
+  gap: var(--space-xs);
+  padding: var(--space-sm);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+}
+.qb-skin__option {
+  block-size: var(--space-sm);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-control);
+}
+.qb-skin__option--chosen {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+.qb-skin__button {
+  justify-self: end;
+  inline-size: 30%;
+  block-size: var(--space-sm);
+  border-radius: var(--radius-control);
+  background: var(--color-accent);
+}

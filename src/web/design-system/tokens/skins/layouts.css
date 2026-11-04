@@ -1,0 +1,76 @@
+/* What changes shape per skin (not just colour). Components keep their classes; only these differ. */
+
+/* Every skin: on a phone the bar wraps, and pinning it would cover the content. */
+@media (min-width: 48rem) {
+  .qb-shell__bar {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: var(--layer-nav);
+  }
+}
+
+/* Clinic: a navy sidebar on wide screens, the navy bar on top on phones. */
+[data-skin='clinic'] .qb-shell__bar {
+  --color-focus: #7dd5d9;
+  border-block-end: 0;
+}
+@media (min-width: 64rem) {
+  [data-skin='clinic'] .qb-shell {
+    display: grid;
+    grid-template-columns: 15rem minmax(0, 1fr);
+  }
+  [data-skin='clinic'] .qb-shell__bar {
+    block-size: 100vh;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: var(--space-lg);
+    padding: var(--space-lg) var(--space-md);
+  }
+  [data-skin='clinic'] .qb-shell__actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  [data-skin='clinic'] .qb-shell__actions > * {
+    justify-content: flex-start;
+  }
+  [data-skin='clinic'] .qb-shell__main {
+    align-content: start;
+    inline-size: 100%;
+    padding: var(--space-xl);
+  }
+}
+
+/* Calm: a quiet reading column. */
+[data-skin='calm'] .qb-shell__main {
+  max-inline-size: 60rem;
+  padding-block: var(--space-xl);
+}
+[data-skin='calm'] .qb-heading {
+  letter-spacing: -0.015em;
+}
+
+/* Native: large bold titles and borderless grouped cards. */
+[data-skin='native'] .qb-heading {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+[data-skin='native'] .qb-card {
+  border-color: transparent;
+}
+[data-skin='native'] .qb-shell__brand {
+  color: var(--color-text);
+}
+
+/* Warm: pill buttons and big, friendly option cards. */
+[data-skin='warm'] .qb-button {
+  border-radius: 999px;
+}
+[data-skin='warm'] .qb-choice {
+  padding: var(--space-md) var(--space-lg);
+  border-width: var(--focus-ring-width);
+}
+[data-skin='warm'] .qb-card {
+  border-color: transparent;
+}

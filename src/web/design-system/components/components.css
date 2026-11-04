@@ -40,6 +40,7 @@
 
 .qb-field {
   display: grid;
+  min-inline-size: 0;
   gap: var(--space-xs);
 }
 .qb-field__label {
@@ -55,12 +56,15 @@
   font-size: var(--text-small);
 }
 .qb-field__input {
+  /* Never wider than its column: a long option or font must not push the page sideways. */
+  inline-size: 100%;
+  min-inline-size: 0;
   min-block-size: var(--size-touch-target);
   padding-block: var(--space-control-block);
   padding-inline: var(--space-control-inline);
   border: var(--border-width) solid var(--color-border-strong);
   border-radius: var(--radius-control);
-  background: var(--color-surface);
+  background: var(--color-field);
   color: var(--color-text);
   font: inherit;
 }
@@ -128,19 +132,21 @@
   justify-content: space-between;
   padding-block: var(--space-sm);
   padding-inline: var(--space-md);
-  background: var(--color-surface);
+  background: var(--color-nav);
+  color: var(--color-nav-text);
   border-block-end: var(--border-width) solid var(--color-border);
+  backdrop-filter: saturate(1.8) blur(var(--blur-nav));
 }
 .qb-shell__brand {
   font-size: var(--text-title);
   font-weight: var(--weight-strong);
-  color: var(--color-text);
+  color: inherit;
   text-decoration: none;
 }
 .qb-shell__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-sm);
+  gap: var(--space-xs);
   align-items: center;
 }
 .qb-shell__actions > a {
@@ -148,7 +154,21 @@
   align-items: center;
   min-block-size: var(--size-touch-target);
   padding-inline: var(--space-sm);
+  border-radius: var(--radius-control);
+  color: inherit;
+  text-decoration: none;
 }
+.qb-shell__actions > a:hover,
+.qb-shell__actions > a[aria-current='page'] {
+  background: var(--color-nav-active);
+}
+.qb-shell__actions > a[aria-current='page'] {
+  font-weight: var(--weight-strong);
+}
+.qb-shell__bar .qb-button--ghost {
+  color: inherit;
+}
+
 .qb-shell__main {
   display: grid;
   gap: var(--space-lg);
@@ -160,6 +180,9 @@
   display: grid;
   gap: var(--space-md);
 }
+.qb-stack > * {
+  min-inline-size: 0;
+}
 .qb-narrow {
   max-inline-size: var(--size-form);
   inline-size: 100%;
@@ -167,6 +190,7 @@
 }
 .qb-heading {
   font-size: var(--text-heading);
+  line-height: var(--line-height-heading);
 }
 .qb-title {
   font-size: var(--text-title);
@@ -318,6 +342,10 @@
   border-radius: var(--radius-control);
   background: var(--color-surface);
   cursor: pointer;
+  transition: border-color var(--motion-fast);
+}
+.qb-choice:hover {
+  border-color: var(--color-accent);
 }
 .qb-choice--right {
   border-color: var(--color-success);

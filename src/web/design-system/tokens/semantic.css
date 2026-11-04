@@ -65,12 +65,23 @@
   --weight-body: var(--qb-weight-regular);
   --weight-strong: var(--qb-weight-semibold);
   --line-height-body: var(--qb-line-normal);
+  --line-height-heading: var(--qb-line-tight);
   --size-touch-target: var(--qb-size-touch);
   --size-page: var(--qb-size-content);
   --size-form: var(--qb-size-form);
   --size-card-min: var(--qb-size-card-min);
   --size-viewport: var(--qb-size-viewport);
   --size-thumb: var(--qb-size-thumb);
+  --size-skin-min: var(--qb-size-skin-min);
+  --size-skin-preview: var(--qb-size-skin-preview);
+  --blur-nav: var(--qb-blur-nav);
   --shadow-card: var(--qb-shadow-1);
   --motion-fast: var(--qb-duration-fast);
+  --layer-nav: var(--qb-layer-nav);
+  /* Skins (tokens/skins) remap these; without a skin they follow the theme above. */
+  --color-field: var(--color-surface);
+  --color-nav: var(--color-surface);
+  --color-nav-text: var(--color-text);
+  --color-nav-active: var(--color-accent-soft);
+  --canvas-glow: none;
 }

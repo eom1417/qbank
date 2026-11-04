@@ -1,4 +1,4 @@
-import { Link, Outlet } from 'react-router';
+import { Link, NavLink, Outlet } from 'react-router';
 import { Button, PageShell, useTheme, type ThemePreference } from '../design-system/index.js';
 import { useSession } from '../capabilities/identity/session.js';
 import { useI18n } from '../platform/i18n/i18n.js';
@@ -45,11 +45,13 @@ function AccountLinks() {
   }
   return (
     <>
-      <Link to="/">{t('shell.nav.library')}</Link>
-      <Link to="/search">{t('nav.search')}</Link>
-      <Link to="/analytics">{t('nav.analytics')}</Link>
-      <Link to="/settings">{t('shell.nav.settings')}</Link>
-      <Link to="/help">{t('help.link')}</Link>
+      <NavLink to="/" end>
+        {t('shell.nav.library')}
+      </NavLink>
+      <NavLink to="/search">{t('nav.search')}</NavLink>
+      <NavLink to="/analytics">{t('nav.analytics')}</NavLink>
+      <NavLink to="/settings">{t('shell.nav.settings')}</NavLink>
+      <NavLink to="/help">{t('help.link')}</NavLink>
       {mode === 'accounts' && (
         <Button variant="secondary" onClick={() => void signOut()}>
           {t('shell.signOut')}

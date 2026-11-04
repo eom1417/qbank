@@ -9,6 +9,8 @@ interface AccountTable {
   display_name: string;
   locale: 'ar' | 'en';
   theme: Generated<'system' | 'light' | 'dark'>;
+  /** Checked by the contract, not the database, so a new skin needs no migration. */
+  skin: Generated<string>;
   default_session_size: Generated<number>;
   explanation_mode: Generated<'after_answer' | 'on_request'>;
   review_reminders: Generated<'off' | 'daily' | 'weekly'>;

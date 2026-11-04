@@ -7,6 +7,7 @@ import { planEn } from './catalog-plan-en.js';
 import { analyticsEn } from './catalog-analytics-en.js';
 import { portabilityEn } from './catalog-portability-en.js';
 import { helpEn } from './catalog-help-en.js';
+import { skinsEn } from './catalog-skins-en.js';
 import { providersEn } from './catalog-providers-en.js';
 
 /** English UI strings. catalog-ar.ts must define exactly the same keys (enforced by its type). */
@@ -21,6 +22,7 @@ export const en = {
   ...analyticsEn,
   ...portabilityEn,
   ...helpEn,
+  ...skinsEn,
   'app.name': 'QBank Engine',
   'shell.language': 'العربية',
   'shell.theme.system': 'Theme: system',
