@@ -38,6 +38,8 @@ export const reviewEn = {
   'review.reason.garbled_text': 'The text looks garbled',
   'review.reason.restored': 'Brought back: approve it again',
   'review.reason.reported': 'Reported while studying',
+  'review.reason.duplicate': 'The same question is already in this bank',
+  'review.reason.reimport_differs': 'A new import reads your edited question differently',
   'review.decision.approve': 'Approve',
   'review.decision.defer': 'Leave for later',
   'review.decision.exclude': 'Hide from study',

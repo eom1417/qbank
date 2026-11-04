@@ -6,6 +6,11 @@ import { registerQuestionRoutes } from './http/routes.js';
 import { registerEditRoutes } from './http/edit-routes.js';
 import { registerNoteRoutes } from './http/note-routes.js';
 import { registerReviewRoutes } from './http/review-routes.js';
+import { registerDuplicateRoutes } from './http/duplicate-routes.js';
+import { createPairRepository } from './adapters/pair-repository.js';
+import { detectDuplicates } from './use-cases/duplicates.js';
+import type { ImportedQuestion } from './domain/imported.js';
+import type { Place } from './adapters/question-writes.js';
 import { createNoteRepository } from './adapters/note-repository.js';
 import { createReportRepository } from './adapters/report-repository.js';
 import { createReviewRepository } from './adapters/review-repository.js';
@@ -46,20 +51,28 @@ export function createQuestions(settings: QuestionsSettings) {
     review: createReviewRepository(settings.db),
     notes: createNoteRepository(settings.db),
     reports: createReportRepository(settings.db),
+    pairs: createPairRepository(settings.db, newId),
     newId,
     deleteBlob: settings.deleteBlob,
     ownsBank: settings.ownsBank,
     chaptersOf: settings.chaptersOf,
     tagsOf: settings.tagsOf,
   };
+  /** An import's questions, then the duplicates they bring into the bank (M8.1). */
+  const saveImported = async (place: Place, questions: readonly ImportedQuestion[], now: Date) => {
+    const added = await repository.saveImported(place, questions, now);
+    await detectDuplicates(deps, place, added, now);
+  };
   return {
     ...repository,
+    saveImported,
     ...media,
     register: (app: FastifyInstance) => {
       registerQuestionRoutes(app, deps, settings.requireActor);
       registerReviewRoutes(app, deps, settings.requireActor);
       registerEditRoutes(app, deps, settings.requireActor);
       registerNoteRoutes(app, deps, settings.requireActor);
+      registerDuplicateRoutes(app, deps, settings.requireActor);
     },
   };
 }

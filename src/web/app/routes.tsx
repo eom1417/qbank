@@ -7,6 +7,10 @@ import { ResetPasswordScreen } from '../capabilities/identity/ResetPasswordScree
 import { SignInScreen } from '../capabilities/identity/SignInScreen.js';
 import { SignUpScreen } from '../capabilities/identity/SignUpScreen.js';
 import { BankScreen } from '../capabilities/library/BankScreen.js';
+import { DuplicatesLink } from '../capabilities/duplicates/DuplicatesLink.js';
+import { DuplicatesScreen } from '../capabilities/duplicates/DuplicatesScreen.js';
+import { ReimportCard } from '../capabilities/duplicates/ReimportCard.js';
+import { TransferCard } from '../capabilities/duplicates/TransferCard.js';
 import { QuestionScreen } from '../capabilities/review/QuestionScreen.js';
 import { ReviewLink } from '../capabilities/review/ReviewLink.js';
 import { ReviewScreen } from '../capabilities/review/ReviewScreen.js';
@@ -30,6 +34,7 @@ export const router = createBrowserRouter([
               sources={(bankId) => (
                 <>
                   <ReviewLink bankId={bankId} />
+                  <DuplicatesLink bankId={bankId} />
                   <SourcesCard bankId={bankId} />
                 </>
               )}
@@ -46,10 +51,25 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: '/banks/:bankId/duplicates',
+        element: (
+          <Private>
+            <DuplicatesScreen />
+          </Private>
+        ),
+      },
+      {
         path: '/questions/:id',
         element: (
           <Private>
-            <QuestionScreen />
+            <QuestionScreen
+              extras={(question, onChange) => (
+                <>
+                  <ReimportCard question={question} onChosen={onChange} />
+                  <TransferCard question={question} />
+                </>
+              )}
+            />
           </Private>
         ),
       },

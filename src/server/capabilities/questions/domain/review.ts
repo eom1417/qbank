@@ -14,6 +14,7 @@ const HIGH: ReadonlySet<string> = new Set([
   'duplicate_options',
   'garbled_text',
   'reported',
+  'reimport_differs',
 ]);
 /** A picture or a page that may be missing from the question. */
 const MEDIUM: ReadonlySet<string> = new Set([
@@ -21,6 +22,7 @@ const MEDIUM: ReadonlySet<string> = new Set([
   'media_uncertain',
   'unreadable_page',
   'numbering_gap',
+  'duplicate',
 ]);
 const RANK: Record<Severity, number> = { high: 3, medium: 2, low: 1 };
 

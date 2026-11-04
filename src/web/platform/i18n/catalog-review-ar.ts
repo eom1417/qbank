@@ -40,6 +40,8 @@ export const reviewAr: Record<keyof typeof reviewEn, string> = {
   'review.reason.garbled_text': 'النص يبدو مشوّهاً',
   'review.reason.restored': 'أُعيد: اعتمده من جديد',
   'review.reason.reported': 'بلاغ أثناء الدراسة',
+  'review.reason.duplicate': 'السؤال نفسه موجود في هذا البنك',
+  'review.reason.reimport_differs': 'استيراد جديد قرأ سؤالك المعدّل بشكل مختلف',
   'review.decision.approve': 'اعتمد',
   'review.decision.defer': 'أجّل',
   'review.decision.exclude': 'أخفِ عن الدراسة',

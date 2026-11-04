@@ -6,7 +6,7 @@ import { useQuery } from '../../platform/api/use-query.js';
 import { useAction } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { fetchHistory, restoreVersion } from './api.js';
-import { wordDiff } from './diff.js';
+import { wordDiff } from '../../platform/text/word-diff.js';
 import { originLabel } from './labels.js';
 
 /** A version's words as one text: the stem, then each option, then the answer. */

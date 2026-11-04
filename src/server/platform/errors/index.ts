@@ -19,6 +19,7 @@ const STATUS: Record<ErrorCode, number> = {
   not_retryable: 409,
   version_conflict: 409,
   not_approvable: 409,
+  answers_differ: 409,
   original_deleted: 409,
   ai_host_unavailable: 503,
   internal: 500,

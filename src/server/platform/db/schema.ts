@@ -166,6 +166,28 @@ interface QuestionTable {
   deferred_at: ColumnType<Date | null, Date | null | undefined, Date | null>;
   /** Newer medical information, kept apart from the book's answer (FR-24-002, DEC-16). */
   update_note: ColumnType<string | null, string | null | undefined, string | null>;
+  /** The owner changed its text (M7): a re-import never overwrites it (FR-10-006). */
+  owner_edited_at: ColumnType<Date | null, Date | null | undefined, Date | null>;
+  /** A re-import's different reading of an edited question, for the owner to compare. */
+  reimport_text: ColumnType<unknown, string | null | undefined, string | null>;
+  /** A copy made into another bank (FR-03-009); re-imports of its source leave it alone. */
+  copied_from: ColumnType<string | null, string | null | undefined, string | null>;
+  /** The question the owner chose as the reference for this duplicate (FR-10-004). */
+  duplicate_of: ColumnType<string | null, string | null | undefined, string | null>;
+}
+
+interface QuestionPairTable {
+  id: string;
+  owner_id: string;
+  bank_id: string;
+  question_a: string;
+  question_b: string;
+  kind: 'exact' | 'similar';
+  similarity: number;
+  differences: ColumnType<string[], string[] | undefined, string[]>;
+  decision: 'kept_both' | 'reference' | 'excluded' | null;
+  decided_at: Date | null;
+  created_at: Date;
 }
 
 interface QuestionNoteTable {
@@ -240,4 +262,5 @@ export interface Database {
   question_tag: QuestionTagTable;
   question_note: QuestionNoteTable;
   question_report: QuestionReportTable;
+  question_pair: QuestionPairTable;
 }

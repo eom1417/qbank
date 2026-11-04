@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { wordDiff } from '../../../src/web/capabilities/review/diff.js';
+import { wordDiff } from '../../../src/web/platform/text/word-diff.js';
 
 describe('word diff (UAT-033)', () => {
   it('marks only the changed words', () => {

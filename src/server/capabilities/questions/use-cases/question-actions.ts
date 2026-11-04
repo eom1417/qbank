@@ -31,6 +31,18 @@ export interface ReviewDeps extends QuestionsDeps {
   tagsOf(ownerId: string): Promise<readonly { id: string; name: string }[]>;
 }
 
+/** The re-import's reading set aside, in the response's shape (its options without labels). */
+function readingAside(value: unknown): QuestionResponse['reimportText'] {
+  const text = value as {
+    stem: string;
+    options: { letter: string; text: string }[];
+    explanation: string | null;
+  } | null;
+  if (!text) return null;
+  const options = text.options.map((o) => ({ letter: o.letter, text: o.text }));
+  return { stem: text.stem, options, explanation: text.explanation };
+}
+
 function toQuestionResponse(
   row: QuestionRow,
   tags: QuestionResponse['tags'],
@@ -60,6 +72,7 @@ function toQuestionResponse(
     difficulty: { kind: row.difficulty_kind, value: row.difficulty },
     updateNote: row.update_note,
     deferred: row.deferred_at !== null,
+    reimportText: readingAside(row.reimport_text),
     pictures,
     version: row.version,
   };

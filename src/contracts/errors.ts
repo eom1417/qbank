@@ -20,6 +20,7 @@ export const ErrorCode = z.enum([
   'not_retryable',
   'version_conflict',
   'not_approvable',
+  'answers_differ',
   'original_deleted',
   'ai_host_unavailable',
   'internal',

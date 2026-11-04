@@ -32,7 +32,7 @@
 | FR-03-006 | فلاتر مركبة                   | مقترح  | M9.2   | planned | —                                                |
 | FR-03-007 | فرز يمكن فهمه                 | مقترح  | M1.5   | partial | `tests/e2e/bank-management.spec.ts`              |
 | FR-03-008 | أرشفة بنوك                    | مقترح  | M1.3   | done    | `tests/integration/bank-editing.test.ts`         |
-| FR-03-009 | نقل أسئلة مختارة              | مقترح  | M8.6   | planned | —                                                |
+| FR-03-009 | نقل أسئلة مختارة              | مقترح  | M8.6   | done    | `tests/integration/duplicates.test.ts`           |
 | FR-03-010 | مكتبة فارغة مفيدة             | مقترح  | M1.5   | done    | `tests/e2e/library.spec.ts`                      |
 | FR-04-001 | PDF نصي وممسوح                | سابق   | M4.1   | done    | `tests/integration/imports.test.ts`              |
 | FR-04-002 | رفع متعدد                     | مقترح  | M4.2   | done    | `tests/e2e/import.spec.ts`                       |
@@ -98,12 +98,12 @@
 | FR-09-008 | التراجع وسجل التاريخ          | مقترح  | M7.7   | done    | `tests/integration/question-editing.test.ts`     |
 | FR-09-009 | ملاحظات المراجعة              | مقترح  | M7.8   | done    | `tests/integration/question-editing.test.ts`     |
 | FR-09-010 | بلاغ مشكلة أثناء الدراسة      | مقترح  | M7.9   | partial | `tests/integration/question-editing.test.ts`     |
-| FR-10-001 | كشف التطابق                   | سابق   | M8.1   | planned | —                                                |
-| FR-10-002 | كشف التشابه                   | مقترح  | M8.2   | planned | —                                                |
-| FR-10-003 | مقارنة المصدرين               | مقترح  | M8.3   | planned | —                                                |
-| FR-10-004 | خيارات القرار                 | مقترح  | M8.4   | planned | —                                                |
+| FR-10-001 | كشف التطابق                   | سابق   | M8.1   | done    | `tests/integration/duplicates.test.ts`           |
+| FR-10-002 | كشف التشابه                   | مقترح  | M8.2   | done    | `tests/unit/questions/duplicates.test.ts`        |
+| FR-10-003 | مقارنة المصدرين               | مقترح  | M8.3   | done    | `tests/integration/duplicates.test.ts`           |
+| FR-10-004 | خيارات القرار                 | مقترح  | M8.4   | done    | `tests/integration/duplicates.test.ts`           |
 | FR-10-005 | عزل التكرار داخل امتحان       | مقترح  | M9.9   | planned | —                                                |
-| FR-10-006 | إعادة استيراد بعد تحرير       | مقترح  | M8.5   | planned | —                                                |
+| FR-10-006 | إعادة استيراد بعد تحرير       | مقترح  | M8.5   | done    | `tests/integration/reimport-edited.test.ts`      |
 | FR-11-001 | معيار مكتمل                   | مقترح  | M6.11  | done    | `tests/unit/questions/eligibility.test.ts`       |
 | FR-11-002 | حالات منتهية ومعلقة           | سابق   | M6.11  | done    | `tests/unit/questions/eligibility.test.ts`       |
 | FR-11-003 | التصنيف للفصل والموضوع        | سابق   | M1.4   | partial | `tests/integration/taxonomy.test.ts`             |

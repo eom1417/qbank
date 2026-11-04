@@ -46,6 +46,12 @@ async function checkTags(deps: ReviewDeps, actor: Actor, tagIds: readonly string
     throw new AppError('validation_failed', { tagIds: 'invalid_value' });
 }
 
+/** Text the owner wrote stays theirs: a re-import will not overwrite it (FR-10-006). */
+const ownerText = (edit: EditQuestionRequest, now: Date) =>
+  edit.stem !== undefined || edit.options !== undefined || edit.explanation !== undefined
+    ? { owner_edited_at: now }
+    : {};
+
 /**
  * The owner's edit (FR-09-003, UI-11), as one new version with origin `edit`. Refused when the
  * question changed since the editor loaded it (another tab), so nothing is overwritten.
@@ -68,7 +74,7 @@ export async function editQuestion(
   await deps.questions.updateQuestion(
     actor.accountId,
     id,
-    { ...content, ...place },
+    { ...content, ...place, ...ownerText(edit, deps.clock.now()) },
     edit.fromAiSuggestion ? 'ai_fix' : 'edit',
     deps.clock.now(),
   );
@@ -148,6 +154,7 @@ export async function restoreVersion(deps: ReviewDeps, actor: Actor, id: string,
     topic_id: s.topic_id,
     review_reasons: s.review_reasons,
     status,
+    owner_edited_at: deps.clock.now(),
   };
   await deps.questions.updateQuestion(
     actor.accountId,

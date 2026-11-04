@@ -19,6 +19,8 @@ const existingAt = (db: Db, place: Place, question: ImportedQuestion, occurrence
     .where('source_page', '=', question.page)
     .where('source_number', '=', question.number)
     .where('source_occurrence', '=', occurrence)
+    // A copy in another bank (FR-03-009) is the owner's own; re-imports leave it alone.
+    .where('copied_from', 'is', null)
     .executeTakeFirst();
 
 /** The answer the user set by hand (M7) survives a re-import unchanged. */
@@ -71,13 +73,56 @@ function placeFields(
     : { chapter_id: null, topic_id: null, classification: 'none' };
 }
 
+const sameText = (a: string | null, b: string | null) =>
+  (a ?? '').replace(/\s+/g, ' ').trim() === (b ?? '').replace(/\s+/g, ' ').trim();
+
+/** The fresh reading differs from the owner's edited text somewhere. */
+function readingDiffers(question: ImportedQuestion, existing: NonNullable<Existing>) {
+  const options = existing.options as { letter: string; text: string }[];
+  return (
+    !sameText(question.stem, existing.stem) ||
+    !sameText(question.explanation, existing.explanation) ||
+    question.options.length !== options.length ||
+    question.options.some(
+      (o, i) => o.letter !== options[i]?.letter || !sameText(o.text, options[i]?.text ?? ''),
+    )
+  );
+}
+
+/** A question's text as this import read it. */
+export const freshText = (question: ImportedQuestion) => ({
+  kind: question.kind,
+  stem: question.stem,
+  options: JSON.stringify(question.options),
+  multi_select: question.multiSelect,
+  explanation: question.explanation,
+  reimport_text: null,
+});
+
+/**
+ * The text an import writes (FR-10-006): the fresh reading, unless the owner edited the
+ * question. Then their text stays, and a different fresh reading is kept aside to compare.
+ */
+function textFields(question: ImportedQuestion, existing: Existing) {
+  if (!existing?.owner_edited_at) return { fields: freshText(question), differs: false };
+  const differs = readingDiffers(question, existing);
+  const aside = {
+    stem: question.stem,
+    options: question.options,
+    explanation: question.explanation,
+  };
+  return { fields: { reimport_text: differs ? JSON.stringify(aside) : null }, differs };
+}
+
 /** The values an import writes for one question, keeping what the user decided. */
 export function importedValues(
   question: ImportedQuestion,
   existing: Existing,
   chapters: readonly ChapterNames[],
 ) {
-  const { reasons, accepted, ...answer } = answerFields(question, existing);
+  const { reasons: answerReasons, accepted, ...answer } = answerFields(question, existing);
+  const text = textFields(question, existing);
+  const reasons = text.differs ? [...answerReasons, 'reimport_differs'] : answerReasons;
   const status =
     existing?.status === 'excluded'
       ? 'excluded'
@@ -89,11 +134,7 @@ export function importedValues(
           aiAccepted: accepted !== null,
         });
   return {
-    kind: question.kind,
-    stem: question.stem,
-    options: JSON.stringify(question.options),
-    multi_select: question.multiSelect,
-    explanation: question.explanation,
+    ...text.fields,
     ...answer,
     ...placeFields(question, existing, chapters),
     ai_answer_accepted_at: accepted,

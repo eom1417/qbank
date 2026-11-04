@@ -5,7 +5,6 @@ import {
   Alert,
   Button,
   Card,
-  DiffText,
   MutedText,
   SelectField,
   Stack,
@@ -16,7 +15,7 @@ import { useI18n } from '../../platform/i18n/i18n.js';
 import { DisclosureNote } from '../providers/DisclosureNote.js';
 import { useReadyProviders } from '../providers/ready-providers.js';
 import { editQuestion, suggestFix } from './api.js';
-import { wordDiff } from './diff.js';
+import { QuestionTextDiff } from './QuestionTextDiff.js';
 
 type Suggested = Extract<FixSuggestionResponse, { outcome: 'suggested' }>;
 
@@ -41,16 +40,9 @@ function SuggestionView({
       }),
     ),
   );
-  const textOf = (stem: string, options: readonly { letter: string; text: string }[]) =>
-    [stem, ...options.map((o) => `${o.letter}. ${o.text}`)].join('\n');
   return (
     <Stack>
-      <DiffText
-        segments={wordDiff(
-          textOf(question.stem, question.options),
-          textOf(suggestion.stem, suggestion.options),
-        )}
-      />
+      <QuestionTextDiff before={question} after={suggestion} />
       <MutedText>
         {t('editor.fix.reason')} {suggestion.reason}
       </MutedText>

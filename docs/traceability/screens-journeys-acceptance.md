@@ -20,7 +20,7 @@
 | UI-09   | نتيجة استيراد         | M4.8   | done    | `tests/e2e/import.spec.ts`          |
 | UI-10   | طابور المراجعة        | M7.1   | done    | `tests/e2e/review.spec.ts`          |
 | UI-11   | محرر السؤال           | M7.2   | partial | `tests/e2e/review.spec.ts`          |
-| UI-12   | عرض التكرارات         | M8.3   | planned | —                                   |
+| UI-12   | عرض التكرارات         | M8.3   | done    | `tests/e2e/duplicates.spec.ts`      |
 | UI-13   | إعداد Tutor           | M9.2   | planned | —                                   |
 | UI-14   | سؤال Tutor            | M9.4   | planned | —                                   |
 | UI-15   | نهاية Tutor           | M9.8   | planned | —                                   |
@@ -47,7 +47,7 @@
 | JY-03   | مفتاح حلول منفصل            | M6.3   | done    | `tests/integration/answers.test.ts`       |
 | JY-04   | كتاب ذو عمودين              | M4.6   | done    | `tests/integration/imports.test.ts`       |
 | JY-05   | سؤال بصورتي ECG             | M5.3   | done    | `tests/integration/imports-media.test.ts` |
-| JY-06   | تكرارات مع اختلاف except    | M8.4   | planned | —                                         |
+| JY-06   | تكرارات مع اختلاف except    | M8.4   | done    | `tests/e2e/duplicates.spec.ts`            |
 | JY-07   | تدريب Tutor                 | M9.8   | planned | —                                         |
 | JY-08   | امتحان بوقت إجمالي          | M10.6  | planned | —                                         |
 | JY-09   | امتحان بوقت لكل سؤال        | M10.6  | planned | —                                         |
@@ -102,9 +102,9 @@
 | UAT-034 | اعتماد جماعي          | M7.5   | done    | `tests/integration/review-queue.test.ts`     |
 | UAT-035 | استبعاد ثم استرجاع    | M7.3   | done    | `tests/integration/review-queue.test.ts`     |
 | UAT-036 | بلاغ أثناء حل سؤال    | M7.9   | partial | `tests/integration/question-editing.test.ts` |
-| UAT-037 | نفس الملف مرتين       | M8.1   | planned | —                                            |
-| UAT-038 | سؤال Except           | M8.2   | planned | —                                            |
-| UAT-039 | اختلاف مفتاح          | M8.3   | planned | —                                            |
+| UAT-037 | نفس الملف مرتين       | M8.1   | done    | `tests/integration/duplicates.test.ts`       |
+| UAT-038 | سؤال Except           | M8.2   | done    | `tests/integration/duplicates.test.ts`       |
+| UAT-039 | اختلاف مفتاح          | M8.3   | done    | `tests/integration/duplicates.test.ts`       |
 | UAT-040 | امتحان مع نسخ متطابقة | M9.9   | planned | —                                            |
 | UAT-041 | جواب قبل الإرسال      | M9.4   | planned | —                                            |
 | UAT-042 | جواب خاطئ             | M9.4   | planned | —                                            |

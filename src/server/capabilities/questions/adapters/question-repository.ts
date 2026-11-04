@@ -5,7 +5,13 @@ import type { ChapterNames } from '../domain/classify.js';
 import { withAnswerFile } from '../domain/answer-file.js';
 import { occurrencesOf, type ImportedQuestion } from '../domain/imported.js';
 import { suggestTags } from '../domain/classify.js';
-import { existingAt, importedValues, writeSuggestedTags, type Place } from './question-writes.js';
+import {
+  existingAt,
+  freshText,
+  importedValues,
+  writeSuggestedTags,
+  type Place,
+} from './question-writes.js';
 
 export interface SourceCounts {
   sourceId: string;
@@ -73,6 +79,7 @@ async function saveImported(
 ) {
   const { place, names, now } = writes;
   const occurrences = occurrencesOf(questions);
+  const inserted: string[] = [];
   for (const [seq, question] of questions.entries()) {
     const occurrence = occurrences[seq] ?? 1;
     const existing = await existingAt(db, place, question, occurrence);
@@ -82,6 +89,7 @@ async function saveImported(
       updated_at: now,
     };
     const id = existing?.id ?? newId();
+    if (!existing) inserted.push(id);
     if (existing) await db.updateTable('question').set(values).where('id', '=', id).execute();
     else
       await db
@@ -96,12 +104,14 @@ async function saveImported(
           source_occurrence: occurrence,
           created_at: now,
           ...values,
+          ...freshText(question),
         })
         .execute();
     const text = `${question.stem} ${question.explanation ?? ''}`;
     await writeSuggestedTags(db, place.ownerId, id, suggestTags(text, names.tags));
     await recordVersion(db, id, 'import', now);
   }
+  return inserted;
 }
 
 /** One question of the owner's (anyone else's is invisible). */
@@ -130,6 +140,56 @@ async function updateQuestion(
     .where('id', '=', id)
     .execute();
   await recordVersion(db, id, origin.origin, origin.now);
+}
+
+/**
+ * A copy of the owner's question in another bank (FR-03-009): its own row, unplaced, with its
+ * source kept and `copied_from` naming the original; its first version says `copy`.
+ */
+async function copyQuestion(
+  db: Db,
+  ownerId: string,
+  id: string,
+  bankId: string,
+  copyId: string,
+  now: Date,
+) {
+  const row = await findQuestion(db, ownerId, id);
+  if (!row) throw new Error('question not found');
+  const rest: Omit<typeof row, 'version'> & { version?: number } = { ...row };
+  delete rest.version;
+  await db
+    .insertInto('question')
+    .values({
+      ...rest,
+      id: copyId,
+      bank_id: bankId,
+      options: JSON.stringify(row.options),
+      reimport_text: row.reimport_text === null ? null : JSON.stringify(row.reimport_text),
+      chapter_id: null,
+      topic_id: null,
+      classification: 'none',
+      copied_from: id,
+      duplicate_of: null,
+      created_at: now,
+      updated_at: now,
+    })
+    .execute();
+  const tags = await tagsOfQuestion(db, ownerId, id);
+  if (tags.length > 0)
+    await db
+      .insertInto('question_tag')
+      .values(
+        tags.map((t) => ({
+          question_id: copyId,
+          tag_id: t.tag_id,
+          owner_id: ownerId,
+          origin: t.origin,
+        })),
+      )
+      .execute();
+  await recordVersion(db, copyId, 'copy', now);
+  return copyId;
 }
 
 /** A source's questions in reading order, to match a separate answer file (M6.3). */
@@ -219,7 +279,7 @@ export function createQuestionRepository(db: Db, newId: () => string, lookups: N
         chapters: await lookups.chaptersOf(place.ownerId, place.bankId),
         tags: await lookups.tagsOf(place.ownerId),
       };
-      await saveImported(db, newId, { place, names, now }, questions);
+      return saveImported(db, newId, { place, names, now }, questions);
     },
     findQuestion: (ownerId: string, id: string) => findQuestion(db, ownerId, id),
     tagsOfQuestion: (ownerId: string, id: string) => tagsOfQuestion(db, ownerId, id),
@@ -237,6 +297,8 @@ export function createQuestionRepository(db: Db, newId: () => string, lookups: N
     recordVersion: (questionId: string, origin: string, now: Date) =>
       recordVersion(db, questionId, origin, now),
     countsBySource: (ownerId: string, bankId: string) => countsBySource(db, ownerId, bankId),
+    copyQuestion: (ownerId: string, id: string, bankId: string, copyId: string, now: Date) =>
+      copyQuestion(db, ownerId, id, bankId, copyId, now),
   };
 }
 

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import type { QuestionResponse } from '../../../contracts/questions.js';
 import { Alert, Heading, MutedText, Stack } from '../../design-system/index.js';
@@ -14,13 +14,19 @@ import { PicturesCard } from './PicturesCard.js';
 import { QuestionForm } from './QuestionForm.js';
 import { ReportsCard } from './ReportsCard.js';
 
-function QuestionCards({
-  question,
-  onChange,
-}: {
+/** Cards other capabilities add to the editor, composed in by the app. */
+export type QuestionExtras = (
+  question: QuestionResponse,
+  onChange: (q: QuestionResponse) => void,
+) => ReactNode;
+
+interface CardsProps {
   question: QuestionResponse;
   onChange(q: QuestionResponse): void;
-}) {
+  extras: QuestionExtras | undefined;
+}
+
+function QuestionCards({ question, onChange, extras }: CardsProps) {
   const { t } = useI18n();
   const navigate = useNavigate();
   return (
@@ -33,6 +39,7 @@ function QuestionCards({
         {t('review.page')} {question.page}
       </MutedText>
       <DecisionsCard question={question} onChange={onChange} />
+      {extras?.(question, onChange)}
       <QuestionForm key={question.version} question={question} onSaved={onChange} />
       <PicturesCard question={question} />
       <FixCard question={question} onApplied={onChange} />
@@ -53,8 +60,11 @@ function newest(changed: QuestionResponse | null, loaded: QuestionResponse | nul
   return changed.version >= loaded.version ? changed : loaded;
 }
 
-/** One question with everything about it (UI-11): edit, decide, compare, notes, history. */
-export function QuestionScreen() {
+/**
+ * One question with everything about it (UI-11): edit, decide, compare, notes, history. Other
+ * capabilities' cards (re-import choice, moving) are composed in by the app.
+ */
+export function QuestionScreen({ extras }: { extras?: QuestionExtras }) {
   const { t } = useI18n();
   const id = useParams()['id'] ?? '';
   const load = useCallback(() => fetchQuestion(id), [id]);
@@ -65,7 +75,7 @@ export function QuestionScreen() {
     <Stack>
       {state.status === 'loading' && <MutedText>{t('common.loading')}</MutedText>}
       {state.status === 'error' && <Alert tone="error">{t(state.error)}</Alert>}
-      {question && <QuestionCards question={question} onChange={setChanged} />}
+      {question && <QuestionCards question={question} onChange={setChanged} extras={extras} />}
     </Stack>
   );
 }

@@ -37,6 +37,14 @@ export const QuestionResponse = z
     updateNote: z.string().nullable(),
     /** Left for later in review (M7.3). */
     deferred: z.boolean(),
+    /** A re-import's different reading of this edited question, to compare (FR-10-006). */
+    reimportText: z
+      .object({
+        stem: z.string(),
+        options: z.array(z.object({ letter: z.string(), text: z.string() })),
+        explanation: z.string().nullable(),
+      })
+      .nullable(),
     /** Its figures and tables in order (M5), served at `/api/media/:id`. */
     pictures: z.array(
       z
