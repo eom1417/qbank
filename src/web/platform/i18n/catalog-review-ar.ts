@@ -38,6 +38,7 @@ export const reviewAr: Record<keyof typeof reviewEn, string> = {
   'review.reason.duplicate_options': 'خيارات مكررة',
   'review.reason.too_few_options': 'أقل من خيارين',
   'review.reason.garbled_text': 'النص يبدو مشوّهاً',
+  'review.reason.ai_read': 'قرأه الذكاء الاصطناعي من صورة الصفحة: تحقّق من النص',
   'review.reason.restored': 'أُعيد: اعتمده من جديد',
   'review.reason.reported': 'بلاغ أثناء الدراسة',
   'review.reason.duplicate': 'السؤال نفسه موجود في هذا البنك',

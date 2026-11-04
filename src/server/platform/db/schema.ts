@@ -120,6 +120,8 @@ interface ImportJobTable {
   ai_provider_id: string | null;
   /** The model chosen for that instance; its default when null. */
   ai_model: Generated<string | null>;
+  /** 'verify': the AI checks open answers; 'read': it reads whole pages. */
+  ai_mode: Generated<'verify' | 'read'>;
   ai_outcome: string | null;
   error_code: string | null;
   attempts: Generated<number>;

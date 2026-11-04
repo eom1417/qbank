@@ -49,6 +49,8 @@ export const StartImportFields = z
     aiProviderId: KitInstanceId.optional(),
     /** That instance's model for this import; its default when omitted. */
     aiModel: KitModel.optional(),
+    /** How the AI helps: checks the answers the rules left open, or reads whole pages. */
+    aiMode: z.enum(['verify', 'read']).default('verify'),
     /** With source type `answer_key`: the source whose questions this file answers (M6.3). */
     answersFor: z.uuid().optional(),
     /** The user approved an AI cost estimate above their limits (DEC-18). */

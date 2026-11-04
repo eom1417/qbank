@@ -35,4 +35,7 @@ export const cliLoginAr: Record<keyof typeof cliLoginEn, string> = {
   'cliLogin.signOut': 'تسجيل الخروج',
   'cliLogin.signOut.confirm': 'سجّل الخروج من هذا المزوّد',
   'ai.model.default': 'النموذج الافتراضي',
+  'import.ai.read': 'دع الذكاء الاصطناعي يقرأ الصفحات كاملة',
+  'import.ai.read.hint':
+    'الأفضل للصفحات الممسوحة والتنسيقات المعقدة: يقرأ صورة كل صفحة ويأخذ الأسئلة والاختيارات والإجابة والشرح المطبوعين في الصفحة، والصور. أبطأ (طلب لكل صفحة)، وكل سؤال ينتظر تحققك.',
 };

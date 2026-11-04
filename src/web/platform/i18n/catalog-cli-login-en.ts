@@ -33,4 +33,7 @@ export const cliLoginEn = {
   'cliLogin.signOut': 'Sign out',
   'cliLogin.signOut.confirm': 'Sign out of this provider',
   'ai.model.default': 'default model',
+  'import.ai.read': 'Let my AI read whole pages',
+  'import.ai.read.hint':
+    'Best for scans and complex layouts: it reads each page image and takes the questions, options, the key and explanation printed on the page, and the pictures. Slower (one request per page), and every question waits for your check.',
 };

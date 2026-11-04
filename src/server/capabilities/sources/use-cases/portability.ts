@@ -71,6 +71,7 @@ export async function restoreSources(
         pages_total: source.pageCount,
         ai_provider_id: null,
         ai_model: null,
+        ai_mode: 'verify',
         created_at: now,
         updated_at: now,
       },

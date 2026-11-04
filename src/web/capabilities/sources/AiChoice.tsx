@@ -10,9 +10,13 @@ interface AiChoiceProps {
   approval: string[] | null;
   approved: boolean;
   onApprove(approved: boolean): void;
+  /** The AI reads whole pages instead of only checking open answers. */
+  readPages: boolean;
+  onReadPages(readPages: boolean): void;
 }
 
-export function AiChoice({ value, onChange, approval, approved, onApprove }: AiChoiceProps) {
+export function AiChoice(props: AiChoiceProps) {
+  const { value, onChange, approval, approved, onApprove } = props;
   const { t } = useI18n();
   const options = [{ value: '', label: t('import.ai.none') }, ...useAiChoices()];
   return (
@@ -24,6 +28,14 @@ export function AiChoice({ value, onChange, approval, approved, onApprove }: AiC
         onChange={(event) => onChange(event.target.value)}
       />
       <MutedText>{t(value ? 'import.ai.with' : 'import.ai.without')}</MutedText>
+      {value && (
+        <Checkbox
+          checked={props.readPages}
+          onChange={(event) => props.onReadPages(event.target.checked)}
+          label={t('import.ai.read')}
+        />
+      )}
+      {value && <MutedText>{t('import.ai.read.hint')}</MutedText>}
       {value && <DisclosureNote />}
       {approval && (
         <Alert tone="info">

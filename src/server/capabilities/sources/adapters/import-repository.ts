@@ -26,6 +26,7 @@ type NewJob = Pick<
   | 'pages_total'
   | 'ai_provider_id'
   | 'ai_model'
+  | 'ai_mode'
   | 'created_at'
   | 'updated_at'
 >;

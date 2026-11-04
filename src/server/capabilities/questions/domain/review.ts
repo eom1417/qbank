@@ -23,6 +23,7 @@ const MEDIUM: ReadonlySet<string> = new Set([
   'unreadable_page',
   'numbering_gap',
   'duplicate',
+  'ai_read',
 ]);
 const RANK: Record<Severity, number> = { high: 3, medium: 2, low: 1 };
 

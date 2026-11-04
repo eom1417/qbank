@@ -50,6 +50,13 @@ function rangeOf(fields: StartImportFields, pages: number) {
   return { from, to };
 }
 
+/** The job's AI: instance, model and mode, or none at all. */
+const aiColumns = (aiProviderId: string | null, fields: StartImportFields) => ({
+  ai_provider_id: aiProviderId,
+  ai_model: aiProviderId ? (fields.aiModel ?? null) : null,
+  ai_mode: aiProviderId ? fields.aiMode : ('verify' as const),
+});
+
 /** With AI chosen, its estimate must be within the user's limits or approved (DEC-18, FR-22-008). */
 async function checkAi(deps: SourcesDeps, actor: Actor, fields: StartImportFields) {
   if (!fields.aiProviderId) return null;
@@ -126,8 +133,7 @@ export async function startImport(
       source_id: source.id,
       stage: 'queued' as const,
       pages_total: range.to - range.from + 1,
-      ai_provider_id: aiProviderId,
-      ai_model: aiProviderId ? (fields.aiModel ?? null) : null,
+      ...aiColumns(aiProviderId, fields),
       created_at: now,
       updated_at: now,
     };

@@ -18,7 +18,9 @@ export type ReviewReason =
   | 'explanation_conflict'
   | 'duplicate_options'
   | 'too_few_options'
-  | 'garbled_text';
+  | 'garbled_text'
+  /** Read from the page image by the user's AI: its text is checked by the owner. */
+  | 'ai_read';
 
 /** One question as an import produced it, before it is saved. */
 export interface ImportedQuestion {

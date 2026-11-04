@@ -14,7 +14,38 @@ export const FAKE_INSTANCES = {
   fixer: 'fake-fixer',
   /** Explains an answered study question (M9.4). */
   explainer: 'fake-explainer',
+  /** Reads a whole page: two questions, a printed key for the first, one picture. */
+  reader: 'fake-reader',
 } as const;
+
+/** The reader's reply for every page: what a model returns for a page it can read. */
+const PAGE_ANSWER = JSON.stringify({
+  questions: [
+    {
+      number: 1,
+      stem: 'Which ECG finding is typical of hyperkalaemia?',
+      options: [
+        { label: 'A', text: 'Peaked T waves' },
+        { label: 'B', text: 'U waves' },
+        { label: 'C', text: 'Delta wave' },
+      ],
+      answers: ['A'],
+      explanation: 'Potassium excess peaks the T waves first.',
+      figures: [{ kind: 'figure', x: 0.1, y: 0.2, width: 0.5, height: 0.25 }],
+    },
+    {
+      number: 2,
+      stem: 'First-line treatment of anaphylaxis?',
+      options: [
+        { label: 'A', text: 'Antihistamine' },
+        { label: 'B', text: 'IM adrenaline' },
+      ],
+      answers: ['Z'],
+      explanation: null,
+      figures: [{ kind: 'table', x: 0.9, y: 0.9, width: 0.01, height: 0.01 }],
+    },
+  ],
+});
 
 const EXPLAIN_ANSWER = JSON.stringify({
   explanation: 'B is right because the keyed finding fits; the others do not.',
@@ -78,6 +109,7 @@ export async function startFakeAiHost() {
     const replies: Record<string, string> = {
       [FAKE_INSTANCES.fixer]: FIX_ANSWER,
       [FAKE_INSTANCES.explainer]: EXPLAIN_ANSWER,
+      [FAKE_INSTANCES.reader]: PAGE_ANSWER,
     };
     const reply = replies[body.instanceId ?? ''] ?? MARK_ANSWER;
     return [200, { text: `Here it is: ${reply}` }];
@@ -93,6 +125,7 @@ export async function startFakeAiHost() {
           instance(FAKE_INSTANCES.disabled, false),
           instance(FAKE_INSTANCES.fixer, true),
           instance(FAKE_INSTANCES.explainer, true),
+          instance(FAKE_INSTANCES.reader, true),
         ];
         return respond(response, 200, { providers, settings: { providerInstances: {} } });
       }

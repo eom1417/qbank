@@ -1,6 +1,6 @@
 import type { SourceLanguage } from '../../../../contracts/sources.js';
 import type { ImportStage } from '../../../platform/db/schema.js';
-import type { ImportedQuestion } from '../../questions/index.js';
+import type { ImportedQuestion, ReviewReason } from '../../questions/index.js';
 import type { JobRow, PageRow, SourceRow } from '../adapters/import-repository.js';
 import { readScan, readTextLayer } from '../adapters/readers.js';
 import type { PageText } from '../domain/page.js';
@@ -10,7 +10,8 @@ import type { SourcesDeps } from './deps.js';
 import { applyAnswerFile } from './apply-answer-file.js';
 import { cropMedia, storeMedia } from './keep-media.js';
 import { readSource } from './read-source.js';
-import { verifyWithAi } from './verify-with-ai.js';
+import { aiTargetOf, verifyWithAi } from './verify-with-ai.js';
+import { readWithAi } from './read-with-ai.js';
 
 /** A page with fewer words than this has no usable text layer: it is read as a scan. */
 const MIN_TEXT_WORDS = 6;
@@ -90,28 +91,61 @@ function finalStage(
 const setStage = (deps: SourcesDeps, job: JobRow, stage: ImportStage) =>
   deps.imports.update(job.id, { stage, ...heartbeat(deps) });
 
+const contentOf = (pages: readonly PageRow[], statuses: readonly string[]) =>
+  pages.filter((page) => statuses.includes(page.status)).map((page) => page.content as PageText);
+
+/**
+ * The questions and pictures: read by the user's AI when the job asks for it (pages OCR could
+ * not read included), else by the rules. When the AI cannot run or stops, the rules read the
+ * file and `failure` says why, so nothing is lost and nothing is silent.
+ */
+async function readQuestions(deps: SourcesDeps, job: JobRow, file: string, rows: PageRow[]) {
+  const rules = async (failure: string | null) => {
+    const pages = contentOf(rows, ['done']);
+    return { ...(await readSource(file, pages)), pages, byAi: false, failure };
+  };
+  if (job.ai_mode !== 'read' || !job.ai_provider_id) return rules(null);
+  const provider = await deps.ai.openOwned(job.owner_id, aiTargetOf(job));
+  if (!provider) return rules('not_ready');
+  const pages = contentOf(rows, ['done', 'unreadable']);
+  const keepLease = async () => void (await deps.imports.update(job.id, heartbeat(deps)));
+  const reading = await readWithAi(file, pages, provider, keepLease);
+  if (!reading.ok) return rules(reading.failure);
+  return { questions: reading.questions, media: reading.media, pages, byAi: true, failure: null };
+}
+
+/** Every question the AI read waits for the owner's eye, on top of its other reasons. */
+function aiReadReasons(reasons: Map<number, ReviewReason[]>, count: number) {
+  for (let index = 0; index < count; index++)
+    reasons.set(index, [...(reasons.get(index) ?? []), 'ai_read']);
+  return reasons;
+}
+
 /** Stages 2–4: extract, screen (then the user's AI), and save without duplicates. */
 async function extractAndSave(deps: SourcesDeps, job: JobRow, source: SourceRow, file: string) {
   await setStage(deps, job, 'extracting');
   const pages = await deps.imports.pages(job.id);
-  const readable = pages
-    .filter((page) => page.status === 'done')
-    .map((page) => page.content as PageText);
-  const { questions: extracted, media } = await readSource(file, readable);
-  const { cropped, reasons } = await cropMedia(file, readable, media);
+  const read = await readQuestions(deps, job, file, pages);
+  const { questions: extracted, media } = read;
+  const { cropped, reasons } = await cropMedia(file, read.pages, media);
   await setStage(deps, job, 'verifying');
   const readings = new Map<number, PageReading>(
     pages.map((page) => [
       page.page_no,
-      { reading: page.reading, unreadable: page.status === 'unreadable' },
+      read.byAi
+        ? { reading: 'text', unreadable: false }
+        : { reading: page.reading, unreadable: page.status === 'unreadable' },
     ]),
   );
-  const verified = await verifyWithAi(
-    deps,
-    job,
-    file,
-    screenQuestions(extracted, readings, reasons),
+  const screened = screenQuestions(
+    extracted,
+    readings,
+    read.byAi ? aiReadReasons(reasons, extracted.length) : reasons,
   );
+  const verified =
+    read.byAi || read.failure
+      ? { questions: screened, aiOutcome: read.failure ?? 'done' }
+      : await verifyWithAi(deps, job, file, screened);
   await setStage(deps, job, 'matching');
   const place = { ownerId: job.owner_id, bankId: source.bank_id, sourceId: source.id };
   await deps.questions.saveImported(place, verified.questions, deps.clock.now());

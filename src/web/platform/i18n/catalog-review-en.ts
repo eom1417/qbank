@@ -36,6 +36,7 @@ export const reviewEn = {
   'review.reason.duplicate_options': 'Repeated options',
   'review.reason.too_few_options': 'Fewer than two options',
   'review.reason.garbled_text': 'The text looks garbled',
+  'review.reason.ai_read': 'Read by your AI from the page: check the text',
   'review.reason.restored': 'Brought back: approve it again',
   'review.reason.reported': 'Reported while studying',
   'review.reason.duplicate': 'The same question is already in this bank',

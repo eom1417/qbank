@@ -67,6 +67,10 @@ async function findRegions(
   return regions;
 }
 
+/** The pictures and tables the rules find on these pages, with their exact edges. */
+export const pageRegions = (file: string, pages: readonly PageText[]) =>
+  findRegions(file, pages, rasterCache(file));
+
 export interface SourceReading {
   questions: ExtractedQuestion[];
   /** Figures and tables with the question each belongs to (M5.2). */
