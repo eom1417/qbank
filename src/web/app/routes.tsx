@@ -7,6 +7,9 @@ import { ResetPasswordScreen } from '../capabilities/identity/ResetPasswordScree
 import { SignInScreen } from '../capabilities/identity/SignInScreen.js';
 import { SignUpScreen } from '../capabilities/identity/SignUpScreen.js';
 import { BankScreen } from '../capabilities/library/BankScreen.js';
+import { QuestionScreen } from '../capabilities/review/QuestionScreen.js';
+import { ReviewLink } from '../capabilities/review/ReviewLink.js';
+import { ReviewScreen } from '../capabilities/review/ReviewScreen.js';
 import { ImportReportScreen } from '../capabilities/sources/ImportReportScreen.js';
 import { ImportScreen } from '../capabilities/sources/ImportScreen.js';
 import { SourcesCard } from '../capabilities/sources/SourcesCard.js';
@@ -23,7 +26,30 @@ export const router = createBrowserRouter([
         path: '/banks/:bankId',
         element: (
           <Private>
-            <BankScreen sources={(bankId) => <SourcesCard bankId={bankId} />} />
+            <BankScreen
+              sources={(bankId) => (
+                <>
+                  <ReviewLink bankId={bankId} />
+                  <SourcesCard bankId={bankId} />
+                </>
+              )}
+            />
+          </Private>
+        ),
+      },
+      {
+        path: '/banks/:bankId/review',
+        element: (
+          <Private>
+            <ReviewScreen />
+          </Private>
+        ),
+      },
+      {
+        path: '/questions/:id',
+        element: (
+          <Private>
+            <QuestionScreen />
           </Private>
         ),
       },

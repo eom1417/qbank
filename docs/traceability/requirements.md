@@ -11,11 +11,11 @@
 | FR-01-002 | محتوى يجلبه المستخدم          | سابق   | M1.5   | done    | `tests/e2e/library.spec.ts`                      |
 | FR-01-003 | أمانة النص العلمي             | سابق   | M4.6   | done    | `tests/integration/imports.test.ts`              |
 | FR-01-004 | حظر الاختلاق                  | سابق   | M6.4   | done    | `tests/integration/answers.test.ts`              |
-| FR-01-005 | تقليل المراجعة البشرية        | سابق   | M7.1   | planned | —                                                |
+| FR-01-005 | تقليل المراجعة البشرية        | سابق   | M7.1   | done    | `tests/integration/review-queue.test.ts`         |
 | FR-01-006 | العمل عبر الأجهزة             | سابق   | M9.7   | planned | —                                                |
 | FR-01-007 | لغتان أساسيتان                | سابق   | M15.1  | planned | —                                                |
-| FR-01-008 | حق تعديل المحتوى              | مقترح  | M7.6   | planned | —                                                |
-| FR-01-009 | وضوح سلوك AI                  | مقترح  | M7.7   | planned | —                                                |
+| FR-01-008 | حق تعديل المحتوى              | مقترح  | M7.6   | done    | `tests/integration/question-editing.test.ts`     |
+| FR-01-009 | وضوح سلوك AI                  | مقترح  | M7.7   | done    | `tests/integration/question-fix.test.ts`         |
 | FR-01-010 | قياس العمل الحقيقي            | مقترح  | M12.2  | planned | —                                                |
 | FR-02-001 | زائر غير مسجل                 | مقترح  | M1.1   | done    | `tests/e2e/landing.spec.ts`                      |
 | FR-02-002 | مالك الحساب                   | سابق   | M0.2   | partial | `tests/integration/identity.test.ts`             |
@@ -77,27 +77,27 @@
 | FR-08-001 | القراءة والاستخراج بمساعدة AI | سابق   | M6.10  | partial | `tests/unit/sources/answers.test.ts`             |
 | FR-08-002 | تصنيف موضوع السؤال            | سابق   | M6.9   | done    | `tests/integration/answers.test.ts`              |
 | FR-08-003 | كشف خلل المحتوى               | سابق   | M6.10  | done    | `tests/unit/sources/answers.test.ts`             |
-| FR-08-004 | إصلاح اختياري مقيد            | سابق   | M7.4   | planned | —                                                |
+| FR-08-004 | إصلاح اختياري مقيد            | سابق   | M7.4   | done    | `tests/integration/question-fix.test.ts`         |
 | FR-08-005 | شرح AI بعد الإجابة            | مقترح  | M9.4   | planned | —                                                |
 | FR-08-006 | مناقشة الخيارات               | مقترح  | M9.4   | planned | —                                                |
-| FR-08-007 | مراجعة بشرية للجماعي          | مقترح  | M7.5   | planned | —                                                |
-| FR-08-008 | سجل المنشأ والتعديل           | مقترح  | M7.7   | planned | —                                                |
+| FR-08-007 | مراجعة بشرية للجماعي          | مقترح  | M7.5   | done    | `tests/integration/review-queue.test.ts`         |
+| FR-08-008 | سجل المنشأ والتعديل           | مقترح  | M7.7   | done    | `tests/integration/question-editing.test.ts`     |
 | FR-08-009 | مفتاح مزود لكل مستخدم         | سابق   | M2.2   | done    | `tests/integration/providers.test.ts`            |
 | FR-08-010 | اختيار مزود AI                | سابق   | M2.3   | done    | `tests/integration/imports-rules.test.ts`        |
 | FR-08-011 | تحقق جاهزية المفتاح           | مقترح  | M2.4   | done    | `tests/integration/providers.test.ts`            |
 | FR-08-012 | إظهار حدود التكلفة            | مقترح  | M2.5   | done    | `tests/integration/imports-rules.test.ts`        |
 | FR-08-013 | العمل دون مفتاح               | مقترح  | M2.7   | partial | `tests/integration/imports-rules.test.ts`        |
-| FR-08-014 | رفض الاستنتاج غير المدعوم     | مقترح  | M7.4   | planned | —                                                |
-| FR-09-001 | طابور استثناءات مركز          | سابق   | M7.1   | planned | —                                                |
-| FR-09-002 | مراجعة سؤال مفرد              | مقترح  | M7.2   | planned | —                                                |
-| FR-09-003 | تحرير البيانات العلمية        | سابق   | M7.2   | planned | —                                                |
-| FR-09-004 | الاعتماد أو الإرجاء           | مقترح  | M7.3   | planned | —                                                |
-| FR-09-005 | التصحيح المقترح               | مقترح  | M7.4   | planned | —                                                |
-| FR-09-006 | اعتماد آمن جماعي              | مقترح  | M7.5   | planned | —                                                |
-| FR-09-007 | رفض/حذف                       | مقترح  | M7.6   | planned | —                                                |
-| FR-09-008 | التراجع وسجل التاريخ          | مقترح  | M7.7   | planned | —                                                |
-| FR-09-009 | ملاحظات المراجعة              | مقترح  | M7.8   | planned | —                                                |
-| FR-09-010 | بلاغ مشكلة أثناء الدراسة      | مقترح  | M7.9   | planned | —                                                |
+| FR-08-014 | رفض الاستنتاج غير المدعوم     | مقترح  | M7.4   | done    | `tests/unit/sources/fix-suggestion.test.ts`      |
+| FR-09-001 | طابور استثناءات مركز          | سابق   | M7.1   | done    | `tests/integration/review-queue.test.ts`         |
+| FR-09-002 | مراجعة سؤال مفرد              | مقترح  | M7.2   | done    | `tests/integration/question-editing.test.ts`     |
+| FR-09-003 | تحرير البيانات العلمية        | سابق   | M7.2   | done    | `tests/integration/question-editing.test.ts`     |
+| FR-09-004 | الاعتماد أو الإرجاء           | مقترح  | M7.3   | done    | `tests/integration/review-queue.test.ts`         |
+| FR-09-005 | التصحيح المقترح               | مقترح  | M7.4   | done    | `tests/integration/question-fix.test.ts`         |
+| FR-09-006 | اعتماد آمن جماعي              | مقترح  | M7.5   | done    | `tests/integration/review-queue.test.ts`         |
+| FR-09-007 | رفض/حذف                       | مقترح  | M7.6   | done    | `tests/integration/question-editing.test.ts`     |
+| FR-09-008 | التراجع وسجل التاريخ          | مقترح  | M7.7   | done    | `tests/integration/question-editing.test.ts`     |
+| FR-09-009 | ملاحظات المراجعة              | مقترح  | M7.8   | done    | `tests/integration/question-editing.test.ts`     |
+| FR-09-010 | بلاغ مشكلة أثناء الدراسة      | مقترح  | M7.9   | partial | `tests/integration/question-editing.test.ts`     |
 | FR-10-001 | كشف التطابق                   | سابق   | M8.1   | planned | —                                                |
 | FR-10-002 | كشف التشابه                   | مقترح  | M8.2   | planned | —                                                |
 | FR-10-003 | مقارنة المصدرين               | مقترح  | M8.3   | planned | —                                                |
@@ -220,10 +220,10 @@
 | FR-23-008 | حذف بنك خلال جلسة             | مقترح  | M10.10 | planned | —                                                |
 | FR-23-009 | خروج من خطأ                   | مقترح  | M15.5  | planned | —                                                |
 | FR-24-001 | معيار قبول علمي               | مقترح  | M6.11  | partial | `tests/unit/questions/eligibility.test.ts`       |
-| FR-24-002 | العناية بالمعلومة الحديثة     | مقترح  | M7.10  | planned | —                                                |
-| FR-24-003 | بلاغ الطالب                   | مقترح  | M7.9   | planned | —                                                |
+| FR-24-002 | العناية بالمعلومة الحديثة     | مقترح  | M7.10  | done    | `tests/integration/question-editing.test.ts`     |
+| FR-24-003 | بلاغ الطالب                   | مقترح  | M7.9   | done    | `tests/integration/question-editing.test.ts`     |
 | FR-24-004 | تدقيق أثر التصحيح             | مقترح  | M10.9  | planned | —                                                |
-| FR-24-005 | منع الحشو                     | مقترح  | M7.4   | planned | —                                                |
+| FR-24-005 | منع الحشو                     | مقترح  | M7.4   | done    | `tests/unit/sources/fix-suggestion.test.ts`      |
 | FR-24-006 | فحص جودة عينات الاستيراد      | مقترح  | M3.1   | partial | `tests/integration/extraction-benchmark.test.ts` |
 | FR-25-001 | تثبيت القرارات قبل التنفيذ    | مقترح  | M0.7   | planned | —                                                |
 | FR-25-002 | الاستيراد كامل المسار         | سابق   | M18.1  | planned | —                                                |

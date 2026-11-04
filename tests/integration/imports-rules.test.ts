@@ -1,15 +1,10 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { FAKE_INSTANCES, startFakeAiHost } from '../support/fake-ai-host.js';
+import { describe, expect, it } from 'vitest';
+import { FAKE_INSTANCES, useFakeAiHost } from '../support/fake-ai-host.js';
 import { ownerWithBank, registeredBrowser, type createClient } from '../support/client.js';
 import { blobCount, runImports, uploadFile, useImportSuite } from '../support/imports.js';
 
-// The fake AI host starts first: the app reads its address when it starts.
-let fake: Awaited<ReturnType<typeof startFakeAiHost>>;
-beforeAll(async () => {
-  fake = await startFakeAiHost();
-});
-afterAll(() => fake.close());
-const { app, fixtures } = useImportSuite({ aiHost: () => fake.settings });
+const fakeHost = useFakeAiHost();
+const { app, fixtures } = useImportSuite({ aiHost: () => fakeHost().settings });
 type Browser = ReturnType<typeof createClient>;
 
 describe('files that cannot be imported are refused clearly (FR-23-001, UAT-019)', () => {
@@ -120,7 +115,7 @@ describe("the user's AI on top of the rules (cascade, DEC-30)", () => {
       ['A', 'ai_suggested', ['ai_suggested']],
       [null, 'missing', ['essay']],
     ]);
-    expect(fake.asks.at(-1)?.ownerSession).toMatch(/^account:/);
+    expect(fakeHost().asks.at(-1)?.ownerSession).toMatch(/^account:/);
   });
 
   it('a signed-out provider keeps the rules result and says why (JY-14, UAT-084)', async () => {
@@ -131,14 +126,14 @@ describe("the user's AI on top of the rules (cascade, DEC-30)", () => {
       aiOutcome: 'invalid_key',
       questionsFound: 3,
     });
-    fake.refusing.delete(FAKE_INSTANCES.refusing);
+    fakeHost().refusing.delete(FAKE_INSTANCES.refusing);
     await owner.post(`/api/imports/${job.id}/retry`, {});
     await runImports(app());
     expect((await owner.get(`/api/imports/${job.id}`)).json()).toMatchObject({
       aiOutcome: 'done',
       questionsFound: 3,
     });
-    fake.refusing.add(FAKE_INSTANCES.refusing);
+    fakeHost().refusing.add(FAKE_INSTANCES.refusing);
   });
 });
 

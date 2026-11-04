@@ -1,4 +1,5 @@
 import { useId, type SelectHTMLAttributes } from 'react';
+import { FieldLabel } from './FieldParts.js';
 
 interface SelectOption {
   value: string;
@@ -15,9 +16,7 @@ export function SelectField({ label, options, ...select }: SelectFieldProps) {
   const id = useId();
   return (
     <div className="qb-field">
-      <label className="qb-field__label" htmlFor={id}>
-        {label}
-      </label>
+      <FieldLabel id={id}>{label}</FieldLabel>
       <select {...select} id={id} className="qb-field__input">
         {options.map((option) => (
           <option key={option.value} value={option.value}>

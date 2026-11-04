@@ -282,3 +282,21 @@
   font-size: var(--text-small);
   overflow-wrap: anywhere;
 }
+
+.qb-diff {
+  white-space: pre-wrap;
+}
+.qb-diff del {
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+}
+.qb-diff ins {
+  background: var(--color-success-soft);
+  color: var(--color-success);
+  text-decoration: none;
+}
+
+.qb-field__input--area {
+  min-block-size: calc(var(--size-touch-target) * 2);
+  resize: vertical;
+}

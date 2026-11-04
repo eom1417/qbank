@@ -1,10 +1,12 @@
 import { localEn } from './catalog-local-en.js';
+import { reviewEn } from './catalog-review-en.js';
 import { providersEn } from './catalog-providers-en.js';
 
 /** English UI strings. catalog-ar.ts must define exactly the same keys (enforced by its type). */
 export const en = {
   ...providersEn,
   ...localEn,
+  ...reviewEn,
   'app.name': 'QBank Engine',
   'shell.language': 'العربية',
   'shell.theme.system': 'Theme: system',
@@ -46,6 +48,10 @@ export const en = {
   'bank.created': 'Created',
   'error.validation_failed': 'Please check the highlighted fields.',
   'error.unauthenticated': 'Please sign in to continue.',
+  'error.version_conflict':
+    'This question changed in another window. Reload it, then make your change again.',
+  'error.not_approvable':
+    'This question cannot be approved yet: it needs a stem, at least two options and its answer.',
   'error.pairing_required':
     'That pairing code is not right. Copy it again from the computer running QBank.',
   'error.invalid_credentials': 'The email or password is not correct.',

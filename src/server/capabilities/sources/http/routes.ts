@@ -21,6 +21,8 @@ import {
   retryImport,
 } from '../use-cases/manage-imports.js';
 import { startImport } from '../use-cases/start-import.js';
+import { suggestFix } from '../use-cases/fix-suggestion.js';
+import { FixSuggestionRequest, type FixSuggestionResponse } from '../../../../contracts/review.js';
 
 type BankParams = { Params: { bankId: string } };
 type IdParams = { Params: { id: string } };
@@ -101,6 +103,15 @@ export function registerSourceRoutes(
       .header('x-content-type-options', 'nosniff')
       .send(createReadStream(path));
   });
+
+  app.post<IdParams>(
+    '/api/questions/:id/fix-suggestion',
+    async (request): Promise<FixSuggestionResponse> => {
+      const actor = await requireActor(request);
+      const { instanceId } = parseInput(FixSuggestionRequest, request.body);
+      return suggestFix(deps, actor, request.params.id, instanceId);
+    },
+  );
 
   app.delete<IdParams>('/api/sources/:id/original', async (request, reply) => {
     await deleteOriginal(deps, await requireActor(request), request.params.id);

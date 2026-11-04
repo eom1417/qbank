@@ -1,5 +1,6 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
+import { afterAll, beforeAll } from 'vitest';
 
 /** The provider instances the fake host lists; any other instance id is unknown to it. */
 export const FAKE_INSTANCES = {
@@ -9,7 +10,17 @@ export const FAKE_INSTANCES = {
   refusing: 'fake-refusing',
   /** Turned off in the kit: never asked. */
   disabled: 'fake-disabled',
+  /** Fixes the misread unit of the review tests' question (M7.4). */
+  fixer: 'fake-fixer',
 } as const;
+
+/** The fixer's reply: the unit read right, with words copied from the page. */
+const FIX_ANSWER = JSON.stringify({
+  stem: 'Serum potassium is 7.2 mmol/L. Which ECG change is typical?',
+  options: ['A', 'B', 'C', 'D'].map((letter) => ({ letter, text: `Option ${letter}` })),
+  reason: 'The unit was misread.',
+  evidence: 'potassium is 7.2 mmol/L',
+});
 
 const FAKE_HOST_TOKEN = 'fake-ai-host-token-0123456789abcdef';
 
@@ -51,7 +62,8 @@ export async function startFakeAiHost() {
         422,
         { error: { _tag: 'AskFailed', reason: 'provider_error', detail: 'signed out' } },
       ];
-    return [200, { text: `Here it is: ${MARK_ANSWER}` }];
+    const reply = body.instanceId === FAKE_INSTANCES.fixer ? FIX_ANSWER : MARK_ANSWER;
+    return [200, { text: `Here it is: ${reply}` }];
   };
   const server = createServer((request, response) => {
     void readJson(request).then((body) => {
@@ -62,6 +74,7 @@ export async function startFakeAiHost() {
           instance(FAKE_INSTANCES.vision, true),
           instance(FAKE_INSTANCES.refusing, true),
           instance(FAKE_INSTANCES.disabled, false),
+          instance(FAKE_INSTANCES.fixer, true),
         ];
         return respond(response, 200, { providers, settings: { providerInstances: {} } });
       }
@@ -78,5 +91,21 @@ export async function startFakeAiHost() {
     asks,
     refusing,
     close: () => new Promise<void>((resolve) => server.close(() => resolve())),
+  };
+}
+
+/**
+ * A fake AI host for the current suite file. Call it before `useTestApp`, so it is listening
+ * when the app reads its address: `useTestApp({ aiHost: () => fake().settings })`.
+ */
+export function useFakeAiHost() {
+  let fake: Awaited<ReturnType<typeof startFakeAiHost>> | undefined;
+  beforeAll(async () => {
+    fake = await startFakeAiHost();
+  });
+  afterAll(() => fake?.close());
+  return () => {
+    if (!fake) throw new Error('fake AI host not started');
+    return fake;
   };
 }

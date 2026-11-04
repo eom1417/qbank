@@ -1,4 +1,5 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+import { buildPdfFixtures, type PdfFixtures } from '../support/pdf-fixtures.js';
 
 /** A unique learner per test run, so tests never depend on database cleanup. */
 export function newLearner(tag: string) {
@@ -30,3 +31,16 @@ export const AR = {
   terms: 'أوافق على الشروط، ولن أرفع إلا مواد يحق لي استخدامها.',
   submit: 'إنشاء الحساب',
 };
+
+/** The test PDFs, built once for the spec file; call the getter inside tests. */
+export function usePdfFixtures() {
+  let fx: PdfFixtures | undefined;
+  test.beforeAll(async () => {
+    fx = await buildPdfFixtures();
+  });
+  test.afterAll(() => fx?.cleanup());
+  return () => {
+    if (!fx) throw new Error('PDF fixtures not built');
+    return fx;
+  };
+}

@@ -162,6 +162,29 @@ interface QuestionTable {
   version: ColumnType<number, number | undefined, number>;
   source_occurrence: ColumnType<number, number | undefined, number>;
   source_seq: ColumnType<number, number | undefined, number>;
+  /** The owner left it for later (M7.3); it stays in review, listed after the rest. */
+  deferred_at: ColumnType<Date | null, Date | null | undefined, Date | null>;
+  /** Newer medical information, kept apart from the book's answer (FR-24-002, DEC-16). */
+  update_note: ColumnType<string | null, string | null | undefined, string | null>;
+}
+
+interface QuestionNoteTable {
+  id: string;
+  owner_id: string;
+  question_id: string;
+  body: string;
+  labels: ColumnType<string[], string[] | undefined, string[]>;
+  created_at: Date;
+}
+
+interface QuestionReportTable {
+  id: string;
+  owner_id: string;
+  question_id: string;
+  kind: 'ambiguous' | 'image_missing' | 'wrong_key' | 'other';
+  comment: string | null;
+  created_at: Date;
+  resolved_at: Date | null;
 }
 
 interface QuestionTagTable {
@@ -215,4 +238,6 @@ export interface Database {
   media: MediaTable;
   question_version: QuestionVersionTable;
   question_tag: QuestionTagTable;
+  question_note: QuestionNoteTable;
+  question_report: QuestionReportTable;
 }

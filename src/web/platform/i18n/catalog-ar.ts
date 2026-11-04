@@ -1,10 +1,12 @@
 import type { MessageKey } from './catalog-en.js';
 import { localAr } from './catalog-local-ar.js';
+import { reviewAr } from './catalog-review-ar.js';
 import { providersAr } from './catalog-providers-ar.js';
 
 export const ar: Record<MessageKey, string> = {
   ...providersAr,
   ...localAr,
+  ...reviewAr,
   'app.name': 'محرك بنك الأسئلة',
   'shell.language': 'English',
   'shell.theme.system': 'المظهر: حسب الجهاز',
@@ -43,6 +45,8 @@ export const ar: Record<MessageKey, string> = {
   'bank.created': 'تاريخ الإنشاء',
   'error.validation_failed': 'يرجى مراجعة الحقول المحددة.',
   'error.unauthenticated': 'يرجى تسجيل الدخول للمتابعة.',
+  'error.version_conflict': 'تغيّر هذا السؤال في نافذة أخرى. أعد تحميله ثم أجرِ تعديلك من جديد.',
+  'error.not_approvable': 'لا يمكن اعتماد هذا السؤال بعد: يحتاج متناً وخيارين على الأقل وإجابته.',
   'error.pairing_required': 'رمز الربط غير صحيح. انسخه من جديد من الجهاز الذي يشغّل QBank.',
   'error.invalid_credentials': 'البريد الإلكتروني أو كلمة المرور غير صحيحة.',
   'error.email_taken': 'يوجد حساب بهذا البريد الإلكتروني.',

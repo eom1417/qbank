@@ -1,12 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
-import { buildPdfFixtures, type PdfFixtures } from '../support/pdf-fixtures.js';
-import { AR, newLearner, signUp } from './support.js';
+import { AR, newLearner, signUp, usePdfFixtures } from './support.js';
 
-let fx: PdfFixtures;
-test.beforeAll(async () => {
-  fx = await buildPdfFixtures();
-});
-test.afterAll(() => fx.cleanup());
+const fixtures = usePdfFixtures();
 
 async function newBank(page: Page, tag: string) {
   await signUp(page, newLearner(tag), AR);
@@ -19,7 +14,7 @@ async function newBank(page: Page, tag: string) {
 
 test('import a PDF: choose, confirm rights, follow progress, read the report', async ({ page }) => {
   await newBank(page, 'import');
-  await page.getByLabel('ملفات PDF').setInputFiles(fx.english);
+  await page.getByLabel('ملفات PDF').setInputFiles(fixtures().english);
   await expect(page.getByText('english.pdf')).toBeVisible();
   const start = page.getByRole('button', { name: 'ارفع وابدأ' });
   await expect(start).toBeDisabled();
@@ -41,7 +36,7 @@ test('import a PDF: choose, confirm rights, follow progress, read the report', a
 
 test('a damaged file is refused with a clear reason and nothing is imported', async ({ page }) => {
   await newBank(page, 'import-bad');
-  await page.getByLabel('ملفات PDF').setInputFiles([fx.damaged, fx.arabic]);
+  await page.getByLabel('ملفات PDF').setInputFiles([fixtures().damaged, fixtures().arabic]);
   await page.getByRole('button', { name: 'احذف هذا الملف' }).last().click();
   await page.getByLabel('أؤكد أنه يحق لي استخدام هذه الملفات لمذاكرتي الشخصية.').check();
   await page.getByRole('button', { name: 'ارفع وابدأ' }).click();
@@ -53,7 +48,7 @@ test('import into a new bank, see it complete, then delete the original', async 
   await newBank(page, 'import-new');
   await page.getByLabel('البنك الذي تذهب إليه الأسئلة').selectOption({ label: 'بنك جديد…' });
   await page.getByLabel('اسم البنك الجديد').fill('أسئلة مقالية');
-  await page.getByLabel('ملفات PDF').setInputFiles(fx.essays);
+  await page.getByLabel('ملفات PDF').setInputFiles(fixtures().essays);
   await page.getByLabel('أؤكد أنه يحق لي استخدام هذه الملفات لمذاكرتي الشخصية.').check();
   await page.getByRole('button', { name: 'ارفع وابدأ' }).click();
   await expect(page.getByText('اكتمل الاستيراد، والأسئلة في البنك.')).toBeVisible({
@@ -72,7 +67,7 @@ test('import into a new bank, see it complete, then delete the original', async 
 
 test('see the pictures an import kept and enlarge one (M5.7)', async ({ page }) => {
   await newBank(page, 'import-media');
-  await page.getByLabel('ملفات PDF').setInputFiles(fx.media);
+  await page.getByLabel('ملفات PDF').setInputFiles(fixtures().media);
   await page.getByLabel('أؤكد أنه يحق لي استخدام هذه الملفات لمذاكرتي الشخصية.').check();
   await page.getByRole('button', { name: 'ارفع وابدأ' }).click();
   const row = page.getByRole('listitem').filter({ hasText: 'media.pdf' });
@@ -98,11 +93,11 @@ test('see the pictures an import kept and enlarge one (M5.7)', async ({ page }) 
 test('a separate answer file makes the questions ready to study (M6.3)', async ({ page }) => {
   await newBank(page, 'import-key');
   const rights = page.getByLabel('أؤكد أنه يحق لي استخدام هذه الملفات لمذاكرتي الشخصية.');
-  await page.getByLabel('ملفات PDF').setInputFiles(fx.english);
+  await page.getByLabel('ملفات PDF').setInputFiles(fixtures().english);
   await rights.check();
   await page.getByRole('button', { name: 'ارفع وابدأ' }).click();
   await expect(page.getByText('يحتاج مراجعتك')).toBeVisible({ timeout: 60_000 });
-  await page.getByLabel('ملفات PDF').setInputFiles(fx.answersOnly);
+  await page.getByLabel('ملفات PDF').setInputFiles(fixtures().answersOnly);
   await page.getByLabel('نوع الملف').selectOption({ label: 'ملف إجابات لمصدر آخر' });
   await page.getByLabel('هذه إجابات أسئلة الملف').selectOption({ label: 'english.pdf' });
   await page.getByRole('button', { name: 'ارفع وابدأ' }).click();

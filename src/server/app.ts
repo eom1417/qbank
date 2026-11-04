@@ -34,12 +34,15 @@ function registerContent(
 ) {
   const library = createLibrary({ db, clock, requireActor: requireActor });
   library.register(app);
+  const blobs = createDiskBlobStore(config.imports.dataDir);
   const questions = createQuestions({
     db,
     clock,
     requireActor: requireActor,
     chaptersOf: library.chaptersOf,
     tagsOf: library.tagsOf,
+    ownsBank: library.ownsBank,
+    deleteBlob: (key) => blobs.remove(key),
   });
   questions.register(app);
   const providers = createProviders({ aiHost: config.aiHost, requireActor });
@@ -47,7 +50,7 @@ function registerContent(
   const sources = createSources({
     db,
     clock,
-    blobs: createDiskBlobStore(config.imports.dataDir),
+    blobs,
     questions,
     ai: providers.importAi,
     requireActor: requireActor,

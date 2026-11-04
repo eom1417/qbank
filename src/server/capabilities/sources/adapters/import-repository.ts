@@ -147,6 +147,19 @@ const expiredOriginals = (db: Db, now: Date) =>
     .limit(50)
     .execute();
 
+/** One page of the owner's source as its latest import read it, for an AI fix (M7.4). */
+const pageOfSource = (db: Db, ownerId: string, sourceId: string, page: number) =>
+  db
+    .selectFrom('import_page')
+    .innerJoin('import_job', 'import_job.id', 'import_page.job_id')
+    .select('import_page.content')
+    .where('import_job.owner_id', '=', ownerId)
+    .where('import_job.source_id', '=', sourceId)
+    .where('import_page.page_no', '=', page)
+    .where('import_page.status', '=', 'done')
+    .orderBy('import_job.created_at', 'desc')
+    .executeTakeFirst();
+
 /** Owner-scoped store of sources, import jobs and their per-page checkpoints. */
 export function createImportRepository(db: Db) {
   return {
@@ -192,6 +205,8 @@ export function createImportRepository(db: Db) {
     removeSource: (ownerId: string, sourceId: string) =>
       db.deleteFrom('source').where('owner_id', '=', ownerId).where('id', '=', sourceId).execute(),
     countPages: (jobId: string) => countPages(db, jobId),
+    pageOfSource: (ownerId: string, sourceId: string, page: number) =>
+      pageOfSource(db, ownerId, sourceId, page),
   };
 }
 

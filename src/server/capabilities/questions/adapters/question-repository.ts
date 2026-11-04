@@ -28,6 +28,7 @@ const SNAPSHOT_FIELDS = [
   'topic_id',
   'status',
   'review_reasons',
+  'update_note',
 ] as const;
 
 /** Saves the question's state as its next version when it changed; returns the version number. */

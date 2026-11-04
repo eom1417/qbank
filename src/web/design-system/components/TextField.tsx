@@ -1,4 +1,5 @@
 import { useId, type InputHTMLAttributes } from 'react';
+import { FieldError, FieldLabel } from './FieldParts.js';
 
 export interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -12,9 +13,7 @@ export function TextField({ label, hint, error, ...input }: TextFieldProps) {
   const describedBy = [hint && `${id}-hint`, error && `${id}-error`].filter(Boolean).join(' ');
   return (
     <div className="qb-field">
-      <label className="qb-field__label" htmlFor={id}>
-        {label}
-      </label>
+      <FieldLabel id={id}>{label}</FieldLabel>
       {hint && (
         <span className="qb-field__hint" id={`${id}-hint`}>
           {hint}
@@ -27,11 +26,7 @@ export function TextField({ label, hint, error, ...input }: TextFieldProps) {
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy || undefined}
       />
-      {error && (
-        <span className="qb-field__error" id={`${id}-error`} role="alert">
-          {error}
-        </span>
-      )}
+      <FieldError id={id} error={error} />
     </div>
   );
 }

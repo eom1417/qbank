@@ -18,6 +18,8 @@ export const ErrorCode = z.enum([
   'too_many_pages',
   'approval_required',
   'not_retryable',
+  'version_conflict',
+  'not_approvable',
   'original_deleted',
   'ai_host_unavailable',
   'internal',

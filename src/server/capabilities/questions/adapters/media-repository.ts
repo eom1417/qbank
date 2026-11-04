@@ -88,6 +88,15 @@ export function createMediaRepository(db: Db, newId: () => string) {
     replaceMedia: (place: SourcePlace, items: readonly ImportedMedia[], now: Date) =>
       replaceMedia(db, newId, place, items, now),
     mediaOfSource: (ownerId: string, sourceId: string) => mediaOfSource(db, ownerId, sourceId),
+    /** One question's pictures in their order (shown in the editor, UI-11). */
+    mediaOfQuestion: (ownerId: string, questionId: string) =>
+      db
+        .selectFrom('media')
+        .select(['id', 'kind', 'link', 'low_quality', 'width', 'height'])
+        .where('owner_id', '=', ownerId)
+        .where('question_id', '=', questionId)
+        .orderBy('position')
+        .execute(),
     /** One picture's stored file, only for its owner. */
     findMedia: (ownerId: string, mediaId: string) =>
       db
@@ -98,3 +107,5 @@ export function createMediaRepository(db: Db, newId: () => string) {
         .executeTakeFirst(),
   };
 }
+
+export type MediaRepository = ReturnType<typeof createMediaRepository>;

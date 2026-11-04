@@ -7,6 +7,7 @@ export { Dialog } from './components/Dialog.js';
 export { SelectField } from './components/SelectField.js';
 export { Checkbox } from './components/Checkbox.js';
 export { CodeText } from './components/CodeText.js';
+export { DiffText, type DiffSegment } from './components/DiffText.js';
 export { Alert, EmptyState } from './components/Feedback.js';
 export {
   Badge,
@@ -22,6 +23,7 @@ export {
 } from './components/Layout.js';
 export { PageShell } from './components/PageShell.js';
 export { Meter } from './components/Meter.js';
+export { TextArea } from './components/TextArea.js';
 export { TextField } from './components/TextField.js';
 export { ZoomableImage } from './components/ZoomableImage.js';
 export { ThemeProvider, useTheme, type ThemePreference } from './theme.js';
