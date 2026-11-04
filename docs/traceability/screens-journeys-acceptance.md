@@ -28,7 +28,7 @@
 | UI-17   | شاشة Exam             | M10.2  | done    | `tests/e2e/exam.spec.ts`            |
 | UI-18   | مراجعة قبل تسليم Exam | M10.5  | done    | `tests/e2e/exam.spec.ts`            |
 | UI-19   | تقرير Exam            | M10.8  | done    | `tests/e2e/exam.spec.ts`            |
-| UI-20   | المراجعات المستحقة    | M11.4  | planned | —                                   |
+| UI-20   | المراجعات المستحقة    | M11.4  | done    | `tests/e2e/plan.spec.ts`            |
 | UI-21   | تحليلات الطالب        | M12.10 | planned | —                                   |
 | UI-22   | البحث                 | M12.11 | planned | —                                   |
 | UI-23   | إدارة المصادر         | M4.9   | done    | `tests/e2e/import.spec.ts`          |
@@ -52,9 +52,9 @@
 | JY-08   | امتحان بوقت إجمالي          | M10.6  | done    | `tests/e2e/exam.spec.ts`                   |
 | JY-09   | امتحان بوقت لكل سؤال        | M10.6  | done    | `tests/integration/study-exam.test.ts`     |
 | JY-10   | انقطاع أثناء امتحان         | M10.7  | done    | `tests/integration/study-exam.test.ts`     |
-| JY-11   | Smart Mix عند الوفرة        | M11.6  | planned | —                                          |
-| JY-12   | Smart Mix عند نقص الجديد    | M11.6  | planned | —                                          |
-| JY-13   | مراجعة متباعدة              | M11.3  | planned | —                                          |
+| JY-11   | Smart Mix عند الوفرة        | M11.6  | done    | `tests/e2e/plan.spec.ts`                   |
+| JY-12   | Smart Mix عند نقص الجديد    | M11.6  | done    | `tests/integration/study-plan.test.ts`     |
+| JY-13   | مراجعة متباعدة              | M11.3  | done    | `tests/integration/study-plan.test.ts`     |
 | JY-14   | فشل AI في منتصف الاستيراد   | M4.7   | done    | `tests/integration/imports-rules.test.ts`  |
 | JY-15   | تعارض إجابة بعد امتحان      | M10.9  | done    | `tests/integration/study-exam.test.ts`     |
 | JY-16   | تصدير ثم حذف بنك            | M13.5  | planned | —                                          |
@@ -122,13 +122,13 @@
 | UAT-054 | مراجعة قبل التسليم    | M10.5  | done    | `tests/e2e/exam.spec.ts`                     |
 | UAT-055 | قطع اتصال             | M10.7  | done    | `tests/integration/study-exam.test.ts`       |
 | UAT-056 | تقرير نهائي           | M10.8  | done    | `tests/e2e/exam.spec.ts`                     |
-| UAT-057 | وفرة المجموعات        | M11.6  | planned | —                                            |
-| UAT-058 | نقص الجديد            | M11.6  | planned | —                                            |
+| UAT-057 | وفرة المجموعات        | M11.6  | done    | `tests/integration/study-plan.test.ts`       |
+| UAT-058 | نقص الجديد            | M11.6  | done    | `tests/integration/study-plan.test.ts`       |
 | UAT-059 | لا تكرار              | M9.9   | done    | `tests/integration/study-tutor.test.ts`      |
-| UAT-060 | محاولة صحيحة واحدة    | M11.2  | planned | —                                            |
-| UAT-061 | تكرر نجاح             | M11.2  | planned | —                                            |
-| UAT-062 | خطأ بعد نجاح          | M11.3  | planned | —                                            |
-| UAT-063 | يوم بال مستحقات       | M11.4  | planned | —                                            |
+| UAT-060 | محاولة صحيحة واحدة    | M11.2  | done    | `tests/integration/study-plan.test.ts`       |
+| UAT-061 | تكرر نجاح             | M11.2  | done    | `tests/unit/study/mastery.test.ts`           |
+| UAT-062 | خطأ بعد نجاح          | M11.3  | done    | `tests/integration/study-plan.test.ts`       |
+| UAT-063 | يوم بال مستحقات       | M11.4  | done    | `tests/integration/study-plan.test.ts`       |
 | UAT-064 | 8 صحيح و2 خطأ         | M12.1  | planned | —                                            |
 | UAT-065 | عينة صغيرة            | M12.3  | planned | —                                            |
 | UAT-066 | فلترة بنك             | M12.7  | planned | —                                            |

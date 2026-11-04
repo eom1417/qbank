@@ -12,6 +12,7 @@ import {
 import { parseInput } from '../../../platform/http/validate.js';
 import type { RequireActor } from '../../identity/index.js';
 import { explainWithAi } from '../use-cases/ai-explanation.js';
+import { dueToday, questionMastery, topicPriorities } from '../use-cases/plan.js';
 import {
   answerImpact,
   examState,
@@ -144,6 +145,26 @@ function registerExamRoutes(app: FastifyInstance, deps: StudyDeps, requireActor:
   );
 }
 
+const bankIdsOf = (raw: string | undefined) =>
+  String(raw ?? '')
+    .split(',')
+    .filter(Boolean)
+    .slice(0, 20);
+
+/** The study plan: today's reviews, topics by need, one question's mastery (M11). */
+function registerPlanRoutes(app: FastifyInstance, deps: StudyDeps, requireActor: RequireActor) {
+  type Banks = { Querystring: { bankIds?: string } };
+  app.get<Banks>('/api/study/due', async (request) =>
+    dueToday(deps, await requireActor(request), bankIdsOf(request.query.bankIds)),
+  );
+  app.get<Banks>('/api/study/topics', async (request) =>
+    topicPriorities(deps, await requireActor(request), bankIdsOf(request.query.bankIds)),
+  );
+  app.get<SessionParams>('/api/study/questions/:id/mastery', async (request) =>
+    questionMastery(deps, await requireActor(request), request.params.id),
+  );
+}
+
 export function registerStudyRoutes(
   app: FastifyInstance,
   deps: StudyDeps,
@@ -152,4 +173,5 @@ export function registerStudyRoutes(
   registerSessionRoutes(app, deps, requireActor);
   registerItemRoutes(app, deps, requireActor);
   registerExamRoutes(app, deps, requireActor);
+  registerPlanRoutes(app, deps, requireActor);
 }

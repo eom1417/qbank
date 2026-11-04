@@ -56,6 +56,7 @@ async function toItem(
           explanation: snapshot.explanation,
         }
       : null,
+    reason: snapshot.reason ?? null,
     saved: item.chosen ?? [],
     examFlag: item.flagged,
     changeable: changeableNow(deps, session, item),

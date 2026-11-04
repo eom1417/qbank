@@ -112,7 +112,7 @@
 | FR-11-006 | سجل تحرير النسخ               | مقترح  | M6.1   | done    | `tests/integration/answers.test.ts`              |
 | FR-11-007 | استبعاد الأسئلة غير الملائمة  | مقترح  | M6.11  | partial | `tests/integration/answers.test.ts`              |
 | FR-12-001 | اختيار نطاق الجلسة            | سابق   | M9.2   | done    | `tests/integration/study-tutor.test.ts`          |
-| FR-12-002 | اختيار نوع الجلسة             | مقترح  | M9.3   | partial | `tests/integration/study-progress.test.ts`       |
+| FR-12-002 | اختيار نوع الجلسة             | مقترح  | M9.3   | done    | `tests/integration/study-progress.test.ts`       |
 | FR-12-003 | إرسال الإجابة                 | سابق   | M9.4   | done    | `tests/integration/study-tutor.test.ts`          |
 | FR-12-004 | شرح المؤلف                    | سابق   | M9.4   | done    | `tests/integration/study-tutor.test.ts`          |
 | FR-12-005 | تفسير مساعد اختياري           | مقترح  | M9.4   | done    | `tests/integration/study-progress.test.ts`       |
@@ -136,22 +136,22 @@
 | FR-13-012 | استعادة المحاولة              | مقترح  | M10.7  | done    | `tests/integration/study-exam.test.ts`           |
 | FR-13-013 | نتيجة مفصلة بعد التسليم       | سابق   | M10.8  | done    | `tests/e2e/exam.spec.ts`                         |
 | FR-13-014 | مراجعة بعد التسليم            | مقترح  | M10.8  | done    | `tests/integration/study-exam.test.ts`           |
-| FR-14-001 | الصيغة 50/30/20               | سابق   | M11.6  | planned | —                                                |
-| FR-14-002 | إعادة توزيع النقص             | سابق   | M11.6  | planned | —                                                |
-| FR-14-003 | تعريف الجديد                  | مقترح  | M11.6  | planned | —                                                |
-| FR-14-004 | تعريف الضعيف                  | مقترح  | M11.6  | planned | —                                                |
-| FR-14-005 | تعريف المستحق                 | مقترح  | M11.6  | planned | —                                                |
+| FR-14-001 | الصيغة 50/30/20               | سابق   | M11.6  | done    | `tests/integration/study-plan.test.ts`           |
+| FR-14-002 | إعادة توزيع النقص             | سابق   | M11.6  | done    | `tests/integration/study-plan.test.ts`           |
+| FR-14-003 | تعريف الجديد                  | مقترح  | M11.6  | done    | `tests/unit/study/mastery.test.ts`               |
+| FR-14-004 | تعريف الضعيف                  | مقترح  | M11.6  | done    | `tests/unit/study/mastery.test.ts`               |
+| FR-14-005 | تعريف المستحق                 | مقترح  | M11.6  | done    | `tests/integration/study-plan.test.ts`           |
 | FR-14-006 | منع التكرار داخل الجلسة       | مقترح  | M9.9   | done    | `tests/integration/study-tutor.test.ts`          |
-| FR-14-007 | تخصيص النسب                   | مقترح  | M11.6  | planned | —                                                |
-| FR-14-008 | إيضاح اختيار السؤال           | مقترح  | M11.7  | planned | —                                                |
-| FR-15-001 | سجل الأداء لكل سؤال           | سابق   | M11.2  | planned | —                                                |
-| FR-15-002 | مستويات الإتقان               | سابق   | M11.2  | planned | —                                                |
-| FR-15-003 | الثبات أهم من الإجابة الواحدة | مقترح  | M11.2  | planned | —                                                |
-| FR-15-004 | مراجعة متباعدة                | سابق   | M11.3  | planned | —                                                |
-| FR-15-005 | مراجعة اليوم                  | مقترح  | M11.4  | planned | —                                                |
-| FR-15-006 | أولوية المواضيع               | مقترح  | M11.5  | planned | —                                                |
-| FR-15-007 | تحكم المتعلم                  | مقترح  | M11.7  | planned | —                                                |
-| FR-15-008 | تعليل المواعيد                | مقترح  | M11.7  | planned | —                                                |
+| FR-14-007 | تخصيص النسب                   | مقترح  | M11.6  | done    | `tests/integration/study-plan.test.ts`           |
+| FR-14-008 | إيضاح اختيار السؤال           | مقترح  | M11.7  | done    | `tests/e2e/plan.spec.ts`                         |
+| FR-15-001 | سجل الأداء لكل سؤال           | سابق   | M11.2  | done    | `tests/integration/study-plan.test.ts`           |
+| FR-15-002 | مستويات الإتقان               | سابق   | M11.2  | done    | `tests/unit/study/mastery.test.ts`               |
+| FR-15-003 | الثبات أهم من الإجابة الواحدة | مقترح  | M11.2  | done    | `tests/unit/study/mastery.test.ts`               |
+| FR-15-004 | مراجعة متباعدة                | سابق   | M11.3  | done    | `tests/integration/study-plan.test.ts`           |
+| FR-15-005 | مراجعة اليوم                  | مقترح  | M11.4  | done    | `tests/integration/study-plan.test.ts`           |
+| FR-15-006 | أولوية المواضيع               | مقترح  | M11.5  | done    | `tests/integration/study-plan.test.ts`           |
+| FR-15-007 | تحكم المتعلم                  | مقترح  | M11.7  | done    | `tests/e2e/plan.spec.ts`                         |
+| FR-15-008 | تعليل المواعيد                | مقترح  | M11.7  | done    | `tests/integration/study-plan.test.ts`           |
 | FR-16-001 | ملخص المكتبة                  | سابق   | M12.2  | planned | —                                                |
 | FR-16-002 | دقة الحل                      | سابق   | M12.1  | planned | —                                                |
 | FR-16-003 | تطور الأداء                   | مقترح  | M12.3  | planned | —                                                |

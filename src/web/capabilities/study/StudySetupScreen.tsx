@@ -19,9 +19,10 @@ import { useI18n } from '../../platform/i18n/i18n.js';
 import { fetchBanks } from '../library/api.js';
 import { startExam, startStudy } from './api.js';
 import { ExamOptions, timingOf } from './ExamOptions.js';
+import { SharesFields } from './SharesFields.js';
 import { useStudySetup } from './use-study-setup.js';
 
-const KINDS: StudyKind[] = ['random', 'new', 'wrong', 'due', 'flagged'];
+const KINDS: StudyKind[] = ['smart_mix', 'random', 'new', 'weak', 'wrong', 'due', 'flagged'];
 
 /** What is ready, and what to do when it is fewer than asked for (FR-12-001). */
 function Availability({
@@ -108,7 +109,7 @@ function useStart(setup: Setup) {
       );
       return void navigate(`/exam/sessions/${exam.id}`);
     }
-    const session = await startStudy(setup.scope, setup.kind, setup.size);
+    const session = await startStudy(setup.scope, setup.kind, setup.size, setup.shares);
     void navigate(`/study/sessions/${session.id}`);
   });
 }
@@ -148,6 +149,9 @@ export function StudySetupScreen() {
         <form className="qb-stack" onSubmit={submit} noValidate>
           <ModeField setup={setup} />
           <SetupFields setup={setup} />
+          {setup.kind === 'smart_mix' && (
+            <SharesFields shares={setup.shares} groups={setup.groups} onChange={setup.setShares} />
+          )}
           {setup.mode === 'exam' && (
             <ExamOptions
               timing={setup.timing}

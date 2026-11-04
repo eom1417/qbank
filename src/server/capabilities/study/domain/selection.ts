@@ -1,28 +1,27 @@
 import type { StudyKind } from '../../../../contracts/study.js';
 import type { PoolQuestion } from '../../questions/index.js';
+import { stateOf, type Attempt, type QuestionState } from './mastery.js';
+import { DEFAULT_SHARES, mixCounts, type MixGroup, type Shares } from './smart-mix.js';
 
-/** The owner's last answer to a question, from earlier sessions. */
-export interface LastAttempt {
-  questionId: string;
-  correct: boolean;
-  answeredAt: Date;
-}
+/** Every graded answer of the owner's, by question, oldest first. */
+export type History = ReadonlyMap<string, readonly Attempt[]>;
 
-const DAY_MS = 24 * 60 * 60 * 1000;
 /**
- * Due again (interim until M11's spaced review): a wrong answer a day later, a right one after a
- * week. A question never answered is "new", not due.
+ * The Smart Mix group of a question (FR-14-003…005): never answered is new; weak, or wrong last
+ * time, is weak; answered before and due again is due. Others are not drawn by a mix.
  */
-function isDue(last: LastAttempt, now: Date): boolean {
-  const waited = now.getTime() - last.answeredAt.getTime();
-  return waited >= (last.correct ? 7 : 1) * DAY_MS;
+export function groupOf(state: QuestionState): MixGroup | null {
+  if (state.attempts === 0) return 'new';
+  if (state.level === 'weak' || state.lastCorrect === false) return 'weak';
+  return state.isDue ? 'due' : null;
 }
 
 /** Whether a question fits the session kind (FR-12-002). Flagged is filtered in the pool. */
-function fitsKind(kind: StudyKind, last: LastAttempt | undefined, now: Date): boolean {
-  if (kind === 'new') return last === undefined;
-  if (kind === 'wrong') return last !== undefined && !last.correct;
-  if (kind === 'due') return last !== undefined && isDue(last, now);
+function fitsKind(kind: StudyKind, state: QuestionState): boolean {
+  if (kind === 'new') return state.attempts === 0;
+  if (kind === 'wrong') return state.lastCorrect === false;
+  if (kind === 'weak') return groupOf(state) === 'weak';
+  if (kind === 'due') return state.attempts > 0 && state.isDue;
   return true;
 }
 
@@ -39,14 +38,16 @@ function oncePerText(pool: readonly PoolQuestion[]): PoolQuestion[] {
   });
 }
 
+const stateIn = (history: History, id: string, now: Date) => stateOf(history.get(id) ?? [], now);
+
 /** The questions a session of this kind may draw from, each text once. */
 export function candidatesFor(
   kind: StudyKind,
   pool: readonly PoolQuestion[],
-  history: ReadonlyMap<string, LastAttempt>,
+  history: History,
   now: Date,
-): PoolQuestion[] {
-  return oncePerText(pool.filter((q) => fitsKind(kind, history.get(q.id), now)));
+) {
+  return oncePerText(pool.filter((q) => fitsKind(kind, stateIn(history, q.id, now))));
 }
 
 /** A fair random order (Fisher–Yates) with the given source of randomness. */
@@ -57,4 +58,39 @@ export function shuffled<T>(items: readonly T[], random: () => number): T[] {
     [result[i], result[j]] = [result[j] as T, result[i] as T];
   }
   return result;
+}
+
+/** The pool sorted into the three Smart Mix groups, each text once. */
+export function mixGroups(pool: readonly PoolQuestion[], history: History, now: Date) {
+  const groups: Record<MixGroup, PoolQuestion[]> = { new: [], weak: [], due: [] };
+  for (const q of oncePerText(pool)) {
+    const group = groupOf(stateIn(history, q.id, now));
+    if (group) groups[group].push(q);
+  }
+  return groups;
+}
+
+interface MixPick {
+  question: PoolQuestion;
+  reason: MixGroup;
+}
+
+/**
+ * A Smart Mix (FR-14-001, FR-14-002): the counts by the shares, any shortfall moved by the
+ * declared rule, each question with why it was chosen (FR-14-008), in a random order.
+ */
+export function smartMix(
+  groups: Record<MixGroup, PoolQuestion[]>,
+  size: number,
+  random: () => number,
+  shares: Shares = DEFAULT_SHARES,
+) {
+  const available = { new: groups.new.length, weak: groups.weak.length, due: groups.due.length };
+  const counts = mixCounts(size, available, shares);
+  const picks: MixPick[] = (['new', 'weak', 'due'] as const).flatMap((reason) =>
+    shuffled(groups[reason], random)
+      .slice(0, counts[reason])
+      .map((question) => ({ question, reason })),
+  );
+  return { picks: shuffled(picks, random), counts };
 }

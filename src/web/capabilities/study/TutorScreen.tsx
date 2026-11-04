@@ -98,6 +98,11 @@ export function TutorScreen() {
         {t('study.progress')} {item.position + 1} {t('study.of')} {item.total}
       </MutedText>
       {!item.questionId && <Alert tone="info">{t('study.deleted')}</Alert>}
+      {item.reason && (
+        <MutedText>
+          {t('plan.reason')} {t(`plan.reason.${item.reason}`)}
+        </MutedText>
+      )}
       <QuestionView tutor={tutor} />
       {item.solution === null ? (
         <Button

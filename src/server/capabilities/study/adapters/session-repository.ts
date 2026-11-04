@@ -105,23 +105,25 @@ async function answerItem(
   return result.numUpdatedRows > 0n;
 }
 
-/** The latest answer the owner gave to each of these questions, in any session. */
-async function lastAttempts(db: Db, ownerId: string) {
+/** Every graded answer of the owner's, by question, oldest first (the mastery record, FR-15-001). */
+async function attemptHistory(db: Db, ownerId: string) {
   const rows = await db
     .selectFrom('study_item')
     .select(['question_id', 'correct', 'answered_at'])
-    .distinctOn('question_id')
     .where('owner_id', '=', ownerId)
     .where('answered_at', 'is not', null)
+    .where('correct', 'is not', null)
     .where('question_id', 'is not', null)
-    .orderBy('question_id')
-    .orderBy('answered_at', 'desc')
+    .orderBy('answered_at')
+    .orderBy('position')
     .execute();
-  return rows.map((row) => ({
-    questionId: row.question_id as string,
-    correct: row.correct === true,
-    answeredAt: row.answered_at as Date,
-  }));
+  const history = new Map<string, { correct: boolean; at: Date }[]>();
+  for (const row of rows) {
+    const id = row.question_id as string;
+    const attempt = { correct: row.correct === true, at: row.answered_at as Date };
+    history.set(id, [...(history.get(id) ?? []), attempt]);
+  }
+  return history;
 }
 
 const activeSessions = (db: Db, ownerId: string) =>
@@ -224,7 +226,7 @@ export function createSessionRepository(db: Db) {
       update(ownerId, id, { position, updated_at: now }),
     finish: (ownerId: string, id: string, now: Date) =>
       update(ownerId, id, { status: 'finished', finished_at: now, updated_at: now }),
-    lastAttempts: (ownerId: string) => lastAttempts(db, ownerId),
+    attemptHistory: (ownerId: string) => attemptHistory(db, ownerId),
     activeSessions: (ownerId: string) => activeSessions(db, ownerId),
     saveChoice: (key: ItemKey, chosen: string[], now: Date) => saveChoice(db, key, chosen, now),
     setItemFlag: (key: ItemKey, flagged: boolean) => setItemFlag(db, key, flagged),

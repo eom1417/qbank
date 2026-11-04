@@ -244,7 +244,8 @@ interface MediaTable {
   created_at: Date;
 }
 
-export type StudyKind = 'random' | 'new' | 'wrong' | 'due' | 'flagged' | 'retry';
+export type StudyKind =
+  'random' | 'new' | 'wrong' | 'due' | 'flagged' | 'retry' | 'weak' | 'smart_mix';
 
 interface StudySessionTable {
   id: string;

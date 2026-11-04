@@ -17,4 +17,6 @@ export interface Snapshot {
   pictureIds: string[];
   chapterId: string | null;
   version: number;
+  /** Why a Smart Mix chose it (FR-14-008); absent for other kinds. */
+  reason?: 'new' | 'weak' | 'due';
 }

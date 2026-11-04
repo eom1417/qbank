@@ -18,11 +18,30 @@ export const StudyScope = z
 export type StudyScope = z.infer<typeof StudyScope>;
 
 /** Random, never answered, last answered wrong, due again, or flagged (FR-12-002). */
-export const StudyKind = z.enum(['random', 'new', 'wrong', 'due', 'flagged']);
+export const StudyKind = z.enum(['random', 'new', 'wrong', 'due', 'flagged', 'weak', 'smart_mix']);
 export type StudyKind = z.infer<typeof StudyKind>;
 
-export const PreviewRequest = z.object({ scope: StudyScope, kind: StudyKind }).strict();
-export const PreviewResponse = z.object({ available: z.number().int() }).strict();
+/** Smart Mix shares in percent: new, weak or wrong, due (FR-14-007; default 50/30/20). */
+export const MixShares = z
+  .object({
+    new: z.number().int().min(0).max(100),
+    weak: z.number().int().min(0).max(100),
+    due: z.number().int().min(0).max(100),
+  })
+  .strict()
+  .refine((s) => s.new + s.weak + s.due === 100, { message: 'must_total_100' });
+export type MixShares = z.infer<typeof MixShares>;
+
+const MixCounts = z
+  .object({ new: z.number().int(), weak: z.number().int(), due: z.number().int() })
+  .strict();
+
+export const PreviewRequest = z
+  .object({ scope: StudyScope, kind: StudyKind, shares: MixShares.optional() })
+  .strict();
+export const PreviewResponse = z
+  .object({ available: z.number().int(), groups: MixCounts.optional() })
+  .strict();
 export type PreviewResponse = z.infer<typeof PreviewResponse>;
 
 /**
@@ -51,6 +70,7 @@ const SessionBase = {
   scope: StudyScope,
   kind: StudyKind,
   size: z.number().int().min(1).max(200),
+  shares: MixShares.optional(),
 };
 
 export const StartSessionRequest = z.discriminatedUnion('mode', [
@@ -63,7 +83,12 @@ export const SessionResponse = z
   .object({
     id: z.uuid(),
     mode: z.enum(['tutor', 'exam']),
-    kind: z.enum(['random', 'new', 'wrong', 'due', 'flagged', 'retry']),
+    kind: z.enum(['random', 'new', 'wrong', 'due', 'flagged', 'retry', 'weak', 'smart_mix']),
+    /** A Smart Mix session's real composition, never the requested shares (FR-14-002). */
+    mix: z
+      .object({ new: z.number().int(), weak: z.number().int(), due: z.number().int() })
+      .strict()
+      .nullable(),
     total: z.number().int(),
     answered: z.number().int(),
     position: z.number().int(),
@@ -103,6 +128,8 @@ export const ItemResponse = z
     flagged: z.boolean(),
     favorite: z.boolean(),
     solution: Solution.nullable(),
+    /** Why a Smart Mix chose this question (FR-14-008). */
+    reason: z.enum(['new', 'weak', 'due']).nullable(),
     /** An exam answer saved so far (never graded before submission). */
     saved: z.array(z.string()),
     /** This exam item's own flag (FR-13-009). */
@@ -215,3 +242,59 @@ export const AnswerImpactResponse = z
   })
   .strict();
 export type AnswerImpactResponse = z.infer<typeof AnswerImpactResponse>;
+
+/** Today's reviews (FR-15-005, UI-20): what is due and why, or what to do instead. */
+export const DueResponse = z
+  .object({
+    count: z.number().int(),
+    items: z.array(
+      z
+        .object({
+          questionId: z.uuid(),
+          excerpt: z.string(),
+          chapterId: z.uuid().nullable(),
+          streak: z.number().int(),
+          intervalDays: z.number().int(),
+          dueAt: z.iso.datetime(),
+        })
+        .strict(),
+    ),
+    /** With nothing due: how many new and weak questions are there instead (UAT-063). */
+    alternatives: z.object({ new: z.number().int(), weak: z.number().int() }).strict(),
+  })
+  .strict();
+export type DueResponse = z.infer<typeof DueResponse>;
+
+/** Chapters and topics by need (FR-15-006): weak and due first; small samples are said. */
+export const TopicsResponse = z
+  .object({
+    topics: z.array(
+      z
+        .object({
+          chapterId: z.uuid().nullable(),
+          topicId: z.uuid().nullable(),
+          questions: z.number().int(),
+          answered: z.number().int(),
+          /** 0–1 over answered questions; consistency, not one answer (FR-15-003). */
+          mastery: z.number(),
+          weak: z.number().int(),
+          due: z.number().int(),
+          smallSample: z.boolean(),
+        })
+        .strict(),
+    ),
+  })
+  .strict();
+export type TopicsResponse = z.infer<typeof TopicsResponse>;
+
+/** One question's level and next review, with what they rest on (FR-15-002, FR-15-008). */
+export const MasteryResponse = z
+  .object({
+    level: z.enum(['new', 'weak', 'learning', 'good', 'mastered']),
+    streak: z.number().int(),
+    attempts: z.number().int(),
+    intervalDays: z.number().int().nullable(),
+    dueAt: z.iso.datetime().nullable(),
+  })
+  .strict();
+export type MasteryResponse = z.infer<typeof MasteryResponse>;

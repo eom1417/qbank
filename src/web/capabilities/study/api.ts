@@ -2,6 +2,9 @@ import { ReportsResponse } from '../../../contracts/review.js';
 import {
   ActiveSessionsResponse,
   AnswerImpactResponse,
+  DueResponse,
+  TopicsResponse,
+  type MixShares,
   ExamStateResponse,
   type ExamTiming,
   AiExplanationResponse,
@@ -17,11 +20,27 @@ import { apiRequest } from '../../platform/api/client.js';
 
 const session = (id: string) => `/api/study/sessions/${id}`;
 
-export const previewStudy = (scope: StudyScope, kind: StudyKind) =>
-  apiRequest('POST', '/api/study/preview', PreviewResponse, { scope, kind });
+export const previewStudy = (scope: StudyScope, kind: StudyKind, shares?: MixShares) =>
+  apiRequest('POST', '/api/study/preview', PreviewResponse, {
+    scope,
+    kind,
+    ...(shares ? { shares } : {}),
+  });
 
-export const startStudy = (scope: StudyScope, kind: StudyKind, size: number) =>
-  apiRequest('POST', '/api/study/sessions', SessionResponse, { scope, kind, size, mode: 'tutor' });
+export const startStudy = (scope: StudyScope, kind: StudyKind, size: number, shares?: MixShares) =>
+  apiRequest('POST', '/api/study/sessions', SessionResponse, {
+    scope,
+    kind,
+    size,
+    mode: 'tutor',
+    ...(shares && kind === 'smart_mix' ? { shares } : {}),
+  });
+
+export const fetchDue = (bankIds: readonly string[]) =>
+  apiRequest('GET', `/api/study/due?bankIds=${bankIds.join(',')}`, DueResponse);
+
+export const fetchTopics = (bankIds: readonly string[]) =>
+  apiRequest('GET', `/api/study/topics?bankIds=${bankIds.join(',')}`, TopicsResponse);
 
 export const fetchActiveSessions = () =>
   apiRequest('GET', '/api/study/sessions', ActiveSessionsResponse);

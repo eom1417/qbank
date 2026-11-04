@@ -10,7 +10,7 @@ const percent = (part: number, whole: number) =>
   whole === 0 ? 0 : Math.round((part / whole) * 100);
 
 /**
- * An exam's result (FR-13-013, UI-19, UAT-056): the score counts every question, the accuracy
+ * A Smart Mix's real composition (FR-14-002), or an exam's result (FR-13-013, UI-19, UAT-056): the score counts every question, the accuracy
  * only the answered ones, both with their formula (DEC-08 assumed); then each answer to review.
  */
 export function ExamResult({
@@ -22,7 +22,15 @@ export function ExamResult({
 }) {
   const { t } = useI18n();
   const { state } = useQuery(useCallback(() => fetchSession(sessionId), [sessionId]));
-  if (state.status !== 'ready' || state.data.mode !== 'exam') return null;
+  if (state.status !== 'ready') return null;
+  const { mix } = state.data;
+  if (state.data.mode !== 'exam')
+    return mix ? (
+      <MutedText>
+        {t('plan.mix')} {t('plan.shares.new')} {mix.new} · {t('plan.shares.weak')} {mix.weak} ·{' '}
+        {t('plan.shares.due')} {mix.due}
+      </MutedText>
+    ) : null;
   return (
     <Card>
       <Stack>

@@ -14,6 +14,7 @@ import { TransferCard } from '../capabilities/duplicates/TransferCard.js';
 import { QuestionScreen } from '../capabilities/review/QuestionScreen.js';
 import { ExamCheckScreen } from '../capabilities/study/ExamCheckScreen.js';
 import { ExamScreen } from '../capabilities/study/ExamScreen.js';
+import { PlanScreen } from '../capabilities/study/PlanScreen.js';
 import { StudyLink } from '../capabilities/study/StudyLink.js';
 import { StudySetupScreen } from '../capabilities/study/StudySetupScreen.js';
 import { SummaryScreen } from '../capabilities/study/SummaryScreen.js';
@@ -62,6 +63,14 @@ export const router = createBrowserRouter([
         element: (
           <Private>
             <StudySetupScreen />
+          </Private>
+        ),
+      },
+      {
+        path: '/study/plan',
+        element: (
+          <Private>
+            <PlanScreen />
           </Private>
         ),
       },
