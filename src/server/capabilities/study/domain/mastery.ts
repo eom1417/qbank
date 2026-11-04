@@ -6,6 +6,8 @@
 export interface Attempt {
   correct: boolean;
   at: Date;
+  /** Time spent answering, when known (Tutor records it; exams do not per question). */
+  seconds?: number | null;
 }
 
 export type Level = 'new' | 'weak' | 'learning' | 'good' | 'mastered';

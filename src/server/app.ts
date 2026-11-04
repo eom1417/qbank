@@ -66,6 +66,7 @@ function registerContent(
     requireActor,
     questions,
     ownsBank: library.ownsBank,
+    bankIdsOf: library.bankIdsOf,
     ai: providers.importAi,
   }).register(app);
   if (config.imports.worker) {

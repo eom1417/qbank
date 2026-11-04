@@ -109,7 +109,7 @@ async function answerItem(
 async function attemptHistory(db: Db, ownerId: string) {
   const rows = await db
     .selectFrom('study_item')
-    .select(['question_id', 'correct', 'answered_at'])
+    .select(['question_id', 'correct', 'answered_at', 'seconds'])
     .where('owner_id', '=', ownerId)
     .where('answered_at', 'is not', null)
     .where('correct', 'is not', null)
@@ -117,10 +117,14 @@ async function attemptHistory(db: Db, ownerId: string) {
     .orderBy('answered_at')
     .orderBy('position')
     .execute();
-  const history = new Map<string, { correct: boolean; at: Date }[]>();
+  const history = new Map<string, { correct: boolean; at: Date; seconds: number | null }[]>();
   for (const row of rows) {
     const id = row.question_id as string;
-    const attempt = { correct: row.correct === true, at: row.answered_at as Date };
+    const attempt = {
+      correct: row.correct === true,
+      at: row.answered_at as Date,
+      seconds: row.seconds,
+    };
     history.set(id, [...(history.get(id) ?? []), attempt]);
   }
   return history;
@@ -207,6 +211,30 @@ const attemptsOf = (db: Db, ownerId: string, questionId: string) =>
     .where('answered_at', 'is not', null)
     .execute();
 
+/** The owner's sessions, newest first, each with its counts and time (FR-16-006). */
+async function sessionHistory(db: Db, ownerId: string) {
+  return db
+    .selectFrom('study_session as s')
+    .leftJoin('study_item as i', 'i.session_id', 's.id')
+    .select([
+      's.id',
+      's.mode',
+      's.kind',
+      's.status',
+      's.scope',
+      's.created_at',
+      sql<string>`count(i.position)`.as('total'),
+      sql<string>`count(i.answered_at)`.as('answered'),
+      sql<string>`count(*) filter (where i.correct)`.as('correct'),
+      sql<string>`coalesce(sum(i.seconds), 0)`.as('seconds'),
+    ])
+    .where('s.owner_id', '=', ownerId)
+    .groupBy('s.id')
+    .orderBy('s.created_at', 'desc')
+    .limit(500)
+    .execute();
+}
+
 /** Owner-scoped store of study sessions and their answered items (M9). */
 export function createSessionRepository(db: Db) {
   const update = (ownerId: string, id: string, changes: Record<string, unknown>) =>
@@ -227,6 +255,7 @@ export function createSessionRepository(db: Db) {
     finish: (ownerId: string, id: string, now: Date) =>
       update(ownerId, id, { status: 'finished', finished_at: now, updated_at: now }),
     attemptHistory: (ownerId: string) => attemptHistory(db, ownerId),
+    sessionHistory: (ownerId: string) => sessionHistory(db, ownerId),
     activeSessions: (ownerId: string) => activeSessions(db, ownerId),
     saveChoice: (key: ItemKey, chosen: string[], now: Date) => saveChoice(db, key, chosen, now),
     setItemFlag: (key: ItemKey, flagged: boolean) => setItemFlag(db, key, flagged),

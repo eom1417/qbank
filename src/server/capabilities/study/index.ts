@@ -5,16 +5,17 @@ import type { Db } from '../../platform/db/index.js';
 import { newId } from '../../platform/ids.js';
 import type { RequireActor } from '../identity/index.js';
 import type { ImportAi } from '../providers/index.js';
-import type { Questions } from '../questions/index.js';
 import { createSessionRepository } from './adapters/session-repository.js';
 import { registerStudyRoutes } from './http/routes.js';
+import type { StudyDeps } from './use-cases/deps.js';
 
 interface StudySettings {
   db: Db;
   clock: Clock;
   requireActor: RequireActor;
-  questions: Pick<Questions, 'studyPool' | 'marksOf'>;
+  questions: StudyDeps['questions'];
   ownsBank(ownerId: string, bankId: string): Promise<boolean>;
+  bankIdsOf(ownerId: string): Promise<string[]>;
   ai: ImportAi;
   /** The order of a session's questions; tests may fix it. */
   random?: () => number;
@@ -29,6 +30,7 @@ export function createStudy(settings: StudySettings) {
     sessions: createSessionRepository(settings.db),
     questions: settings.questions,
     ownsBank: settings.ownsBank,
+    bankIdsOf: settings.bankIdsOf,
     ai: settings.ai,
     clock: settings.clock,
     newId,

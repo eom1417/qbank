@@ -9,6 +9,8 @@ import { registerReviewRoutes } from './http/review-routes.js';
 import { registerDuplicateRoutes } from './http/duplicate-routes.js';
 import { registerMarkRoutes } from './http/mark-routes.js';
 import { createPairRepository } from './adapters/pair-repository.js';
+import { createInsights } from './adapters/insights.js';
+import { searchQuestions, type SearchFilter } from './adapters/search.js';
 import { createMarkRepository, studyPool, type PoolFilter } from './adapters/study-pool.js';
 import { detectDuplicates } from './use-cases/duplicates.js';
 import type { ImportedQuestion } from './domain/imported.js';
@@ -22,6 +24,7 @@ import { createQuestionRepository } from './adapters/question-repository.js';
 import type { ChapterNames } from './domain/classify.js';
 
 export type { PoolFilter, PoolQuestion } from './adapters/study-pool.js';
+export type { SearchFilter } from './adapters/search.js';
 export {
   occurrencesOf,
   type ImportedMedia,
@@ -73,6 +76,10 @@ export function createQuestions(settings: QuestionsSettings) {
     /** The owner's eligible questions in a study scope, ready to snapshot (M9). */
     studyPool: (ownerId: string, filter: PoolFilter) => studyPool(settings.db, ownerId, filter),
     marksOf: marks.marksOf,
+    ...createInsights(settings.db),
+    /** The owner's questions by words and filters (FR-17-001, UI-22). */
+    searchQuestions: (ownerId: string, filter: SearchFilter) =>
+      searchQuestions(settings.db, ownerId, filter),
     ...media,
     register: (app: FastifyInstance) => {
       registerQuestionRoutes(app, deps, settings.requireActor);

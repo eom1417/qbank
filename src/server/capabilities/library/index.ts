@@ -30,6 +30,9 @@ export function createLibrary(settings: LibrarySettings) {
   return {
     /** A bank's chapters with their topics, for other capabilities (questions' suggestions). */
     chaptersOf: (ownerId: string, bankId: string) => deps.taxonomy.listChapters(ownerId, bankId),
+    /** The account's bank ids, archived ones included (analytics over the whole library). */
+    bankIdsOf: async (ownerId: string) =>
+      (await deps.banks.listOwned(ownerId, { archived: 'include' })).map((bank) => bank.id),
     /** Whether the bank is the account's (questions' review lists are per bank). */
     ownsBank: async (ownerId: string, bankId: string) =>
       (await deps.banks.findOwned(ownerId, bankId)) !== undefined,

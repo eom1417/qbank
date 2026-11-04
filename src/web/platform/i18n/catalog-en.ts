@@ -4,6 +4,7 @@ import { duplicatesEn } from './catalog-duplicates-en.js';
 import { studyEn } from './catalog-study-en.js';
 import { examEn } from './catalog-exam-en.js';
 import { planEn } from './catalog-plan-en.js';
+import { analyticsEn } from './catalog-analytics-en.js';
 import { providersEn } from './catalog-providers-en.js';
 
 /** English UI strings. catalog-ar.ts must define exactly the same keys (enforced by its type). */
@@ -15,6 +16,7 @@ export const en = {
   ...studyEn,
   ...examEn,
   ...planEn,
+  ...analyticsEn,
   'app.name': 'QBank Engine',
   'shell.language': 'العربية',
   'shell.theme.system': 'Theme: system',

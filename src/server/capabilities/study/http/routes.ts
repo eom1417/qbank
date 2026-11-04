@@ -13,6 +13,7 @@ import { parseInput } from '../../../platform/http/validate.js';
 import type { RequireActor } from '../../identity/index.js';
 import { explainWithAi } from '../use-cases/ai-explanation.js';
 import { dueToday, questionMastery, topicPriorities } from '../use-cases/plan.js';
+import { registerAnalyticsRoutes } from './analytics-routes.js';
 import {
   answerImpact,
   examState,
@@ -174,4 +175,5 @@ export function registerStudyRoutes(
   registerItemRoutes(app, deps, requireActor);
   registerExamRoutes(app, deps, requireActor);
   registerPlanRoutes(app, deps, requireActor);
+  registerAnalyticsRoutes(app, deps, requireActor);
 }

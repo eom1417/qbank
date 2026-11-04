@@ -5,6 +5,7 @@ import { duplicatesAr } from './catalog-duplicates-ar.js';
 import { studyAr } from './catalog-study-ar.js';
 import { examAr } from './catalog-exam-ar.js';
 import { planAr } from './catalog-plan-ar.js';
+import { analyticsAr } from './catalog-analytics-ar.js';
 import { providersAr } from './catalog-providers-ar.js';
 
 export const ar: Record<MessageKey, string> = {
@@ -15,6 +16,7 @@ export const ar: Record<MessageKey, string> = {
   ...studyAr,
   ...examAr,
   ...planAr,
+  ...analyticsAr,
   'app.name': 'محرك بنك الأسئلة',
   'shell.language': 'English',
   'shell.theme.system': 'المظهر: حسب الجهاز',

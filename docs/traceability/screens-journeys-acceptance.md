@@ -29,8 +29,8 @@
 | UI-18   | مراجعة قبل تسليم Exam | M10.5  | done    | `tests/e2e/exam.spec.ts`            |
 | UI-19   | تقرير Exam            | M10.8  | done    | `tests/e2e/exam.spec.ts`            |
 | UI-20   | المراجعات المستحقة    | M11.4  | done    | `tests/e2e/plan.spec.ts`            |
-| UI-21   | تحليلات الطالب        | M12.10 | planned | —                                   |
-| UI-22   | البحث                 | M12.11 | planned | —                                   |
+| UI-21   | تحليلات الطالب        | M12.10 | done    | `tests/e2e/analytics.spec.ts`       |
+| UI-22   | البحث                 | M12.11 | done    | `tests/e2e/analytics.spec.ts`       |
 | UI-23   | إدارة المصادر         | M4.9   | done    | `tests/e2e/import.spec.ts`          |
 | UI-24   | إعدادات المفاتيح      | M2.2   | done    | `tests/e2e/providers.spec.ts`       |
 | UI-25   | إعدادات الدراسة       | M1.6   | partial | `tests/e2e/account.spec.ts`         |
@@ -59,7 +59,7 @@
 | JY-15   | تعارض إجابة بعد امتحان      | M10.9  | done    | `tests/integration/study-exam.test.ts`     |
 | JY-16   | تصدير ثم حذف بنك            | M13.5  | planned | —                                          |
 | JY-17   | تبديل اللغة والجهاز         | M9.7   | partial | `tests/integration/study-progress.test.ts` |
-| JY-18   | تصفح دون درجة               | M12.12 | planned | —                                          |
+| JY-18   | تصفح دون درجة               | M12.12 | done    | `tests/e2e/analytics.spec.ts`              |
 | JY-19   | كتاب مع صورة مريض معرّف     | M14.1  | planned | —                                          |
 
 ## حالات القبول (UAT)
@@ -129,11 +129,11 @@
 | UAT-061 | تكرر نجاح             | M11.2  | done    | `tests/unit/study/mastery.test.ts`           |
 | UAT-062 | خطأ بعد نجاح          | M11.3  | done    | `tests/integration/study-plan.test.ts`       |
 | UAT-063 | يوم بال مستحقات       | M11.4  | done    | `tests/integration/study-plan.test.ts`       |
-| UAT-064 | 8 صحيح و2 خطأ         | M12.1  | planned | —                                            |
-| UAT-065 | عينة صغيرة            | M12.3  | planned | —                                            |
-| UAT-066 | فلترة بنك             | M12.7  | planned | —                                            |
-| UAT-067 | جودة الاستيراد        | M12.6  | planned | —                                            |
-| UAT-068 | تقرير جلسة قديمة      | M12.5  | planned | —                                            |
+| UAT-064 | 8 صحيح و2 خطأ         | M12.1  | done    | `tests/integration/analytics.test.ts`        |
+| UAT-065 | عينة صغيرة            | M12.3  | done    | `tests/integration/analytics.test.ts`        |
+| UAT-066 | فلترة بنك             | M12.7  | done    | `tests/integration/analytics.test.ts`        |
+| UAT-067 | جودة الاستيراد        | M12.6  | done    | `tests/integration/analytics.test.ts`        |
+| UAT-068 | تقرير جلسة قديمة      | M12.5  | done    | `tests/integration/analytics.test.ts`        |
 | UAT-069 | بنك مصور              | M13.1  | planned | —                                            |
 | UAT-070 | إخفاء الأسرار         | M13.1  | planned | —                                            |
 | UAT-071 | نطاق فصل              | M13.1  | planned | —                                            |

@@ -7,6 +7,9 @@ import { ResetPasswordScreen } from '../capabilities/identity/ResetPasswordScree
 import { SignInScreen } from '../capabilities/identity/SignInScreen.js';
 import { SignUpScreen } from '../capabilities/identity/SignUpScreen.js';
 import { BankScreen } from '../capabilities/library/BankScreen.js';
+import { AnalyticsScreen } from '../capabilities/analytics/AnalyticsScreen.js';
+import { SearchScreen } from '../capabilities/analytics/SearchScreen.js';
+import { ReadQuestionScreen } from '../capabilities/review/ReadQuestionScreen.js';
 import { DuplicatesLink } from '../capabilities/duplicates/DuplicatesLink.js';
 import { DuplicatesScreen } from '../capabilities/duplicates/DuplicatesScreen.js';
 import { ReimportCard } from '../capabilities/duplicates/ReimportCard.js';
@@ -63,6 +66,30 @@ export const router = createBrowserRouter([
         element: (
           <Private>
             <StudySetupScreen />
+          </Private>
+        ),
+      },
+      {
+        path: '/analytics',
+        element: (
+          <Private>
+            <AnalyticsScreen />
+          </Private>
+        ),
+      },
+      {
+        path: '/search',
+        element: (
+          <Private>
+            <SearchScreen />
+          </Private>
+        ),
+      },
+      {
+        path: '/questions/:id/read',
+        element: (
+          <Private>
+            <ReadQuestionScreen />
           </Private>
         ),
       },

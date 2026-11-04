@@ -16,7 +16,7 @@
 | FR-01-007 | لغتان أساسيتان                | سابق   | M15.1  | planned | —                                                |
 | FR-01-008 | حق تعديل المحتوى              | مقترح  | M7.6   | done    | `tests/integration/question-editing.test.ts`     |
 | FR-01-009 | وضوح سلوك AI                  | مقترح  | M7.7   | done    | `tests/integration/question-fix.test.ts`         |
-| FR-01-010 | قياس العمل الحقيقي            | مقترح  | M12.2  | planned | —                                                |
+| FR-01-010 | قياس العمل الحقيقي            | مقترح  | M12.2  | done    | `tests/integration/analytics.test.ts`            |
 | FR-02-001 | زائر غير مسجل                 | مقترح  | M1.1   | done    | `tests/e2e/landing.spec.ts`                      |
 | FR-02-002 | مالك الحساب                   | سابق   | M0.2   | partial | `tests/integration/identity.test.ts`             |
 | FR-02-003 | موظف دعم الخدمة               | مقترح  | M14.6  | planned | —                                                |
@@ -28,8 +28,8 @@
 | FR-03-002 | مصادر متعددة                  | مقترح  | M4.9   | done    | `tests/integration/imports.test.ts`              |
 | FR-03-003 | مجلدات وتصنيفات               | مقترح  | M1.4   | partial | `tests/integration/taxonomy.test.ts`             |
 | FR-03-004 | إسناد المصدر والصفحة          | سابق   | M4.9   | done    | `tests/integration/imports.test.ts`              |
-| FR-03-005 | البحث داخل المكتبة            | مقترح  | M12.11 | planned | —                                                |
-| FR-03-006 | فلاتر مركبة                   | مقترح  | M9.2   | partial | `tests/integration/study-tutor.test.ts`          |
+| FR-03-005 | البحث داخل المكتبة            | مقترح  | M12.11 | done    | `tests/integration/analytics.test.ts`            |
+| FR-03-006 | فلاتر مركبة                   | مقترح  | M9.2   | done    | `tests/integration/analytics.test.ts`            |
 | FR-03-007 | فرز يمكن فهمه                 | مقترح  | M1.5   | partial | `tests/e2e/bank-management.spec.ts`              |
 | FR-03-008 | أرشفة بنوك                    | مقترح  | M1.3   | done    | `tests/integration/bank-editing.test.ts`         |
 | FR-03-009 | نقل أسئلة مختارة              | مقترح  | M8.6   | done    | `tests/integration/duplicates.test.ts`           |
@@ -152,23 +152,23 @@
 | FR-15-006 | أولوية المواضيع               | مقترح  | M11.5  | done    | `tests/integration/study-plan.test.ts`           |
 | FR-15-007 | تحكم المتعلم                  | مقترح  | M11.7  | done    | `tests/e2e/plan.spec.ts`                         |
 | FR-15-008 | تعليل المواعيد                | مقترح  | M11.7  | done    | `tests/integration/study-plan.test.ts`           |
-| FR-16-001 | ملخص المكتبة                  | سابق   | M12.2  | planned | —                                                |
-| FR-16-002 | دقة الحل                      | سابق   | M12.1  | planned | —                                                |
-| FR-16-003 | تطور الأداء                   | مقترح  | M12.3  | planned | —                                                |
-| FR-16-004 | ضعف الموضوعات                 | سابق   | M12.4  | planned | —                                                |
-| FR-16-005 | معدلات الإجابة والمدة         | مقترح  | M12.4  | planned | —                                                |
-| FR-16-006 | تاريخ المحاولات               | سابق   | M12.5  | planned | —                                                |
-| FR-16-007 | جودة الاستيراد                | مقترح  | M12.6  | planned | —                                                |
-| FR-16-008 | فلاتر التقارير                | مقترح  | M12.7  | planned | —                                                |
-| FR-16-009 | أسباب الضعف المحتملة          | مقترح  | M12.8  | planned | —                                                |
-| FR-16-010 | اقتراح جلسة مفيدة             | مقترح  | M12.9  | planned | —                                                |
+| FR-16-001 | ملخص المكتبة                  | سابق   | M12.2  | done    | `tests/integration/analytics.test.ts`            |
+| FR-16-002 | دقة الحل                      | سابق   | M12.1  | done    | `tests/integration/analytics.test.ts`            |
+| FR-16-003 | تطور الأداء                   | مقترح  | M12.3  | done    | `tests/integration/analytics.test.ts`            |
+| FR-16-004 | ضعف الموضوعات                 | سابق   | M12.4  | done    | `tests/integration/study-plan.test.ts`           |
+| FR-16-005 | معدلات الإجابة والمدة         | مقترح  | M12.4  | done    | `tests/e2e/analytics.spec.ts`                    |
+| FR-16-006 | تاريخ المحاولات               | سابق   | M12.5  | done    | `tests/integration/analytics.test.ts`            |
+| FR-16-007 | جودة الاستيراد                | مقترح  | M12.6  | done    | `tests/integration/analytics.test.ts`            |
+| FR-16-008 | فلاتر التقارير                | مقترح  | M12.7  | done    | `tests/integration/analytics.test.ts`            |
+| FR-16-009 | أسباب الضعف المحتملة          | مقترح  | M12.8  | partial | `tests/integration/analytics.test.ts`            |
+| FR-16-010 | اقتراح جلسة مفيدة             | مقترح  | M12.9  | done    | `tests/integration/analytics.test.ts`            |
 | FR-16-011 | تصدير تقرير الدراسة           | مقترح  | M13.2  | planned | —                                                |
-| FR-17-001 | بحث متقدم                     | مقترح  | M12.11 | planned | —                                                |
-| FR-17-002 | Flags شخصية                   | سابق   | M12.12 | planned | —                                                |
-| FR-17-003 | مفضلة                         | مقترح  | M12.12 | planned | —                                                |
-| FR-17-004 | ملاحظات الطالب                | مقترح  | M12.12 | planned | —                                                |
-| FR-17-005 | تصفح دون تقييم                | مقترح  | M12.12 | planned | —                                                |
-| FR-17-006 | فلاتر المراجعة                | مقترح  | M12.12 | planned | —                                                |
+| FR-17-001 | بحث متقدم                     | مقترح  | M12.11 | done    | `tests/integration/analytics.test.ts`            |
+| FR-17-002 | Flags شخصية                   | سابق   | M12.12 | done    | `tests/integration/study-progress.test.ts`       |
+| FR-17-003 | مفضلة                         | مقترح  | M12.12 | done    | `tests/integration/study-progress.test.ts`       |
+| FR-17-004 | ملاحظات الطالب                | مقترح  | M12.12 | done    | `tests/e2e/analytics.spec.ts`                    |
+| FR-17-005 | تصفح دون تقييم                | مقترح  | M12.12 | done    | `tests/e2e/analytics.spec.ts`                    |
+| FR-17-006 | فلاتر المراجعة                | مقترح  | M12.12 | done    | `tests/integration/analytics.test.ts`            |
 | FR-18-001 | تصدير بنك كامل                | سابق   | M13.1  | planned | —                                                |
 | FR-18-002 | تصدير نتائج                   | سابق   | M13.2  | planned | —                                                |
 | FR-18-003 | نطاق التصدير                  | مقترح  | M13.1  | planned | —                                                |
@@ -199,7 +199,7 @@
 | FR-21-005 | قابلية القراءة                | مقترح  | M15.5  | planned | —                                                |
 | FR-21-006 | رسائل أخطاء عملية             | مقترح  | M15.5  | planned | —                                                |
 | FR-21-007 | حالات فارغة                   | مقترح  | M15.5  | planned | —                                                |
-| FR-21-008 | تناسق الأرقام                 | مقترح  | M12.1  | planned | —                                                |
+| FR-21-008 | تناسق الأرقام                 | مقترح  | M12.1  | done    | `tests/integration/analytics.test.ts`            |
 | FR-21-009 | إمكانية الوصول                | مقترح  | M15.4  | planned | —                                                |
 | FR-21-010 | حفظ التفضيلات                 | مقترح  | M1.6   | done    | `tests/e2e/account.spec.ts`                      |
 | FR-22-001 | تفضيلات التعلم                | مقترح  | M1.6   | partial | `tests/integration/account.test.ts`              |
