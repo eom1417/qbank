@@ -16,7 +16,7 @@ import tempfile
 from pathlib import Path
 
 from guard_core import POLICY_PATHS, is_policy_path
-from layout import PROJECT_ROOT, TOOLS_DIR
+from layout import PROJECT_ROOT, PYLIB, TOOLS_DIR
 
 ROOT = PROJECT_ROOT
 OWNERS_FILES = ('.github/CODEOWNERS', 'CODEOWNERS', 'docs/CODEOWNERS', '.gitlab/CODEOWNERS')
@@ -125,6 +125,9 @@ def base_guard(base: str, root: Path) -> int:
             print(f'SKIP: {base} has no {TOOLS_DIR}/ yet (first adoption)')
             return 0
         subprocess.run(['tar', '-x', '-C', temp], input=archive.stdout, check=True)
+        # The base tools look for their pinned libraries (lizard) beside them: lend this tree's.
+        if (root / PYLIB).is_dir():
+            (Path(temp) / PYLIB).symlink_to((root / PYLIB).resolve(), target_is_directory=True)
         guard = Path(temp) / TOOLS_DIR / 'guard.py'
         codes = [subprocess.run([sys.executable, str(guard), '--root', str(root), *extra],
                                 check=False).returncode for extra in ([], ['--functions'])]
