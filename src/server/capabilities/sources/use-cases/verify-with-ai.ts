@@ -24,13 +24,14 @@ const withoutReason = (question: ImportedQuestion, reason: string) =>
 function applyMark(question: ImportedQuestion, letter: string | null): ImportedQuestion {
   if (letter === null) return question;
   if (question.answer === null) {
-    const reasons = [...withoutReason(question, 'no_answer'), 'ai_suggested' as const];
+    // A hand mark the AI saw on the page is the file's answer (DEC-34).
+    const reasons = withoutReason(question, 'no_answer');
     return {
       ...question,
       answer: letter,
       answers: [letter],
-      provenance: 'ai_suggested',
-      evidence: 'ai_suggested',
+      provenance: 'source',
+      evidence: 'ai_mark',
       reasons,
     };
   }

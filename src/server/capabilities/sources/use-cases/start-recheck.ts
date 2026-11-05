@@ -15,8 +15,8 @@ async function checkModels(deps: SourcesDeps, actor: Actor, input: RecheckReques
 }
 
 /**
- * Queues a re-check of a source (DEC-33): its saved questions are improved (when asked) and
- * their answers settled again by the owner's AI. One job runs per source at a time; the report
+ * Queues a re-check of a source (DEC-33, DEC-34): its saved questions are organized again and
+ * improved as the owner chose, by the owner's AI. One job runs per source at a time; the report
  * is the import report. Returns the new job's id.
  */
 export async function startRecheck(
@@ -40,7 +40,7 @@ export async function startRecheck(
     ai_provider_id: input.aiProviderId,
     ai_model: input.aiModel ?? null,
     ai_mode: 'recheck',
-    ai_improve: input.improve,
+    ai_enhance: JSON.stringify(input.enhance),
     ai_roles: JSON.stringify(input.models),
     created_at: now,
     updated_at: now,

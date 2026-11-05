@@ -11,6 +11,8 @@ import {
 
 /** One question can take a while on a busy subscription; the import waits this long. */
 const ASK_TIMEOUT_MS = 180_000;
+/** A research turn searches and reads pages first. */
+const RESEARCH_TIMEOUT_MS = 420_000;
 
 /** The kit's failure classes as QBank's readiness statuses (what the user sees and retries on). */
 const FAILURES: Record<string, Exclude<AiFailure, 'invalid_output'>> = {
@@ -46,7 +48,8 @@ function askOf<T>(target: AiTarget, request: StructuredRequest<T>) {
     ...(target.model ? { model: target.model } : {}),
     prompt: promptOf(request),
     ...(image?.type === 'image' ? { imagePngBase64: image.base64 } : {}),
-    timeoutMs: ASK_TIMEOUT_MS,
+    ...(request.research ? { research: true } : {}),
+    timeoutMs: request.research ? RESEARCH_TIMEOUT_MS : ASK_TIMEOUT_MS,
   };
 }
 

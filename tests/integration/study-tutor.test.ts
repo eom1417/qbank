@@ -74,6 +74,7 @@ describe('answering (FR-12-003…006, UAT-041, UAT-042, UAT-045, FR-23-007)', ()
       correct: false,
       answers: ['B'],
       explanation: null,
+      studyNote: null,
     });
     const again = await answer(owner, id, 0, ['B']);
     expect([again.statusCode, again.json().error.code]).toEqual([409, 'already_answered']);

@@ -3,6 +3,7 @@ import type { ItemResponse } from '../../../contracts/study.js';
 import { Alert, Button, Card, MutedText, Stack, Subtitle } from '../../design-system/index.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { useSession } from '../identity/session.js';
+import { StudyNoteCard } from '../review/StudyNoteCard.js';
 
 type Solution = NonNullable<ItemResponse['solution']>;
 
@@ -35,6 +36,7 @@ export function SolutionView({ solution }: { solution: Solution }) {
           )}
         </>
       )}
+      <StudyNoteCard note={solution.studyNote} />
     </Stack>
   );
 }

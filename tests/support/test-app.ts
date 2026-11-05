@@ -72,7 +72,9 @@ async function startTestApp(options: TestAppOptions = {}): Promise<TestApp> {
     webDir: options.webDir ?? null,
   };
   const pairingToken = options.local ? TEST_PAIRING_TOKEN : null;
-  const app = buildApp({ config, db, clock, pairingToken });
+  // No test reaches the web: a source link "opens" unless its URL says it is dead.
+  const checkLink = (url: string) => Promise.resolve(!url.includes('dead'));
+  const app = buildApp({ config, db, clock, pairingToken, checkLink });
   await app.ready();
   const close = async () => {
     await app.close();

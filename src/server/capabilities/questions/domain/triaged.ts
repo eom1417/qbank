@@ -6,10 +6,12 @@ export interface TriageChange extends QuestionContent {
   fileAnswer: string | null;
   /** The deciding reason, shown with the answer. */
   aiNote: string | null;
-  /** Whether the AI settled the answer (else a person decides). */
-  settled: boolean;
-  /** Whether improvement mode rewrote the text (DEC-04). */
+  /** The AI settled the answer (true), left it to a person (false), or did not check it (null). */
+  settled: boolean | null;
+  /** Whether the AI organized or improved the text (DEC-04, DEC-34). */
   improved: boolean;
+  /** What the AI changed (`polished`, `options_added`, `answer_verified`…), for badges. */
+  changes: string[];
 }
 
 /** Doubts about the answer that a settled triage answers. */
@@ -34,8 +36,15 @@ const TEXT_DOUBTS: ReadonlySet<ReviewReason> = new Set([
 ]);
 
 /** A reason the triage answered: an answer doubt it settled, a text doubt it rewrote away. */
+/** Doubts an unchecked answer still answers: an answer now read from the page is the file's. */
+const answeredUnchecked = (reason: ReviewReason, change: TriageChange) =>
+  change.settled === null &&
+  change.provenance === 'source' &&
+  (reason === 'no_answer' || reason === 'ai_suggested');
+
 const answered = (reason: ReviewReason, change: TriageChange) =>
-  (change.settled && ANSWER_DOUBTS.has(reason)) ||
+  (change.settled === true && ANSWER_DOUBTS.has(reason)) ||
+  answeredUnchecked(reason, change) ||
   (change.improved && TEXT_DOUBTS.has(reason)) ||
   (reason === 'essay' && change.kind === 'mcq');
 
@@ -43,7 +52,7 @@ const answered = (reason: ReviewReason, change: TriageChange) =>
 function remaining(change: TriageChange): ReviewReason[] {
   const mcq = change.kind === 'mcq';
   if (change.improved && mcq && change.options.length < 2) return ['too_few_options'];
-  if (change.settled) return [];
+  if (change.settled !== false) return [];
   if (change.answers.length > 0) return ['ai_disagrees'];
   return mcq ? ['no_answer'] : [];
 }
@@ -58,9 +67,13 @@ function reasonsAfterTriage(
 }
 
 /** The row values for a triaged question; its status follows from the one eligibility rule. */
-export function triagedValues(previous: readonly ReviewReason[], change: TriageChange) {
-  const reasons = reasonsAfterTriage(previous, change);
+export function triagedValues(
+  previous: { reasons: readonly ReviewReason[]; changes: readonly string[] },
+  change: TriageChange,
+) {
+  const reasons = reasonsAfterTriage(previous.reasons, change);
   return {
+    ai_changes: [...new Set([...previous.changes, ...change.changes])],
     kind: change.kind,
     stem: change.stem,
     options: JSON.stringify(change.options),

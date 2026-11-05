@@ -17,6 +17,7 @@ import {
 import { registerImportRoutes, registerSourceRoutes } from './http/routes.js';
 import type { SourcesDeps } from './use-cases/deps.js';
 import { createImportWorker } from './worker.js';
+import { linkOpens } from './adapters/link-check.js';
 
 export { extractQuestions } from './use-cases/read-source.js';
 export type { ExtractedQuestion, ReadingMode } from './use-cases/extract-questions.js';
@@ -36,6 +37,8 @@ interface SourcesSettings {
   maxPages: number;
   originalRetentionDays: number;
   log: SourcesDeps['log'];
+  /** Whether a source link opens; the real web unless a test replaces it. */
+  checkLink?: (url: string) => Promise<boolean>;
 }
 
 /** Uploaded sources and their imports: upload, durable job queue, reading, report (M4). */
@@ -48,6 +51,7 @@ export function createSources(settings: SourcesSettings) {
     questions: settings.questions,
     ai: settings.ai,
     clock: settings.clock,
+    checkLink: settings.checkLink ?? linkOpens,
     newId,
     maxUploadBytes: settings.maxUploadBytes,
     maxPages: settings.maxPages,

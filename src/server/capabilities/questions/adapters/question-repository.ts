@@ -166,6 +166,7 @@ async function copyQuestion(
       bank_id: bankId,
       options: JSON.stringify(row.options),
       reimport_text: row.reimport_text === null ? null : JSON.stringify(row.reimport_text),
+      study_note: row.study_note === null ? null : JSON.stringify(row.study_note),
       chapter_id: null,
       topic_id: null,
       classification: 'none',
@@ -249,6 +250,19 @@ async function countsBySource(db: Db, ownerId: string, bankId: string): Promise<
   }));
 }
 
+/** The bank's questions with a topic review, in reading order (DEC-34). */
+const topicCardsOf = (db: Db, ownerId: string, bankId: string) =>
+  db
+    .selectFrom('question')
+    .select(['id', 'stem', 'options', 'answer_letters', 'study_note'])
+    .where('owner_id', '=', ownerId)
+    .where('bank_id', '=', bankId)
+    .where(sql<boolean>`study_note->>'kind' = 'topic_review'`)
+    .where('status', 'not in', ['excluded', 'archived'])
+    .orderBy('source_id')
+    .orderBy('source_seq')
+    .execute();
+
 /** Owner-scoped store of questions; an import writes each one once per source place. */
 /** The names the user gave their bank's chapters and topics, and their tags. */
 interface BankNames {
@@ -297,6 +311,7 @@ export function createQuestionRepository(db: Db, newId: () => string, lookups: N
     recordVersion: (questionId: string, origin: string, now: Date) =>
       recordVersion(db, questionId, origin, now),
     countsBySource: (ownerId: string, bankId: string) => countsBySource(db, ownerId, bankId),
+    topicCardsOf: (ownerId: string, bankId: string) => topicCardsOf(db, ownerId, bankId),
     copyQuestion: (ownerId: string, id: string, bankId: string, copyId: string, now: Date) =>
       copyQuestion(db, ownerId, id, bankId, copyId, now),
   };

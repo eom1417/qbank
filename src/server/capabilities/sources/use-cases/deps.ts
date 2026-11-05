@@ -15,6 +15,8 @@ export interface SourcesDeps {
   /** The user's own AI connections (opened only for their own jobs). */
   ai: ImportAi;
   clock: Clock;
+  /** Whether a source link opens (a study note never shows a dead link, DEC-34). */
+  checkLink(url: string): Promise<boolean>;
   newId: () => string;
   maxUploadBytes: number;
   maxPages: number;

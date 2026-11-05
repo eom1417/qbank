@@ -9,8 +9,7 @@ export interface PageReading {
 
 function answerReasons(question: ExtractedQuestion): ReviewReason[] {
   if (question.kind === 'essay') return ['essay'];
-  if (question.answer === null) return ['no_answer'];
-  return question.evidence === 'ai_suggested' ? ['ai_suggested'] : [];
+  return question.answer === null ? ['no_answer'] : [];
 }
 
 function placeReasons(
@@ -42,7 +41,7 @@ const reasonsOf = (
 const provenanceOf = (question: ExtractedQuestion): ImportedQuestion['provenance'] => {
   if (question.conflicts.length > 0) return 'conflict';
   if (question.answer === null) return 'missing';
-  return question.evidence === 'ai_suggested' ? 'ai_suggested' : 'source';
+  return 'source';
 };
 
 /**

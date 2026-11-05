@@ -1,5 +1,5 @@
 import type { Readable } from 'node:stream';
-import type { StartImportFields } from '../../../../contracts/sources.js';
+import { enhancementsOf, type StartImportFields } from '../../../../contracts/sources.js';
 import { AppError, notFound } from '../../../platform/errors/index.js';
 import { isId } from '../../../platform/ids.js';
 import { openBlob, type StoredBlob } from '../../../platform/storage/blob-store.js';
@@ -64,7 +64,7 @@ const aiColumns = (aiProviderId: string | null, fields: StartImportFields) => ({
   ai_provider_id: aiProviderId,
   ai_model: aiProviderId ? (fields.aiModel ?? null) : null,
   ai_mode: aiProviderId ? fields.aiMode : ('verify' as const),
-  ai_improve: aiProviderId !== null && fields.aiImprove === 'true',
+  ai_enhance: aiProviderId ? JSON.stringify(enhancementsOf(fields.aiEnhance)) : null,
   ai_roles: aiProviderId ? JSON.stringify(roleModels(fields)) : null,
 });
 
@@ -87,6 +87,8 @@ async function checkRoleModels(deps: SourcesDeps, actor: Actor, fields: StartImp
 /** With AI chosen, its estimate must be within the user's limits or approved (DEC-18, FR-22-008). */
 async function checkAi(deps: SourcesDeps, actor: Actor, fields: StartImportFields) {
   if (!fields.aiProviderId) return null;
+  if (!enhancementsOf(fields.aiEnhance))
+    throw new AppError('validation_failed', { aiEnhance: 'invalid_value' });
   const target = {
     instanceId: fields.aiProviderId,
     ...(fields.aiModel ? { model: fields.aiModel } : {}),

@@ -6,6 +6,7 @@ import { useQuery } from '../../platform/api/use-query.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { fetchQuestion } from './api.js';
 import { DecisionsCard } from './DecisionsCard.js';
+import { StudyNoteCard } from './StudyNoteCard.js';
 import { DeleteCard } from './DeleteCard.js';
 import { FixCard } from './FixCard.js';
 import { HistoryCard } from './HistoryCard.js';
@@ -39,6 +40,7 @@ function QuestionCards({ question, onChange, extras }: CardsProps) {
         {t('review.page')} {question.page}
       </MutedText>
       <DecisionsCard question={question} onChange={onChange} />
+      <StudyNoteCard note={question.studyNote} />
       {extras?.(question, onChange)}
       <QuestionForm key={question.version} question={question} onSaved={onChange} />
       <PicturesCard question={question} />

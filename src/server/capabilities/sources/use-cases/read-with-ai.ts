@@ -15,7 +15,7 @@ import { pageRegions } from './read-source.js';
 import type { ExtractedQuestion } from './extract-questions.js';
 import { pageImages } from './suggest-marks.js';
 
-/** One question as the rules would have produced it, with the user's AI as the evidence. */
+/** One question as the rules would have produced it, read from the page by the user's AI. */
 function toQuestion(page: number, read: ReadQuestion): ExtractedQuestion {
   const { options, answers } = optionsAndKey(read);
   return {
@@ -26,7 +26,8 @@ function toQuestion(page: number, read: ReadQuestion): ExtractedQuestion {
     options,
     answer: answers[0] ?? null,
     answers,
-    evidence: answers.length > 0 ? 'ai_suggested' : null,
+    // The page's own key, read by the AI: the file's answer (DEC-34).
+    evidence: answers.length > 0 ? 'ai_read' : null,
     conflicts: [],
     multiSelect: answers.length > 1,
     explanation: read.explanation || null,

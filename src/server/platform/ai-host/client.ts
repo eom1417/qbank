@@ -8,6 +8,8 @@ interface AskInput {
   prompt: string;
   imagePngBase64?: string;
   timeoutMs?: number;
+  /** May search and read the web; the host declines every other tool. */
+  research?: boolean;
 }
 
 /** A reply from the AI host: its status and JSON body, passed on as they are. */

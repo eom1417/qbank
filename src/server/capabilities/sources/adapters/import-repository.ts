@@ -29,10 +29,12 @@ type NewJob = Pick<
   | 'ai_mode'
   | 'created_at'
   | 'updated_at'
-> &
-  Partial<Pick<JobRow, 'ai_improve'>> & { ai_roles?: string | null };
+> & { ai_roles?: string | null; ai_enhance?: string | null };
 type JobChanges = Partial<
-  Omit<JobRow, 'id' | 'owner_id' | 'source_id' | 'created_at' | 'ai_roles'> & { ai_roles: string }
+  Omit<JobRow, 'id' | 'owner_id' | 'source_id' | 'created_at' | 'ai_roles' | 'ai_enhance'> & {
+    ai_roles: string;
+    ai_enhance: string;
+  }
 >;
 type NewPage = Omit<PageRow, 'content'> & { content: string };
 

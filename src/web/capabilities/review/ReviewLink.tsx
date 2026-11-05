@@ -2,12 +2,17 @@ import { Link } from 'react-router';
 import { buttonClass } from '../../design-system/index.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 
-/** The way from a bank to its review queue (UI-06 → UI-10). */
+/** The way from a bank to its review queue (UI-06 → UI-10), and to its topic cards (DEC-34). */
 export function ReviewLink({ bankId }: { bankId: string }) {
   const { t } = useI18n();
   return (
-    <Link className={buttonClass('secondary')} to={`/banks/${bankId}/review`}>
-      {t('review.link')}
-    </Link>
+    <>
+      <Link className={buttonClass('secondary')} to={`/banks/${bankId}/review`}>
+        {t('review.link')}
+      </Link>
+      <Link className={buttonClass('ghost')} to={`/banks/${bankId}/topics`}>
+        {t('topics.open')}
+      </Link>
+    </>
   );
 }

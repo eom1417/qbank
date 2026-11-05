@@ -1,4 +1,4 @@
-import type { QuestionResponse } from '../../../../contracts/questions.js';
+import { SavedStudyNote, type QuestionResponse } from '../../../../contracts/questions.js';
 import type { Clock } from '../../../platform/clock.js';
 import { AppError, notFound } from '../../../platform/errors/index.js';
 import { isId } from '../../../platform/ids.js';
@@ -43,6 +43,12 @@ function readingAside(value: unknown): QuestionResponse['reimportText'] {
   return { stem: text.stem, options, explanation: text.explanation };
 }
 
+/** A saved study note as the contract shows it; one that no longer fits is left out. */
+function savedNote(value: unknown): SavedStudyNote | null {
+  const parsed = SavedStudyNote.safeParse(value);
+  return parsed.success ? parsed.data : null;
+}
+
 function toQuestionResponse(
   row: QuestionRow,
   tags: QuestionResponse['tags'],
@@ -73,6 +79,8 @@ function toQuestionResponse(
     updateNote: row.update_note,
     fileAnswer: row.file_answer,
     aiNote: row.ai_note,
+    aiChanges: row.ai_changes,
+    studyNote: savedNote(row.study_note),
     deferred: row.deferred_at !== null,
     reimportText: readingAside(row.reimport_text),
     pictures,

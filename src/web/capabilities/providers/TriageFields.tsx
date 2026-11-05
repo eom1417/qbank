@@ -1,6 +1,7 @@
 import type { ProviderView } from '../../../contracts/providers.js';
 import type { TriageModels } from '../../../contracts/sources.js';
-import { Checkbox, MutedText, SelectField, Stack } from '../../design-system/index.js';
+import { MutedText, SelectField, Stack } from '../../design-system/index.js';
+import { EnhanceFields } from './EnhanceFields.js';
 import { useI18n, type MessageKey } from '../../platform/i18n/i18n.js';
 import { modelsOf, type TriageChoiceState } from './use-triage-choice.js';
 import type { TriageQuality } from './triage-presets.js';
@@ -26,13 +27,7 @@ function RoleSummary({ state }: { state: TriageChoiceState }) {
   return (
     <MutedText>
       {t('triage.role.solvers')}: {name('first')} + {name('second')} · {t('triage.role.judge')}:{' '}
-      {name('judge')}
-      {state.choice.improve && (
-        <>
-          {' '}
-          · {t('triage.role.improver')}: {name('improver')}
-        </>
-      )}
+      {name('judge')} · {t('triage.role.improver')}: {name('improver')}
     </MutedText>
   );
 }
@@ -97,13 +92,11 @@ export function TriageFields({ state }: { state: TriageChoiceState }) {
       <RoleSummary state={state} />
       <CustomRoles state={state} />
       {state.provider && (
-        <Checkbox
-          checked={state.choice.improve}
-          onChange={(event) => state.change({ improve: event.target.checked })}
-          label={t('triage.improve')}
+        <EnhanceFields
+          value={state.choice.enhance}
+          onChange={(enhance) => state.change({ enhance })}
         />
       )}
-      {state.provider && <MutedText>{t('triage.improve.hint')}</MutedText>}
     </Stack>
   );
 }

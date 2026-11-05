@@ -51,8 +51,8 @@ export const StartImportFields = z
     aiModel: KitModel.optional(),
     /** How the AI helps: checks the answers the rules left open, or reads whole pages. */
     aiMode: z.enum(['verify', 'read']).default('verify'),
-    /** Improvement mode (DEC-04): clean the text and complete questions with too few options. */
-    aiImprove: z.enum(['true', 'false']).default('false'),
+    /** What the AI improves beyond organizing the file (DEC-34); nothing when omitted. */
+    aiEnhance: z.string().max(1000).optional(),
     /** The model of each triage role (DEC-33); the instance's model or default when omitted. */
     aiFirstModel: KitModel.optional(),
     aiSecondModel: KitModel.optional(),
@@ -69,6 +69,67 @@ export const StartImportFields = z
     message: 'too_small',
   });
 export type StartImportFields = z.infer<typeof StartImportFields>;
+
+/**
+ * "Improve questions with AI" (DEC-34): each part is chosen on its own. Without any of them the
+ * AI only organizes the file (finds, splits, links answers) and keeps every word as printed.
+ */
+export const Enhancements = z
+  .object({
+    /** Two blind solvers and a judge settle every answer (DEC-33). */
+    verifyAnswers: z.boolean(),
+    /** Questions with fewer options get plausible wrong ones up to this many; 0 is off. */
+    completeOptions: z.union([z.literal(0), z.literal(3), z.literal(4), z.literal(5)]),
+    /** Spelling, grammar and clarity, never what is asked (guarded). */
+    polishText: z.boolean(),
+    /** A topic review with real sources for incomplete or unclear questions. */
+    topicReview: z.boolean(),
+    /** A short note on why each option is right or wrong, for every question. */
+    explainOptions: z.boolean(),
+    /** A separate note when the book's answer follows an older guideline (DEC-16). */
+    updateNotes: z.boolean(),
+    /** Chapter, topic and difficulty suggestions. */
+    classify: z.boolean(),
+    /** Questions that ask the same thing in other words, across the bank. */
+    duplicates: z.boolean(),
+  })
+  .strict();
+export type Enhancements = z.infer<typeof Enhancements>;
+
+/** What the owner chose by default (DEC-34). */
+export const DEFAULT_ENHANCEMENTS: Enhancements = {
+  verifyAnswers: true,
+  completeOptions: 4,
+  polishText: true,
+  topicReview: true,
+  explainOptions: false,
+  updateNotes: false,
+  classify: false,
+  duplicates: false,
+};
+
+/** Organizing only: the AI changes no content. */
+export const NO_ENHANCEMENTS: Enhancements = {
+  verifyAnswers: false,
+  completeOptions: 0,
+  polishText: false,
+  topicReview: false,
+  explainOptions: false,
+  updateNotes: false,
+  classify: false,
+  duplicates: false,
+};
+
+/** An upload's enhancements, sent as one JSON form field: none when absent, null when invalid. */
+export function enhancementsOf(field: string | undefined): Enhancements | null {
+  if (field === undefined) return NO_ENHANCEMENTS;
+  try {
+    const parsed = Enhancements.safeParse(JSON.parse(field));
+    return parsed.success ? parsed.data : null;
+  } catch {
+    return null;
+  }
+}
 
 /** The model of each triage role, as an import job keeps it (DEC-33). */
 export const TriageModels = z
@@ -89,7 +150,8 @@ export const RecheckRequest = z
   .object({
     aiProviderId: KitInstanceId,
     aiModel: KitModel.optional(),
-    improve: z.boolean().default(false),
+    /** Organizing only when omitted. */
+    enhance: Enhancements.default(NO_ENHANCEMENTS),
     models: TriageModels.default({}),
   })
   .strict();
@@ -125,7 +187,7 @@ export const ImportResponse = z
       .object({
         instanceId: z.string(),
         model: z.string().nullable(),
-        improve: z.boolean(),
+        enhance: Enhancements,
         models: TriageModels,
       })
       .strict()

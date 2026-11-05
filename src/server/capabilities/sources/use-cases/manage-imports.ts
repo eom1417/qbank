@@ -1,4 +1,6 @@
 import {
+  Enhancements,
+  NO_ENHANCEMENTS,
   TriageModels,
   type ImportResponse,
   type RecentImportsResponse,
@@ -13,6 +15,12 @@ import type { JobRow } from '../adapters/import-repository.js';
 import type { SourcesDeps } from './deps.js';
 import { aiTargetOf } from './verify-with-ai.js';
 
+/** What a job improves (DEC-34); an old job without the column improves nothing. */
+export function enhanceOf(job: Pick<JobRow, 'ai_enhance'>): Enhancements {
+  const parsed = Enhancements.safeParse(job.ai_enhance);
+  return parsed.success ? parsed.data : NO_ENHANCEMENTS;
+}
+
 /** The AI a job ran on, as its report says it (DEC-33). */
 function aiOf(job: JobRow): ImportResponse['ai'] {
   if (!job.ai_provider_id) return null;
@@ -20,7 +28,7 @@ function aiOf(job: JobRow): ImportResponse['ai'] {
   return {
     instanceId: job.ai_provider_id,
     model: job.ai_model,
-    improve: job.ai_improve,
+    enhance: enhanceOf(job),
     models: models.success ? models.data : {},
   };
 }

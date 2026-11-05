@@ -3,6 +3,7 @@ import { FAKE_INSTANCES, useFakeAiHost } from '../support/fake-ai-host.js';
 import { ownerWithBank, registeredBrowser, type createClient } from '../support/client.js';
 import { blobCount, runImports, uploadFile, useImportSuite } from '../support/imports.js';
 import { seedQuestions } from '../support/questions.js';
+import { NO_ENHANCEMENTS } from '../../src/contracts/sources.js';
 
 const fakeHost = useFakeAiHost();
 const { app, fixtures } = useImportSuite({ aiHost: () => fakeHost().settings });
@@ -87,11 +88,14 @@ describe('deleting the original file (FR-19-001)', () => {
 });
 
 const ownerWithAi = () => ownerWithBank(app());
+/** The answers checked by the triage, nothing else improved (DEC-34). */
+const VERIFY = JSON.stringify({ ...NO_ENHANCEMENTS, verifyAnswers: true });
 
 /** Imports the Arabic fixture with the given AI connection and runs it. */
 async function importWithAi(owner: Browser, bankId: string, providerId: string) {
   const started = await uploadFile(app(), owner.cookie(), bankId, fixtures().arabic, {
     aiProviderId: providerId,
+    aiEnhance: VERIFY,
   });
   await runImports(app());
   return started.json() as { id: string; sourceId: string };
@@ -178,12 +182,15 @@ describe('choosing the model for an import', () => {
     expect(used.length).toBeGreaterThan(0);
     expect(used.every((ask) => ask.body.model === 'fake-small')).toBe(true);
   });
+});
 
+describe('the models and improvements of an import (DEC-33, DEC-34)', () => {
   it('runs each triage role on its own model when one is chosen (DEC-33)', async () => {
     const { owner, bankId } = await ownerWithAi();
     const asked = fakeHost().asks.length;
     await uploadFile(app(), owner.cookie(), bankId, fixtures().arabic, {
       aiProviderId: FAKE_INSTANCES.vision,
+      aiEnhance: VERIFY,
       aiFirstModel: 'fake-large',
       aiSecondModel: 'fake-small',
     });
@@ -197,6 +204,16 @@ describe('choosing the model for an import', () => {
       aiJudgeModel: 'not-offered',
     });
     expect(refused.json().error.fields).toEqual({ aiJudgeModel: 'invalid_value' });
+    for (const aiEnhance of ['not json', JSON.stringify({ verifyAnswers: true })]) {
+      const bad = await uploadFile(app(), owner.cookie(), bankId, fixtures().arabic, {
+        aiProviderId: FAKE_INSTANCES.vision,
+        aiEnhance,
+      });
+      expect([bad.statusCode, bad.json().error.fields]).toEqual([
+        400,
+        { aiEnhance: 'invalid_value' },
+      ]);
+    }
   });
 });
 

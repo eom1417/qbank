@@ -32,7 +32,9 @@ describe('classifying a question by hand', () => {
       topicId: null,
     });
   });
+});
 
+describe('tagging a question by hand', () => {
   it('takes several of the owner’s tags, and refuses a tag of another account', async () => {
     const { owner, bankId } = await ownerWithBank(app());
     const [id] = await seed(owner, bankId, [{ stem: 'Tagged?' }]);
@@ -44,7 +46,11 @@ describe('classifying a question by hand', () => {
       expectedVersion: version,
       tagIds: tags,
     });
-    expect(tagged.json().tags).toEqual(tags.map((tag) => ({ id: tag, origin: 'manual' })));
+    // Tags come back ordered by id (random), not by when they were made.
+    expect(tagged.json().tags).toEqual(
+      expect.arrayContaining(tags.map((tag) => ({ id: tag, origin: 'manual' }))),
+    );
+    expect(tagged.json().tags).toHaveLength(tags.length);
     const { browser: stranger } = await registeredBrowser(app());
     const foreign = (await stranger.post('/api/tags', { name: 'mine' })).json().id;
     const refused = await owner.patch(`/api/questions/${id}`, {

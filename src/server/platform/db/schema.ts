@@ -122,8 +122,8 @@ interface ImportJobTable {
   ai_model: Generated<string | null>;
   /** 'verify': the AI checks open answers; 'read': it reads whole pages. */
   ai_mode: Generated<'verify' | 'read' | 'recheck'>;
-  /** Improvement mode (DEC-04). */
-  ai_improve: Generated<boolean>;
+  /** What the AI improves (`Enhancements`, DEC-34); null without AI. */
+  ai_enhance: ColumnType<unknown, string | null | undefined, string>;
   /** The model of each triage role (`TriageModels`), or null for the instance default. */
   ai_roles: ColumnType<unknown, string | null | undefined, string>;
   ai_outcome: string | null;
@@ -160,6 +160,10 @@ interface QuestionTable {
   file_answer: ColumnType<string | null, string | null | undefined, string | null>;
   /** The triage's deciding reason (DEC-33). */
   ai_note: ColumnType<string | null, string | null | undefined, string | null>;
+  /** What the AI changed (`polished`, `options_added`, …), shown as badges (DEC-34). */
+  ai_changes: ColumnType<string[], string[] | undefined, string[]>;
+  /** The AI's study note (`StudyNote`), apart from the book's explanation. */
+  study_note: ColumnType<unknown, string | null | undefined, string | null>;
   answer_evidence: string | null;
   status: 'detected' | 'needs_review' | 'eligible' | 'excluded' | 'archived';
   review_reasons: ColumnType<string[], string[] | undefined, string[]>;

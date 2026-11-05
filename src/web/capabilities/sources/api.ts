@@ -33,7 +33,7 @@ const ROLE_FIELDS = {
 function appendTriage(form: FormData, triage: TriageRequest, mode: 'verify' | 'read') {
   form.append('aiProviderId', triage.instanceId);
   form.append('aiMode', mode);
-  form.append('aiImprove', String(triage.improve));
+  form.append('aiEnhance', JSON.stringify(triage.enhance));
   if (triage.models.first) form.append('aiModel', triage.models.first);
   for (const [role, field] of Object.entries(ROLE_FIELDS)) {
     const model = triage.models[role as keyof typeof ROLE_FIELDS];
@@ -68,7 +68,7 @@ export const recheckSource = (sourceId: string, triage: TriageRequest) =>
   apiRequest('POST', `/api/sources/${sourceId}/recheck`, ImportResponse, {
     aiProviderId: triage.instanceId,
     ...(triage.models.first ? { aiModel: triage.models.first } : {}),
-    improve: triage.improve,
+    enhance: triage.enhance,
     models: triage.models,
   });
 

@@ -35,8 +35,9 @@ describe("reading whole pages with the user's AI (scans and hard layouts)", () =
     expect(first).toMatchObject({
       stem: 'Which ECG finding is typical of hyperkalaemia?',
       answer_letter: 'A',
-      // The printed key, read by the AI, then confirmed by the triage's two solvers (DEC-33).
-      answer_provenance: 'ai_verified',
+      // The printed key, read from the page by the AI: the file's answer (DEC-34).
+      answer_provenance: 'source',
+      answer_evidence: 'ai_read',
       explanation: 'Potassium excess peaks the T waves first.',
       status: 'eligible',
     });
@@ -49,7 +50,7 @@ describe("reading whole pages with the user's AI (scans and hard layouts)", () =
     const { questions } = await readByAi(FAKE_INSTANCES.reader, fixtures().scanned);
     const second = questions.find((q) => q.stem.startsWith('First-line'));
     expect(second).toMatchObject({ answer_letter: null, answer_provenance: 'missing' });
-    expect(second?.review_reasons).toEqual(expect.arrayContaining(['ai_read', 'no_answer']));
+    expect(second?.review_reasons).toEqual(expect.arrayContaining(['no_answer']));
     const media = await app.db().selectFrom('media').selectAll().execute();
     expect(media.some((m) => m.question_id === second?.id)).toBe(false);
   });

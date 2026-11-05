@@ -13,6 +13,7 @@ import { readSource } from './read-source.js';
 import { recheckOutcome, triageImport } from './triage-import.js';
 import { aiTargetOf, verifyWithAi } from './verify-with-ai.js';
 import { readWithAi } from './read-with-ai.js';
+import { linkKeys } from './link-keys.js';
 
 /** A page with fewer words than this has no usable text layer: it is read as a scan. */
 const MIN_TEXT_WORDS = 6;
@@ -107,7 +108,8 @@ async function readQuestions(deps: SourcesDeps, job: JobRow, file: string, rows:
   const keepLease = async () => void (await deps.imports.update(job.id, heartbeat(deps)));
   const reading = await readWithAi(file, pages, provider, keepLease);
   if (!reading.ok) return rules(reading.failure);
-  return { questions: reading.questions, media: reading.media, pages, byAi: true, failure: null };
+  const questions = await linkKeys(provider, reading.questions, pages);
+  return { questions, media: reading.media, pages, byAi: true, failure: null };
 }
 
 /** Every question the AI read waits for the owner's eye, on top of its other reasons. */

@@ -71,7 +71,13 @@ const MARK_ANSWER = JSON.stringify({ marked: 'A', mark: 'circle', confident: tru
 
 interface Ask {
   ownerSession: string | undefined;
-  body: { instanceId?: string; model?: string; prompt?: string; imagePngBase64?: string };
+  body: {
+    instanceId?: string;
+    model?: string;
+    prompt?: string;
+    imagePngBase64?: string;
+    research?: boolean;
+  };
 }
 
 async function readJson(request: IncomingMessage): Promise<unknown> {

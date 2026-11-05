@@ -1,8 +1,17 @@
 import { explanationClaim } from './key-lines.js';
 
-/** Where an answer came from in the source; `ai_suggested` is only ever the user's AI. */
+/**
+ * Where an answer came from in the source. `ai_read` (a printed key) and `ai_mark` (a hand mark)
+ * were read from the page by the user's AI: still the file's answer (DEC-34).
+ */
 export type AnswerEvidence =
-  'answer_key' | 'answer_file' | 'explanation' | 'pen_mark' | 'single_option' | 'ai_suggested';
+  | 'answer_key'
+  | 'answer_file'
+  | 'explanation'
+  | 'pen_mark'
+  | 'single_option'
+  | 'ai_read'
+  | 'ai_mark';
 
 /** Disagreements that hold a question for review instead of picking a side (FR-07-005). */
 export type AnswerConflict = 'key_conflict' | 'explanation_conflict';

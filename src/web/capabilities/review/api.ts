@@ -1,6 +1,10 @@
 import type { AiTarget } from '../../../contracts/providers.js';
 import { z } from 'zod';
-import { QuestionResponse, type EditQuestionRequest } from '../../../contracts/questions.js';
+import {
+  QuestionResponse,
+  TopicCardsResponse,
+  type EditQuestionRequest,
+} from '../../../contracts/questions.js';
 import {
   BulkApproveResponse,
   DeletionImpactResponse,
@@ -22,6 +26,10 @@ export const approveSafe = (bankId: string) =>
 
 export const decide = (id: string, decision: Decision) =>
   apiRequest('POST', `/api/questions/${id}/${decision}`, QuestionResponse, {});
+
+/** The bank's topic cards (DEC-34). */
+export const fetchTopicCards = (bankId: string) =>
+  apiRequest('GET', `/api/banks/${bankId}/topic-cards`, TopicCardsResponse);
 
 export const fetchQuestion = (id: string) =>
   apiRequest('GET', `/api/questions/${id}`, QuestionResponse);

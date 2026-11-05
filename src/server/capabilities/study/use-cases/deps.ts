@@ -15,6 +15,7 @@ export interface StudyDeps {
     | 'reportedQuestionIds'
     | 'searchQuestions'
     | 'inferDifficulty'
+    | 'studyNoteOf'
   >;
   /** Whether the bank is the account's (from the library). */
   ownsBank(ownerId: string, bankId: string): Promise<boolean>;

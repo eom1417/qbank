@@ -14,6 +14,65 @@ export const AnswerProvenance = z.enum([
 ]);
 export type AnswerProvenance = z.infer<typeof AnswerProvenance>;
 
+const NoteText = z.string().trim().max(3000);
+
+/**
+ * The AI's study note on a question (DEC-34), kept apart from the book's explanation: the topic
+ * it tests, why the answer is right and each option right or wrong, "if it were…" variations,
+ * points to remember, and sources (`url` only when a search opened the page and it answers).
+ */
+export const StudyNote = z
+  .object({
+    topic: z.string().trim().min(1).max(300),
+    domain: z.string().trim().max(200),
+    keyIdea: NoteText,
+    whyAnswer: NoteText,
+    options: z.array(z.object({ letter: z.string().max(2), why: NoteText }).strict()).max(8),
+    ifThen: z.array(NoteText).max(6),
+    pearls: z.array(NoteText).max(8),
+    sources: z
+      .array(
+        z
+          .object({ title: z.string().trim().min(1).max(300), url: z.url().max(600).nullable() })
+          .strict(),
+      )
+      .max(8),
+    /** What is wrong with the question as printed (missing data, no right option…), if anything. */
+    questionIssue: NoteText.nullable(),
+  })
+  .strict();
+export type StudyNote = z.infer<typeof StudyNote>;
+
+/** A saved note: a full topic review (with a web search) or a short note on the options. */
+export const SavedStudyNote = StudyNote.extend({
+  kind: z.enum(['topic_review', 'options']),
+  researched: z.boolean(),
+}).strict();
+export type SavedStudyNote = z.infer<typeof SavedStudyNote>;
+
+/**
+ * `GET /api/banks/:bankId/topic-cards`: the bank's questions that have a topic review, to study
+ * as cards when they cannot be answered as printed (DEC-34).
+ */
+export const TopicCardsResponse = z
+  .object({
+    cards: z.array(
+      z
+        .object({
+          id: z.uuid(),
+          stem: z.string(),
+          options: z.array(
+            z.object({ letter: z.string(), label: z.string(), text: z.string() }).strict(),
+          ),
+          answers: z.array(z.string()),
+          note: SavedStudyNote,
+        })
+        .strict(),
+    ),
+  })
+  .strict();
+export type TopicCardsResponse = z.infer<typeof TopicCardsResponse>;
+
 /** One printed option of a question: its letter, the label as printed, and its text. */
 export const QuestionOption = z
   .object({ letter: z.string(), label: z.string(), text: z.string() })
@@ -55,6 +114,10 @@ export const QuestionResponse = z
     fileAnswer: z.string().nullable(),
     /** The triage's deciding reason (DEC-33). */
     aiNote: z.string().nullable(),
+    /** What the AI changed (`polished`, `options_added`, `answer_verified`…), DEC-34. */
+    aiChanges: z.array(z.string()),
+    /** The AI's study note, apart from the book's explanation (DEC-34). */
+    studyNote: SavedStudyNote.nullable(),
     /** Left for later in review (M7.3). */
     deferred: z.boolean(),
     /** A re-import's different reading of this edited question, to compare (FR-10-006). */

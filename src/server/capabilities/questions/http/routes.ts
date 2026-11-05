@@ -1,5 +1,6 @@
 import type { FastifyInstance } from 'fastify';
-import type { QuestionResponse } from '../../../../contracts/questions.js';
+import type { QuestionResponse, TopicCardsResponse } from '../../../../contracts/questions.js';
+import { topicCards } from '../use-cases/topic-cards.js';
 import type { RequireActor } from '../../identity/index.js';
 import {
   acceptSuggestedAnswer,
@@ -9,14 +10,20 @@ import {
 
 type IdParams = { Params: { id: string } };
 
-/** One question, and accepting the answer the user's AI suggested (M6). */
+/** One question, accepting the answer the user's AI suggested (M6), and topic cards (DEC-34). */
 export function registerQuestionRoutes(
   app: FastifyInstance,
-  deps: QuestionsDeps,
+  deps: QuestionsDeps & { ownsBank(ownerId: string, bankId: string): Promise<boolean> },
   requireActor: RequireActor,
 ) {
   app.get<IdParams>('/api/questions/:id', async (request): Promise<QuestionResponse> =>
     getQuestion(deps, await requireActor(request), request.params.id),
+  );
+
+  app.get<{ Params: { bankId: string } }>(
+    '/api/banks/:bankId/topic-cards',
+    async (request): Promise<TopicCardsResponse> =>
+      topicCards(deps, await requireActor(request), request.params.bankId),
   );
 
   app.post<IdParams>(

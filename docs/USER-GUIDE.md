@@ -34,17 +34,23 @@ out, the old link stops working, and a new link is made.
 2. Choose one or more PDFs, and confirm you have the right to use them.
 3. **Leave out pages that identify a patient.**
 4. Optional: choose your AI and **how thorough** it is (high, balanced, economy, or custom, where
-   you pick each role's model). Your AI checks every question: two models answer it on their own
-   without seeing the file's answer, and a stronger one settles any disagreement. When they agree
-   with the file, the question is approved; when the file has no answer, their shared answer is
-   used with a **"verified by AI"** badge; when they and the judge agree against the file, the
-   answer is corrected and **"The file said: …"** stays visible with the reason. Only real disputes
-   come to you.
-   - **"Improve the questions first"** (on by default) fixes spelling, grammar and reading noise,
-     rebuilds a scanned question from its printed options, and gives questions with fewer than 3
-     options plausible wrong ones (4 in all). The original stays in the question history.
-   - Tick **"Let my AI read whole pages"** for scans and complex layouts. It then takes the
-     questions and options, the printed key and explanation, and the pictures.
+   you pick each role's model).
+   - **Organizing (always, with an AI):** it finds and splits the questions, links answers and
+     explanations printed on other pages (such as an answer key at the end), rebuilds a scanned
+     question from its printed options, and **changes no word**.
+   - **Improve questions with AI:** choose any of:
+     - **Complete the options** to 3, 4 or 5 with plausible wrong ones.
+     - **Check and verify the answers:** two models answer each question on their own, a stronger
+       one settles disagreements; a corrected file answer stays shown as "The file said: …".
+     - **Polish the wording:** spelling, grammar and clarity; every number and negation stays,
+       and a rewrite that changes the answer is undone.
+     - **Topic review for incomplete questions:** a short review from authoritative sources found
+       on the web, with links checked before they are shown.
+     - **Explain every option**, **note outdated answers** (a separate note; the book's answer is
+       not changed), **suggest chapter, topic and difficulty**, and **find questions that ask the
+       same thing**.
+   - Each question shows badges for what the AI changed; the original stays in its history.
+   - Tick **"Let my AI read whole pages"** for scans and complex layouts.
 5. Press **Upload and start**. The import report says honestly what was read, what waits for your
    review, and what could not be read.
 
@@ -73,6 +79,10 @@ Press **Approve** to make the question ready to study.
 **Check again with AI:** in the bank's file list, each file has a button that checks its saved
 questions again with the same choices, even after the original was deleted. Answers you set
 yourself never change.
+
+**Topic cards:** from the bank page → "Topic cards": questions that cannot be answered as
+printed; read each, then show its topic review. The review also shows in a study solution and on
+the question page.
 
 ## 5. Study
 

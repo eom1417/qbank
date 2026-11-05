@@ -14,6 +14,8 @@ const AskRequest = Schema.Struct({
   timeoutMs: Schema.optional(
     Schema.Int.check(Schema.isBetween({ minimum: 5_000, maximum: 600_000 })),
   ),
+  /** May search and read the web (a study note's sources); nothing else ever runs. */
+  research: Schema.optional(Schema.Boolean),
 });
 
 export interface AskReply {

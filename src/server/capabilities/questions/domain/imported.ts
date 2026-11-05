@@ -91,6 +91,8 @@ export interface ImportedMedia {
  */
 const INFORMATIONAL: ReadonlySet<string> = new Set([
   'essay',
+  // Read by the user's AI as printed (DEC-34): organizing changes no content.
+  'ai_read',
   'ocr_page',
   'numbering_gap',
   'media_low_quality',

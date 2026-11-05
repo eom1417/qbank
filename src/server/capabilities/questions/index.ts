@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import { SavedStudyNote } from '../../../contracts/questions.js';
 import type { Clock } from '../../platform/clock.js';
 import type { Db } from '../../platform/db/index.js';
 import type { RequireActor } from '../identity/index.js';
@@ -14,7 +15,7 @@ import { createPortability, type RestoredQuestion } from './adapters/portability
 import { searchQuestions, type SearchFilter } from './adapters/search.js';
 import { createMarkRepository, studyPool, type PoolFilter } from './adapters/study-pool.js';
 import { detectDuplicates } from './use-cases/duplicates.js';
-import type { ImportedQuestion, ReviewReason } from './domain/imported.js';
+import type { ImportedQuestion } from './domain/imported.js';
 import type { Place } from './adapters/question-writes.js';
 import { createNoteRepository } from './adapters/note-repository.js';
 import { createReportRepository } from './adapters/report-repository.js';
@@ -24,14 +25,13 @@ import { createMediaRepository } from './adapters/media-repository.js';
 import { createQuestionRepository } from './adapters/question-repository.js';
 import type { ChapterNames } from './domain/classify.js';
 import { inferredDifficulty } from './domain/difficulty.js';
-import { statusNow, triagedValues, type TriageChange } from './domain/triaged.js';
+import { aiAdditions } from './use-cases/ai-additions.js';
 import { setInferredDifficulty } from './adapters/insights.js';
 
 export type { PoolQuestion } from './adapters/study-pool.js';
 export type { RestoredQuestion } from './adapters/portability.js';
 export type { TriageChange } from './domain/triaged.js';
 export type { QuestionRow } from './adapters/question-repository.js';
-import type { QuestionRow } from './adapters/question-repository.js';
 export {
   occurrencesOf,
   type ImportedMedia,
@@ -104,6 +104,12 @@ function sharedInterface(settings: QuestionsSettings, deps: Deps) {
       const value = inferredDifficulty(correct, total);
       if (value !== null) await setInferredDifficulty(settings.db, ownerId, questionId, value);
     },
+    /** The AI's study note on one of the owner's questions, as it is now (DEC-34). */
+    studyNoteOf: async (ownerId: string, questionId: string) => {
+      const row = await deps.questions.findQuestion(ownerId, questionId);
+      const note = SavedStudyNote.safeParse(row?.study_note);
+      return note.success ? note.data : null;
+    },
     /** The owner's questions by words and filters (FR-17-001, UI-22). */
     searchQuestions: (ownerId: string, filter: SearchFilter) =>
       searchQuestions(settings.db, ownerId, filter),
@@ -118,30 +124,10 @@ export function createQuestions(settings: QuestionsSettings) {
     const added = await deps.questions.saveImported(place, questions, now);
     await detectDuplicates(deps, place, added, now);
   };
-  /** The AI triage's decision, as the question's next version (DEC-33). */
-  const applyTriage = async (
-    owner: { ownerId: string; now: Date },
-    question: { id: string; reasons: readonly ReviewReason[] },
-    change: TriageChange,
-  ) =>
-    deps.questions.updateQuestion(
-      owner.ownerId,
-      question.id,
-      triagedValues(question.reasons, change),
-      'ai_triage',
-      owner.now,
-    );
-  /** Brings a question the triage left alone to today's eligibility rule (DEC-33). */
-  const refreshStatus = async (owner: { ownerId: string; now: Date }, row: QuestionRow) => {
-    const status = statusNow(row);
-    if (status === row.status) return;
-    await deps.questions.updateQuestion(owner.ownerId, row.id, { status }, 'policy', owner.now);
-  };
   return {
     ...deps.questions,
+    ...aiAdditions(deps),
     saveImported,
-    applyTriage,
-    refreshStatus,
     ...sharedInterface(settings, deps),
     ...deps.media,
     register: (app: FastifyInstance) => {

@@ -12,6 +12,8 @@ export interface StructuredRequest<T> {
   system: string;
   parts: readonly ContentPart[];
   schema: z.ZodType<T>;
+  /** May search and read the web for sources (a study note, DEC-34); nothing else ever runs. */
+  research?: boolean;
 }
 
 export type AiFailure = Exclude<AiOutcomeStatus, 'unchecked' | 'ready'> | 'invalid_output';

@@ -28,6 +28,20 @@ function changeableNow(deps: StudyDeps, session: SessionRow, item: ItemRow) {
   return canChange(session, item, session.position, deps.clock.now());
 }
 
+/** The solution once it may be seen: graded on the snapshot, with the AI's note as it is now. */
+async function solutionOf(deps: StudyDeps, actor: Actor, item: ItemRow, snapshot: Snapshot) {
+  const studyNote = item.question_id
+    ? await deps.questions.studyNoteOf(actor.accountId, item.question_id)
+    : null;
+  return {
+    chosen: item.chosen ?? [],
+    correct: item.correct === true,
+    answers: snapshot.answers,
+    explanation: snapshot.explanation,
+    studyNote,
+  };
+}
+
 /** One question of the session as it was snapshotted, with only what may be seen now. */
 async function toItem(
   deps: StudyDeps,
@@ -39,6 +53,7 @@ async function toItem(
   const [mark] = item.question_id
     ? await deps.questions.marksOf(actor.accountId, [item.question_id])
     : [];
+
   return {
     position: item.position,
     total,
@@ -49,14 +64,7 @@ async function toItem(
     pictureIds: snapshot.pictureIds,
     flagged: mark?.flagged ?? false,
     favorite: mark?.favorite ?? false,
-    solution: solutionShown(session, item)
-      ? {
-          chosen: item.chosen ?? [],
-          correct: item.correct === true,
-          answers: snapshot.answers,
-          explanation: snapshot.explanation,
-        }
-      : null,
+    solution: solutionShown(session, item) ? await solutionOf(deps, actor, item, snapshot) : null,
     reason: snapshot.reason ?? null,
     saved: item.chosen ?? [],
     examFlag: item.flagged,

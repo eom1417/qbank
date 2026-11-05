@@ -1,18 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { ownerWithBank, type createClient } from '../support/client.js';
-import { FAKE_INSTANCES, useFakeAiHost } from '../support/fake-ai-host.js';
-import { runImports } from '../support/imports.js';
-import { useReviewSuite, type SeedQuestion } from '../support/questions.js';
+import { NO_ENHANCEMENTS } from '../../src/contracts/sources.js';
+import { ownerWithBank } from '../support/client.js';
+import { FAKE_INSTANCES } from '../support/fake-ai-host.js';
+import type { SeedQuestion } from '../support/questions.js';
+import { lettered as options, useAiSuite } from '../support/ai-suite.js';
 
-const fakeHost = useFakeAiHost();
-const { app, seed } = useReviewSuite({ aiHost: () => fakeHost().settings });
-type Browser = ReturnType<typeof createClient>;
-
-const options = (...texts: string[]) =>
-  texts.map((text, index) => {
-    const letter = String.fromCharCode(65 + index);
-    return { letter, label: `${letter}.`, text };
-  });
+const { app, rowOf, seeded, recheckNow } = useAiSuite();
+/** The answers checked, nothing else improved. */
+const VERIFY = { ...NO_ENHANCEMENTS, verifyAnswers: true };
 
 /** Five questions, one per outcome; the fake models pick the longest option (fake-triage.ts). */
 const SEEDS: SeedQuestion[] = [
@@ -30,26 +25,11 @@ const SEEDS: SeedQuestion[] = [
   { stem: 'Recall: teh next step?', options: options('Skeletal survey'), answers: ['A'] },
 ];
 
-const rowOf = (id: string) =>
-  app.db().selectFrom('question').selectAll().where('id', '=', id).executeTakeFirstOrThrow();
-
-/** Seeds questions into a new source of the owner's bank; returns their ids and the source. */
-async function seeded(owner: Browser, bankId: string, questions: SeedQuestion[]) {
-  const ids = await seed(owner, bankId, questions);
-  return { ids, sourceId: (await rowOf(ids[0] ?? '')).source_id };
-}
-
-/** Starts a re-check, runs it, and returns its import report. */
-async function recheckNow(owner: Browser, sourceId: string, body: object) {
-  const started = await owner.post(`/api/sources/${sourceId}/recheck`, body);
-  await runImports(app());
-  return { started, job: (await owner.get(`/api/imports/${started.json().id}`)).json() };
-}
-
 async function recheckSeeds(improve: boolean) {
+  const enhance = improve ? { ...VERIFY, completeOptions: 4, polishText: true } : VERIFY;
   const { owner, bankId } = await ownerWithBank(app());
   const { ids, sourceId } = await seeded(owner, bankId, SEEDS);
-  const body = { aiProviderId: FAKE_INSTANCES.vision, improve, models: { judge: 'fake-large' } };
+  const body = { aiProviderId: FAKE_INSTANCES.vision, enhance, models: { judge: 'fake-large' } };
   const { started, job } = await recheckNow(owner, sourceId, body);
   expect(started.statusCode).toBe(200);
   return { job, rows: await Promise.all(ids.map(rowOf)) };
@@ -76,9 +56,10 @@ describe('the AI triage settles answers (DEC-33)', () => {
     });
     expect(tie).toMatchObject({ answer_letter: null, status: 'needs_review' });
     expect(tie?.review_reasons).toContain('no_answer');
-    // One option and no improvement: nothing for the solvers to choose between.
-    expect(recall).toMatchObject({ stem: 'Recall: teh next step?', version: 1 });
-    expect(job).toMatchObject({ stage: 'needs_review', aiOutcome: 'done', questionsReview: 1 });
+    // One option and no options added: nothing to choose between, so a person looks at it.
+    expect(recall).toMatchObject({ stem: 'Recall: teh next step?', status: 'needs_review' });
+    expect(recall?.review_reasons).toEqual(['too_few_options']);
+    expect(job).toMatchObject({ stage: 'needs_review', aiOutcome: 'done', questionsReview: 2 });
   });
 
   it('improves text and completes a recall question, keeping the original as version 1', async () => {
@@ -111,7 +92,7 @@ describe('what a re-check may touch', () => {
     const mine = { options: options('Long answer text', 'B'), provenance: 'manual' as const };
     const { ids, sourceId } = await seeded(owner, bankId, [mine]);
     const stranger = await ownerWithBank(app(), 'Other');
-    const body = { aiProviderId: FAKE_INSTANCES.vision };
+    const body = { aiProviderId: FAKE_INSTANCES.vision, enhance: VERIFY };
     const refused = await stranger.owner.post(`/api/sources/${sourceId}/recheck`, body);
     expect(refused.statusCode).toBe(404);
     await recheckNow(owner, sourceId, body);
@@ -127,7 +108,7 @@ describe('what a re-check may touch', () => {
       reasons: ['ocr_page'],
     };
     const { ids, sourceId } = await seeded(owner, bankId, [old]);
-    await recheckNow(owner, sourceId, { aiProviderId: FAKE_INSTANCES.vision });
+    await recheckNow(owner, sourceId, { aiProviderId: FAKE_INSTANCES.vision, enhance: VERIFY });
     expect(await rowOf(ids[0] ?? '')).toMatchObject({
       status: 'eligible',
       answer_provenance: 'manual',
@@ -151,7 +132,7 @@ describe('a re-check of answers it settled before', () => {
       .set({ answer_provenance: 'ai_verified', answer_evidence: 'ai_consensus' })
       .where('id', '=', ids[0] ?? '')
       .execute();
-    await recheckNow(owner, sourceId, { aiProviderId: FAKE_INSTANCES.vision });
+    await recheckNow(owner, sourceId, { aiProviderId: FAKE_INSTANCES.vision, enhance: VERIFY });
     expect(await rowOf(ids[0] ?? '')).toMatchObject({
       answer_letter: 'A',
       answer_provenance: 'ai_verified',
@@ -167,7 +148,7 @@ describe('a re-check of answers it settled before', () => {
       provenance: 'conflict' as const,
     };
     const { ids, sourceId } = await seeded(owner, bankId, [disputed]);
-    await recheckNow(owner, sourceId, { aiProviderId: FAKE_INSTANCES.vision });
+    await recheckNow(owner, sourceId, { aiProviderId: FAKE_INSTANCES.vision, enhance: VERIFY });
     expect(await rowOf(ids[0] ?? '')).toMatchObject({
       answer_letter: 'A',
       file_answer: 'B',
@@ -182,10 +163,14 @@ describe('a re-check that cannot run', () => {
     const { ids, sourceId } = await seeded(owner, bankId, [SEEDS[1] ?? {}]);
     const unknown = await owner.post(`/api/sources/${sourceId}/recheck`, {
       aiProviderId: FAKE_INSTANCES.vision,
+      enhance: VERIFY,
       models: { judge: 'no-such-model' },
     });
     expect(unknown.statusCode).toBe(400);
-    const { job } = await recheckNow(owner, sourceId, { aiProviderId: FAKE_INSTANCES.refusing });
+    const { job } = await recheckNow(owner, sourceId, {
+      aiProviderId: FAKE_INSTANCES.refusing,
+      enhance: VERIFY,
+    });
     expect(job).toMatchObject({ stage: 'needs_review', aiOutcome: 'invalid_key' });
     expect(await rowOf(ids[0] ?? '')).toMatchObject({ answer_provenance: 'missing', version: 1 });
   });

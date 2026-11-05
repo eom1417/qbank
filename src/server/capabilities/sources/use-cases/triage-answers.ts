@@ -1,6 +1,6 @@
 import type { AiFailure, AiProvider } from '../../providers/index.js';
 import { mapWithLimit } from '../../../platform/concurrency.js';
-import { askBatch } from './ask-batch.js';
+import { askInParts } from './ask-batch.js';
 import { batches, reversed, type TriageQuestion } from '../domain/triage/batch.js';
 import { JUDGE_PROMPT, JudgeReply, judgeText, verdictsOf } from '../domain/triage/judge.js';
 import type { Disputed, Verdict } from '../domain/triage/judge.js';
@@ -41,48 +41,64 @@ export interface TriageResult {
 
 type Solved = { solutions: Map<string, Solution>; failure: AiFailure | null };
 
+type Shown = { question: TriageQuestion; back: Map<string, string> | null };
+
+/** One part's answers, in the original letters (the second solver saw them reversed). */
+function solvedPart(part: readonly Shown[], reply: SolveReply): [string, Solution][] {
+  const found = solutionsOf(
+    reply,
+    part.map((entry) => entry.question),
+  );
+  return part.map(({ question, back }): [string, Solution] => {
+    const solution = found.get(question.id) ?? { letter: null, why: '' };
+    const letter = solution.letter && back ? (back.get(solution.letter) ?? null) : solution.letter;
+    return [question.id, { ...solution, letter }];
+  });
+}
+
 /** One solver over every question, in batches; the second sees the options reversed. */
-async function solveAll(provider: AiProvider, questions: TriageQuestion[], flip: boolean) {
+export async function solveAll(provider: AiProvider, questions: TriageQuestion[], flip: boolean) {
   const replies = await mapWithLimit(batches(questions), PARALLEL, async (batch) => {
-    const shown = batch.map((question) => (flip ? reversed(question) : { question, back: null }));
-    const asked = shown.map((entry) => entry.question);
-    const reply = await askBatch(provider, {
+    const shown: Shown[] = batch.map((question) =>
+      flip ? reversed(question) : { question, back: null },
+    );
+    const parts = await askInParts(provider, shown, (part) => ({
       name: 'solve_questions',
       system: SOLVE_PROMPT,
-      parts: [{ type: 'text', text: solveText(asked) }],
+      parts: [{ type: 'text', text: solveText(part.map((entry) => entry.question)) }],
       schema: SolveReply,
-    });
-    if (!reply.ok) return { failure: reply.failure, solutions: [] as [string, Solution][] };
-    const found = solutionsOf(reply.value, asked);
-    const solutions = shown.map(({ question, back }): [string, Solution] => {
-      const solution = found.get(question.id) ?? { letter: null, why: '' };
-      const letter =
-        solution.letter && back ? (back.get(solution.letter) ?? null) : solution.letter;
-      return [question.id, { ...solution, letter }];
-    });
-    return { failure: null, solutions };
+    }));
+    return parts.map(({ part, reply }) =>
+      reply === null || reply.ok
+        ? { failure: null, solutions: reply ? solvedPart(part, reply.value) : [] }
+        : { failure: reply.failure, solutions: [] as [string, Solution][] },
+    );
   });
+  const all = replies.flat();
   return {
-    solutions: new Map(replies.flatMap((reply) => reply.solutions)),
-    failure: replies.find((reply) => reply.failure)?.failure ?? null,
+    solutions: new Map(all.flatMap((reply) => reply.solutions)),
+    failure: all.find((reply) => reply.failure)?.failure ?? null,
   } satisfies Solved;
 }
 
 async function judgeAll(provider: AiProvider, disputes: Disputed[]) {
   const replies = await mapWithLimit(batches(disputes), PARALLEL, async (batch) => {
-    const reply = await askBatch(provider, {
+    const parts = await askInParts(provider, batch, (part) => ({
       name: 'judge_questions',
       system: JUDGE_PROMPT,
-      parts: [{ type: 'text', text: judgeText(batch) }],
+      parts: [{ type: 'text', text: judgeText(part) }],
       schema: JudgeReply,
-    });
-    return reply.ok
-      ? { failure: null, verdicts: [...verdictsOf(reply.value, batch)] }
-      : { failure: reply.failure, verdicts: [] as [string, Verdict][] };
+    }));
+    return parts.map(({ part, reply }) =>
+      reply === null || reply.ok
+        ? { failure: null, verdicts: reply ? [...verdictsOf(reply.value, part)] : [] }
+        : { failure: reply.failure, verdicts: [] as [string, Verdict][] },
+    );
   });
+  const all = replies.flat();
   return {
-    verdicts: new Map(replies.flatMap((reply) => reply.verdicts)),
-    failure: replies.find((reply) => reply.failure)?.failure ?? null,
+    verdicts: new Map(all.flatMap((reply) => reply.verdicts)),
+    failure: all.find((reply) => reply.failure)?.failure ?? null,
   };
 }
 

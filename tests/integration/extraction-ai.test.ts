@@ -35,7 +35,7 @@ describe('AI mark suggestions through the providers kit', () => {
     expect(suggested.map((q) => [q.number, q.answer, q.evidence])).toEqual([
       [1, 'C', 'pen_mark'],
       [2, 'A', 'single_option'],
-      [3, 'A', 'ai_suggested'],
+      [3, 'A', 'ai_mark'],
     ]);
     const asked = fake.asks.slice(before);
     expect(asked).toHaveLength(1);

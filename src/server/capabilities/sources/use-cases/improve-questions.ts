@@ -1,12 +1,13 @@
 import type { AiFailure, AiProvider } from '../../providers/index.js';
 import { mapWithLimit } from '../../../platform/concurrency.js';
-import { askBatch } from './ask-batch.js';
+import { askInParts } from './ask-batch.js';
 import { batches } from '../domain/triage/batch.js';
 import {
-  IMPROVE_PROMPT,
   ImproveReply,
   acceptedImprovement,
+  improvePrompt,
   improveText,
+  type ImproveRules,
   type ToImprove,
 } from '../domain/triage/improve.js';
 import { reshape, type Reshaped } from '../domain/triage/reshape.js';
@@ -19,29 +20,41 @@ export interface ImproveResult {
   failure: AiFailure | null;
 }
 
-/** Improvement mode (DEC-04): every question in batches, each reply checked before it is used. */
+/** The part's accepted improvements, each checked before it is used. */
+function acceptedOf(part: readonly ToImprove[], reply: ImproveReply, rules: ImproveRules) {
+  const byId = new Map(reply.questions.map((question) => [question.id, question]));
+  return part.flatMap((item): [string, Reshaped][] => {
+    const answer = byId.get(item.question.id);
+    const accepted = answer ? acceptedImprovement(item, answer, rules) : null;
+    return accepted ? [[item.question.id, reshape(accepted)]] : [];
+  });
+}
+
+/**
+ * Organizing (always, with AI) and the chosen text improvements (DEC-34): every question in
+ * batches, each reply checked before it is used.
+ */
 export async function improveQuestions(
   provider: AiProvider,
   items: readonly ToImprove[],
+  rules: ImproveRules,
 ): Promise<ImproveResult> {
   const replies = await mapWithLimit(batches(items), PARALLEL, async (batch) => {
-    const reply = await askBatch(provider, {
+    const parts = await askInParts(provider, batch, (part) => ({
       name: 'improve_questions',
-      system: IMPROVE_PROMPT,
-      parts: [{ type: 'text', text: improveText(batch) }],
+      system: improvePrompt(rules),
+      parts: [{ type: 'text', text: improveText(part) }],
       schema: ImproveReply,
-    });
-    if (!reply.ok) return { failure: reply.failure, improved: [] as [string, Reshaped][] };
-    const byId = new Map(reply.value.questions.map((question) => [question.id, question]));
-    const improved = batch.flatMap(({ question }): [string, Reshaped][] => {
-      const answer = byId.get(question.id);
-      const accepted = answer ? acceptedImprovement(question, answer) : null;
-      return accepted ? [[question.id, reshape(accepted)]] : [];
-    });
-    return { failure: null, improved };
+    }));
+    return parts.map(({ part, reply }) =>
+      reply === null || reply.ok
+        ? { failure: null, improved: reply ? acceptedOf(part, reply.value, rules) : [] }
+        : { failure: reply.failure, improved: [] as [string, Reshaped][] },
+    );
   });
+  const all = replies.flat();
   return {
-    byId: new Map(replies.flatMap((reply) => reply.improved)),
-    failure: replies.find((reply) => reply.failure)?.failure ?? null,
+    byId: new Map(all.flatMap((reply) => reply.improved)),
+    failure: all.find((reply) => reply.failure)?.failure ?? null,
   };
 }

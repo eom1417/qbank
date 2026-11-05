@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import type { ProviderView } from '../../../contracts/providers.js';
-import type { TriageModels } from '../../../contracts/sources.js';
+import {
+  DEFAULT_ENHANCEMENTS,
+  Enhancements,
+  type TriageModels,
+} from '../../../contracts/sources.js';
 import { useQuery } from '../../platform/api/use-query.js';
 import { fetchProviderState } from './api.js';
 import { presetModels, type TriageQuality } from './triage-presets.js';
@@ -12,23 +16,36 @@ export interface TriageChoice {
   quality: TriageQuality;
   /** The models per role when the quality is `custom`. */
   custom: TriageModels;
-  improve: boolean;
+  /** What the AI improves beyond organizing the file (DEC-34). */
+  enhance: Enhancements;
 }
 
-/** The AI a request runs on: instance, models per role, improvement mode. */
+/** The AI a request runs on: instance, models per role, and what it improves. */
 export interface TriageRequest {
   instanceId: string;
-  improve: boolean;
+  enhance: Enhancements;
   models: TriageModels;
 }
 
 const STORAGE_KEY = 'qb.ai.triage';
-const FIRST_USE: TriageChoice = { instanceId: '', quality: 'balanced', custom: {}, improve: true };
+const FIRST_USE: TriageChoice = {
+  instanceId: '',
+  quality: 'balanced',
+  custom: {},
+  enhance: DEFAULT_ENHANCEMENTS,
+};
 
 function stored(): TriageChoice {
   try {
     const value = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') as TriageChoice | null;
-    return value ? { ...FIRST_USE, ...value } : FIRST_USE;
+    if (!value) return FIRST_USE;
+    // A choice kept before the improvements were separate (DEC-34) starts from the defaults.
+    const enhance = Enhancements.safeParse(value.enhance);
+    return {
+      ...FIRST_USE,
+      ...value,
+      enhance: enhance.success ? enhance.data : DEFAULT_ENHANCEMENTS,
+    };
   } catch {
     return FIRST_USE;
   }
@@ -61,7 +78,7 @@ export function useTriageChoice() {
   const request: TriageRequest | null = provider
     ? {
         instanceId: provider.instanceId,
-        improve: current.improve,
+        enhance: current.enhance,
         models: modelsOf(current, provider),
       }
     : null;

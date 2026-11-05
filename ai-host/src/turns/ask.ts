@@ -12,6 +12,7 @@ import * as Stream from 'effect/Stream';
 import { ProviderAdapterRegistryV2 } from '../../../vendor/t3-ai-providers-kit/kit/apps/server/src/orchestration-v2/ProviderAdapterRegistry.ts';
 import { storeImage } from './attachment.ts';
 import { mintTurnIdentity, type AskTarget } from './identity.ts';
+import { toolGate } from './research.ts';
 
 /** Why a question got no answer; `usage_limit` and friends come from the provider itself. */
 export class AskFailed extends Data.TaggedError('AskFailed')<{
@@ -23,6 +24,8 @@ export interface AskInput extends AskTarget {
   readonly prompt: string;
   readonly image?: Uint8Array | undefined;
   readonly timeoutMs: number;
+  /** May search and read the web for its sources (`toolGate`); every other tool is declined. */
+  readonly research?: boolean | undefined;
 }
 
 type Outcome =
@@ -46,20 +49,24 @@ const follow = Effect.fn('follow')(function* (
   yield* Deferred.succeed(done, outcome);
 });
 
-/** Declines any tool or permission request (QBank's questions never act), follows the rest. */
+/**
+ * Answers every tool or permission request (QBank's questions never act: only a research turn's
+ * web search is approved, `toolGate`), and follows the rest.
+ */
 const listen = Effect.fn('listen')(function* (
   session: ProviderAdapterV2SessionRuntime,
-  reply: Ref.Ref<string>,
-  done: Deferred.Deferred<Outcome>,
+  turn: { reply: Ref.Ref<string>; done: Deferred.Deferred<Outcome>; research: boolean },
 ) {
+  const gate = toolGate(turn.research);
   yield* session.events.pipe(
-    Stream.runForEach((event) =>
-      event.type === 'runtime_request.updated'
-        ? session
-            .respondToRuntimeRequest({ requestId: event.runtimeRequest.id, decision: 'decline' })
-            .pipe(Effect.ignore)
-        : follow(event, reply, done),
-    ),
+    Stream.runForEach((event) => {
+      gate.see(event);
+      if (event.type !== 'runtime_request.updated') return follow(event, turn.reply, turn.done);
+      const decision = gate.decide(event.runtimeRequest.nodeId);
+      return session
+        .respondToRuntimeRequest({ requestId: event.runtimeRequest.id, decision })
+        .pipe(Effect.ignore);
+    }),
     Effect.ignore,
     Effect.forkScoped,
   );
@@ -73,7 +80,8 @@ const TIMED_OUT: Outcome = {
 
 /**
  * One question through the instance's own adapter (INTEGRATION_GUIDE §7.2): a private,
- * read-only session and thread, the prompt with its page image, every tool request declined,
+ * read-only session and thread, the prompt with its page image, every tool request declined
+ * (but a research turn's web search),
  * and the assistant's text when the turn ends. QBank checks the text itself.
  */
 export const askOnce = Effect.fn('askOnce')(function* (input: AskInput) {
@@ -91,7 +99,7 @@ export const askOnce = Effect.fn('askOnce')(function* (input: AskInput) {
   });
   const reply = yield* Ref.make('');
   const done = yield* Deferred.make<Outcome>();
-  yield* listen(session, reply, done);
+  yield* listen(session, { reply, done, research: input.research === true });
   const providerThread = yield* session.ensureThread({ threadId, modelSelection, runtimePolicy });
   yield* session.startTurn({
     ...{

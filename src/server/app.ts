@@ -32,6 +32,8 @@ export interface AppDeps {
   pairingToken: string | null;
   /** The log file of a local install (M17.3); stdout only when absent. */
   log?: RotatingLog;
+  /** Whether a study note's source link opens; the real web when absent (tests replace it). */
+  checkLink?: (url: string) => Promise<boolean>;
 }
 
 type ContentDeps = Omit<AppDeps, 'pairingToken'>;
@@ -84,6 +86,7 @@ function registerImports(
     maxUploadBytes: config.imports.maxUploadBytes,
     maxPages: config.imports.maxPages,
     originalRetentionDays: config.imports.originalRetentionDays,
+    ...(deps.checkLink ? { checkLink: deps.checkLink } : {}),
   });
   sources.register(app);
   if (config.imports.worker) {
@@ -157,7 +160,8 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     publicOrigin: config.allowedOrigins[0] ?? null,
   });
   identity.register(app);
-  const content = registerContent(app, { config, db, clock }, identity);
+  const checks = deps.checkLink ? { checkLink: deps.checkLink } : {};
+  const content = registerContent(app, { config, db, clock, ...checks }, identity);
   if (config.devOutbox) registerOutboxRoute(app, db);
   registerOperations(app, deps, identity, content);
   app.get('/api/health', async () => ({ status: 'ok' }));

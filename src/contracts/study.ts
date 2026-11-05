@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { AiTarget } from './providers.js';
-import { QuestionOption } from './questions.js';
+import { QuestionOption, SavedStudyNote } from './questions.js';
 
 const Ids = z.array(z.uuid()).max(200);
 
@@ -113,6 +113,8 @@ const Solution = z
     answers: z.array(z.string()),
     /** The book's explanation as printed; null says "not available" (FR-12-004). */
     explanation: z.string().nullable(),
+    /** The AI's study note on the question as it is now, apart from the book's (DEC-34). */
+    studyNote: SavedStudyNote.nullable(),
   })
   .strict();
 

@@ -29,7 +29,7 @@ export interface ExtractedQuestion {
   answer: string | null;
   /** Every right option; several only for a multiple-select question (FR-07-008). */
   answers: string[];
-  /** `ai_suggested` comes only from the user's AI (suggest-marks), never from the rules. */
+  /** `ai_read` and `ai_mark` come only from the user's AI reading the page, never from the rules. */
   evidence: AnswerEvidence | null;
   /** Key, pen mark and explanation disagree: held for review (FR-07-005). */
   conflicts: AnswerConflict[];
