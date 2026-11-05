@@ -67,6 +67,9 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo bash scripts/setup-reading-tools.sh
+          # Test PDFs are printed by Chromium; without an Arabic font with proper ligature
+          # mappings, lam-alef comes out reversed in their text layer (seen in CI, reproduced locally).
+          sudo apt-get install -y -qq fonts-noto-core
           sudo bash scripts/setup-ai-host.sh
           sudo chown -R "$(id -u):$(id -g)" .
       - name: Install the project's pinned stack
