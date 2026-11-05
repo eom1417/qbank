@@ -31,6 +31,9 @@ jobs:
       TEST_DATABASE_URL: postgres://qbank:qbank-ci-only@127.0.0.1:5432/qbank_test
       # E2E learners use unique emails, so the same throwaway database is safe to share.
       E2E_DATABASE_URL: postgres://qbank:qbank-ci-only@127.0.0.1:5432/qbank_test
+      # The owner's reference PDFs are private and never sent to GitHub: the extraction
+      # benchmark runs on the owner's machine, and is skipped here by name (DEC-21).
+      QBANK_SAMPLES_REQUIRED: 'false'
     steps:
       # Pinned to commit SHAs (verified with git ls-remote); Dependabot proposes updates.
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
