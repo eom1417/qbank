@@ -179,23 +179,31 @@ def _writes_to(command: str, token: str) -> bool:
 HANDLERS = {'pre-edit': pre_edit, 'post-edit': post_edit, 'pre-bash': pre_bash}
 
 
-# DEC-29 (owner, 2026-11-03): a milestone branch is merged into main locally, fast-forward
-# only, on the owner's word in chat; the confirmation prompt cannot reach the owner on a
-# remote host. Any other merge, and every other outward action, still asks.
-_MERGE = re.compile(r'\bgit\s+merge\b(?!-)([^;&|\n]*)', re.I)
+# DEC-29, widened by DEC-37 (owner, 2026-11-05): merging, and pushing to main, run on the
+# owner's word in chat; the confirmation prompt cannot reach the owner on a remote host. A push
+# that rewrites or deletes remote history (force, mirror, delete, a "+" or ":" refspec) still
+# asks, and every other outward action (deploy, publish, governance, gh merge) still asks.
+_PUSH = re.compile(r'\bgit\s+push\b(?!-)([^;&|\n]*)', re.I)
+_REWRITING_PUSH = re.compile(r'(?:^|\s)(?:--force\S*|-[a-zA-Z]*f[a-zA-Z]*|--mirror|--delete|-d|--prune'
+                             r'|\+\S+|:\S*)(?=\s|$)')
+_OWNER_IN_CHAT = {'merging branches', 'pushing to the main branch'}
 
 
-def _only_fast_forward_merges(command: str, labels: list[str]) -> bool:
-    merges = _MERGE.findall(command)
-    return labels == ['merging branches'] and all(
-        re.fullmatch(r'\s*--ff-only\s+[\w./-]+\s*', args) for args in merges)
+def _owner_said_in_chat(command: str, labels: list[str]) -> bool:
+    """Only merges and plain pushes (DEC-37); nothing that rewrites or deletes remote history."""
+    if not labels or not set(labels) <= _OWNER_IN_CHAT:
+        return False
+    return not any(_REWRITING_PUSH.search(args) for args in _PUSH.findall(command))
 
 
 def ask_owner(event: dict) -> str | None:
     """Publishing/deploying/merging: Claude Code shows the owner a confirmation prompt."""
     command = (event.get('tool_input') or {}).get('command') or ''
     labels = release_operations(command)
-    if _only_fast_forward_merges(command, labels):
+    # A push that rewrites or deletes remote history asks, whatever branch it names.
+    if any(_REWRITING_PUSH.search(args) for args in _PUSH.findall(command)):
+        labels = [*labels, 'rewriting or deleting remote history']
+    if _owner_said_in_chat(command, labels):
         return None
     if not labels:
         return None

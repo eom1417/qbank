@@ -53,7 +53,7 @@ class OwnerConfirmationTests(RepoCase):
 
     def test_outward_actions_ask_the_owner(self):
         for command in ('npx vercel deploy --prod', 'gh pr merge 12 --squash', 'npm publish',
-                        'git push origin main', 'terraform apply -auto-approve',
+                        'terraform apply -auto-approve',
                         'python3 .genesis/tools/genesis.py governance --apply'):
             with self.subTest(command=command):
                 done = self.bash(command)
@@ -61,13 +61,17 @@ class OwnerConfirmationTests(RepoCase):
                 decision = json.loads(done.stdout)['hookSpecificOutput']
                 self.assertEqual(decision['permissionDecision'], 'ask')
 
-    def test_local_fast_forward_merge_follows_the_owner_rule(self):
-        # DEC-29 (owner): a local fast-forward merge of a milestone branch runs on the owner's
-        # word; any other merge, or a push to main in the same command, still asks.
-        quiet = ('git checkout main && git merge --ff-only feat/m4 && git branch -d feat/m4',)
-        asks = ('git merge feat/m4', 'git merge --no-ff feat/m4',
-                'git merge --ff-only feat/m4 && git push origin main',
-                'git merge --ff-only feat/m4 && git merge feat/other')
+    def test_merges_and_plain_pushes_follow_the_owner_rule(self):
+        # DEC-29, DEC-37 (owner): merging and pushing to main run on the owner's word in chat;
+        # a push that rewrites or deletes remote history, or any other outward action, asks.
+        quiet = ('git checkout main && git merge --ff-only feat/m4 && git branch -d feat/m4',
+                 'git merge feat/m4', 'git merge --no-ff feat/m4', 'git push -u origin main',
+                 'git push origin main', 'git merge --ff-only feat/m4 && git push origin main')
+        asks = ('git push --force-with-lease origin main', 'git push origin +main',
+                'git push origin :main', 'git push --mirror origin main',
+                'git push --delete origin main', 'git push -d origin main',
+                'git push --prune origin main', 'git merge feat/m4 && npm publish',
+                'git push origin main && gh pr merge 3')
         for command in quiet:
             with self.subTest(command=command):
                 self.assertEqual(self.bash(command).stdout.strip(), '')

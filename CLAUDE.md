@@ -8,6 +8,6 @@
 - `.claude/settings.json` hooks run `.genesis/tools/agent_hook.py`:
   - before an edit, bypass markers are blocked, and so are kit/policy files once `engineering.json.ready` is true;
   - after an edit, the file is re-checked for 400/50/10;
-  - before a shell command, destructive git (force push, hard reset, clean, `--no-verify`, `commit -n`) is denied, and publishing, deploying, merging or pushing to the main branch triggers a confirmation prompt for the owner.
+  - before a shell command, destructive git (force push, hard reset, clean, `--no-verify`, `commit -n`) is denied, publishing, deploying and any push that rewrites or deletes remote history trigger a confirmation prompt for the owner, while merging and plain pushes to the main branch run on the owner's word in chat (DEC-37).
 - A hook message is a real failure: fix the code, never work around the hook. Hooks are the fast feedback layer. The security boundary is CI (base-branch guard, `policy-change` label) together with CODEOWNERS and branch protection.
 - Personal, uncommitted settings belong in `.claude/settings.local.json` (git-ignored).
