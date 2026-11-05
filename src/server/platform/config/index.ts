@@ -30,6 +30,8 @@ const Env = z.object({
   QBANK_AI_HOST_ENTRY: z.string().min(1).default('ai-host/src/main.ts'),
   QBANK_AI_HOSTS_MAX: z.coerce.number().int().min(1).max(1000).default(20),
   QBANK_AI_HOSTS_IDLE_MINUTES: z.coerce.number().int().min(1).max(1440).default(15),
+  /** How often each account's provider sign-ins are renewed while it is away (DEC-35). */
+  QBANK_AI_HOSTS_REFRESH_HOURS: z.coerce.number().int().min(1).max(168).default(12),
   /** The built web app the API serves (`npm run build`); `none` leaves it to a dev server. */
   QBANK_WEB_DIR: z.string().min(1).default('dist/web'),
 });
@@ -80,6 +82,8 @@ export interface AiHostsConfig {
   /** Hosts running at once; an idle one is stopped to make room, else `ai_host_busy`. */
   max: number;
   idleMs: number;
+  /** Every account's sign-ins are renewed this often, so a long absence never lapses them. */
+  refreshMs: number;
   /** The only server variables a host (and the provider tools it starts) inherits. */
   inherited: Record<string, string>;
 }
@@ -101,6 +105,7 @@ function aiHostsOf(parsed: z.infer<typeof Env>, env: NodeJS.ProcessEnv): AiHosts
     entry: parsed.QBANK_AI_HOST_ENTRY,
     max: parsed.QBANK_AI_HOSTS_MAX,
     idleMs: parsed.QBANK_AI_HOSTS_IDLE_MINUTES * 60_000,
+    refreshMs: parsed.QBANK_AI_HOSTS_REFRESH_HOURS * 3_600_000,
   };
 }
 

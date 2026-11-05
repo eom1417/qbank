@@ -22,6 +22,7 @@ export function usePerAccountHosts(max = 5) {
       entry: 'tests/support/fake-ai-host-process.mjs',
       max,
       idleMs: 60_000,
+      refreshMs: 3_600_000,
       inherited: { PATH: process.env['PATH'] ?? '' },
     },
   });

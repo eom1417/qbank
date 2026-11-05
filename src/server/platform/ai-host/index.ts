@@ -1,5 +1,6 @@
 import type { AiHostsConfig } from '../config/index.js';
 import { createAiHostClient, type AiHostClient } from './client.js';
+import { startSignInRefresh } from './keep-alive.js';
 import { createAiHostPool } from './pool.js';
 import { createRoutedAiHostClient } from './routed-client.js';
 
@@ -38,12 +39,16 @@ export function createAiHosts(
       close: async () => undefined,
     };
   const pool = createAiHostPool(hosts);
+  const stopRefresh = startSignInRefresh(pool, hosts.refreshMs);
   return {
     client: createRoutedAiHostClient(pool),
     perAccount: true,
     configured: true,
     isSetUp: pool.isSetUp,
     forget: pool.forget,
-    close: pool.close,
+    close: async () => {
+      stopRefresh();
+      await pool.close();
+    },
   };
 }

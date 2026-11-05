@@ -36,6 +36,7 @@ const SINGLE_AI_HOST: AiHostsConfig = {
   entry: '',
   max: 1,
   idleMs: 60_000,
+  refreshMs: 3_600_000,
   inherited: {},
 };
 

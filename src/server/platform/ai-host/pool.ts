@@ -1,4 +1,4 @@
-import { access, rm } from 'node:fs/promises';
+import { access, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { AppError } from '../errors/index.js';
 import {
@@ -124,6 +124,15 @@ export function createAiHostPool(settings: AiHostPoolSettings) {
         : Promise.resolve(false),
     /** Accounts whose host is running or starting now. */
     running: () => [...pool.hosts.keys()],
+    /** Accounts that set up their providers (they have a folder), running or not. */
+    setUpAccounts: async () =>
+      (await readdir(settings.dir).catch(() => [] as string[])).filter((name) =>
+        ACCOUNT_ID.test(name),
+      ),
+    /** Stops the account's host now if nobody is using it (after a sign-in refresh). */
+    async rest(accountId: string) {
+      if (pool.hosts.get(accountId)?.leases === 0) await stop(pool, accountId);
+    },
     /** Stops the account's host and deletes its folder: its sign-ins and keys (M22.4). */
     async forget(accountId: string) {
       if (!ACCOUNT_ID.test(accountId)) return;
