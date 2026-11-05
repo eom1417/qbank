@@ -6,7 +6,8 @@ import { useI18n } from '../../platform/i18n/i18n.js';
 import { useAction } from '../../platform/forms/use-submit.js';
 import { AddProviderCard } from './AddProviderCard.js';
 import { DisclosureNote } from './DisclosureNote.js';
-import { fetchDrivers, KitError, kitCall } from './api.js';
+import { ProviderAccessContext } from './access.js';
+import { fetchDrivers, fetchProviderAccess, KitError, kitCall } from './api.js';
 import { ProviderCard } from './ProviderCard.js';
 import { useProviderState } from './use-provider-state.js';
 
@@ -27,39 +28,45 @@ export function ProvidersScreen() {
   const { t } = useI18n();
   const { state } = useProviderState();
   const drivers = useQuery(fetchDrivers).state;
+  const access = useQuery(fetchProviderAccess).state;
   const error = useErrorText();
   const refreshAll = useAction(async () => {
     await kitCall('server.refreshProviders', { refreshModels: true }).catch(error.show);
   });
-  if (state.status === 'loading') return <MutedText>{t('common.loading')}</MutedText>;
+  if (state.status === 'loading' || access.status === 'loading')
+    return <MutedText>{t('common.loading')}</MutedText>;
   if (state.status === 'error') return <Alert tone="error">{t(state.error)}</Alert>;
+  if (access.status === 'error') return <Alert tone="error">{t(access.error)}</Alert>;
   const labels = new Map(
     drivers.status === 'ready' ? drivers.data.drivers.map((d) => [d.driverKind, d.label]) : [],
   );
   return (
-    <Stack>
-      <Row>
-        <Heading>{t('providers.title')}</Heading>
-        <Button variant="secondary" busy={refreshAll.busy} onClick={() => void refreshAll.run()}>
-          {t('providers.refreshAll')}
-        </Button>
-      </Row>
-      <MutedText>{t('providers.intro')}</MutedText>
-      <Alert tone="info">{t('providers.withoutAi')}</Alert>
-      <DisclosureNote />
-      {error.text && <Alert tone="error">{error.text}</Alert>}
-      {state.providers.map((provider) => (
-        <ProviderCard
-          key={provider.instanceId}
-          provider={provider}
-          label={labels.get(provider.driver) ?? provider.driver}
-          config={state.instances[provider.instanceId]}
-          onError={error.show}
-        />
-      ))}
-      {drivers.status === 'ready' && (
-        <AddProviderCard drivers={drivers.data.drivers} onError={error.show} />
-      )}
-    </Stack>
+    <ProviderAccessContext.Provider value={access.data}>
+      <Stack>
+        <Row>
+          <Heading>{t('providers.title')}</Heading>
+          <Button variant="secondary" busy={refreshAll.busy} onClick={() => void refreshAll.run()}>
+            {t('providers.refreshAll')}
+          </Button>
+        </Row>
+        <MutedText>{t('providers.intro')}</MutedText>
+        <Alert tone="info">{t('providers.withoutAi')}</Alert>
+        <DisclosureNote />
+        {error.text && <Alert tone="error">{error.text}</Alert>}
+        {state.providers.map((provider) => (
+          <ProviderCard
+            key={provider.instanceId}
+            provider={provider}
+            label={labels.get(provider.driver) ?? provider.driver}
+            config={state.instances[provider.instanceId]}
+            onError={error.show}
+          />
+        ))}
+        {!access.data.signIn && <MutedText>{t('providers.readOnly')}</MutedText>}
+        {drivers.status === 'ready' && access.data.signIn && (
+          <AddProviderCard drivers={drivers.data.drivers} onError={error.show} />
+        )}
+      </Stack>
+    </ProviderAccessContext.Provider>
   );
 }

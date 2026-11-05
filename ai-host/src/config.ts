@@ -15,6 +15,8 @@ export interface HostConfig {
   readonly cwd: string;
   /** Keeps provider CLIs current on its own (`AI_HOST_AUTO_UPDATE=1`); off for test hosts. */
   readonly autoUpdate: boolean;
+  /** Started by QBank's host pool (DEC-35): stop when QBank goes, even if it was killed. */
+  readonly exitWithParent: boolean;
 }
 
 const MIN_TOKEN_LENGTH = 32;
@@ -30,5 +32,12 @@ export function readConfig(env: NodeJS.ProcessEnv): HostConfig {
   if (!Number.isInteger(port) || port <= 0 || port > 65535)
     throw new Error('AI_HOST_PORT is invalid');
   const cwd = env['AI_HOST_CWD'] ?? join(home, 'workdir');
-  return { port, token, home, cwd, autoUpdate: env['AI_HOST_AUTO_UPDATE'] === '1' };
+  return {
+    port,
+    token,
+    home,
+    cwd,
+    autoUpdate: env['AI_HOST_AUTO_UPDATE'] === '1',
+    exitWithParent: env['AI_HOST_EXIT_WITH_PARENT'] === '1',
+  };
 }

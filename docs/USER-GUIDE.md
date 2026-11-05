@@ -125,6 +125,7 @@ Arabic and English.
 - Sign-in works from any device, stays signed in and renews on its own.
 - Each task lets you choose the provider and model, and QBank remembers your choice for each task.
 - **Test** next to each model sends one tiny real request and says whether it works.
+- **Your sign-ins are yours.** On a shared QBank server every account has its own AI connection, in its own folder: nobody else sees or uses it, and deleting your account deletes it. There, installing and updating the provider tools is the server's job, not yours.
 - Provider tools (Claude Code and Codex) **update themselves**, so new models appear without a
   step from you.
 

@@ -5,6 +5,7 @@ import { afterAll, beforeAll } from 'vitest';
 import { buildApp } from '../../src/server/app.js';
 import { migrateToLatest } from '../../src/server/migrator.js';
 import type { Clock } from '../../src/server/platform/clock.js';
+import type { AiHostsConfig } from '../../src/server/platform/config/index.js';
 import { createDb, type Db } from '../../src/server/platform/db/index.js';
 
 export const ORIGIN = 'http://qbank.test';
@@ -27,6 +28,16 @@ interface TestApp {
 /** A real app on the dedicated test database, migrated and emptied before each suite. */
 /** No AI host unless a suite starts one (tests/support/ai-host.ts). */
 const NO_AI_HOST = { url: 'http://127.0.0.1:9', token: null };
+/** Accounts mode sharing one (fake) host, as before DEC-35: every test that does not opt in. */
+const SINGLE_AI_HOST: AiHostsConfig = {
+  mode: 'single',
+  dir: '',
+  node: process.execPath,
+  entry: '',
+  max: 1,
+  idleMs: 60_000,
+  inherited: {},
+};
 
 /** The pairing code of a local-mode test app (fixed, not a secret). */
 export const TEST_PAIRING_TOKEN = 'test-pairing-code-not-a-secret-0001';
@@ -40,6 +51,8 @@ interface TestAppOptions {
   /** A built web app for the API to serve. */
   webDir?: string;
   aiHost?: () => { url: string; token: string | null };
+  /** One AI host per account (DEC-35) instead of the single fake one. */
+  aiHosts?: AiHostsConfig;
 }
 
 async function startTestApp(options: TestAppOptions = {}): Promise<TestApp> {
@@ -69,6 +82,7 @@ async function startTestApp(options: TestAppOptions = {}): Promise<TestApp> {
       originalRetentionDays: 7,
     },
     aiHost: options.aiHost?.() ?? NO_AI_HOST,
+    aiHosts: options.aiHosts ?? SINGLE_AI_HOST,
     webDir: options.webDir ?? null,
   };
   const pairingToken = options.local ? TEST_PAIRING_TOKEN : null;

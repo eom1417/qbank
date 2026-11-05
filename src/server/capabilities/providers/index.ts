@@ -1,7 +1,8 @@
 import type { FastifyInstance } from 'fastify';
-import { createAiHostClient } from '../../platform/ai-host/client.js';
+import type { AiHosts } from '../../platform/ai-host/index.js';
 import type { RequireActor } from '../identity/index.js';
 import { kitImportAi } from './adapters/kit-imports.js';
+import { accessOf } from './domain/tenant-access.js';
 import { registerProviderRoutes } from './http/routes.js';
 import { registerLoginRoutes } from './http/login-routes.js';
 import { registerModelTestRoute } from './http/test-routes.js';
@@ -17,10 +18,9 @@ export type {
 } from './domain/ai-provider.js';
 
 interface ProvidersSettings {
-  aiHost: { url: string; token: string | null };
+  aiHosts: AiHosts;
   requireActor: RequireActor;
-  /** The account runs this install (local mode): it may change settings and sign in. */
-  manage: boolean;
+  mode: 'local' | 'accounts';
 }
 
 /**
@@ -28,14 +28,22 @@ interface ProvidersSettings {
  * and reached only through the AI host client (DEC-30).
  */
 export function createProviders(settings: ProvidersSettings) {
-  const client = createAiHostClient(settings.aiHost);
+  const { client } = settings.aiHosts;
+  const access = accessOf(settings.mode, settings.aiHosts.perAccount);
   return {
     client,
     /** The user's AI for imports (sources' `deps.ai`): instances of the kit. */
     importAi: kitImportAi(client),
+    /** Whether the account ever set up its providers (browsing never starts a host). */
+    isSetUp: settings.aiHosts.isSetUp,
+    /** Deletes an account's own sign-ins and keys with its host (M22.4). */
+    forgetAccount: settings.aiHosts.forget,
     register: (app: FastifyInstance) => {
-      registerProviderRoutes(app, client, settings.requireActor, settings.manage);
-      if (!settings.manage) return;
+      registerProviderRoutes(app, client, settings.requireActor, {
+        ...access,
+        isSetUp: settings.aiHosts.isSetUp,
+      });
+      if (!access.signIn) return;
       registerLoginRoutes(app, client, settings.requireActor);
       registerModelTestRoute(app, client, settings.requireActor);
     },

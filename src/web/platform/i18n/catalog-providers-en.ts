@@ -2,6 +2,8 @@
 export const providersEn = {
   'error.ai_host_unavailable':
     'The AI service is not running on this machine. Start it, then try again.',
+  'error.ai_host_busy':
+    'The AI service is busy for everyone right now. Try again in a few minutes.',
   'providers.title': 'AI providers',
   'providers.withoutAi':
     'AI is optional. Without it everything works: importing (text and scanned pages), review, Tutor and exams, analytics, export and backups. With your AI: every question is checked and its answer settled by two models and a judge, questions can be improved, whole pages read, and explanations given.',
@@ -41,6 +43,7 @@ export const providersEn = {
   'providers.signOut': 'Sign out',
   'providers.install': 'Install',
   'providers.update': 'Update',
+  'providers.readOnly': 'Providers are managed by whoever runs this server. You can see them here.',
   'providers.notInstalled': 'Not installed on this machine',
   'providers.version': 'Version',
   'providers.remove': 'Remove',

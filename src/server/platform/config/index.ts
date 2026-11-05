@@ -22,6 +22,14 @@ const Env = z.object({
   QBANK_ORIGINAL_RETENTION_DAYS: z.coerce.number().int().min(0).max(365).default(7),
   QBANK_AI_HOST_URL: z.url({ protocol: /^http$/ }).default('http://127.0.0.1:3790'),
   QBANK_AI_HOST_TOKEN: z.string().min(32).optional(),
+  /** `single`: one AI host for the install. `per_account`: one per account (DEC-35). */
+  QBANK_AI_HOSTS: z.enum(['single', 'per_account']).optional(),
+  QBANK_AI_HOSTS_DIR: z.string().min(1).optional(),
+  /** Node 24.10+ for the providers kit (scripts/setup-ai-host.sh installs it there). */
+  QBANK_AI_HOST_NODE: z.string().min(1).default('/opt/node24/bin/node'),
+  QBANK_AI_HOST_ENTRY: z.string().min(1).default('ai-host/src/main.ts'),
+  QBANK_AI_HOSTS_MAX: z.coerce.number().int().min(1).max(1000).default(20),
+  QBANK_AI_HOSTS_IDLE_MINUTES: z.coerce.number().int().min(1).max(1440).default(15),
   /** The built web app the API serves (`npm run build`); `none` leaves it to a dev server. */
   QBANK_WEB_DIR: z.string().min(1).default('dist/web'),
 });
@@ -57,8 +65,43 @@ export interface AppConfig {
    * the providers screens report it as unavailable.
    */
   aiHost: { url: string; token: string | null };
+  /** One AI host for the install, or one per account in its own folder (DEC-35). */
+  aiHosts: AiHostsConfig;
   /** Served at `/` when it holds a build; null serves the API only. */
   webDir: string | null;
+}
+
+export interface AiHostsConfig {
+  mode: 'single' | 'per_account';
+  /** Each account's host lives in `<dir>/<accountId>/` (its kit home and its HOME). */
+  dir: string;
+  node: string;
+  entry: string;
+  /** Hosts running at once; an idle one is stopped to make room, else `ai_host_busy`. */
+  max: number;
+  idleMs: number;
+  /** The only server variables a host (and the provider tools it starts) inherits. */
+  inherited: Record<string, string>;
+}
+
+/** Enough to run a program and read text; never QBank's own settings or secrets. */
+const HOST_INHERITS = ['PATH', 'LANG', 'LC_ALL', 'TZ', 'TMPDIR'] as const;
+
+/** Accounts get their own hosts unless the install says `single` (the M22 roll-back switch). */
+function aiHostsOf(parsed: z.infer<typeof Env>, env: NodeJS.ProcessEnv): AiHostsConfig {
+  const inherited = HOST_INHERITS.flatMap((name) => {
+    const value = env[name];
+    return value === undefined ? [] : [[name, value] as const];
+  });
+  return {
+    inherited: Object.fromEntries(inherited),
+    mode: parsed.QBANK_AI_HOSTS ?? (parsed.QBANK_MODE === 'local' ? 'single' : 'per_account'),
+    dir: parsed.QBANK_AI_HOSTS_DIR ?? `${parsed.QBANK_DATA_DIR}/ai-hosts`,
+    node: parsed.QBANK_AI_HOST_NODE,
+    entry: parsed.QBANK_AI_HOST_ENTRY,
+    max: parsed.QBANK_AI_HOSTS_MAX,
+    idleMs: parsed.QBANK_AI_HOSTS_IDLE_MINUTES * 60_000,
+  };
 }
 
 /** A local install starts with nothing to set up: PGlite in its data directory. */
@@ -98,6 +141,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       originalRetentionDays: parsed.QBANK_ORIGINAL_RETENTION_DAYS,
     },
     aiHost: { url: parsed.QBANK_AI_HOST_URL, token: parsed.QBANK_AI_HOST_TOKEN ?? null },
+    aiHosts: aiHostsOf(parsed, env),
     webDir: parsed.QBANK_WEB_DIR === 'none' ? null : parsed.QBANK_WEB_DIR,
   };
 }

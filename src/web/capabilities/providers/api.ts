@@ -3,6 +3,7 @@ import {
   AuthStateView,
   DriverListResponse,
   ModelTestResponse,
+  ProviderAccessResponse,
   ProviderStateResponse,
   type AiTarget,
   type KitMethod,
@@ -15,9 +16,17 @@ export class KitError extends Error {}
 export const fetchProviderState = () =>
   apiRequest('GET', '/api/providers/state', ProviderStateResponse);
 
+/** The state to choose a model from: none for an account that never set up providers. */
+export const peekProviderState = () =>
+  apiRequest('GET', '/api/providers/state?peek=1', ProviderStateResponse);
+
 /** One tiny real turn on a model (local mode): whether it runs, or why not. */
 export const testModel = async (target: AiTarget) =>
   (await apiRequest('POST', '/api/providers/test', ModelTestResponse, target)).status;
+
+/** What this account may do with its AI: link its own providers, run the machine (DEC-35). */
+export const fetchProviderAccess = () =>
+  apiRequest('GET', '/api/providers/access', ProviderAccessResponse);
 
 export const fetchDrivers = () => apiRequest('GET', '/api/providers/drivers', DriverListResponse);
 

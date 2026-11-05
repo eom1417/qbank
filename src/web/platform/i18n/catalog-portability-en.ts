@@ -39,6 +39,7 @@ export const portabilityEn = {
   'deleteAccount.confirm': 'Yes, erase everything',
   'deleteAccount.step.banks': 'Banks and questions',
   'deleteAccount.step.files': 'Stored files',
+  'deleteAccount.step.providers': 'AI provider sign-ins and keys',
   'deleteAccount.step.account': 'The account',
   'deleteAccount.done': 'Done',
   'deleteAccount.notDone': 'Not done',

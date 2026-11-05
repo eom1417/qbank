@@ -14,6 +14,7 @@ import { createQuestions } from './capabilities/questions/index.js';
 import { createSources } from './capabilities/sources/index.js';
 import { createStudy } from './capabilities/study/index.js';
 import type { Clock } from './platform/clock.js';
+import { createAiHosts } from './platform/ai-host/index.js';
 import type { AppConfig } from './platform/config/index.js';
 import type { Db } from './platform/db/index.js';
 import { handleError } from './platform/http/error-handler.js';
@@ -68,11 +69,9 @@ function registerImports(
   parts: ReturnType<typeof registerLibrary>,
 ) {
   const { config, db, clock } = deps;
-  const providers = createProviders({
-    aiHost: config.aiHost,
-    requireActor,
-    manage: config.mode === 'local',
-  });
+  const aiHosts = createAiHosts(config.aiHost, config.aiHosts);
+  app.addHook('onClose', aiHosts.close);
+  const providers = createProviders({ aiHosts, requireActor, mode: config.mode });
   providers.register(app);
   const sources = createSources({
     log: app.log,
@@ -94,13 +93,14 @@ function registerImports(
     app.addHook('onClose', async () => sources.worker.stop());
   }
   app.decorate('importWorker', sources.worker);
-  return { providers, sources };
+  return { providers, sources, aiConfigured: aiHosts.configured };
 }
 
 /** Study, then export, restore and deletion across everything (M9–M13). */
 function registerContent(app: FastifyInstance, deps: ContentDeps, identity: IdentityModule) {
   const parts = registerLibrary(app, deps, identity.requireActor);
-  const { providers, sources } = registerImports(app, deps, identity.requireActor, parts);
+  const imports = registerImports(app, deps, identity.requireActor, parts);
+  const { providers, sources } = imports;
   const { library, questions, blobs } = parts;
   const study = createStudy({
     db: deps.db,
@@ -119,6 +119,7 @@ function registerContent(app: FastifyInstance, deps: ContentDeps, identity: Iden
       questions,
       study,
       blobs,
+      forgetAi: providers.forgetAccount,
       deleteAccount: identity.deleteAccount,
       clock: deps.clock,
       maxUploadBytes: deps.config.imports.maxUploadBytes,
@@ -126,7 +127,7 @@ function registerContent(app: FastifyInstance, deps: ContentDeps, identity: Iden
     },
     identity.requireActor,
   ).register(app);
-  return { providers, sources };
+  return { providers, sources, aiConfigured: imports.aiConfigured };
 }
 
 /** Composition root: wires platform owners and capabilities into one Fastify instance. */
@@ -183,7 +184,8 @@ function registerOperations(
     clock,
     dataDir: config.imports.dataDir,
     ai: content.providers.client,
-    aiConfigured: config.aiHost.token !== null,
+    aiSetUp: content.providers.isSetUp,
+    aiConfigured: content.aiConfigured,
     latestBackup: config.mode === 'local' ? backups.latest : null,
     lastFailure: content.sources.lastFailure,
     logFile: deps.log?.file ?? null,

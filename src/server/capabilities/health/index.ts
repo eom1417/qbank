@@ -11,6 +11,8 @@ interface HealthSettings {
   clock: Clock;
   dataDir: string;
   ai: AiHostClient;
+  /** An account that never set up providers has none: its health never starts a host. */
+  aiSetUp(accountId: string): Promise<boolean>;
   /** The AI service is set up for this install (it is optional). */
   aiConfigured: boolean;
   /** When the newest backup was made; absent where there are no backups (accounts mode). */
@@ -32,6 +34,12 @@ async function aiState(ai: AiHostClient, owner: string) {
   return { aiHost: 'reachable' as const, aiReady: providers.length };
 }
 
+async function aiHealth(settings: HealthSettings, ownerId: string) {
+  if (!settings.aiConfigured) return { aiHost: 'not_configured' as const, aiReady: 0 };
+  if (!(await settings.aiSetUp(ownerId))) return { aiHost: 'reachable' as const, aiReady: 0 };
+  return aiState(settings.ai, `account:${ownerId}`);
+}
+
 /** Free space where the data lives (or its nearest folder that exists yet). */
 async function freeBytes(dir: string): Promise<number | null> {
   for (let path = resolve(dir); ; path = dirname(path)) {
@@ -45,9 +53,7 @@ async function freeBytes(dir: string): Promise<number | null> {
 async function readHealth(settings: HealthSettings, ownerId: string): Promise<HealthResponse> {
   const now = settings.clock.now();
   const snapshot: HealthSnapshot = {
-    ...(settings.aiConfigured
-      ? await aiState(settings.ai, `account:${ownerId}`)
-      : { aiHost: 'not_configured' as const, aiReady: 0 }),
+    ...(await aiHealth(settings, ownerId)),
     diskFreeBytes: await freeBytes(settings.dataDir),
     backups: settings.latestBackup !== null,
     lastBackupAt: settings.latestBackup ? await settings.latestBackup() : null,

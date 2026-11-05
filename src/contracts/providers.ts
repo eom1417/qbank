@@ -60,6 +60,15 @@ export const KitStream = z.enum(KIT_STREAMS);
 export type KitMethod = z.infer<typeof KitMethod>;
 export type KitStream = z.infer<typeof KitStream>;
 
+/**
+ * `GET /api/providers/access`: what this account may do with its AI (DEC-35). `signIn`: link
+ * its own providers. `operator`: install and update the provider tools of the machine.
+ */
+export const ProviderAccessResponse = z
+  .object({ signIn: z.boolean(), operator: z.boolean() })
+  .strict();
+export type ProviderAccessResponse = z.infer<typeof ProviderAccessResponse>;
+
 /** What the providers screens read of one kit instance (the kit's `ServerProvider`). */
 export const ProviderView = z.looseObject({
   instanceId: z.string(),

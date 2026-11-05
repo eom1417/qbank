@@ -4,6 +4,7 @@ import type { providersEn } from './catalog-providers-en.js';
 export const providersAr: Record<keyof typeof providersEn, string> = {
   'error.ai_host_unavailable':
     'خدمة الذكاء الاصطناعي لا تعمل على هذا الجهاز. شغّلها ثم أعد المحاولة.',
+  'error.ai_host_busy': 'خدمة الذكاء الاصطناعي مشغولة للجميع الآن. أعد المحاولة بعد دقائق.',
   'providers.title': 'مزودو الذكاء الاصطناعي',
   'providers.withoutAi':
     'الذكاء الاصطناعي اختياري. بدونه يعمل كل شيء: الاستيراد (صفحات نصية وممسوحة)، والمراجعة، والـTutor والامتحانات، والتحليلات، والتصدير والنسخ الاحتياطي. مع ذكائك الاصطناعي: يُفحص كل سؤال وتُحسم إجابته بنموذجين وحَكَم، ويمكن تحسين الأسئلة، وقراءة الصفحات كاملة، والشروح.',
@@ -43,6 +44,7 @@ export const providersAr: Record<keyof typeof providersEn, string> = {
   'providers.signOut': 'سجّل الخروج',
   'providers.install': 'ثبّت',
   'providers.update': 'حدّث',
+  'providers.readOnly': 'المزوّدون يديرهم من يشغّل هذا الخادم، وتستطيع رؤيتهم هنا.',
   'providers.notInstalled': 'غير مثبت على هذا الجهاز',
   'providers.version': 'الإصدار',
   'providers.remove': 'احذف',

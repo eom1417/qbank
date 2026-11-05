@@ -45,6 +45,8 @@ function maintenance(provider: ProviderView): ProviderAction[] {
 export function providerActions(
   provider: ProviderView,
   config: InstanceConfig | undefined,
+  /** Installs and updates change the machine: only its operator may (DEC-35). */
+  operator = true,
 ): ProviderAction[] {
   const current = config ?? { driver: provider.driver };
   return [
@@ -60,6 +62,6 @@ export function providerActions(
       variant: 'ghost',
       work: () => refreshInstance(provider.instanceId),
     },
-    ...maintenance(provider),
+    ...(operator ? maintenance(provider) : []),
   ];
 }

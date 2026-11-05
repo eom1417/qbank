@@ -33,3 +33,5 @@ const stop = () => {
 };
 process.on('SIGTERM', stop);
 process.on('SIGINT', stop);
+// QBank holds this pipe open while it runs; it closes when QBank exits, however it exits.
+if (config.exitWithParent) process.stdin.on('end', stop).on('close', stop).resume();

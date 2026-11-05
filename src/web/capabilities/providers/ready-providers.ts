@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { AiTarget, ProviderView } from '../../../contracts/providers.js';
 import { useQuery } from '../../platform/api/use-query.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
-import { fetchProviderState } from './api.js';
+import { peekProviderState } from './api.js';
 
 /** Which AI task a choice is remembered for (each keeps its own last choice). */
 export type AiTask = 'import' | 'fix' | 'explain';
@@ -40,7 +40,7 @@ function choicesOf(provider: ProviderView, defaultLabel: string) {
  */
 export function useAiChoices() {
   const { t } = useI18n();
-  const { state } = useQuery(fetchProviderState);
+  const { state } = useQuery(peekProviderState);
   if (state.status !== 'ready') return [];
   return state.data.providers
     .filter((p) => p.enabled && p.auth.status === 'authenticated')

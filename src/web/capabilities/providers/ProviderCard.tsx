@@ -1,6 +1,7 @@
 import type { InstanceConfig, ProviderView } from '../../../contracts/providers.js';
 import { Badge, Card, MutedText, Row, Stack, Title } from '../../design-system/index.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
+import { useProviderAccess } from './access.js';
 import { CodexSetupChoice } from './CodexSetupChoice.js';
 import { ProviderActions } from './ProviderActions.js';
 import { ProviderLimits } from './ProviderLimits.js';
@@ -28,9 +29,25 @@ function AuthLine({ provider }: { provider: ProviderView }) {
   );
 }
 
+/** How the provider signs in, for an account allowed to link its own (DEC-35). */
+function SignInControls({ provider, config, onError }: Omit<CardProps, 'label'>) {
+  const access = useProviderAccess();
+  if (!access.signIn) return null;
+  return (
+    <>
+      {access.operator && (
+        <CodexSetupChoice provider={provider} config={config} onError={onError} />
+      )}
+      <SignInPanel provider={provider} onError={onError} />
+      <CliSignInPanel provider={provider} config={config} onError={onError} />
+    </>
+  );
+}
+
 /** One provider instance: status, sign-in, models, usage limits and every action it allows. */
 export function ProviderCard({ provider, label, config, onError }: CardProps) {
   const { t } = useI18n();
+  const access = useProviderAccess();
   // The kit's "run `codex login`" advice is replaced by the sign-in panel below.
   const signInHere = cliOf(provider, config) !== null && provider.auth.status !== 'authenticated';
   return (
@@ -51,12 +68,10 @@ export function ProviderCard({ provider, label, config, onError }: CardProps) {
             {t('providers.version')} <bdi>{provider.version}</bdi>
           </MutedText>
         )}
-        <CodexSetupChoice provider={provider} config={config} onError={onError} />
-        <SignInPanel provider={provider} onError={onError} />
-        <CliSignInPanel provider={provider} config={config} onError={onError} />
+        <SignInControls provider={provider} config={config} onError={onError} />
         <ProviderLimits provider={provider} />
         <ProviderModels provider={provider} />
-        <ProviderActions provider={provider} config={config} onError={onError} />
+        {access.signIn && <ProviderActions provider={provider} config={config} onError={onError} />}
       </Stack>
     </Card>
   );

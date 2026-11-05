@@ -47,6 +47,8 @@ export interface PortabilityDeps {
     ): Promise<{ sessions: number; active: number }>;
     forgetQuestions(ownerId: string, questionIds: readonly string[]): Promise<void>;
   };
+  /** Stops the account's AI host and deletes its sign-ins and keys (DEC-35). */
+  forgetAi(accountId: string): Promise<void>;
   deleteAccount(accountId: string): Promise<boolean>;
   blobs: BlobStore;
   clock: Clock;

@@ -31,6 +31,7 @@ export const ErrorCode = z.enum([
   'page_too_large',
   'backup_too_new',
   'ai_host_unavailable',
+  'ai_host_busy',
   'internal',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;

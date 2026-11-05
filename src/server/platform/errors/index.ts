@@ -30,6 +30,7 @@ const STATUS: Record<ErrorCode, number> = {
   too_many_attempts: 429,
   backup_too_new: 409,
   ai_host_unavailable: 503,
+  ai_host_busy: 503,
   internal: 500,
 };
 

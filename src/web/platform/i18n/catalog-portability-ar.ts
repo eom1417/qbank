@@ -41,6 +41,7 @@ export const portabilityAr: Record<keyof typeof portabilityEn, string> = {
   'deleteAccount.confirm': 'نعم، امحُ كل شيء',
   'deleteAccount.step.banks': 'البنوك والأسئلة',
   'deleteAccount.step.files': 'الملفات المحفوظة',
+  'deleteAccount.step.providers': 'ربط مزوّدي الذكاء الاصطناعي ومفاتيحهم',
   'deleteAccount.step.account': 'الحساب',
   'deleteAccount.done': 'تم',
   'deleteAccount.notDone': 'لم يتم',

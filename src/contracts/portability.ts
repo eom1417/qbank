@@ -47,7 +47,9 @@ export const AccountDeletionResponse = z
   .object({
     complete: z.boolean(),
     steps: z.array(
-      z.object({ step: z.enum(['banks', 'files', 'account']), done: z.boolean() }).strict(),
+      z
+        .object({ step: z.enum(['banks', 'files', 'providers', 'account']), done: z.boolean() })
+        .strict(),
     ),
   })
   .strict();

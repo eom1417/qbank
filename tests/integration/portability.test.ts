@@ -114,6 +114,7 @@ describe('deleting a bank, then the account (FR-19-005…007, UAT-074, UAT-075, 
       steps: [
         { step: 'banks', done: true },
         { step: 'files', done: true },
+        { step: 'providers', done: true },
         { step: 'account', done: true },
       ],
     });

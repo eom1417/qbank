@@ -114,7 +114,9 @@ export async function mockReadyProvider(page: Page, extra: Record<string, unknow
     ...{ auth: { status: 'authenticated' }, models: [] },
     ...extra,
   };
-  await page.route('**/api/providers/state', (route) =>
-    route.fulfill({ json: { providers: [provider], settings: {} } }),
+  // The screens that list models ask with `?peek=1` (DEC-35): the same state, any query.
+  await page.route(
+    (url) => url.pathname === '/api/providers/state',
+    (route) => route.fulfill({ json: { providers: [provider], settings: {} } }),
   );
 }

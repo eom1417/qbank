@@ -53,7 +53,8 @@ export async function deleteBank(deps: PortabilityDeps, actor: Actor, bankId: st
 
 /**
  * Deletes the account as a task with an honest report (FR-19-006, FR-19-007, UAT-075): the
- * banks and their files first, then the account with everything left. A step that fails stops
+ * banks and their files first, then its AI sign-ins and keys, then the account with everything
+ * left. A step that fails stops
  * the rest and is reported as not done; nothing is said done before it is.
  */
 export async function deleteAccount(
@@ -63,6 +64,7 @@ export async function deleteAccount(
   const steps: AccountDeletionResponse['steps'] = [
     { step: 'banks', done: false },
     { step: 'files', done: false },
+    { step: 'providers', done: false },
     { step: 'account', done: false },
   ];
   const mark = (index: number) => ((steps[index] as { done: boolean }).done = true);
@@ -79,7 +81,9 @@ export async function deleteAccount(
     mark(0);
     await eraseFiles(deps, files);
     mark(1);
-    if (await deps.deleteAccount(actor.accountId)) mark(2);
+    await deps.forgetAi(actor.accountId);
+    mark(2);
+    if (await deps.deleteAccount(actor.accountId)) mark(3);
   } catch {
     // The report below says which steps were not done.
   }

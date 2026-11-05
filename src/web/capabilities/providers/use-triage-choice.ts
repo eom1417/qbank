@@ -6,7 +6,7 @@ import {
   type TriageModels,
 } from '../../../contracts/sources.js';
 import { useQuery } from '../../platform/api/use-query.js';
-import { fetchProviderState } from './api.js';
+import { peekProviderState } from './api.js';
 import { presetModels, type TriageQuality } from './triage-presets.js';
 
 /** What the owner chose for the AI triage of an import or a re-check (DEC-33, DEC-04). */
@@ -62,7 +62,7 @@ export function modelsOf(choice: TriageChoice, provider: ProviderView | undefine
  * that is on and signed in). A remembered instance no longer offered falls back to none.
  */
 export function useTriageChoice() {
-  const { state } = useQuery(fetchProviderState);
+  const { state } = useQuery(peekProviderState);
   const ready =
     state.status === 'ready'
       ? state.data.providers.filter((p) => p.enabled && p.auth.status === 'authenticated')
