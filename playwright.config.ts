@@ -48,6 +48,9 @@ export default defineConfig({
   workers: 1,
   forbidOnly: true,
   retries: 0,
+  // In CI the first failure ends the run: a broken flow fails dozens of journeys one timeout
+  // at a time (over an hour), and the first one already says what broke.
+  maxFailures: process.env['CI'] ? 1 : 0,
   reporter: [['list']],
   use: { baseURL: `http://127.0.0.1:${WEB_PORT}`, locale: 'ar-SA', trace: 'retain-on-failure' },
   projects: [

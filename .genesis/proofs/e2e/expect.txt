@@ -1,1 +1,1 @@
-library.spec.ts
+acceptance.spec.ts
