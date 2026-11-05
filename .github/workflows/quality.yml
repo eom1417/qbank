@@ -44,7 +44,11 @@ jobs:
         with:
           node-version: '22'
       - name: Kit self-tests (every guard is seen failing)
-        run: python .genesis/tools/genesis.py setup && python .genesis/tools/genesis.py selftest
+        # The .claude/skills mirror is not committed (the agent host makes it); build it first.
+        run: |
+          python .genesis/tools/genesis.py setup
+          python .genesis/tools/genesis.py skills --sync
+          python .genesis/tools/genesis.py selftest
       - name: Policy files need the owner's policy-change label
         if: github.event_name == 'pull_request'
         env:
