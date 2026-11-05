@@ -18,7 +18,12 @@ const base = {
 describe('eligibility (FR-11-001, FR-11-002)', () => {
   it('only a trusted answer with nothing to review is eligible', () => {
     expect(eligibilityOf(base)).toBe('eligible');
-    expect(eligibilityOf({ ...base, reasons: ['ocr_page'] })).toBe('needs_review');
+    expect(eligibilityOf({ ...base, reasons: ['key_conflict'] })).toBe('needs_review');
+    // How the page was read, a skipped number or a doubtful picture only inform (DEC-33).
+    expect(
+      eligibilityOf({ ...base, reasons: ['ocr_page', 'numbering_gap', 'media_uncertain'] }),
+    ).toBe('eligible');
+    expect(eligibilityOf({ ...base, provenance: 'ai_verified' })).toBe('eligible');
     expect(eligibilityOf({ ...base, answers: [] })).toBe('needs_review');
     expect(eligibilityOf({ ...base, provenance: 'ai_suggested' })).toBe('needs_review');
     expect(eligibilityOf({ ...base, provenance: 'ai_suggested', aiAccepted: true })).toBe(

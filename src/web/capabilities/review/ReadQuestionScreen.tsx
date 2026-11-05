@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { Link, useParams } from 'react-router';
 import { Alert, buttonClass, Card, Heading, MutedText, Stack } from '../../design-system/index.js';
 import { useQuery } from '../../platform/api/use-query.js';
+import { AiVerdict } from './AiVerdict.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { fetchQuestion } from './api.js';
 import { NotesCard } from './NotesCard.js';
@@ -36,6 +37,7 @@ export function ReadQuestionScreen() {
             {t('read.answer')} {q.answers.join(', ') || '—'} · {t('editor.provenance')}{' '}
             {t(`editor.provenance.${q.provenance}`)}
           </MutedText>
+          <AiVerdict question={q} />
           {q.explanation && <p dir="auto">{q.explanation}</p>}
           {q.updateNote && <Alert tone="info">{q.updateNote}</Alert>}
         </Stack>

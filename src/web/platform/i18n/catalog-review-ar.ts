@@ -69,6 +69,7 @@ export const reviewAr: Record<keyof typeof reviewEn, string> = {
   'editor.provenance.source': 'الكتاب',
   'editor.provenance.manual': 'أنت',
   'editor.provenance.ai_suggested': 'AI الخاص بك (مقترح)',
+  'editor.provenance.ai_verified': 'تحقّق منه AI',
   'editor.provenance.conflict': 'مصادر متعارضة',
   'editor.provenance.missing': 'لا مصدر بعد',
   'editor.pictures': 'الصور',

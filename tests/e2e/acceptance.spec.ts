@@ -87,9 +87,15 @@ test('choosing an AI for an import says what it sends first (FR-20-003, UAT-077)
   await page.getByRole('link', { name: 'استورد ملفات' }).click();
   const ai = page.getByLabel('استخدم الذكاء الاصطناعي الخاص بي', { exact: false });
   await expect(page.getByText('تسري شروط ذلك المزوّد', { exact: false })).toHaveCount(0);
-  await ai.selectOption({ label: 'Claude · Model One' });
+  await ai.selectOption({ label: 'Claude' });
   await expect(page.getByText('تسري شروط ذلك المزوّد', { exact: false })).toBeVisible();
   await expect(page.getByLabel('دع الذكاء الاصطناعي يقرأ الصفحات كاملة')).toBeVisible();
+  // How thorough, each role's model, and improvement mode on by default (DEC-33, DEC-04).
+  await expect(page.getByLabel('مستوى الدقة')).toHaveValue('balanced');
+  await expect(page.getByLabel('حسّن الأسئلة أولاً')).toBeChecked();
+  await page.getByLabel('مستوى الدقة').selectOption('custom');
+  await page.getByLabel('الحَكَم').selectOption({ label: 'Model One' });
+  await expect(page.getByText('الحَكَم: Model One')).toBeVisible();
 });
 
 test('a scanned book: read by OCR, reviewed, studied, original deleted (JY-01)', async ({

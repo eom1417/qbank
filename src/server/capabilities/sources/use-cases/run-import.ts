@@ -1,6 +1,6 @@
 import type { SourceLanguage } from '../../../../contracts/sources.js';
 import type { ImportStage } from '../../../platform/db/schema.js';
-import type { ImportedQuestion, ReviewReason } from '../../questions/index.js';
+import type { ReviewReason } from '../../questions/index.js';
 import type { JobRow, PageRow, SourceRow } from '../adapters/import-repository.js';
 import { readScan, readTextLayer } from '../adapters/readers.js';
 import type { PageText } from '../domain/page.js';
@@ -10,6 +10,7 @@ import type { SourcesDeps } from './deps.js';
 import { applyAnswerFile } from './apply-answer-file.js';
 import { cropMedia, storeMedia } from './keep-media.js';
 import { readSource } from './read-source.js';
+import { recheckOutcome, triageImport } from './triage-import.js';
 import { aiTargetOf, verifyWithAi } from './verify-with-ai.js';
 import { readWithAi } from './read-with-ai.js';
 
@@ -76,16 +77,11 @@ async function readPages(deps: SourcesDeps, job: JobRow, source: SourceRow, file
   }
 }
 
-function finalStage(
-  pages: readonly PageRow[],
-  questions: readonly ImportedQuestion[],
-  aiOutcome: string,
-): ImportStage {
+function finalStage(pages: readonly PageRow[], review: number, aiOutcome: string): ImportStage {
   const read = pages.filter((page) => page.status !== 'failed');
   if (read.length === 0) return 'failed';
   if (read.length < pages.length) return 'partial_failure';
-  const review = questions.some((q) => q.reasons.some((reason) => reason !== 'essay'));
-  return review || !['not_used', 'done'].includes(aiOutcome) ? 'needs_review' : 'completed';
+  return review > 0 || !['not_used', 'done'].includes(aiOutcome) ? 'needs_review' : 'completed';
 }
 
 const setStage = (deps: SourcesDeps, job: JobRow, stage: ImportStage) =>
@@ -121,7 +117,10 @@ function aiReadReasons(reasons: Map<number, ReviewReason[]>, count: number) {
   return reasons;
 }
 
-/** Stages 2–4: extract, screen (then the user's AI), and save without duplicates. */
+/**
+ * Stages 2–4: extract, screen (then the user's AI), save without duplicates (the original as
+ * version 1), then the AI triage settles answers on the saved questions (DEC-33).
+ */
 async function extractAndSave(deps: SourcesDeps, job: JobRow, source: SourceRow, file: string) {
   await setStage(deps, job, 'extracting');
   const pages = await deps.imports.pages(job.id);
@@ -146,18 +145,27 @@ async function extractAndSave(deps: SourcesDeps, job: JobRow, source: SourceRow,
     read.byAi || read.failure
       ? { questions: screened, aiOutcome: read.failure ?? 'done' }
       : await verifyWithAi(deps, job, file, screened);
-  await setStage(deps, job, 'matching');
   const place = { ownerId: job.owner_id, bankId: source.bank_id, sourceId: source.id };
   await deps.questions.saveImported(place, verified.questions, deps.clock.now());
+  const triaged =
+    job.ai_provider_id && verified.aiOutcome === 'done'
+      ? await triageImport(deps, job, source.id)
+      : null;
+  await setStage(deps, job, 'matching');
   await storeMedia(deps, place, cropped, extracted);
-  return { pages, ...verified };
+  return {
+    pages,
+    questions: verified.questions,
+    aiOutcome: triaged?.aiOutcome ?? verified.aiOutcome,
+  };
 }
 
 /** Stages 2–4 for a question source: the job's final counts and stage. */
 async function questionsOutcome(deps: SourcesDeps, job: JobRow, source: SourceRow, file: string) {
   const { pages, questions, aiOutcome } = await extractAndSave(deps, job, source, file);
-  const review = questions.filter((q) => q.reasons.some((reason) => reason !== 'essay')).length;
-  const stage = finalStage(pages, questions, aiOutcome);
+  const saved = await deps.questions.questionsOfSource(job.owner_id, source.id);
+  const review = saved.filter((row) => row.status === 'needs_review').length;
+  const stage = finalStage(pages, review, aiOutcome);
   return {
     stage,
     questions_found: questions.length,
@@ -194,6 +202,18 @@ function expiryOf(deps: SourcesDeps, stage: ImportStage): Date | null {
   return new Date(deps.clock.now().getTime() + deps.originalRetentionMs);
 }
 
+type Finish = (changes: Parameters<SourcesDeps['imports']['update']>[1]) => Promise<unknown>;
+
+/** A re-check needs no file: only the saved questions are triaged again. */
+async function recheck(deps: SourcesDeps, job: JobRow, finish: Finish) {
+  try {
+    await finish(await recheckOutcome(deps, job));
+  } catch (error) {
+    deps.log.error({ jobId: job.id, err: error }, 'recheck failed');
+    await finish({ stage: 'failed', error_code: 'internal' });
+  }
+}
+
 /** Runs (or resumes) one import job to its end; failures are recorded on the job, never thrown. */
 export async function runImport(deps: SourcesDeps, job: JobRow): Promise<void> {
   const source = await deps.imports.findSource(job.owner_id, job.source_id);
@@ -204,6 +224,7 @@ export async function runImport(deps: SourcesDeps, job: JobRow): Promise<void> {
       finished_at: deps.clock.now(),
       updated_at: deps.clock.now(),
     });
+  if (source && job.ai_mode === 'recheck') return recheck(deps, job, finish);
   if (!source?.blob_key)
     return void (await finish({ stage: 'failed', error_code: 'source_missing' }));
   const file = deps.blobs.pathOf(source.blob_key);

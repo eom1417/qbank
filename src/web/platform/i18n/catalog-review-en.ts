@@ -67,6 +67,7 @@ export const reviewEn = {
   'editor.provenance.source': 'the book',
   'editor.provenance.manual': 'you',
   'editor.provenance.ai_suggested': 'your AI (suggested)',
+  'editor.provenance.ai_verified': 'verified by AI',
   'editor.provenance.conflict': 'conflicting sources',
   'editor.provenance.missing': 'nowhere yet',
   'editor.pictures': 'Pictures',

@@ -29,8 +29,11 @@ type NewJob = Pick<
   | 'ai_mode'
   | 'created_at'
   | 'updated_at'
+> &
+  Partial<Pick<JobRow, 'ai_improve'>> & { ai_roles?: string | null };
+type JobChanges = Partial<
+  Omit<JobRow, 'id' | 'owner_id' | 'source_id' | 'created_at' | 'ai_roles'> & { ai_roles: string }
 >;
-type JobChanges = Partial<Omit<JobRow, 'id' | 'owner_id' | 'source_id' | 'created_at'>>;
 type NewPage = Omit<PageRow, 'content'> & { content: string };
 
 /** Saves the source and its queued job together; `bank_missing` when the bank is not the owner's. */
@@ -193,17 +196,24 @@ const sourcesOfBank = (db: Db, ownerId: string, bankId: string) =>
     .orderBy('created_at')
     .execute();
 
+/** One of the owner's import jobs. */
+const findJob = (db: Db, ownerId: string, jobId: string) =>
+  db
+    .selectFrom('import_job')
+    .selectAll()
+    .where('owner_id', '=', ownerId)
+    .where('id', '=', jobId)
+    .executeTakeFirst();
+
+/** Queues another job on an existing source (a re-check, DEC-33). */
+const addJob = (db: Db, job: NewJob) => db.insertInto('import_job').values(job).execute();
+
 /** Owner-scoped store of sources, import jobs and their per-page checkpoints. */
 export function createImportRepository(db: Db) {
   return {
     create: (source: NewSource, job: NewJob) => create(db, source, job),
-    findJob: (ownerId: string, jobId: string) =>
-      db
-        .selectFrom('import_job')
-        .selectAll()
-        .where('owner_id', '=', ownerId)
-        .where('id', '=', jobId)
-        .executeTakeFirst(),
+    addJob: (job: NewJob) => addJob(db, job),
+    findJob: (ownerId: string, jobId: string) => findJob(db, ownerId, jobId),
     findSource: (ownerId: string, sourceId: string) =>
       db
         .selectFrom('source')

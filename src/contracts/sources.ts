@@ -51,6 +51,13 @@ export const StartImportFields = z
     aiModel: KitModel.optional(),
     /** How the AI helps: checks the answers the rules left open, or reads whole pages. */
     aiMode: z.enum(['verify', 'read']).default('verify'),
+    /** Improvement mode (DEC-04): clean the text and complete questions with too few options. */
+    aiImprove: z.enum(['true', 'false']).default('false'),
+    /** The model of each triage role (DEC-33); the instance's model or default when omitted. */
+    aiFirstModel: KitModel.optional(),
+    aiSecondModel: KitModel.optional(),
+    aiJudgeModel: KitModel.optional(),
+    aiImproverModel: KitModel.optional(),
     /** With source type `answer_key`: the source whose questions this file answers (M6.3). */
     answersFor: z.uuid().optional(),
     /** The user approved an AI cost estimate above their limits (DEC-18). */
@@ -62,6 +69,31 @@ export const StartImportFields = z
     message: 'too_small',
   });
 export type StartImportFields = z.infer<typeof StartImportFields>;
+
+/** The model of each triage role, as an import job keeps it (DEC-33). */
+export const TriageModels = z
+  .object({
+    first: KitModel.optional(),
+    second: KitModel.optional(),
+    judge: KitModel.optional(),
+    improver: KitModel.optional(),
+  })
+  .strict();
+export type TriageModels = z.infer<typeof TriageModels>;
+
+/**
+ * `POST /api/sources/:id/recheck`: the AI triages the source's saved questions again (DEC-33),
+ * as a background job whose report is the import report.
+ */
+export const RecheckRequest = z
+  .object({
+    aiProviderId: KitInstanceId,
+    aiModel: KitModel.optional(),
+    improve: z.boolean().default(false),
+    models: TriageModels.default({}),
+  })
+  .strict();
+export type RecheckRequest = z.infer<typeof RecheckRequest>;
 
 const ImportPageReport = z
   .object({
@@ -88,6 +120,16 @@ export const ImportResponse = z
     /** What the AI step did: `not_used`, `done`, or why it stopped (`invalid_key`, …). */
     aiOutcome: z.string().nullable(),
     errorCode: z.string().nullable(),
+    /** The AI the job ran on (DEC-33): instance, its model, improvement and each role's model. */
+    ai: z
+      .object({
+        instanceId: z.string(),
+        model: z.string().nullable(),
+        improve: z.boolean(),
+        models: TriageModels,
+      })
+      .strict()
+      .nullable(),
     createdAt: z.iso.datetime(),
     finishedAt: z.iso.datetime().nullable(),
     /** Pages that were read by OCR, unreadable, or failed; every other page was read cleanly. */

@@ -1,9 +1,10 @@
-import type {
-  ImportResponse,
-  RecentImportsResponse,
-  MediaListResponse,
-  RetryImportRequest,
-  SourceListResponse,
+import {
+  TriageModels,
+  type ImportResponse,
+  type RecentImportsResponse,
+  type MediaListResponse,
+  type RetryImportRequest,
+  type SourceListResponse,
 } from '../../../../contracts/sources.js';
 import { AppError, notFound } from '../../../platform/errors/index.js';
 import { isId } from '../../../platform/ids.js';
@@ -11,6 +12,18 @@ import type { Actor } from '../../identity/index.js';
 import type { JobRow } from '../adapters/import-repository.js';
 import type { SourcesDeps } from './deps.js';
 import { aiTargetOf } from './verify-with-ai.js';
+
+/** The AI a job ran on, as its report says it (DEC-33). */
+function aiOf(job: JobRow): ImportResponse['ai'] {
+  if (!job.ai_provider_id) return null;
+  const models = TriageModels.safeParse(job.ai_roles);
+  return {
+    instanceId: job.ai_provider_id,
+    model: job.ai_model,
+    improve: job.ai_improve,
+    models: models.success ? models.data : {},
+  };
+}
 
 async function ownedJob(deps: SourcesDeps, actor: Actor, jobId: string) {
   const job = isId(jobId) ? await deps.imports.findJob(actor.accountId, jobId) : undefined;
@@ -39,6 +52,7 @@ export async function getImport(
     questionsReview: job.questions_review,
     aiOutcome: job.ai_outcome,
     errorCode: job.error_code,
+    ai: aiOf(job),
     createdAt: job.created_at.toISOString(),
     finishedAt: job.finished_at?.toISOString() ?? null,
     pages: pages.map((page) => ({
@@ -87,7 +101,7 @@ export async function retryImport(
 ) {
   const { job, source } = await ownedJob(deps, actor, jobId);
   if (!RETRYABLE.has(job.stage)) throw new AppError('not_retryable');
-  if (!source.blob_key) throw new AppError('original_deleted');
+  if (job.ai_mode !== 'recheck' && !source.blob_key) throw new AppError('original_deleted');
   const ai = retryTarget(job, input);
   if (input.aiProviderId && !(await deps.ai.estimateFor(actor.accountId, aiTargetOf(ai)))) {
     throw new AppError('validation_failed', { aiProviderId: 'invalid_value' });

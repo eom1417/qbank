@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AnswerProvenance } from '../../../../contracts/questions.js';
 
 /**
  * The export file, version 1 (FR-18-001): one bank with its chapters, tags, sources (never the
@@ -27,7 +28,7 @@ const ExportQuestion = z
       )
       .max(10),
     answers: z.array(z.string().regex(/^[A-J]$/)).max(10),
-    provenance: z.enum(['source', 'manual', 'ai_suggested', 'conflict', 'missing']),
+    provenance: AnswerProvenance,
     evidence: Text(200).nullable(),
     explanation: Text(20000).nullable(),
     updateNote: Text(5000).nullable(),

@@ -15,6 +15,7 @@
     "start": "node --env-file-if-exists=.env.local dist/src/server/main.js",
     "test": "vitest run",
     "bench:extraction": "node --import tsx src/server/tools/extraction-bench/main.ts",
+    "bench:answers": "node --env-file-if-exists=.env.local --import tsx src/server/tools/answer-bench/main.ts",
     "qbank": "node scripts/qbank.mjs",
     "bench:perf": "vitest run --config vitest.perf.config.ts"
   },

@@ -1,12 +1,12 @@
-import { Alert, Checkbox, MutedText, SelectField, Stack } from '../../design-system/index.js';
+import { Alert, Checkbox, MutedText, Stack } from '../../design-system/index.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { DisclosureNote } from '../providers/DisclosureNote.js';
-import { useAiChoices } from '../providers/ready-providers.js';
+import { TriageFields } from '../providers/TriageFields.js';
+import type { TriageChoiceState } from '../providers/use-triage-choice.js';
 
 /** The user's own AI for this import (optional), what it sends, and cost approval (DEC-18). */
 interface AiChoiceProps {
-  value: string;
-  onChange(id: string): void;
+  triage: TriageChoiceState;
   approval: string[] | null;
   approved: boolean;
   onApprove(approved: boolean): void;
@@ -16,18 +16,12 @@ interface AiChoiceProps {
 }
 
 export function AiChoice(props: AiChoiceProps) {
-  const { value, onChange, approval, approved, onApprove } = props;
+  const { triage, approval, approved, onApprove } = props;
   const { t } = useI18n();
-  const options = [{ value: '', label: t('import.ai.none') }, ...useAiChoices()];
+  const value = triage.request !== null;
   return (
     <Stack>
-      <SelectField
-        label={t('import.ai.label')}
-        options={options}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-      />
-      <MutedText>{t(value ? 'import.ai.with' : 'import.ai.without')}</MutedText>
+      <TriageFields state={triage} />
       {value && (
         <Checkbox
           checked={props.readPages}

@@ -1,6 +1,7 @@
 import { createReadStream } from 'node:fs';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import {
+  RecheckRequest,
   RetryImportRequest,
   StartImportFields,
   type ImportResponse,
@@ -22,6 +23,7 @@ import {
   retryImport,
 } from '../use-cases/manage-imports.js';
 import { startImport } from '../use-cases/start-import.js';
+import { startRecheck } from '../use-cases/start-recheck.js';
 import { suggestFix } from '../use-cases/fix-suggestion.js';
 import { FixSuggestionRequest, type FixSuggestionResponse } from '../../../../contracts/review.js';
 
@@ -116,6 +118,12 @@ export function registerSourceRoutes(
       return suggestFix(deps, actor, request.params.id, target);
     },
   );
+
+  app.post<IdParams>('/api/sources/:id/recheck', async (request): Promise<ImportResponse> => {
+    const actor = await requireActor(request);
+    const input = parseInput(RecheckRequest, request.body ?? {});
+    return getImport(deps, actor, await startRecheck(deps, actor, request.params.id, input));
+  });
 
   app.delete<IdParams>('/api/sources/:id/original', async (request, reply) => {
     await deleteOriginal(deps, await requireActor(request), request.params.id);

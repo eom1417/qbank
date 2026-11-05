@@ -121,7 +121,11 @@ interface ImportJobTable {
   /** The model chosen for that instance; its default when null. */
   ai_model: Generated<string | null>;
   /** 'verify': the AI checks open answers; 'read': it reads whole pages. */
-  ai_mode: Generated<'verify' | 'read'>;
+  ai_mode: Generated<'verify' | 'read' | 'recheck'>;
+  /** Improvement mode (DEC-04). */
+  ai_improve: Generated<boolean>;
+  /** The model of each triage role (`TriageModels`), or null for the instance default. */
+  ai_roles: ColumnType<unknown, string | null | undefined, string>;
   ai_outcome: string | null;
   error_code: string | null;
   attempts: Generated<number>;
@@ -151,7 +155,11 @@ interface QuestionTable {
   stem: string;
   options: ColumnType<unknown, string, string>;
   answer_letter: string | null;
-  answer_provenance: 'source' | 'manual' | 'ai_suggested' | 'conflict' | 'missing';
+  answer_provenance: 'source' | 'manual' | 'ai_suggested' | 'ai_verified' | 'conflict' | 'missing';
+  /** The file's own answer, kept when the AI overturned it (DEC-16). */
+  file_answer: ColumnType<string | null, string | null | undefined, string | null>;
+  /** The triage's deciding reason (DEC-33). */
+  ai_note: ColumnType<string | null, string | null | undefined, string | null>;
   answer_evidence: string | null;
   status: 'detected' | 'needs_review' | 'eligible' | 'excluded' | 'archived';
   review_reasons: ColumnType<string[], string[] | undefined, string[]>;

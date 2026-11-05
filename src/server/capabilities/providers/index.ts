@@ -9,7 +9,7 @@ import { registerModelTestRoute } from './http/test-routes.js';
 export { kitProvider } from './adapters/kit-ai.js';
 /** What imports use of the user's AI: open an instance, and whether a run needs approval. */
 export type ImportAi = ReturnType<typeof kitImportAi>;
-export type { AiFailure, AiProvider } from './domain/ai-provider.js';
+export type { AiFailure, AiProvider, StructuredRequest } from './domain/ai-provider.js';
 
 interface ProvidersSettings {
   aiHost: { url: string; token: string | null };

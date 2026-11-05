@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { AiTarget } from './providers.js';
+import { AnswerProvenance } from './questions.js';
 
 /** How much a question risks a wrong answer in study (FR-09-001). */
 const Severity = z.enum(['high', 'medium', 'low']);
@@ -17,7 +18,7 @@ export const ReviewItem = z
     status: z.enum(['detected', 'needs_review', 'eligible', 'excluded', 'archived']),
     reasons: z.array(z.string()),
     severity: Severity,
-    provenance: z.enum(['source', 'manual', 'ai_suggested', 'conflict', 'missing']),
+    provenance: AnswerProvenance,
     deferred: z.boolean(),
     openReports: z.number().int(),
   })

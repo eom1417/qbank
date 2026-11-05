@@ -71,6 +71,8 @@ function toQuestionResponse(
     tags,
     difficulty: { kind: row.difficulty_kind, value: row.difficulty },
     updateNote: row.update_note,
+    fileAnswer: row.file_answer,
+    aiNote: row.ai_note,
     deferred: row.deferred_at !== null,
     reimportText: readingAside(row.reimport_text),
     pictures,

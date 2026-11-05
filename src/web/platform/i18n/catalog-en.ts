@@ -12,10 +12,12 @@ import { cliLoginEn } from './catalog-cli-login-en.js';
 import { backupEn } from './catalog-backup-en.js';
 import { healthEn } from './catalog-health-en.js';
 import { providersEn } from './catalog-providers-en.js';
+import { triageEn } from './catalog-triage-en.js';
 
 /** English UI strings. catalog-ar.ts must define exactly the same keys (enforced by its type). */
 export const en = {
   ...providersEn,
+  ...triageEn,
   ...localEn,
   ...reviewEn,
   ...duplicatesEn,
@@ -215,6 +217,8 @@ export const en = {
   'ai.status.unreachable':
     'The provider could not be reached. Check the address and your connection.',
   'ai.status.model_missing': 'Your key cannot use this model. Load the models list and pick one.',
+  'ai.status.invalid_output':
+    'The model replied, but not in the expected format. Try again or choose another model.',
   'ai.status.unexpected': 'The server gave an unexpected answer. Check the address.',
   'ai.estimate.approval': 'You will be asked to approve this task first:',
   'ai.reason.over_page_limit': 'more pages than your limit',
@@ -242,13 +246,12 @@ export const en = {
   'import.progress': 'Progress',
   'import.pagesRead': 'Pages read',
   'import.completedNotice': 'Import finished. The questions are in the bank.',
-  'import.ai.label': 'Use my AI to check what the free reading could not decide (optional)',
+  'import.ai.label': 'Use my AI to check the questions and settle their answers (optional)',
   'import.ai.none': 'No AI — free reading only',
-  'import.ai.with':
-    'Free reading runs first; your AI only sees questions it could not decide, plus a small audit sample.',
   'import.ai.without': 'Questions the free reading cannot decide wait for your review.',
   'import.ai.approve': 'I approve this AI use for these files.',
-  'import.ai.done': 'Your AI checked the undecided questions and an audit sample.',
+  'import.ai.done':
+    'Your AI checked every question and settled its answer; only real disputes wait for you.',
   'import.ai.notReady': 'The chosen AI connection is not available; only the free reading ran.',
   'import.ai.stopped':
     'Your AI stopped part-way; everything read so far is kept, the rest waits for review',

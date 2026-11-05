@@ -1,7 +1,7 @@
 import { sql } from 'kysely';
 import type { Db } from '../../../platform/db/index.js';
 import { NO_ID } from '../../../platform/ids.js';
-import type { AnswerProvenance } from '../domain/imported.js';
+import type { QuestionContent } from '../domain/imported.js';
 
 /** A bank's questions for an export, optionally only some chapters (FR-18-003, UAT-071). */
 async function questionsOfBank(
@@ -56,18 +56,12 @@ async function extrasOf(db: Db, ownerId: string, ids: readonly string[]) {
 }
 
 /** One question to restore, with the new ids it maps to (FR-18-005). */
-export interface RestoredQuestion {
+export interface RestoredQuestion extends QuestionContent {
   sourceId: string;
   page: number;
   number: number;
   occurrence: number;
   seq: number;
-  kind: 'mcq' | 'essay';
-  stem: string;
-  options: { letter: string; label: string; text: string }[];
-  answers: string[];
-  provenance: AnswerProvenance;
-  evidence: string | null;
   explanation: string | null;
   updateNote: string | null;
   multiSelect: boolean;

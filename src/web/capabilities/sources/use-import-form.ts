@@ -7,7 +7,7 @@ import { useI18n } from '../../platform/i18n/i18n.js';
 import { createBank } from '../library/api.js';
 import { uploadFile } from './api.js';
 import type { ChosenFile } from './FileOptions.js';
-import { targetOfChoice, useAiChoices, useRememberedChoice } from '../providers/ready-providers.js';
+import { useTriageChoice, type TriageRequest } from '../providers/use-triage-choice.js';
 
 /** The destination value that means "create a new bank with this name" (FR-04-003). */
 export const NEW_BANK = 'new';
@@ -35,24 +35,18 @@ function useDestination(bankId: string) {
  * The upload screen's state: destination, chosen files, created imports, the AI choice.
  * Files are uploaded one by one; a file that fails keeps its row with the reason.
  */
-/** The upload's AI fields: the chosen instance and its model, or none. */
-function aiFields(choice: string, readPages: boolean) {
-  const target = targetOfChoice(choice);
-  const aiMode = target && readPages ? ('read' as const) : ('verify' as const);
-  return { aiProviderId: target?.instanceId ?? '', aiModel: target?.model ?? '', aiMode };
+/** The upload's AI fields: instance, models per role, mode and improvement, or none. */
+function aiFields(request: TriageRequest | null, readPages: boolean) {
+  const aiMode = request && readPages ? ('read' as const) : ('verify' as const);
+  return { triage: request, aiMode };
 }
 
-/** The import's AI: the remembered choice, whole-page reading, and any cost approval. */
+/** The import's AI: the remembered triage choice, whole-page reading, and any cost approval. */
 function useAiOptions() {
-  const [choice, remember] = useRememberedChoice('import', useAiChoices(), '');
+  const triage = useTriageChoice();
   const [ai, setAi] = useState({ approved: false, approval: null as string[] | null });
   const [readPages, setReadPages] = useState(false);
-  /** A new AI choice is remembered, and any earlier approval no longer applies. */
-  const chooseAi = (next: string) => {
-    remember(next);
-    setAi({ approved: false, approval: null });
-  };
-  return { choice, ai, setAi, readPages, setReadPages, chooseAi };
+  return { triage, ai, setAi, readPages, setReadPages };
 }
 
 export function useImportForm(bankId: string) {
@@ -60,12 +54,16 @@ export function useImportForm(bankId: string) {
   const { destination, setDestination, banksVersion, resolveBank } = useDestination(bankId);
   const [files, setFiles] = useState<ChosenFile[]>([]);
   const [jobs, setJobs] = useState<ImportResponse[]>([]);
-  const { choice, ai, setAi, readPages, setReadPages, chooseAi } = useAiOptions();
+  const { triage, ai, setAi, readPages, setReadPages } = useAiOptions();
   const upload = useAction(async () => {
     const target = await resolveBank();
     for (const chosen of files) {
       try {
-        const options = { ...chosen, ...aiFields(choice, readPages), aiApproved: ai.approved };
+        const options = {
+          ...chosen,
+          ...aiFields(triage.request, readPages),
+          aiApproved: ai.approved,
+        };
         const job = await uploadFile(target, chosen.file, options);
         setJobs((previous) => [...previous, job]);
         setFiles((previous) => previous.filter((other) => other.key !== chosen.key));
@@ -91,8 +89,8 @@ export function useImportForm(bankId: string) {
     files,
     setFiles,
     jobs,
-    ai: { ...ai, choice, readPages },
-    chooseAi,
+    ai: { ...ai, readPages },
+    triage,
     setReadPages,
     setAi,
     upload,

@@ -18,6 +18,7 @@ import { useI18n, type MessageKey } from '../../platform/i18n/i18n.js';
 import { fetchImport, FINISHED_STAGES, retryImport } from './api.js';
 import { usePolledImport } from './ImportProgress.js';
 import { MediaCard } from './MediaCard.js';
+import { AiUsed } from './AiUsed.js';
 
 const RETRYABLE = new Set(['failed', 'partial_failure', 'needs_review']);
 
@@ -80,6 +81,7 @@ function Report({ initial }: { initial: ImportResponse }) {
           </MutedText>
         )}
         <AiOutcome outcome={job.aiOutcome} />
+        <AiUsed ai={job.ai} />
         {job.errorCode && (
           <Alert tone="error">
             {t(`import.error.${job.errorCode}` as 'import.error.internal')}

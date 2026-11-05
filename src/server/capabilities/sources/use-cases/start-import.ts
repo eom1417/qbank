@@ -51,12 +51,38 @@ function rangeOf(fields: StartImportFields, pages: number) {
   return { from, to };
 }
 
-/** The job's AI: instance, model and mode, or none at all. */
+/** The model chosen for each triage role (DEC-33), as the job keeps it. */
+const roleModels = (fields: StartImportFields) => ({
+  ...(fields.aiFirstModel ? { first: fields.aiFirstModel } : {}),
+  ...(fields.aiSecondModel ? { second: fields.aiSecondModel } : {}),
+  ...(fields.aiJudgeModel ? { judge: fields.aiJudgeModel } : {}),
+  ...(fields.aiImproverModel ? { improver: fields.aiImproverModel } : {}),
+});
+
+/** The job's AI: instance, models, mode and improvement, or none at all. */
 const aiColumns = (aiProviderId: string | null, fields: StartImportFields) => ({
   ai_provider_id: aiProviderId,
   ai_model: aiProviderId ? (fields.aiModel ?? null) : null,
   ai_mode: aiProviderId ? fields.aiMode : ('verify' as const),
+  ai_improve: aiProviderId !== null && fields.aiImprove === 'true',
+  ai_roles: aiProviderId ? JSON.stringify(roleModels(fields)) : null,
 });
+
+/** Every role's model must be one the instance offers now (an unknown one fails early). */
+async function checkRoleModels(deps: SourcesDeps, actor: Actor, fields: StartImportFields) {
+  const roles = [
+    ['aiFirstModel', fields.aiFirstModel],
+    ['aiSecondModel', fields.aiSecondModel],
+    ['aiJudgeModel', fields.aiJudgeModel],
+    ['aiImproverModel', fields.aiImproverModel],
+  ] as const;
+  for (const [field, model] of roles) {
+    if (!model || !fields.aiProviderId) continue;
+    const target = { instanceId: fields.aiProviderId, model };
+    if (!(await deps.ai.estimateFor(actor.accountId, target)))
+      throw new AppError('validation_failed', { [field]: 'invalid_value' });
+  }
+}
 
 /** With AI chosen, its estimate must be within the user's limits or approved (DEC-18, FR-22-008). */
 async function checkAi(deps: SourcesDeps, actor: Actor, fields: StartImportFields) {
@@ -67,6 +93,7 @@ async function checkAi(deps: SourcesDeps, actor: Actor, fields: StartImportField
   };
   const estimate = await deps.ai.estimateFor(actor.accountId, target);
   if (!estimate) throw new AppError('validation_failed', { aiProviderId: 'invalid_value' });
+  await checkRoleModels(deps, actor, fields);
   if (estimate.needsApproval && fields.aiApproved !== 'true') {
     throw new AppError(
       'approval_required',

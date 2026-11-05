@@ -35,10 +35,12 @@ describe("reading whole pages with the user's AI (scans and hard layouts)", () =
     expect(first).toMatchObject({
       stem: 'Which ECG finding is typical of hyperkalaemia?',
       answer_letter: 'A',
-      answer_provenance: 'ai_suggested',
+      // The printed key, read by the AI, then confirmed by the triage's two solvers (DEC-33).
+      answer_provenance: 'ai_verified',
       explanation: 'Potassium excess peaks the T waves first.',
+      status: 'eligible',
     });
-    expect(first?.review_reasons).toEqual(expect.arrayContaining(['ai_read', 'media_uncertain']));
+    expect(first?.review_reasons).toEqual(['media_uncertain']);
     const media = await app.db().selectFrom('media').selectAll().execute();
     expect(media.filter((m) => m.question_id === first?.id)).toHaveLength(1);
   });

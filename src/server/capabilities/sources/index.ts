@@ -21,6 +21,8 @@ import { createImportWorker } from './worker.js';
 export { extractQuestions } from './use-cases/read-source.js';
 export type { ExtractedQuestion, ReadingMode } from './use-cases/extract-questions.js';
 export { suggestMarks } from './use-cases/suggest-marks.js';
+export { triageAnswers } from './use-cases/triage-answers.js';
+export type { TriageItem, Triaged } from './use-cases/triage-answers.js';
 
 interface SourcesSettings {
   db: Db;

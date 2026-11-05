@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { FAKE_INSTANCES, useFakeAiHost } from '../support/fake-ai-host.js';
 import { ownerWithBank, registeredBrowser, type createClient } from '../support/client.js';
 import { blobCount, runImports, uploadFile, useImportSuite } from '../support/imports.js';
+import { seedQuestions } from '../support/questions.js';
 
 const fakeHost = useFakeAiHost();
 const { app, fixtures } = useImportSuite({ aiHost: () => fakeHost().settings });
@@ -97,12 +98,13 @@ async function importWithAi(owner: Browser, bankId: string, providerId: string) 
 }
 
 describe("the user's AI on top of the rules (cascade, DEC-30)", () => {
-  it('suggests answers for undecided questions only, with their own provenance', async () => {
+  it('reads hand marks, then the triage settles every answer blind (DEC-33)', async () => {
     const { owner, bankId } = await ownerWithAi();
     const job = await importWithAi(owner, bankId, FAKE_INSTANCES.vision);
     expect((await owner.get(`/api/imports/${job.id}`)).json()).toMatchObject({
-      stage: 'needs_review',
+      stage: 'completed',
       aiOutcome: 'done',
+      questionsReview: 0,
     });
     const rows = await app
       .db()
@@ -111,10 +113,13 @@ describe("the user's AI on top of the rules (cascade, DEC-30)", () => {
       .where('source_id', '=', job.sourceId)
       .orderBy('source_number')
       .execute();
-    expect(rows.map((q) => [q.answer_letter, q.answer_provenance, q.review_reasons])).toEqual([
-      ['A', 'ai_suggested', ['ai_suggested']],
-      ['A', 'ai_suggested', ['ai_suggested']],
-      [null, 'missing', ['essay']],
+    // The fake reads mark A; its solvers and judge pick the longest option (fake-triage.ts).
+    expect(
+      rows.map((q) => [q.answer_letter, q.file_answer, q.answer_provenance, q.status]),
+    ).toEqual([
+      ['D', 'A', 'ai_verified', 'eligible'],
+      ['C', 'A', 'ai_verified', 'eligible'],
+      [null, null, 'missing', 'detected'],
     ]);
     expect(fakeHost().asks.at(-1)?.ownerSession).toMatch(/^account:/);
   });
@@ -166,31 +171,50 @@ describe('choosing the model for an import', () => {
       400,
       { aiProviderId: 'invalid_value' },
     ]);
-    const job = (await upload('fake-small')).json() as { id: string };
-    await runImports(app());
-    expect(fakeHost().asks.at(-1)?.body.model).toBe('fake-small');
     const asked = fakeHost().asks.length;
-    await owner.post(`/api/imports/${job.id}/retry`, {});
+    await upload('fake-small');
     await runImports(app());
-    const retried = fakeHost().asks.slice(asked);
-    expect(retried.length).toBeGreaterThan(0);
-    expect(retried.every((ask) => ask.body.model === 'fake-small')).toBe(true);
+    const used = fakeHost().asks.slice(asked);
+    expect(used.length).toBeGreaterThan(0);
+    expect(used.every((ask) => ask.body.model === 'fake-small')).toBe(true);
+  });
+
+  it('runs each triage role on its own model when one is chosen (DEC-33)', async () => {
+    const { owner, bankId } = await ownerWithAi();
+    const asked = fakeHost().asks.length;
+    await uploadFile(app(), owner.cookie(), bankId, fixtures().arabic, {
+      aiProviderId: FAKE_INSTANCES.vision,
+      aiFirstModel: 'fake-large',
+      aiSecondModel: 'fake-small',
+    });
+    await runImports(app());
+    const solvers = fakeHost()
+      .asks.slice(asked)
+      .filter((ask) => ask.body.prompt?.startsWith('You are a careful examiner'));
+    expect(solvers.map((ask) => ask.body.model).sort()).toEqual(['fake-large', 'fake-small']);
+    const refused = await uploadFile(app(), owner.cookie(), bankId, fixtures().arabic, {
+      aiProviderId: FAKE_INSTANCES.vision,
+      aiJudgeModel: 'not-offered',
+    });
+    expect(refused.json().error.fields).toEqual({ aiJudgeModel: 'invalid_value' });
   });
 });
 
 describe("accepting the AI's suggested answer (M6.6, DEC-03)", () => {
   it('makes the question eligible, keeps the AI badge, and only for its owner', async () => {
     const { owner, bankId } = await ownerWithAi();
-    const job = await importWithAi(owner, bankId, FAKE_INSTANCES.vision);
-    const [first, , essay] = await app
-      .db()
-      .selectFrom('question')
-      .select('id')
-      .where('source_id', '=', job.sourceId)
-      .orderBy('source_seq')
-      .execute();
+    // A suggestion the triage did not settle (it did not run, or stopped) waits for the owner.
+    const [first, essay] = await seedQuestions(app.db(), owner, bankId, [
+      {
+        answers: ['A'],
+        provenance: 'ai_suggested',
+        status: 'needs_review',
+        reasons: ['ai_suggested'],
+      },
+      { options: [], answers: [], provenance: 'missing', status: 'detected', reasons: ['essay'] },
+    ]);
     const accept = (browser: Browser) =>
-      browser.post(`/api/questions/${first?.id}/accept-ai-answer`, {});
+      browser.post(`/api/questions/${first}/accept-ai-answer`, {});
     const { browser: stranger } = await registeredBrowser(app());
     expect((await accept(stranger)).statusCode).toBe(404);
     expect((await accept(owner)).json()).toMatchObject({
@@ -200,7 +224,7 @@ describe("accepting the AI's suggested answer (M6.6, DEC-03)", () => {
       reviewReasons: [],
       version: 2,
     });
-    const refused = await owner.post(`/api/questions/${essay?.id}/accept-ai-answer`, {});
+    const refused = await owner.post(`/api/questions/${essay}/accept-ai-answer`, {});
     expect(refused.statusCode).toBe(409);
   });
 });

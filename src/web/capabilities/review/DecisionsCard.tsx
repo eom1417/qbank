@@ -1,6 +1,7 @@
 import type { QuestionResponse } from '../../../contracts/questions.js';
 import { Alert, Badge, Button, Card, Row, Stack } from '../../design-system/index.js';
 import { useAction } from '../../platform/forms/use-submit.js';
+import { AiVerdict } from './AiVerdict.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { decide, type Decision } from './api.js';
 import { reasonLabel } from './labels.js';
@@ -34,6 +35,7 @@ export function DecisionsCard({ question, onChange }: Props) {
             {t('editor.provenance')} {t(`editor.provenance.${question.provenance}`)}
           </Badge>
         </Row>
+        <AiVerdict question={question} />
         <Row>
           {question.reviewReasons.map((reason) => (
             <Badge key={reason}>{reasonLabel(t, reason)}</Badge>

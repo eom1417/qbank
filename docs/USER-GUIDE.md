@@ -33,9 +33,18 @@ out, the old link stops working, and a new link is made.
    files**.
 2. Choose one or more PDFs, and confirm you have the right to use them.
 3. **Leave out pages that identify a patient.**
-4. Optional: choose your AI and its model. Tick **"Let my AI read whole pages"** for scans and
-   complex layouts. It then takes the questions and options, the printed key and explanation, and
-   the pictures.
+4. Optional: choose your AI and **how thorough** it is (high, balanced, economy, or custom, where
+   you pick each role's model). Your AI checks every question: two models answer it on their own
+   without seeing the file's answer, and a stronger one settles any disagreement. When they agree
+   with the file, the question is approved; when the file has no answer, their shared answer is
+   used with a **"verified by AI"** badge; when they and the judge agree against the file, the
+   answer is corrected and **"The file said: …"** stays visible with the reason. Only real disputes
+   come to you.
+   - **"Improve the questions first"** (on by default) fixes spelling, grammar and reading noise,
+     rebuilds a scanned question from its printed options, and gives questions with fewer than 3
+     options plausible wrong ones (4 in all). The original stays in the question history.
+   - Tick **"Let my AI read whole pages"** for scans and complex layouts. It then takes the
+     questions and options, the printed key and explanation, and the pictures.
 5. Press **Upload and start**. The import report says honestly what was read, what waits for your
    review, and what could not be read.
 
@@ -60,6 +69,10 @@ In the editor:
 Press **Approve** to make the question ready to study.
 
 **Duplicate questions** are shown side by side, and you decide: keep both, or exclude one.
+
+**Check again with AI:** in the bank's file list, each file has a button that checks its saved
+questions again with the same choices, even after the original was deleted. Answers you set
+yourself never change.
 
 ## 5. Study
 
@@ -101,6 +114,9 @@ Arabic and English.
 - **Claude:** "Sign in with Claude": approve on the page, then paste the code back.
 - Sign-in works from any device, stays signed in and renews on its own.
 - Each task lets you choose the provider and model, and QBank remembers your choice for each task.
+- **Test** next to each model sends one tiny real request and says whether it works.
+- Provider tools (Claude Code and Codex) **update themselves**, so new models appear without a
+  step from you.
 
 ## 9. Backups and restore
 

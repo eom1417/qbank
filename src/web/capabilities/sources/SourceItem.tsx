@@ -4,6 +4,7 @@ import { Alert, Badge, ConfirmButton, MutedText, Row } from '../../design-system
 import { useAction } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { deleteOriginal, FINISHED_STAGES } from './api.js';
+import { RecheckPanel } from './RecheckPanel.js';
 
 interface SourceItemProps {
   source: SourceListResponse['sources'][number];
@@ -47,6 +48,7 @@ export function SourceItem({ source, onChange }: SourceItemProps) {
         />
       )}
       {remove.error && <Alert tone="error">{t(remove.error)}</Alert>}
+      {finished && source.questions.total > 0 && <RecheckPanel sourceId={source.id} />}
     </li>
   );
 }

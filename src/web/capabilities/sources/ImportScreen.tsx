@@ -11,13 +11,12 @@ import { ImportProgressRow } from './ImportProgress.js';
 function StartCard({ form }: { form: ImportForm }) {
   const { t } = useI18n();
   const [rights, setRights] = useState(false);
-  const { ai, setAi, chooseAi, setReadPages, upload, files, destination } = form;
+  const { ai, setAi, triage, setReadPages, upload, files, destination } = form;
   const missingName = destination.bankId === NEW_BANK && destination.newName.trim() === '';
   return (
     <Card>
       <AiChoice
-        value={ai.choice}
-        onChange={chooseAi}
+        triage={triage}
         readPages={ai.readPages}
         onReadPages={setReadPages}
         approval={ai.approval}

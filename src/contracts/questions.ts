@@ -1,5 +1,19 @@
 import { z } from 'zod';
 
+/**
+ * Where a question's answer came from: source, manual, ai_suggested (a permanent badge,
+ * DEC-03), ai_verified (two solvers or a judge agreed, DEC-33), conflict or missing.
+ */
+export const AnswerProvenance = z.enum([
+  'source',
+  'manual',
+  'ai_suggested',
+  'ai_verified',
+  'conflict',
+  'missing',
+]);
+export type AnswerProvenance = z.infer<typeof AnswerProvenance>;
+
 /** One printed option of a question: its letter, the label as printed, and its text. */
 export const QuestionOption = z
   .object({ letter: z.string(), label: z.string(), text: z.string() })
@@ -18,8 +32,7 @@ export const QuestionResponse = z
     options: z.array(QuestionOption),
     multiSelect: z.boolean(),
     answers: z.array(z.string()),
-    /** source, manual, ai_suggested (a permanent badge, DEC-03), conflict or missing. */
-    provenance: z.enum(['source', 'manual', 'ai_suggested', 'conflict', 'missing']),
+    provenance: AnswerProvenance,
     evidence: z.string().nullable(),
     aiAccepted: z.boolean(),
     /** The author's explanation as printed (FR-07-009). */
@@ -38,6 +51,10 @@ export const QuestionResponse = z
       .strict(),
     /** Newer information, kept apart from the book's answer (FR-24-002). */
     updateNote: z.string().nullable(),
+    /** The file's own answer, when the AI triage overturned it (DEC-16). */
+    fileAnswer: z.string().nullable(),
+    /** The triage's deciding reason (DEC-33). */
+    aiNote: z.string().nullable(),
     /** Left for later in review (M7.3). */
     deferred: z.boolean(),
     /** A re-import's different reading of this edited question, to compare (FR-10-006). */

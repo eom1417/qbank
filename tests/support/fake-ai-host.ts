@@ -1,6 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { afterAll, beforeAll } from 'vitest';
+import { triageReply } from './fake-triage.js';
 
 /** The provider instances the fake host lists; any other instance id is unknown to it. */
 export const FAKE_INSTANCES = {
@@ -95,6 +96,22 @@ const instance = (instanceId: string, enabled: boolean) => ({
   ],
 });
 
+/** The fake's reply to one question: refused when signed out, else per prompt and instance. */
+function answerOf(body: Ask['body'], refusing: ReadonlySet<string>): [number, object] {
+  if (refusing.has(body.instanceId ?? ''))
+    return [422, { error: { _tag: 'AskFailed', reason: 'provider_error', detail: 'signed out' } }];
+  const triage = triageReply(body.prompt ?? '');
+  if (triage) return [200, { text: triage }];
+  const replies: Record<string, string> = {
+    [FAKE_INSTANCES.fixer]: FIX_ANSWER,
+    [FAKE_INSTANCES.explainer]: EXPLAIN_ANSWER,
+    [FAKE_INSTANCES.reader]: PAGE_ANSWER,
+    [FAKE_INSTANCES.pinger]: '{"ok": true}',
+  };
+  const reply = replies[body.instanceId ?? ''] ?? MARK_ANSWER;
+  return [200, { text: `Here it is: ${reply}` }];
+}
+
 /**
  * A local stand-in for ai-host (the T3 AI Providers Kit) speaking its `/state` and `/ask`
  * routes: no CLI, no account, deterministic. `refusing` is mutable so a test can "sign in".
@@ -102,21 +119,7 @@ const instance = (instanceId: string, enabled: boolean) => ({
 export async function startFakeAiHost() {
   const asks: Ask[] = [];
   const refusing = new Set<string>([FAKE_INSTANCES.refusing]);
-  const answer = (body: Ask['body']): [number, object] => {
-    if (refusing.has(body.instanceId ?? ''))
-      return [
-        422,
-        { error: { _tag: 'AskFailed', reason: 'provider_error', detail: 'signed out' } },
-      ];
-    const replies: Record<string, string> = {
-      [FAKE_INSTANCES.fixer]: FIX_ANSWER,
-      [FAKE_INSTANCES.explainer]: EXPLAIN_ANSWER,
-      [FAKE_INSTANCES.reader]: PAGE_ANSWER,
-      [FAKE_INSTANCES.pinger]: '{"ok": true}',
-    };
-    const reply = replies[body.instanceId ?? ''] ?? MARK_ANSWER;
-    return [200, { text: `Here it is: ${reply}` }];
-  };
+  const answer = (body: Ask['body']) => answerOf(body, refusing);
   const server = createServer((request, response) => {
     void readJson(request).then((body) => {
       if (request.headers.authorization !== `Bearer ${FAKE_HOST_TOKEN}`)

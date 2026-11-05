@@ -13,9 +13,11 @@ import { cliLoginAr } from './catalog-cli-login-ar.js';
 import { backupAr } from './catalog-backup-ar.js';
 import { healthAr } from './catalog-health-ar.js';
 import { providersAr } from './catalog-providers-ar.js';
+import { triageAr } from './catalog-triage-ar.js';
 
 export const ar: Record<MessageKey, string> = {
   ...providersAr,
+  ...triageAr,
   ...localAr,
   ...reviewAr,
   ...duplicatesAr,
@@ -199,6 +201,8 @@ export const ar: Record<MessageKey, string> = {
   'ai.status.rate_limited': 'المزوّد يحدّ الطلبات الآن. حاول بعد بضع دقائق.',
   'ai.status.unreachable': 'تعذّر الوصول إلى المزوّد. تحقق من العنوان والاتصال.',
   'ai.status.model_missing': 'مفتاحك لا يستطيع استخدام هذا النموذج. حمّل قائمة النماذج واختر منها.',
+  'ai.status.invalid_output':
+    'ردّ النموذج لكن ليس بالصيغة المطلوبة. أعد المحاولة أو اختر نموذجاً آخر.',
   'ai.status.unexpected': 'ردّ الخادم بإجابة غير متوقعة. تحقق من العنوان.',
   'ai.estimate.approval': 'سنطلب موافقتك على هذه المهمة أولاً:',
   'ai.reason.over_page_limit': 'صفحاتها أكثر من حدك',
@@ -226,13 +230,11 @@ export const ar: Record<MessageKey, string> = {
   'import.progress': 'التقدّم',
   'import.pagesRead': 'الصفحات المقروءة',
   'import.completedNotice': 'اكتمل الاستيراد، والأسئلة في البنك.',
-  'import.ai.label': 'استخدم الذكاء الاصطناعي الخاص بي لما لم تحسمه القراءة المجانية (اختياري)',
+  'import.ai.label': 'استخدم الذكاء الاصطناعي الخاص بي لفحص الأسئلة وحسم إجاباتها (اختياري)',
   'import.ai.none': 'بلا AI — القراءة المجانية فقط',
-  'import.ai.with':
-    'القراءة المجانية تعمل أولاً، ونموذجك يرى فقط الأسئلة التي لم تُحسم، مع عينة تدقيق صغيرة.',
   'import.ai.without': 'الأسئلة التي لا تحسمها القراءة المجانية تنتظر مراجعتك.',
   'import.ai.approve': 'أوافق على استخدام AI لهذه الملفات.',
-  'import.ai.done': 'راجع نموذجك الأسئلة غير المحسومة وعينة تدقيق.',
+  'import.ai.done': 'فحص ذكاؤك الاصطناعي كل الأسئلة وحسم إجاباتها؛ لا يصلك إلا الخلاف الحقيقي.',
   'import.ai.notReady': 'اتصال AI المختار غير متاح، فعملت القراءة المجانية فقط.',
   'import.ai.stopped': 'توقف نموذجك في المنتصف؛ كل ما قُرئ محفوظ، والباقي ينتظر المراجعة',
   'import.report.title': 'تقرير الاستيراد',
