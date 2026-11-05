@@ -206,7 +206,8 @@ export const en = {
     "That provider's own terms and privacy policy apply. We cannot guarantee what it does with the content.",
   'ai.status.unchecked': 'Not checked yet',
   'ai.status.ready': 'Ready',
-  'ai.status.invalid_key': 'The key was refused. Check it, or add a new key.',
+  'ai.status.invalid_key':
+    'The provider refused the request. Check the sign-in on the AI providers page, or test another model.',
   'ai.status.no_permission': 'The key does not have permission for this model.',
   'ai.status.no_quota': 'The provider account has no credit or quota left.',
   'ai.status.rate_limited':

@@ -107,6 +107,7 @@ async function main() {
   start('AI host', node24(), [join(ROOT, 'ai-host/src/main.ts')], {
     AI_HOST_TOKEN: token,
     AI_HOST_PORT,
+    AI_HOST_AUTO_UPDATE: '1',
     AI_HOST_HOME: join(DATA_DIR, 'ai-host'),
   });
   start('QBank', process.execPath, [join(ROOT, 'dist/src/server/main.js')], {

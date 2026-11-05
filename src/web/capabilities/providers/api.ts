@@ -2,7 +2,9 @@ import { ErrorResponse } from '../../../contracts/errors.js';
 import {
   AuthStateView,
   DriverListResponse,
+  ModelTestResponse,
   ProviderStateResponse,
+  type AiTarget,
   type KitMethod,
 } from '../../../contracts/providers.js';
 import { apiRaw, apiRequest, ApiError } from '../../platform/api/client.js';
@@ -12,6 +14,10 @@ export class KitError extends Error {}
 
 export const fetchProviderState = () =>
   apiRequest('GET', '/api/providers/state', ProviderStateResponse);
+
+/** One tiny real turn on a model (local mode): whether it runs, or why not. */
+export const testModel = async (target: AiTarget) =>
+  (await apiRequest('POST', '/api/providers/test', ModelTestResponse, target)).status;
 
 export const fetchDrivers = () => apiRequest('GET', '/api/providers/drivers', DriverListResponse);
 

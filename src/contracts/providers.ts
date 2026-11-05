@@ -191,6 +191,12 @@ export const AiTarget = z
   .strict();
 export type AiTarget = z.infer<typeof AiTarget>;
 
+/** `POST /api/providers/test`: one tiny real turn on a model, so the user knows it runs. */
+export const ModelTestResponse = z
+  .object({ status: z.union([AiOutcomeStatus, z.literal('invalid_output')]) })
+  .strict();
+export type ModelTestResponse = z.infer<typeof ModelTestResponse>;
+
 /**
  * Sign-in through a provider's official CLI (ai-host cli-login), for providers the kit can only
  * sign in from a terminal. Credentials stay in the AI host's home and refresh on their own.

@@ -13,6 +13,8 @@ export interface HostConfig {
    * holds its settings and secrets), so a prompt in a user's PDF finds nothing to read there.
    */
   readonly cwd: string;
+  /** Keeps provider CLIs current on its own (`AI_HOST_AUTO_UPDATE=1`); off for test hosts. */
+  readonly autoUpdate: boolean;
 }
 
 const MIN_TOKEN_LENGTH = 32;
@@ -27,5 +29,6 @@ export function readConfig(env: NodeJS.ProcessEnv): HostConfig {
   const port = Number(env['AI_HOST_PORT'] ?? 3790);
   if (!Number.isInteger(port) || port <= 0 || port > 65535)
     throw new Error('AI_HOST_PORT is invalid');
-  return { port, token, home, cwd: env['AI_HOST_CWD'] ?? join(home, 'workdir') };
+  const cwd = env['AI_HOST_CWD'] ?? join(home, 'workdir');
+  return { port, token, home, cwd, autoUpdate: env['AI_HOST_AUTO_UPDATE'] === '1' };
 }

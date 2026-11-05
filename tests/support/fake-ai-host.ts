@@ -16,6 +16,8 @@ export const FAKE_INSTANCES = {
   explainer: 'fake-explainer',
   /** Reads a whole page: two questions, a printed key for the first, one picture. */
   reader: 'fake-reader',
+  /** Answers the model test's connection check. */
+  pinger: 'fake-pinger',
 } as const;
 
 /** The reader's reply for every page: what a model returns for a page it can read. */
@@ -110,6 +112,7 @@ export async function startFakeAiHost() {
       [FAKE_INSTANCES.fixer]: FIX_ANSWER,
       [FAKE_INSTANCES.explainer]: EXPLAIN_ANSWER,
       [FAKE_INSTANCES.reader]: PAGE_ANSWER,
+      [FAKE_INSTANCES.pinger]: '{"ok": true}',
     };
     const reply = replies[body.instanceId ?? ''] ?? MARK_ANSWER;
     return [200, { text: `Here it is: ${reply}` }];
@@ -126,6 +129,7 @@ export async function startFakeAiHost() {
           instance(FAKE_INSTANCES.fixer, true),
           instance(FAKE_INSTANCES.explainer, true),
           instance(FAKE_INSTANCES.reader, true),
+          instance(FAKE_INSTANCES.pinger, true),
         ];
         return respond(response, 200, { providers, settings: { providerInstances: {} } });
       }

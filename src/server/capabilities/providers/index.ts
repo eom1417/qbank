@@ -4,6 +4,7 @@ import type { RequireActor } from '../identity/index.js';
 import { kitImportAi } from './adapters/kit-imports.js';
 import { registerProviderRoutes } from './http/routes.js';
 import { registerLoginRoutes } from './http/login-routes.js';
+import { registerModelTestRoute } from './http/test-routes.js';
 
 export { kitProvider } from './adapters/kit-ai.js';
 /** What imports use of the user's AI: open an instance, and whether a run needs approval. */
@@ -29,7 +30,9 @@ export function createProviders(settings: ProvidersSettings) {
     importAi: kitImportAi(client),
     register: (app: FastifyInstance) => {
       registerProviderRoutes(app, client, settings.requireActor, settings.manage);
-      if (settings.manage) registerLoginRoutes(app, client, settings.requireActor);
+      if (!settings.manage) return;
+      registerLoginRoutes(app, client, settings.requireActor);
+      registerModelTestRoute(app, client, settings.requireActor);
     },
   };
 }

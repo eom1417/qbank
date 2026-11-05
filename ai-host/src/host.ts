@@ -1,6 +1,7 @@
 import { mkdirSync } from 'node:fs';
 import * as Effect from 'effect/Effect';
 
+import { autoUpdateClis } from './bridge/auto-update.ts';
 import { makeProviderInstallation } from './bridge/install.ts';
 import { streamMethods, unaryMethods } from './bridge/methods.ts';
 import { readConfig } from './config.ts';
@@ -24,6 +25,7 @@ const server = startServer(
   config,
 );
 await runtime.runPromise(Effect.logInfo(`ai-host listening on 127.0.0.1:${config.port}`));
+if (config.autoUpdate) runtime.runFork(autoUpdateClis);
 
 const stop = () => {
   server.close();
