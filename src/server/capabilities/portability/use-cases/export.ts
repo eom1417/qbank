@@ -24,6 +24,12 @@ async function ownedBank(deps: PortabilityDeps, actor: Actor, bankId: string) {
 /** The chapters the owner chose, or every one (FR-18-003, UAT-071). */
 const chosen = (chapterIds: readonly string[]) => (chapterIds.length > 0 ? chapterIds : null);
 
+/** A set difficulty, by the owner or inferred; none when unset (FR-11-005). */
+function difficultyOf(row: Rows[number]): ExportQuestion['difficulty'] {
+  if (row.difficulty_kind === 'unset' || row.difficulty === null) return null;
+  return { kind: row.difficulty_kind, value: row.difficulty };
+}
+
 function toExportQuestion(row: Rows[number], extras: Extras): ExportQuestion {
   return {
     id: row.id,
@@ -41,6 +47,11 @@ function toExportQuestion(row: Rows[number], extras: Extras): ExportQuestion {
     explanation: row.explanation,
     updateNote: row.update_note,
     multiSelect: row.multi_select,
+    studyNote: row.study_note as ExportQuestion['studyNote'],
+    aiChanges: row.ai_changes,
+    fileAnswer: row.file_answer,
+    aiNote: row.ai_note,
+    difficulty: difficultyOf(row),
     chapterId: row.chapter_id,
     topicId: row.topic_id,
     status: row.status === 'archived' ? 'excluded' : row.status,

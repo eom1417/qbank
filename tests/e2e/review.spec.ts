@@ -6,6 +6,10 @@ const fixtures = usePdfFixtures();
 test('review: open a question from the queue, set its answer, see the change, approve it (UI-10, UI-11)', async ({
   page,
 }) => {
+  const keyWarnings: string[] = [];
+  page.on('console', (m) => {
+    if (m.text().includes('same key')) keyWarnings.push(m.text());
+  });
   await importedEnglishBank(page, 'review', fixtures().english);
   await page.getByRole('link', { name: 'راجع الأسئلة' }).click();
   await expect(page.getByRole('heading', { name: 'المراجعة' })).toBeVisible();
@@ -17,6 +21,7 @@ test('review: open a question from the queue, set its answer, see the change, ap
   await expect(page.locator('.qb-diff ins').first()).toBeVisible();
   await page.getByRole('link', { name: 'المراجعة' }).click();
   await expect(page.getByText('ينتظرك: 6')).toBeVisible();
+  expect(keyWarnings).toEqual([]);
 });
 
 test('review: hide a question, bring it back, write a private note, and bulk-approve only safe ones', async ({

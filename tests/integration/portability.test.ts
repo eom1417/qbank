@@ -1,20 +1,20 @@
-import { zipSync, unzipSync } from 'fflate';
+import { zipSync } from 'fflate';
 import { describe, expect, it } from 'vitest';
 import { ownerWithBank, registeredBrowser, type createClient } from '../support/client.js';
-import { restoreZip, runImports, uploadFile, useImportSuite } from '../support/imports.js';
+import {
+  exportZip as exportOf,
+  restoreZip,
+  runImports,
+  uploadFile,
+  useImportSuite,
+} from '../support/imports.js';
 import { seedQuestions } from '../support/questions.js';
 import { answer, startTutor } from '../support/study.js';
 
 const { app, fixtures } = useImportSuite();
 type Browser = ReturnType<typeof createClient>;
 
-async function exportZip(owner: Browser, bankId: string, chapters = '') {
-  const response = await app().inject({
-    url: `/api/banks/${bankId}/export${chapters}`,
-    headers: { cookie: owner.cookie() },
-  });
-  return { response, files: unzipSync(new Uint8Array(response.rawPayload)) };
-}
+const exportZip = (owner: Browser, bankId: string) => exportOf(app(), owner.cookie(), bankId);
 
 const restore = (owner: Browser, bytes: Uint8Array) => restoreZip(app(), owner.cookie(), bytes);
 

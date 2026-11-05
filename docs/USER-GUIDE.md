@@ -136,7 +136,7 @@ Arabic and English.
 - **"Restore…"** shows what comes back against what is here now, and backs up today's state first.
 - **A copy off this computer:** type the path of a folder your cloud app syncs (Google Drive,
   iCloud, OneDrive), and every backup is copied there.
-- **Export a bank** to a ZIP file, and restore it as a new bank. The file holds no keys or sign-ins.
+- **Export a bank** to a ZIP file, and restore it as a new bank. The file holds no keys or sign-ins; it keeps the AI's work (study notes, change badges, "the file says", difficulty).
 - **Deleting a bank, or all your data,** shows what goes before anything happens.
 
 ## 10. When something goes wrong

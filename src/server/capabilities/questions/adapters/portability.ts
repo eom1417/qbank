@@ -1,6 +1,7 @@
 import { sql } from 'kysely';
 import type { Db } from '../../../platform/db/index.js';
 import { NO_ID } from '../../../platform/ids.js';
+import type { SavedStudyNote } from '../../../../contracts/questions.js';
 import type { QuestionContent } from '../domain/imported.js';
 
 /** A bank's questions for an export, optionally only some chapters (FR-18-003, UAT-071). */
@@ -65,6 +66,11 @@ export interface RestoredQuestion extends QuestionContent {
   explanation: string | null;
   updateNote: string | null;
   multiSelect: boolean;
+  studyNote: SavedStudyNote | null;
+  aiChanges: string[];
+  fileAnswer: string | null;
+  aiNote: string | null;
+  difficulty: { kind: 'manual' | 'inferred'; value: number } | null;
   chapterId: string | null;
   topicId: string | null;
   status: 'detected' | 'needs_review' | 'eligible' | 'excluded';
@@ -183,6 +189,12 @@ async function restoreQuestions(
         explanation: q.explanation,
         update_note: q.updateNote,
         multi_select: q.multiSelect,
+        study_note: q.studyNote ? JSON.stringify(q.studyNote) : null,
+        ai_changes: q.aiChanges,
+        file_answer: q.fileAnswer,
+        ai_note: q.aiNote,
+        difficulty: q.difficulty?.value ?? null,
+        difficulty_kind: q.difficulty?.kind ?? 'unset',
         chapter_id: q.chapterId,
         topic_id: q.topicId,
         classification: q.chapterId ? 'manual' : 'none',

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AnswerProvenance } from '../../../../contracts/questions.js';
+import { AnswerProvenance, SavedStudyNote } from '../../../../contracts/questions.js';
 
 /**
  * The export file, version 1 (FR-18-001): one bank with its chapters, tags, sources (never the
@@ -33,6 +33,20 @@ const ExportQuestion = z
     explanation: Text(20000).nullable(),
     updateNote: Text(5000).nullable(),
     multiSelect: z.boolean(),
+    /** The AI's study note and what it changed (DEC-34); absent in files made before M20. */
+    studyNote: SavedStudyNote.nullable().default(null),
+    aiChanges: z
+      .array(z.string().regex(/^[a-z_]{1,40}$/))
+      .max(20)
+      .default([]),
+    /** The file's answer the AI overturned, and why (DEC-16, DEC-33). */
+    fileAnswer: Text(20).nullable().default(null),
+    aiNote: Text(5000).nullable().default(null),
+    difficulty: z
+      .object({ kind: z.enum(['manual', 'inferred']), value: z.number().int().min(1).max(5) })
+      .strict()
+      .nullable()
+      .default(null),
     chapterId: Id.nullable(),
     topicId: Id.nullable(),
     status: z.enum(['detected', 'needs_review', 'eligible', 'excluded']),

@@ -42,12 +42,12 @@ function QuestionCards({ question, onChange, extras }: CardsProps) {
       <DecisionsCard question={question} onChange={onChange} />
       <StudyNoteCard note={question.studyNote} />
       {extras?.(question, onChange)}
-      <QuestionForm key={question.version} question={question} onSaved={onChange} />
+      <QuestionForm key={`form-${question.version}`} question={question} onSaved={onChange} />
       <PicturesCard question={question} />
       <FixCard question={question} onApplied={onChange} />
       <ReportsCard questionId={question.id} />
       <NotesCard questionId={question.id} />
-      <HistoryCard key={question.version} question={question} onRestored={onChange} />
+      <HistoryCard key={`history-${question.version}`} question={question} onRestored={onChange} />
       <DeleteCard
         questionId={question.id}
         onDeleted={() => void navigate(`/banks/${question.bankId}/review`)}

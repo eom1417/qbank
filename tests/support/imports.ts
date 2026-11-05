@@ -1,3 +1,4 @@
+import { unzipSync } from 'fflate';
 import { readdirSync } from 'node:fs';
 import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
@@ -81,4 +82,13 @@ export function restoreZip(app: FastifyInstance, cookie: string, bytes: Uint8Arr
     headers: { origin: ORIGIN, cookie, 'content-type': body.contentType },
     payload: body.payload,
   });
+}
+
+/** Exports a bank as its owner would download it: the response and the ZIP's files. */
+export async function exportZip(app: FastifyInstance, cookie: string, bankId: string, query = '') {
+  const response = await app.inject({
+    url: `/api/banks/${bankId}/export${query}`,
+    headers: { cookie },
+  });
+  return { response, files: unzipSync(new Uint8Array(response.rawPayload)) };
 }
