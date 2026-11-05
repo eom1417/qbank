@@ -2,8 +2,12 @@
 // generated or third-party files are never hand-edited). Usage:
 //   node scripts/vendor-lock.mjs --write   record vendor/<name>/ in vendor/<name>.lock.json
 //   node scripts/vendor-lock.mjs --check   fail when any vendored file was added, removed or changed
+//   node scripts/vendor-lock.mjs --restore rebuild vendor/<name>/ from its pinned archive, then check
+// The archive vendor/<name>.tar.xz is the import itself; its SHA-256 is pinned in the lock, so the
+// tree is reproduced from it byte for byte (Genesis' proof that generated files regenerate).
+import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import console from 'node:console';
 import process from 'node:process';
@@ -41,18 +45,40 @@ function differences(expected, actual) {
   return changed;
 }
 
-const packages = readdirSync(ROOT).filter((name) => statSync(join(ROOT, name)).isDirectory());
+/** Extracts a package from its archive after checking the archive against the pinned digest. */
+function restore(name, lock) {
+  const archive = join(ROOT, `${name}.tar.xz`);
+  if (!existsSync(archive) || digest(archive) !== lock.archive) {
+    console.log(`FAIL: ${name}: its archive is missing or differs from the pinned SHA-256`);
+    return false;
+  }
+  execFileSync('tar', ['-xJf', archive, '-C', ROOT]);
+  return true;
+}
+
 const mode = process.argv[2];
+const packages =
+  mode === '--write'
+    ? readdirSync(ROOT).filter((name) => statSync(join(ROOT, name)).isDirectory())
+    : readdirSync(ROOT)
+        .filter((name) => name.endsWith('.lock.json'))
+        .map((name) => name.slice(0, -'.lock.json'.length));
 let failed = false;
 for (const name of packages) {
   const lockPath = join(ROOT, `${name}.lock.json`);
-  const actual = snapshot(name);
   if (mode === '--write') {
-    writeFileSync(lockPath, `${JSON.stringify({ files: actual }, null, 1)}\n`);
-    console.log(`${name}: ${Object.keys(actual).length} files recorded`);
+    const archive = join(ROOT, `${name}.tar.xz`);
+    const pinned = existsSync(archive) ? { archive: digest(archive) } : {};
+    writeFileSync(lockPath, `${JSON.stringify({ ...pinned, files: snapshot(name) }, null, 1)}\n`);
+    console.log(`${name}: ${Object.keys(snapshot(name)).length} files recorded`);
     continue;
   }
-  const changed = differences(JSON.parse(readFileSync(lockPath, 'utf8')).files, actual);
+  const lock = JSON.parse(readFileSync(lockPath, 'utf8'));
+  if (mode === '--restore' && !restore(name, lock)) {
+    failed = true;
+    continue;
+  }
+  const changed = differences(lock.files, snapshot(name));
   if (changed.length > 0) failed = true;
   console.log(
     changed.length === 0
@@ -60,8 +86,8 @@ for (const name of packages) {
       : `FAIL: ${name}\n${changed.join('\n')}`,
   );
 }
-if (mode !== '--write' && mode !== '--check') {
-  console.error('usage: node scripts/vendor-lock.mjs --write | --check');
+if (!['--write', '--check', '--restore'].includes(mode)) {
+  console.error('usage: node scripts/vendor-lock.mjs --write | --check | --restore');
   process.exit(2);
 }
 process.exit(failed ? 1 : 0);

@@ -14,26 +14,26 @@
     ".python-version", ".tool-versions", "*.example", "pre-commit", "pre-push", "commit-msg"
   ],
   "asset_extensions": [],
-  "asset_patterns": [],
+  "asset_patterns": ["vendor/*.tar.xz"],
   "generated": [
     {
       "pattern": "vendor/t3-ai-providers-kit/*",
       "reason": "T3 AI Providers Kit (MIT, pingdotgg/t3code), vendored byte-for-byte by owner decision DEC-30; third-party code, never hand-edited",
-      "regenerate": "replace vendor/t3-ai-providers-kit with a new kit release, then run node scripts/vendor-lock.mjs --write",
+      "regenerate": "replace vendor/t3-ai-providers-kit.tar.xz with a new kit release (a reproducible tar.xz of the kit folder), extract it, then run node scripts/vendor-lock.mjs --write",
       "verify": [
         "node",
         "scripts/vendor-lock.mjs",
-        "--check"
+        "--restore"
       ]
     },
     {
       "pattern": "vendor/*.lock.json",
-      "reason": "SHA-256 of every vendored file, written by scripts/vendor-lock.mjs",
+      "reason": "SHA-256 of the pinned kit archive and of every vendored file, written by scripts/vendor-lock.mjs",
       "regenerate": "node scripts/vendor-lock.mjs --write",
       "verify": [
         "node",
         "scripts/vendor-lock.mjs",
-        "--check"
+        "--write"
       ]
     }
   ],
