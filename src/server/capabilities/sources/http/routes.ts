@@ -1,4 +1,3 @@
-import { createReadStream } from 'node:fs';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import {
   RecheckRequest,
@@ -9,6 +8,7 @@ import {
   type SourceListResponse,
 } from '../../../../contracts/sources.js';
 import { AppError } from '../../../platform/errors/index.js';
+import { sendPng } from '../../../platform/http/send-png.js';
 import { parseInput } from '../../../platform/http/validate.js';
 import type { RequireActor } from '../../identity/index.js';
 import type { SourcesDeps } from '../use-cases/deps.js';
@@ -102,12 +102,7 @@ export function registerSourceRoutes(
   );
 
   app.get<IdParams>('/api/media/:id', async (request, reply) => {
-    const path = await mediaFile(deps, await requireActor(request), request.params.id);
-    return reply
-      .type('image/png')
-      .header('cache-control', 'private, max-age=3600')
-      .header('x-content-type-options', 'nosniff')
-      .send(createReadStream(path));
+    return sendPng(reply, await mediaFile(deps, await requireActor(request), request.params.id));
   });
 
   app.post<IdParams>(

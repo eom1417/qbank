@@ -1,3 +1,4 @@
+import type { ChannelTables } from './schema-channels.js';
 import type { ColumnType, Generated } from 'kysely';
 
 type CreatedAt = ColumnType<Date, Date | undefined, never>;
@@ -310,7 +311,7 @@ interface QuestionMarkTable {
   updated_at: Date;
 }
 
-export interface Database {
+export interface Database extends ChannelTables {
   account: AccountTable;
   auth_session: AuthSessionTable;
   bank: BankTable;

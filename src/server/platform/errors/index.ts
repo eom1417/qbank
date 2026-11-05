@@ -31,6 +31,7 @@ const STATUS: Record<ErrorCode, number> = {
   backup_too_new: 409,
   ai_host_unavailable: 503,
   ai_host_busy: 503,
+  channel_paused: 409,
   internal: 500,
 };
 

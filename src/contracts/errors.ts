@@ -32,6 +32,7 @@ export const ErrorCode = z.enum([
   'backup_too_new',
   'ai_host_unavailable',
   'ai_host_busy',
+  'channel_paused',
   'internal',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;

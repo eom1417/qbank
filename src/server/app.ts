@@ -6,6 +6,7 @@ import {
   type RequireActor,
 } from './capabilities/identity/index.js';
 import { createBackups, type Backups } from './capabilities/backup/index.js';
+import { createChannels } from './capabilities/channels/index.js';
 import { registerHealth } from './capabilities/health/index.js';
 import { createPortability } from './capabilities/portability/index.js';
 import { createLibrary } from './capabilities/library/index.js';
@@ -112,6 +113,15 @@ function registerContent(app: FastifyInstance, deps: ContentDeps, identity: Iden
     ai: providers.importAi,
   });
   study.register(app);
+  createChannels({
+    db: deps.db,
+    clock: deps.clock,
+    newId,
+    requireActor: identity.requireActor,
+    questions,
+    ownsBank: library.ownsBank,
+    pathOf: blobs.pathOf,
+  }).register(app);
   createPortability(
     {
       library,

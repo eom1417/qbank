@@ -23,6 +23,13 @@ module.exports = {
       to: { path: CAP + '.+/', pathNot: ['^src/server/capabilities/$1/', CAP + 'index\\.ts$'] },
     },
     {
+      name: 'channels-apart-from-study',
+      comment: 'DEC-36: a publishing channel never reads or writes study, nor study a channel.',
+      severity: 'error',
+      from: { path: '^src/(server|web)/capabilities/(channels|study)/' },
+      to: { path: '^src/(server|web)/capabilities/(channels|study)/', pathNot: '^src/$1/capabilities/$2/' },
+    },
+    {
       name: 'platform-owns-no-business',
       severity: 'error',
       from: { path: '^src/(server|web)/platform/' },

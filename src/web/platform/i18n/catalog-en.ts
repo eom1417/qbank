@@ -13,11 +13,13 @@ import { backupEn } from './catalog-backup-en.js';
 import { healthEn } from './catalog-health-en.js';
 import { providersEn } from './catalog-providers-en.js';
 import { triageEn } from './catalog-triage-en.js';
+import { channelsEn } from './catalog-channels-en.js';
 
 /** English UI strings. catalog-ar.ts must define exactly the same keys (enforced by its type). */
 export const en = {
   ...providersEn,
   ...triageEn,
+  ...channelsEn,
   ...localEn,
   ...reviewEn,
   ...duplicatesEn,
@@ -87,6 +89,7 @@ export const en = {
   'error.question_locked': 'The time for this question is over; its answer can no longer change.',
   'error.pairing_required':
     'That pairing code is not right. Copy it again from the computer running QBank.',
+  'error.channel_paused': 'This channel is paused. Resume it to send again.',
   'error.backup_too_new': 'This backup comes from a newer QBank. Update QBank, then restore it.',
   'error.page_too_large':
     'A page of this file is larger than any book page (over 70 cm). Export it again at a normal page size.',

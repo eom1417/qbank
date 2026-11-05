@@ -101,7 +101,7 @@ export function createMediaRepository(db: Db, newId: () => string) {
     findMedia: (ownerId: string, mediaId: string) =>
       db
         .selectFrom('media')
-        .select(['blob_key', 'source_id'])
+        .select(['blob_key', 'source_id', 'question_id'])
         .where('owner_id', '=', ownerId)
         .where('id', '=', mediaId)
         .executeTakeFirst(),

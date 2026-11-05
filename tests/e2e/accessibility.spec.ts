@@ -72,7 +72,14 @@ async function auditEverything(page: Page, locale: string, theme: string) {
     (await page.locator('a[href^="/questions/"]').first().getAttribute('href')) ?? '';
   const session = `/study/sessions/${await answeredTutor(page, bankId)}`;
   const screens = ['/', bank, `${bank}/review`, `${bank}/import`, `${bank}/export`];
-  screens.push(`${bank}/duplicates`, question, '/study', '/study/plan', session);
+  screens.push(
+    `${bank}/duplicates`,
+    `${bank}/channels`,
+    question,
+    '/study',
+    '/study/plan',
+    session,
+  );
   screens.push(`${session}/summary`, '/analytics', '/search', '/settings', '/help', '/privacy');
   for (const url of screens) await expectAccessible(page, url);
   // The answered question says right and wrong in symbols and words, not colour alone.

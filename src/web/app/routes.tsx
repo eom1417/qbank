@@ -28,6 +28,7 @@ import { TutorScreen } from '../capabilities/study/TutorScreen.js';
 import { ReviewLink } from '../capabilities/review/ReviewLink.js';
 import { ReviewScreen } from '../capabilities/review/ReviewScreen.js';
 import { TopicCardsScreen } from '../capabilities/review/TopicCardsScreen.js';
+import { ChannelsLink, ChannelsScreen } from '../capabilities/channels/ChannelsScreen.js';
 import { ImportReportScreen } from '../capabilities/sources/ImportReportScreen.js';
 import { ImportScreen } from '../capabilities/sources/ImportScreen.js';
 import { SourcesCard } from '../capabilities/sources/SourcesCard.js';
@@ -52,6 +53,7 @@ export const router = createBrowserRouter([
                   <StudyLink bankId={bankId} />
                   <ReviewLink bankId={bankId} />
                   <DuplicatesLink bankId={bankId} />
+                  <ChannelsLink bankId={bankId} />
                   <SourcesCard bankId={bankId} />
                   <BankDangerCard bankId={bankId} />
                 </>
@@ -65,6 +67,14 @@ export const router = createBrowserRouter([
         element: (
           <Private>
             <ReviewScreen />
+          </Private>
+        ),
+      },
+      {
+        path: '/banks/:bankId/channels',
+        element: (
+          <Private>
+            <ChannelsScreen />
           </Private>
         ),
       },
