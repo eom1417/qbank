@@ -111,6 +111,11 @@ class KitShapeTests(RepoCase):
         self.assertEqual(done.returncode, 0, done.stdout)
 
     def test_kit_root_holds_only_entry_files(self):
+        # DEC-27 (owner): this shape check is about the kit's own repository. A real project
+        # (one with a name in engineering.json) keeps its own folders at the root.
+        project = json.loads((KIT / 'engineering.json').read_text(encoding='utf-8')).get('project')
+        if project not in (None, '', 'CONFIGURE_ME'):
+            self.skipTest('a configured project, not the kit repository (DEC-27)')
         allowed = {'.agents', '.claude', '.genesis', '.github', '.githooks', '.editorconfig',
                    '.gitattributes', '.gitignore', 'AGENTS.md', 'CLAUDE.md', 'START_HERE.md',
                    'BLUEPRINT.md', 'engineering.json', '.git'}
