@@ -1,36 +1,36 @@
 # Policy files: every change needs the project owner's review.
-# Bootstrap replaces @CONFIGURE_ME with the real GitHub user or team, e.g. @your-name.
+# Bootstrap replaces @eom1417 with the real GitHub user or team, e.g. @your-name.
 # Enable "Require review from Code Owners" in branch protection for this to bind
 # (python3 .genesis/tools/genesis.py governance --apply does it, after the owner approves).
 # The project's own folders (src/, docs/, tools/, prompts/, BLUEPRINT.md ...) need no entry.
-/engineering.json   @CONFIGURE_ME
-/.genesis/          @CONFIGURE_ME
-/.github/           @CONFIGURE_ME
-/.claude/           @CONFIGURE_ME
-/.githooks/         @CONFIGURE_ME
-/.agents/           @CONFIGURE_ME
-/AGENTS.md          @CONFIGURE_ME
-/CLAUDE.md          @CONFIGURE_ME
-/START_HERE.md      @CONFIGURE_ME
-/skills-lock.json   @CONFIGURE_ME
+/engineering.json   @eom1417
+/.genesis/          @eom1417
+/.github/           @eom1417
+/.claude/           @eom1417
+/.githooks/         @eom1417
+/.agents/           @eom1417
+/AGENTS.md          @eom1417
+/CLAUDE.md          @eom1417
+/START_HERE.md      @eom1417
+/skills-lock.json   @eom1417
 # Root configuration of the quality tools (same globs as POLICY_PATHS in guard_core.py).
-/CODEOWNERS               @CONFIGURE_ME
-/eslint.config.*          @CONFIGURE_ME
-/.eslintrc*               @CONFIGURE_ME
-/ruff.toml                @CONFIGURE_ME
-/.ruff.toml               @CONFIGURE_ME
-/.golangci.*              @CONFIGURE_ME
-/.swiftlint.yml           @CONFIGURE_ME
-/detekt*.yml              @CONFIGURE_ME
-/.dependency-cruiser.*    @CONFIGURE_ME
-/.importlinter            @CONFIGURE_ME
-/knip.*                   @CONFIGURE_ME
-/.jscpd.json              @CONFIGURE_ME
-/stylelint.config.*       @CONFIGURE_ME
-/.stylelintrc*            @CONFIGURE_ME
-/biome.json               @CONFIGURE_ME
-/tsconfig*.json           @CONFIGURE_ME
-/.semgrep*                @CONFIGURE_ME
-/.gitleaks.toml           @CONFIGURE_ME
-/.secretlintrc*           @CONFIGURE_ME
-/commitlint.config.*      @CONFIGURE_ME
+/CODEOWNERS               @eom1417
+/eslint.config.*          @eom1417
+/.eslintrc*               @eom1417
+/ruff.toml                @eom1417
+/.ruff.toml               @eom1417
+/.golangci.*              @eom1417
+/.swiftlint.yml           @eom1417
+/detekt*.yml              @eom1417
+/.dependency-cruiser.*    @eom1417
+/.importlinter            @eom1417
+/knip.*                   @eom1417
+/.jscpd.json              @eom1417
+/stylelint.config.*       @eom1417
+/.stylelintrc*            @eom1417
+/biome.json               @eom1417
+/tsconfig*.json           @eom1417
+/.semgrep*                @eom1417
+/.gitleaks.toml           @eom1417
+/.secretlintrc*           @eom1417
+/commitlint.config.*      @eom1417

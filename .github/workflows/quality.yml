@@ -60,6 +60,12 @@ jobs:
         env:
           BASE: origin/${{ github.base_ref }}
         run: python .genesis/tools/policy_gate.py --base-guard "$BASE"
+      - name: Reading tools (scanned pages) and the AI host (Node 24, the kit's locked packages)
+        run: |
+          sudo apt-get update -qq
+          sudo bash scripts/setup-reading-tools.sh
+          sudo bash scripts/setup-ai-host.sh
+          sudo chown -R "$(id -u):$(id -g)" .
       - name: Install the project's pinned stack
         run: python .genesis/tools/genesis.py setup --project
       - name: Full gate + re-prove every gate red on its fixture
