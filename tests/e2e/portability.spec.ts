@@ -11,7 +11,9 @@ test('export a bank, then delete it after seeing what goes (UI-26, UI-27, JY-16)
   await page.getByRole('link', { name: 'صدِّر' }).click();
   await expect(page.getByRole('heading', { name: 'صدِّر هذا البنك' })).toBeVisible();
   await expect(page.getByText('سيحوي الملف: 8 سؤال', { exact: false })).toBeVisible();
-  await expect(page.getByText('تسجيلات دخولك ومفاتيحك لدى مزوّدي الذكاء الاصطناعي', { exact: false })).toBeVisible();
+  await expect(
+    page.getByText('تسجيلات دخولك ومفاتيحك لدى مزوّدي الذكاء الاصطناعي', { exact: false }),
+  ).toBeVisible();
   const download = page.waitForEvent('download');
   await page.getByRole('link', { name: 'نزّل الملف' }).click();
   expect((await download).suggestedFilename()).toMatch(/\.zip$/);
