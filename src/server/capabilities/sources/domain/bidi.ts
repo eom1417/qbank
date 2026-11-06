@@ -26,10 +26,13 @@ export const isRtlText = (text: string): boolean => count(text, ARABIC) > count(
  * mirrored brackets) back in reading order: "(1س" → "س1)", "ﺔﺋﺮﻟا" → "الرئة", "5−" → "−5".
  */
 export function toLogical(word: string): string {
-  const reversed = [...word.normalize('NFKC')]
+  // Turn around first, then unfold presentation forms: a lam-alef ligature is one character in
+  // visual order and unfolds to lam then alef, which reversing afterwards would swap.
+  const reversed = [...word]
     .reverse()
     .map((char) => MIRRORED[char] ?? char)
-    .join('');
+    .join('')
+    .normalize('NFKC');
   // Latin words and numbers were reversed with the rest: turn each run back.
   return reversed.replace(LTR_RUN, (run) => [...run].reverse().join(''));
 }
