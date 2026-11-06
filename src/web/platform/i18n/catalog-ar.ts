@@ -262,6 +262,8 @@ export const ar: Record<MessageKey, string> = {
   'import.page.unreadable': 'غير مقروءة',
   'import.page.failed': 'فشلت',
   'import.error.source_missing': 'الملف الأصلي لم يعد متاحاً.',
+  'import.error.no_questions':
+    'لم يُعثر على أي سؤال في هذا الملف. إن كان مسحاً ضوئياً بجودة ضعيفة، استورده من جديد مع «دع الذكاء الاصطناعي يقرأ الصفحات كاملة». وإن كان ملاحظات أو إجابات فقط، فليس فيه أسئلة.',
   'import.error.unreadable_file': 'لم يُقرأ أي صفحة من هذا الملف.',
   'import.error.internal': 'حدث خطأ أثناء الاستيراد. ما قُرئ محفوظ، وأعد المحاولة للمتابعة.',
   'media.title': 'الصور والجداول',

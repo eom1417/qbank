@@ -280,6 +280,8 @@ export const en = {
   'import.page.unreadable': 'unreadable',
   'import.page.failed': 'failed',
   'import.error.source_missing': 'The original file is no longer available.',
+  'import.error.no_questions':
+    'No question was found in this file. If it is a scan of poor quality, import it again with "Let my AI read whole pages". If it holds only notes or answers, it has no questions to make.',
   'import.error.unreadable_file': 'No page of this file could be read.',
   'import.error.internal':
     'Something went wrong while importing. What was read is kept; retry to continue.',

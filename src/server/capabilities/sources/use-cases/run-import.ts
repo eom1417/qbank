@@ -162,6 +162,15 @@ async function extractAndSave(deps: SourcesDeps, job: JobRow, source: SourceRow,
   };
 }
 
+/**
+ * Why a finished question import has nothing to study: the file could not be read, or it was
+ * read and no question came out of it (notes, or a scan too poor). Never a quiet success (M26).
+ */
+function errorOf(stage: ImportStage, questions: number) {
+  if (stage === 'failed') return 'unreadable_file';
+  return questions === 0 ? 'no_questions' : null;
+}
+
 /** Stages 2–4 for a question source: the job's final counts and stage. */
 async function questionsOutcome(deps: SourcesDeps, job: JobRow, source: SourceRow, file: string) {
   const { pages, questions, aiOutcome } = await extractAndSave(deps, job, source, file);
@@ -173,7 +182,7 @@ async function questionsOutcome(deps: SourcesDeps, job: JobRow, source: SourceRo
     questions_found: questions.length,
     questions_review: review,
     ai_outcome: aiOutcome,
-    error_code: stage === 'failed' ? 'unreadable_file' : null,
+    error_code: errorOf(stage, questions.length),
   };
 }
 

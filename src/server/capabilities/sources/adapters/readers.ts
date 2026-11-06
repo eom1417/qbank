@@ -7,6 +7,9 @@ import { readBytes, renderPgm, runTool, withTempDir } from './run-tool.js';
 import { parseStext } from './stext.js';
 
 const OCR_DPI = 200;
+/** A page that reads almost empty at 200 dpi is read again sharper (a poor scan, M26). */
+const SHARP_DPI = 300;
+const WEAK_WORDS = 15;
 
 export interface PageRange {
   from: number;
@@ -55,20 +58,36 @@ export function parseTesseractTsv(tsv: string, dpi: number): PageWord[] {
  * Reads a page as a scan would be read: render it, then OCR in Arabic and English. Used for
  * scanned files, and to measure how much the text layer is worth on files that have one.
  */
-export function readByOcr(file: string, page: number, languages = 'eng+ara'): Promise<PageText> {
+export function readByOcr(
+  file: string,
+  page: number,
+  languages = 'eng+ara',
+  dpi = OCR_DPI,
+): Promise<PageText> {
   return withTempDir(async (dir) => {
-    const imagePath = await renderPgm(file, page, OCR_DPI, dir);
+    const imagePath = await renderPgm(file, page, dpi, dir);
     const tsv = await runTool('tesseract', [imagePath, 'stdout', '-l', languages, 'tsv'], 300_000);
     const header = (await readBytes(imagePath)).subarray(0, 32).toString('latin1');
     const size = /^P5\s+(\d+)\s+(\d+)/.exec(header);
-    const toPoints = 72 / OCR_DPI;
+    const toPoints = 72 / dpi;
     return {
       page,
       width: Number(size?.[1]) * toPoints,
       height: Number(size?.[2]) * toPoints,
-      words: parseTesseractTsv(tsv.toString('utf8'), OCR_DPI),
+      words: parseTesseractTsv(tsv.toString('utf8'), dpi),
     };
   });
+}
+
+/**
+ * A blurred or washed-out scan can read almost empty at 200 dpi while 300 dpi reads it well
+ * (measured on a poor Arabic scan: nothing, then the whole question). Only such pages pay for
+ * the second, slower reading; the richer of the two is kept.
+ */
+async function readSharpIfWeak(file: string, page: number, languages: string, first: PageText) {
+  if (first.words.length >= WEAK_WORDS) return first;
+  const sharp = await readByOcr(file, page, languages, SHARP_DPI);
+  return sharp.words.length > first.words.length ? sharp : first;
 }
 
 /** Tesseract models per source language (FR-04-006); the first one leads. */
@@ -88,7 +107,9 @@ export async function readScan(
   page: number,
   language: SourceLanguage,
 ): Promise<PageText> {
-  const read = await readByOcr(file, page, OCR_LANGUAGES[language]);
+  const languages = OCR_LANGUAGES[language];
+  const read = await readSharpIfWeak(file, page, languages, await readByOcr(file, page, languages));
   if (language !== 'auto' || !isRtlText(read.words.map((word) => word.text).join(' '))) return read;
-  return readByOcr(file, page, OCR_LANGUAGES.ar);
+  const arabic = OCR_LANGUAGES.ar;
+  return readSharpIfWeak(file, page, arabic, await readByOcr(file, page, arabic));
 }

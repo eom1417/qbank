@@ -1,7 +1,7 @@
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { chromium, type Browser } from '@playwright/test';
+import { chromium, type Browser, type Page } from '@playwright/test';
 import { runTool } from '../../src/server/capabilities/sources/adapters/run-tool.js';
 import { drawFigures } from './figures.js';
 
@@ -16,6 +16,41 @@ async function refusedFiles(dir: string, readable: string) {
   return { protectedPdf, damaged, text };
 }
 
+type Images = Record<string, string>;
+
+/** Prints the fixtures' HTML as PDFs: as text, as a clean scan, and as a poor scan (M26). */
+function printerOf(page: Page, dir: string) {
+  const textPdf = async (name: string, images: Images = {}) => {
+    const html = readFileSync(resolve(`tests/fixtures/import/${name}.html`), 'utf8');
+    await page.setContent(html.replace(/\{\{(\w+)\}\}/g, (_, key: string) => images[key] ?? ''));
+    const out = join(dir, `${name}.pdf`);
+    await page.pdf({ path: out, format: 'A4', preferCSSPageSize: true });
+    return out;
+  };
+  /** The current page as one picture, styled, printed into a PDF with no text layer. */
+  const pictured = async (out: string, style: string) => {
+    const shot = (await page.screenshot({ fullPage: false })).toString('base64');
+    await page.setContent(`<img src="data:image/png;base64,${shot}" style="width:100%;${style}">`);
+    await page.pdf({ path: out, format: 'A4', printBackground: true });
+    return out;
+  };
+  // A scan: the first page as an image only, so only OCR can read it.
+  const scanOf = async (name: string, images: Images = {}) => {
+    await textPdf(name, images);
+    await page.setViewportSize({ width: 794, height: 1123 });
+    return pictured(join(dir, `${name}-scanned.pdf`), '');
+  };
+  // A poor scan: blurred, washed out and a little crooked, as a phone photo of a photocopy is.
+  const poorScanOf = async (name: string) => {
+    await scanOf(name);
+    return pictured(
+      join(dir, `${name}-poor-scan.pdf`),
+      'filter:blur(0.6px) contrast(0.75);transform:rotate(1.2deg)',
+    );
+  };
+  return { textPdf, scanOf, poorScanOf };
+}
+
 /**
  * Builds test PDFs from the HTML in tests/fixtures/import with Chromium (no binary fixtures in
  * git): text PDFs, "scanned" PDFs with no text layer, a protected one and damaged bytes.
@@ -24,34 +59,21 @@ export async function buildPdfFixtures() {
   const dir = mkdtempSync(join(tmpdir(), 'qbank-pdf-'));
   const browser: Browser = await chromium.launch();
   const page = await browser.newPage();
-  const textPdf = async (name: string, images: Record<string, string> = {}) => {
-    const html = readFileSync(resolve(`tests/fixtures/import/${name}.html`), 'utf8');
-    await page.setContent(html.replace(/\{\{(\w+)\}\}/g, (_, key: string) => images[key] ?? ''));
-    const out = join(dir, `${name}.pdf`);
-    await page.pdf({ path: out, format: 'A4', preferCSSPageSize: true });
-    return out;
-  };
-  const scanOf = async (name: string) => {
-    // A scan: the first page as an image only, so only OCR can read it.
-    await textPdf(name, images);
-    await page.setViewportSize({ width: 794, height: 1123 });
-    const shot = (await page.screenshot({ fullPage: false })).toString('base64');
-    await page.setContent(`<img src="data:image/png;base64,${shot}" style="width:100%">`);
-    const out = join(dir, `${name}-scanned.pdf`);
-    await page.pdf({ path: out, format: 'A4', printBackground: true });
-    return out;
-  };
+  const { textPdf, scanOf, poorScanOf } = printerOf(page, dir);
   const images = await drawFigures(page);
   const media = await textPdf('media', images);
-  const mediaScanned = await scanOf('media');
+  const mediaScanned = await scanOf('media', images);
   const english = await textPdf('english');
   const arabic = await textPdf('arabic');
   const mixed = await textPdf('mixed');
   const essays = await textPdf('essays');
   const keys = await textPdf('keys');
   const answersOnly = await textPdf('answers-only');
+  const prose = await textPdf('prose');
   const scanned = await scanOf('english');
   const arabicScanned = await scanOf('arabic');
+  const poorScan = await poorScanOf('english');
+  const arabicPoorScan = await poorScanOf('arabic');
   await browser.close();
   const refused = await refusedFiles(dir, english);
   return {
@@ -62,8 +84,11 @@ export async function buildPdfFixtures() {
     essays,
     keys,
     answersOnly,
+    prose,
     scanned,
     arabicScanned,
+    poorScan,
+    arabicPoorScan,
     media,
     mediaScanned,
     ...refused,
