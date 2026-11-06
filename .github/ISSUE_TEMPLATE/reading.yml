@@ -1,0 +1,22 @@
+name: قراءة سيئة لملف / A file read badly
+description: أسئلة ناقصة أو مشوهة أو خيارات ضائعة / Missing or garbled questions, lost options
+labels: ['reading']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **لا ترفق الملف إن لم يكن من حقك مشاركته.** صف نوعه بدلاً من ذلك.
+        **Do not attach the file unless you may share it.** Describe it instead.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: نوع الملف / Kind of file
+      options: ['نصي / text PDF', 'ممسوح ضوئياً / scan', 'صورة بالجوال / phone photo', 'عمودان / two columns', 'مفاتيح منفصلة / separate key file', 'أخرى / other']
+  - type: input
+    id: counts
+    attributes:
+      label: كم سؤالاً فيه، وكم قُرئ؟ / How many questions does it hold, and how many were read?
+  - type: textarea
+    id: example
+    attributes:
+      label: مثال لسؤال قُرئ خطأ (كما طُبع، وكما ظهر) / One question read wrongly (as printed, as shown)

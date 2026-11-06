@@ -10,6 +10,14 @@ provider you chose.
 > الأسهل: ثبّت Docker Desktop مرة، ثم `docker compose up -d` وافتح `http://localhost:3000`. أو بلا Docker: `bash scripts/install.sh` ثم `qbank`.
 > ويمكن تشغيله منصة بحسابات، لكل حساب ربط ذكاء اصطناعي خاص به، وقنوات نشر لـagents (واتساب، تيليجرام).
 
+| Study with the book's explanation                                                                           | Your library                                                                          |
+| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| ![A question in Tutor mode, the right answer shown with the book's explanation](docs/screenshots/tutor.png) | ![The library with the sample bank and today's reviews](docs/screenshots/library.png) |
+| **An import's honest report**                                                                               | **Your own AI, if you want it**                                                       |
+| ![An import report: pages read, questions found, what needs review](docs/screenshots/import-report.png)     | ![The AI providers screen](docs/screenshots/providers.png)                            |
+
+**Trying it for the first time?** The one-page guide for testers (Arabic): [`docs/BETA-GUIDE.md`](docs/BETA-GUIDE.md).
+
 ## Install and run
 
 ### The easiest way: Docker (Windows, macOS, Linux)
@@ -73,6 +81,11 @@ whoever runs the server. Settings and limits: [`docs/reports/m22-provider-isolat
 
 - User guide: [`docs/USER-GUIDE.ar.md`](docs/USER-GUIDE.ar.md) (العربية) · [`docs/USER-GUIDE.md`](docs/USER-GUIDE.md) (English).
 - Acceptance, security, performance and handoff: `docs/reports/`.
+
+## Help and contributing
+
+- Inside QBank: **Help → Send feedback** opens a filled-in issue.
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) · [`SECURITY.md`](SECURITY.md) (report security problems privately) · [`CHANGELOG.md`](CHANGELOG.md).
 
 ## For developers
 

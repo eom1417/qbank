@@ -55,4 +55,6 @@ export interface PortabilityDeps {
   maxUploadBytes: number;
   /** How this install runs, for the support report. */
   mode: string;
+  /** The release it runs (package.json, passed by the launcher), for the support report. */
+  version: string;
 }

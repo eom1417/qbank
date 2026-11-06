@@ -14,6 +14,7 @@ export async function supportReport(
   const questions = await deps.questions.statusCounts(actor.accountId, null);
   return {
     mode: deps.mode,
+    version: deps.version,
     node: process.version,
     platform: `${process.platform} ${process.arch}`,
     banks: banks.length,

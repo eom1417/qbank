@@ -135,6 +135,7 @@ function registerContent(app: FastifyInstance, deps: ContentDeps, identity: Iden
       clock: deps.clock,
       maxUploadBytes: deps.config.imports.maxUploadBytes,
       mode: deps.config.mode,
+      version: deps.config.version,
     },
     identity.requireActor,
   ).register(app);

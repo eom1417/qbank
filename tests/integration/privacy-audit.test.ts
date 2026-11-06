@@ -62,7 +62,11 @@ describe('reminders and support (FR-22-004, FR-22-007)', () => {
     await seed(owner, bankId, [{ stem: 'Confidential stem about patient X?' }]);
     const report = await owner.get('/api/support/report');
     expect(report.statusCode).toBe(200);
-    expect(report.json()).toMatchObject({ banks: 1, questions: expect.any(Object) });
+    expect(report.json()).toMatchObject({
+      banks: 1,
+      version: 'test',
+      questions: expect.any(Object),
+    });
     expect(report.body).not.toMatch(/Confidential|Secret Cardiology|@/);
   });
 });

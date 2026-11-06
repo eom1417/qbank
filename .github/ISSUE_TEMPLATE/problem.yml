@@ -1,0 +1,27 @@
+name: مشكلة / A problem
+description: شيء لا يعمل كما ينبغي / Something does not work as it should
+labels: ['problem']
+body:
+  - type: textarea
+    id: tried
+    attributes:
+      label: ماذا كنت تحاول أن تفعل؟ / What were you trying to do?
+    validations:
+      required: true
+  - type: textarea
+    id: happened
+    attributes:
+      label: ماذا حدث بدلاً من ذلك؟ / What happened instead?
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: كيف ثبّت QBank؟ / How is QBank installed?
+      options: ['Docker', 'install.sh (macOS)', 'install.sh (Linux)', 'WSL (Windows)', 'Other']
+  - type: textarea
+    id: report
+    attributes:
+      label: تقرير النظام (اختياري) / System report (optional)
+      description: المساعدة ← تقرير الدعم. أرقام ونسخ فقط. / Help → support report. Counts and versions only.
+      render: json

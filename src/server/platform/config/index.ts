@@ -38,6 +38,8 @@ const Env = z.object({
   QBANK_WEB_DIR: z.string().min(1).default('dist/web'),
   /** The sample bank a new owner can import in one click (M28.1). */
   QBANK_SAMPLE_PDF: z.string().min(1).default('samples/sample-bank.pdf'),
+  /** The release, passed by the launcher from package.json (`dev` when run another way). */
+  QBANK_VERSION: z.string().min(1).default('dev'),
 });
 
 export interface AppConfig {
@@ -82,6 +84,8 @@ export interface AppConfig {
   webDir: string | null;
   /** The sample bank's PDF, imported by "Try a ready bank" (M28.1). */
   samplePdf: string;
+  /** The release this install runs, for the support report. */
+  version: string;
 }
 
 export interface AiHostsConfig {
@@ -163,6 +167,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     aiHosts: aiHostsOf(parsed, env),
     webDir: parsed.QBANK_WEB_DIR === 'none' ? null : parsed.QBANK_WEB_DIR,
     samplePdf: parsed.QBANK_SAMPLE_PDF,
+    version: parsed.QBANK_VERSION,
   };
 }
 

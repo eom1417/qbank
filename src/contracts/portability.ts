@@ -59,6 +59,8 @@ export type AccountDeletionResponse = z.infer<typeof AccountDeletionResponse>;
 export const SupportReportResponse = z
   .object({
     mode: z.string(),
+    /** QBank's version (package.json), so a report says which release it comes from. */
+    version: z.string(),
     node: z.string(),
     platform: z.string(),
     banks: z.number().int(),

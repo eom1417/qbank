@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: مشكلة أمنية / A security problem
+    url: https://github.com/eom1417/qbank/security/advisories/new
+    about: بلّغ عنها سراً لا في بلاغ عام / Report it privately, not in a public issue

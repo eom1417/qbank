@@ -1,0 +1,10 @@
+name: فكرة / An idea
+description: ما يجعل QBank أنفع لك / What would make QBank more useful to you
+labels: ['idea']
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: الفكرة، ولماذا تحتاجها / The idea, and why you need it
+    validations:
+      required: true
