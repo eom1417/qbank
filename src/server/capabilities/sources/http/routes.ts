@@ -9,6 +9,7 @@ import {
 } from '../../../../contracts/sources.js';
 import { AppError } from '../../../platform/errors/index.js';
 import { sendPng } from '../../../platform/http/send-png.js';
+import { startSampleImport } from '../use-cases/sample-import.js';
 import { parseInput } from '../../../platform/http/validate.js';
 import type { RequireActor } from '../../identity/index.js';
 import type { SourcesDeps } from '../use-cases/deps.js';
@@ -60,6 +61,12 @@ export function registerImportRoutes(
     const actor = await requireActor(request);
     const { fields, upload } = await uploadOf(request, deps);
     const jobId = await startImport(deps, actor, request.params.bankId, fields, upload);
+    return reply.status(201).send(await getImport(deps, actor, jobId));
+  });
+
+  app.post<BankParams>('/api/banks/:bankId/imports/sample', async (request, reply) => {
+    const actor = await requireActor(request);
+    const jobId = await startSampleImport(deps, actor, request.params.bankId);
     return reply.status(201).send(await getImport(deps, actor, jobId));
   });
 

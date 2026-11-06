@@ -20,6 +20,7 @@ import { useQuery } from '../../platform/api/use-query.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { fetchBanks } from './api.js';
 import { CreateBankCard } from './CreateBankCard.js';
+import { SampleBankCard } from './SampleBankCard.js';
 import { lastStudiedOf, visibleBanks, type BankSort } from './library-view.js';
 import { fetchHistory } from '../analytics/api.js';
 
@@ -147,6 +148,7 @@ export function LibraryScreen() {
       {state.status === 'loading' && <MutedText>{t('common.loading')}</MutedText>}
       {state.status === 'error' && <Alert tone="error">{t(state.error)}</Alert>}
       {isNewLibrary && <LibraryEmpty />}
+      {isNewLibrary && <SampleBankCard />}
       {!isNewLibrary && (
         <LibraryToolbar {...view} onChange={(next) => setView({ ...view, ...next })} />
       )}

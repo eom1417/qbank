@@ -35,6 +35,8 @@ interface SourcesSettings {
   requireActor: RequireActor;
   maxUploadBytes: number;
   maxPages: number;
+  /** The sample bank's PDF (M28.1). */
+  samplePdf: string;
   originalRetentionDays: number;
   log: SourcesDeps['log'];
   /** Whether a source link opens; the real web unless a test replaces it. */
@@ -55,6 +57,7 @@ export function createSources(settings: SourcesSettings) {
     newId,
     maxUploadBytes: settings.maxUploadBytes,
     maxPages: settings.maxPages,
+    samplePdf: settings.samplePdf,
     originalRetentionMs: settings.originalRetentionDays * 24 * 60 * 60_000,
   };
   return {

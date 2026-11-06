@@ -58,6 +58,10 @@ export function uploadFile(bankId: string, file: File, options: UploadOptions) {
 
 export const fetchImport = (id: string) => apiRequest('GET', `/api/imports/${id}`, ImportResponse);
 
+/** The sample bank's ten questions into this bank, read by the rules (M28.1). */
+export const importSample = (bankId: string) =>
+  apiRequest('POST', `/api/banks/${bankId}/imports/sample`, ImportResponse, {});
+
 export const retryImport = (id: string, body: RetryImportRequest) =>
   apiRequest('POST', `/api/imports/${id}/retry`, ImportResponse, body);
 

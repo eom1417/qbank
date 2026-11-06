@@ -10,7 +10,7 @@ const code = () => readFileSync(join(LOCAL_DATA_DIR, 'pairing-token'), 'utf8').t
 async function openProviders(page: Page) {
   await page.goto(`${LOCAL_WEB_URL}/#pair=${code()}`);
   await page.getByRole('link', { name: 'الإعدادات' }).click();
-  await page.getByRole('link', { name: 'مزودو الذكاء الاصطناعي' }).click();
+  await page.getByRole('link', { name: 'مزوّدو الذكاء الاصطناعي' }).click();
   await expect(page).toHaveURL(`${LOCAL_WEB_URL}/settings/providers`);
 }
 
@@ -18,7 +18,7 @@ test('the providers screen lists the kit providers and says what AI sends (UI-24
   page,
 }) => {
   await openProviders(page);
-  await expect(page.getByRole('heading', { name: 'مزودو الذكاء الاصطناعي' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'مزوّدو الذكاء الاصطناعي' })).toBeVisible();
   await expect(page.getByText('تسري شروط ذلك المزوّد وسياسة خصوصيته')).toBeVisible();
   for (const provider of ['Codex', 'Claude']) {
     await expect(page.getByRole('heading', { name: provider, exact: true }).first()).toBeVisible();

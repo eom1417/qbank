@@ -76,7 +76,7 @@ export async function answerAndApprove(page: Page) {
   // Choosing the answer settles a missing key; anything else still needs the approval.
   const approve = page.getByRole('button', { name: 'اعتمد', exact: true });
   if (await approve.isVisible()) await approve.click();
-  await expect(page.getByText('الحالة: جاهز للدراسة')).toBeVisible();
+  await expect(page.getByText('الحالة: جاهز للمذاكرة')).toBeVisible();
 }
 
 /** A bank with the English fixture imported and its first two questions answered. */

@@ -84,6 +84,7 @@ function testConfig(options: TestAppOptions) {
     aiHost: options.aiHost?.() ?? NO_AI_HOST,
     aiHosts: options.aiHosts ?? SINGLE_AI_HOST,
     webDir: options.webDir ?? null,
+    samplePdf: 'samples/sample-bank.pdf',
   };
 }
 

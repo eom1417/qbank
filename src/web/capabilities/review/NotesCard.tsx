@@ -18,7 +18,8 @@ import { addNote, fetchNotes } from './api.js';
 
 const labelsOf = (text: string) =>
   text
-    .split(',')
+    // Arabic keyboards type «،»: either comma separates labels.
+    .split(/[,،]/)
     .map((l) => l.trim())
     .filter(Boolean);
 

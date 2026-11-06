@@ -85,6 +85,7 @@ function registerImports(
     requireActor,
     maxUploadBytes: config.imports.maxUploadBytes,
     maxPages: config.imports.maxPages,
+    samplePdf: config.samplePdf,
     originalRetentionDays: config.imports.originalRetentionDays,
     ...(deps.checkLink ? { checkLink: deps.checkLink } : {}),
   });

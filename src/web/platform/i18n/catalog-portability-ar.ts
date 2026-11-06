@@ -12,7 +12,7 @@ export const portabilityAr: Record<keyof typeof portabilityEn, string> = {
   'export.chaptersCount': 'فصل',
   'export.sources': 'مصدر',
   'export.notIncluded': 'لا يحوي الملف أبداً:',
-  'export.not.ai_sign_ins_and_keys': 'تسجيلات دخولك ومفاتيح AI',
+  'export.not.ai_sign_ins_and_keys': 'تسجيلات دخولك ومفاتيحك لدى مزوّدي الذكاء الاصطناعي',
   'export.not.original_files': 'ملفات PDF الأصلية',
   'export.not.attempt_history': 'إجاباتك وسجل الجلسات',
   'export.not.study_reports': 'بلاغات الدراسة',
@@ -36,7 +36,7 @@ export const portabilityAr: Record<keyof typeof portabilityEn, string> = {
   'deleteBank.confirm': 'نعم، احذفه نهائياً',
   'deleteAccount.title': 'احذف كل بياناتي',
   'deleteAccount.lead':
-    'تُمحى كل البنوك والأسئلة والصور والملاحظات والجلسات. تسجيلات دخول AI تبقى في شاشة مزودي الذكاء الاصطناعي: سجّل الخروج منها هناك.',
+    'تُمحى كل البنوك والأسئلة والصور والملاحظات والجلسات. تسجيلات دخول AI تبقى في شاشة مزوّدي الذكاء الاصطناعي: سجّل الخروج منها هناك.',
   'deleteAccount.button': 'احذف كل بياناتي',
   'deleteAccount.confirm': 'نعم، امحُ كل شيء',
   'deleteAccount.step.banks': 'البنوك والأسئلة',

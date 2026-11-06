@@ -125,6 +125,7 @@ async function main() {
     QBANK_AI_HOST_URL: `http://127.0.0.1:${AI_HOST_PORT}`,
     QBANK_AI_HOST_TOKEN: token,
     QBANK_WEB_DIR: join(ROOT, 'dist/web'),
+    QBANK_SAMPLE_PDF: join(ROOT, 'samples/sample-bank.pdf'),
   });
   await waitFor(`http://127.0.0.1:${AI_HOST_PORT}/health`, { authorization: `Bearer ${token}` });
   await waitFor(`http://127.0.0.1:${API_PORT}/api/health`);

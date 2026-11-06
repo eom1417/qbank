@@ -12,6 +12,7 @@ import {
 import { apiRequest } from '../../platform/api/client.js';
 import { useAction } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
+import { FeedbackCard } from './FeedbackCard.js';
 
 const TOPICS = ['pending', 'due', 'ai', 'import', 'rights', 'privacy'] as const;
 
@@ -60,6 +61,7 @@ export function HelpScreen() {
     <Stack>
       <Heading>{t('help.title')}</Heading>
       <MutedText>{t('help.lead')}</MutedText>
+      <FeedbackCard />
       {TOPICS.map((topic) => (
         <section key={topic} id={topic}>
           <Card>

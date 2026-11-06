@@ -147,6 +147,8 @@ Arabic and English.
 - **"Restore…"** shows what comes back against what is here now, and backs up today's state first.
 - **A copy off this computer:** type the path of a folder your cloud app syncs (Google Drive,
   iCloud, OneDrive), and every backup is copied there.
+- **First time?** In the empty library press **Make the sample bank**: ten questions with answers and explanations, ready to study in seconds, with no file and no AI.
+- **Send feedback** (Help): say what you tried and what happened; a GitHub issue opens filled in for you to send. No text of your questions or files goes into it.
 - **Publishing channels** (bank page → Publishing channels): an outside agent (WhatsApp, Telegram, n8n…) takes the bank's questions in batches that never repeat, with the channel's own key, shown once. Each channel keeps its own numbers; your study is never touched. How to connect one: `docs/CHANNELS.md`.
 - **Export a bank** to a ZIP file, and restore it as a new bank. The file holds no keys or sign-ins; it keeps the AI's work (study notes, change badges, "the file says", difficulty).
 - **Deleting a bank, or all your data,** shows what goes before anything happens.

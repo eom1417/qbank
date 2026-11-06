@@ -20,6 +20,8 @@ export interface SourcesDeps {
   newId: () => string;
   maxUploadBytes: number;
   maxPages: number;
+  /** The sample bank's PDF, imported in one click by a new owner (M28.1). */
+  samplePdf: string;
   /** How long an original stays after its import ends, unless the user deletes it first. */
   originalRetentionMs: number;
 }

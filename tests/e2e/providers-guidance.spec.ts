@@ -27,7 +27,7 @@ test('an AI stop says what to do, with the way to the providers screen (M27)', a
   await page.route(`**/api/imports/${ID}`, (route) => route.fulfill({ json: stopped }));
   await page.route(`**/api/imports/${ID}/media`, (route) => route.fulfill({ json: { media: [] } }));
   await page.goto(`/imports/${ID}`);
-  await expect(page.getByText('حد الاشتراك يتجدد وحده', { exact: false })).toBeVisible();
+  await expect(page.getByText('حد الاشتراك يتجدد تلقائياً', { exact: false })).toBeVisible();
   await page.getByRole('link', { name: 'افتح مزوّدي الذكاء الاصطناعي' }).click();
   await expect(page).toHaveURL(/\/settings\/providers$/);
 });

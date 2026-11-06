@@ -5,7 +5,7 @@ export const backupAr: Record<keyof typeof backupEn, string> = {
   'backup.title': 'النسخ الاحتياطية',
   'backup.lead':
     'ينسخ QBank كل شيء هنا مرة يومياً: البنوك والأسئلة والجلسات والملاحظات والصور. يحتفظ بأحدث 7 نسخ ونسخة من كل أسبوع من الأسابيع الأربعة قبلها. تسجيلات دخول الذكاء الاصطناعي ليست ضمن النسخ.',
-  'backup.now.make': 'انسخ الآن',
+  'backup.now.make': 'أنشئ نسخة احتياطية الآن',
   'backup.none': 'لا نسخ بعد. أول نسخة تُصنع اليوم.',
   'backup.reason.daily': 'يومية',
   'backup.reason.manual': 'صنعتها أنت',

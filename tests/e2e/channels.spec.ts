@@ -25,7 +25,7 @@ test('a publishing channel: created with its key shown once, used by an agent, i
   await expect(page.getByText('مفتاح القناة: انسخه الآن')).toHaveCount(0);
   await expect(page.getByText(key)).toHaveCount(0);
   await expect(page.getByText(key.slice(0, 10), { exact: false })).toBeVisible();
-  await page.getByRole('button', { name: 'اعرض الأرقام' }).click();
+  await page.getByRole('button', { name: 'اعرض الإحصاءات' }).click();
   await expect(page.getByText('أُرسل في هذه الدورة: 2/2', { exact: false })).toBeVisible();
   await page.getByRole('button', { name: 'أوقفها مؤقتاً' }).click();
   await expect(page.getByText('موقوفة')).toBeVisible();

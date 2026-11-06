@@ -36,6 +36,8 @@ const Env = z.object({
   QBANK_AI_HOSTS_REFRESH_HOURS: z.coerce.number().int().min(1).max(168).default(12),
   /** The built web app the API serves (`npm run build`); `none` leaves it to a dev server. */
   QBANK_WEB_DIR: z.string().min(1).default('dist/web'),
+  /** The sample bank a new owner can import in one click (M28.1). */
+  QBANK_SAMPLE_PDF: z.string().min(1).default('samples/sample-bank.pdf'),
 });
 
 export interface AppConfig {
@@ -78,6 +80,8 @@ export interface AppConfig {
   aiHosts: AiHostsConfig;
   /** Served at `/` when it holds a build; null serves the API only. */
   webDir: string | null;
+  /** The sample bank's PDF, imported by "Try a ready bank" (M28.1). */
+  samplePdf: string;
 }
 
 export interface AiHostsConfig {
@@ -158,6 +162,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     aiHost: { url: parsed.QBANK_AI_HOST_URL, token: parsed.QBANK_AI_HOST_TOKEN ?? null },
     aiHosts: aiHostsOf(parsed, env),
     webDir: parsed.QBANK_WEB_DIR === 'none' ? null : parsed.QBANK_WEB_DIR,
+    samplePdf: parsed.QBANK_SAMPLE_PDF,
   };
 }
 

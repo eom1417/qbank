@@ -37,7 +37,7 @@ test('another browser is asked for the code, and a wrong one is refused', async 
 test('backs up now, and previews a restore before anything changes (M17.2)', async ({ page }) => {
   await page.goto(`${LOCAL_WEB_URL}/#pair=${code()}`);
   await page.getByRole('link', { name: 'الإعدادات' }).click();
-  await page.getByRole('button', { name: 'انسخ الآن' }).click();
+  await page.getByRole('button', { name: 'أنشئ نسخة احتياطية الآن' }).click();
   await expect(page.getByText('صنعتها أنت').first()).toBeVisible();
   await page.getByRole('button', { name: 'استرجاع…' }).first().click();
   await expect(page.getByText('في هذه النسخة')).toBeVisible();

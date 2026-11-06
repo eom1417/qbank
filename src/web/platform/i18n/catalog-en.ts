@@ -53,6 +53,22 @@ export const en = {
   'auth.field.displayName': 'Your name',
   'auth.field.terms': 'I agree to the terms, and I will only upload material I am allowed to use.',
   'library.title': 'My library',
+  'sample.title': 'Try a ready bank',
+  'sample.lead':
+    'Ten general medical questions with their answers and explanations, read on this computer with no AI, so you can study within two minutes, before your own files.',
+  'sample.start': 'Make the sample bank',
+  'sample.bankName': 'Sample bank',
+  'feedback.title': 'Send feedback',
+  'feedback.lead':
+    'A problem, a file read badly, or an idea: write it here, and a GitHub issue opens filled in with it for you to send. No text of your questions or files goes into it.',
+  'feedback.kind': 'Kind',
+  'feedback.kind.problem': 'A problem',
+  'feedback.kind.reading': 'A file read badly',
+  'feedback.kind.idea': 'An idea',
+  'feedback.tried': 'What were you trying to do?',
+  'feedback.happened': 'What happened instead?',
+  'feedback.withReport': 'Attach the system report (counts and versions only, no content)',
+  'feedback.open': 'Open the issue on GitHub',
   'library.empty.title': 'Your library is empty',
   'library.empty.description':
     'Start by creating a bank. Each bank holds questions from your own files.',

@@ -5,9 +5,9 @@ export const providersAr: Record<keyof typeof providersEn, string> = {
   'error.ai_host_unavailable':
     'خدمة الذكاء الاصطناعي لا تعمل على هذا الجهاز. شغّلها ثم أعد المحاولة.',
   'error.ai_host_busy': 'خدمة الذكاء الاصطناعي مشغولة للجميع الآن. أعد المحاولة بعد دقائق.',
-  'providers.title': 'مزودو الذكاء الاصطناعي',
+  'providers.title': 'مزوّدو الذكاء الاصطناعي',
   'providers.withoutAi':
-    'الذكاء الاصطناعي اختياري. بدونه يعمل كل شيء: الاستيراد (صفحات نصية وممسوحة)، والمراجعة، والـTutor والامتحانات، والتحليلات، والتصدير والنسخ الاحتياطي. مع ذكائك الاصطناعي: يُفحص كل سؤال وتُحسم إجابته بنموذجين وحَكَم، ويمكن تحسين الأسئلة، وقراءة الصفحات كاملة، والشروح.',
+    'الذكاء الاصطناعي اختياري. بدونه يعمل كل شيء: الاستيراد (صفحات نصية وممسوحة)، والمراجعة، والـTutor والامتحانات، والتحليلات، والتصدير والنسخ الاحتياطي. مع ذكائك الاصطناعي: يُفحص كل سؤال وتُحسم إجابته بنموذجين وحَكَم، ويمكن تحسين الأسئلة، وقراءة الصفحات كاملة، وتقديم الشروح.',
   'providers.intro':
     'ذكاؤك الاصطناعي أنت: اشتراكات تسجّل دخولها على هذا الجهاز، أو مفاتيح API. كل طلب يستخدم حساباتك أنت.',
   'providers.refreshAll': 'افحص الكل من جديد',
@@ -23,7 +23,7 @@ export const providersAr: Record<keyof typeof providersEn, string> = {
   'providers.test.ready': 'يعمل',
   'providers.test.invalid_key': 'المزوّد رفض الطلب (الحساب أو النموذج).',
   'providers.test.no_permission': 'هذا الحساب لا يستطيع استخدام هذا النموذج.',
-  'providers.test.no_quota': 'وصلت حد الاستخدام.',
+  'providers.test.no_quota': 'بلغتَ حد الاستخدام.',
   'providers.test.rate_limited': 'طلبات كثيرة الآن، جرّب بعد دقائق.',
   'providers.test.unreachable': 'لم يصل رد من المزوّد.',
   'providers.test.model_missing': 'هذا النموذج غير متاح.',
@@ -58,8 +58,8 @@ export const providersAr: Record<keyof typeof providersEn, string> = {
   'signIn.cancel': 'إلغاء',
   'signIn.succeeded': 'تم تسجيل الدخول.',
   'signIn.waiting': 'بانتظار تسجيل دخولك…',
-  'add.title': 'أضف مزوداً',
-  'add.driver': 'المزود',
+  'add.title': 'أضف مزوّداً',
+  'add.driver': 'المزوّد',
   'add.name': 'الاسم (اختياري)',
   'add.submit': 'أضف',
 };

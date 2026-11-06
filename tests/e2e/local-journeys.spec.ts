@@ -41,7 +41,7 @@ async function exportBank(page: Page) {
 
 async function eraseEverything(page: Page) {
   await page.goto(`${LOCAL_WEB_URL}/settings`);
-  await page.getByRole('button', { name: 'انسخ الآن' }).click();
+  await page.getByRole('button', { name: 'أنشئ نسخة احتياطية الآن' }).click();
   await expect(page.getByText('صنعتها أنت').first()).toBeVisible();
   await page.getByRole('button', { name: 'احذف كل بياناتي' }).click();
   await page.getByRole('button', { name: 'نعم، امحُ كل شيء' }).click();
