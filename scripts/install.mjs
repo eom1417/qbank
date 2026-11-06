@@ -69,7 +69,9 @@ function installReadingTools() {
 function installAiHost() {
   run('node', ['scripts/vendor-lock.mjs', '--check']);
   const kit = join(ROOT, 'vendor/t3-ai-providers-kit/kit');
-  run('corepack', ['pnpm@10', 'install', '--frozen-lockfile'], kit, {
+  // Node 25+ no longer ships corepack (Homebrew's node is 26): pnpm 10 through npx there.
+  const pnpm = has('corepack') ? ['corepack', ['pnpm@10']] : ['npx', ['--yes', 'pnpm@10']];
+  run(pnpm[0], [...pnpm[1], 'install', '--frozen-lockfile'], kit, {
     CI: 'true',
     COREPACK_ENABLE_DOWNLOAD_PROMPT: '0',
   });
