@@ -214,7 +214,8 @@ export const en = {
   'ai.status.invalid_key':
     'The provider refused the request. Check the sign-in on the AI providers page, or test another model.',
   'ai.status.no_permission': 'The key does not have permission for this model.',
-  'ai.status.no_quota': 'The provider account has no credit or quota left.',
+  'ai.status.no_quota':
+    'You reached your subscription limit, or your credit with the provider ran out. A subscription limit resets by itself: the providers screen says when; then try again.',
   'ai.status.rate_limited':
     'The provider is limiting requests right now. Try again in a few minutes.',
   'ai.status.unreachable':
@@ -256,6 +257,7 @@ export const en = {
   'import.ai.done':
     'Your AI checked every question and settled its answer; only real disputes wait for you.',
   'import.ai.notReady': 'The chosen AI connection is not available; only the free reading ran.',
+  'import.ai.openProviders': 'Open AI providers',
   'import.ai.stopped':
     'Your AI stopped part-way; everything read so far is kept, the rest waits for review',
   'import.report.title': 'Import report',

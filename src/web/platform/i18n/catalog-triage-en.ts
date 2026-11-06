@@ -1,5 +1,7 @@
 /** English strings of the AI triage choice (DEC-33) and its results. */
 export const triageEn = {
+  'triage.usage':
+    'What it uses of your subscription, roughly: 3 to 4 requests for every 8 questions (organizing them, two independent solvers, and a judge when they disagree). A topic review or notes on the options add about one request per question that gets one.',
   'triage.with':
     'Your AI organizes the file: it finds and splits the questions and links answers printed on other pages, without changing a word. Below, choose what else it improves.',
   'triage.quality': 'How thorough',

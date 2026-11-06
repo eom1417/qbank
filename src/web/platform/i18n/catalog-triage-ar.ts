@@ -2,6 +2,8 @@ import type { triageEn } from './catalog-triage-en.js';
 
 /** Arabic strings of the AI triage choice; the same keys as catalog-triage-en.ts. */
 export const triageAr: Record<keyof typeof triageEn, string> = {
+  'triage.usage':
+    'ما يستهلكه من اشتراكك تقريباً: 3 إلى 4 طلبات لكل 8 أسئلة (تنظيمها، وحلّان مستقلان، وحَكَم عند الخلاف). ملخص الموضوع أو شرح الخيارات يضيف قرابة طلب لكل سؤال يأخذه.',
   'triage.with':
     'ذكاؤك الاصطناعي ينظّم الملف: يكتشف الأسئلة ويفصلها ويربط الإجابات المطبوعة في صفحات أخرى، دون أن يغيّر كلمة. واختر تحته ما يحسّنه أيضاً.',
   'triage.quality': 'مستوى الدقة',

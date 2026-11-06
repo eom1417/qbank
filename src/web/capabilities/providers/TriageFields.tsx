@@ -75,6 +75,7 @@ export function TriageFields({ state }: { state: TriageChoiceState }) {
         onChange={(event) => state.change({ instanceId: event.target.value })}
       />
       <MutedText>{t(state.provider ? 'triage.with' : 'import.ai.without')}</MutedText>
+      {state.provider && <MutedText>{t('triage.usage')}</MutedText>}
       {state.provider && (
         <SelectField
           label={t('triage.quality')}

@@ -31,13 +31,33 @@ function aiOutcomeKey(outcome: string | null): MessageKey | null {
 }
 
 /** Why the AI step stopped is a readiness status (an expired key, no quota…). */
+/** Why the AI stopped, when the fix is on the providers screen (sign in again, a limit, a model). */
+const FIXED_IN_PROVIDERS = new Set([
+  'invalid_key',
+  'no_permission',
+  'no_quota',
+  'rate_limited',
+  'model_missing',
+  'not_ready',
+]);
+
 function AiOutcome({ outcome }: { outcome: string | null }) {
   const { t } = useI18n();
   const key = aiOutcomeKey(outcome);
   if (!key) return null;
   const why =
     key === 'import.ai.stopped' ? ` (${t(`ai.status.${outcome}` as 'ai.status.invalid_key')})` : '';
-  return <Alert tone={outcome === 'done' ? 'success' : 'info'}>{`${t(key)}${why}`}</Alert>;
+  return (
+    <Alert tone={outcome === 'done' ? 'success' : 'info'}>
+      {`${t(key)}${why}`}
+      {FIXED_IN_PROVIDERS.has(outcome ?? '') && (
+        <>
+          {' '}
+          <Link to="/settings/providers">{t('import.ai.openProviders')}</Link>
+        </>
+      )}
+    </Alert>
+  );
 }
 
 function PageIssues({ job }: { job: ImportResponse }) {

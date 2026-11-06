@@ -35,5 +35,5 @@ export const cliLoginEn = {
   'ai.model.default': 'default model',
   'import.ai.read': 'Let my AI read whole pages',
   'import.ai.read.hint':
-    'Best for scans and complex layouts: it reads each page image and takes the questions, options, the key and explanation printed on the page, and the pictures. Slower (one request per page), and every question waits for your check.',
+    'Best for scans and complex layouts: it reads each page image and takes the questions, options, the key and explanation printed on the page, and the pictures. Slower: one request per page from your subscription. Questions are kept as printed, and only those in doubt wait for your review.',
 };
