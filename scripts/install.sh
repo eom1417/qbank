@@ -16,6 +16,8 @@ if ! node_ok; then
   else
     echo "Node 24.10 or newer is needed: https://nodejs.org (LTS), or: nvm install 24 && nvm use 24" >&2
     echo "Then run this script again." >&2
+    echo "يلزم Node 24.10 أو أحدث: ثبّته من https://nodejs.org ثم أعد هذا الأمر." >&2
+    echo "أو الأسهل: Docker Desktop ثم docker compose up -d" >&2
     exit 1
   fi
 fi

@@ -105,6 +105,18 @@ function report() {
   console.log(missing.length === 0 ? 'Everything is installed.' : `Missing: ${missing.join(', ')}`);
 }
 
+/** What to do when a step stops, for someone who is not a developer (M25). */
+const HINTS = {
+  'Reading tools':
+    'تعذّر تثبيت أدوات القراءة. تأكد من الإنترنت (وعلى لينكس من صلاحية sudo)، ثم أعد الأمر نفسه.',
+  QBank: 'تعذّر تنزيل حزم QBank. تأكد من الإنترنت ثم أعد الأمر نفسه.',
+  'AI host': 'تعذّر تجهيز حزمة الذكاء الاصطناعي. تأكد من الإنترنت ثم أعد الأمر نفسه.',
+  'AI CLIs':
+    'تعذّر تثبيت أداتي Claude Code وCodex. أعد الأمر، أو ثبّت بدونهما (بلا --with-ai-clis).',
+  Build: 'تعذّر بناء QBank. أعد الأمر نفسه؛ وإن تكرر فأرسل هذا النص في بلاغ.',
+  Launcher: 'تعذّر إنشاء أمر qbank. شغّل QBank من مجلده بالأمر: npm run qbank',
+};
+
 function install() {
   const steps = [
     ['Reading tools', installReadingTools],
@@ -120,7 +132,11 @@ function install() {
   ];
   for (const [name, step] of steps) {
     console.log(`\n== ${name}`);
-    step();
+    try {
+      step();
+    } catch (error) {
+      throw new Error(`${name}: ${error.message}\n${HINTS[name] ?? ''}`, { cause: error });
+    }
   }
   console.log('\nDone. Start QBank: qbank   (for your phone on the same Wi-Fi: qbank --lan)');
   if (!(process.env.PATH ?? '').split(':').includes(join(homedir(), '.local', 'bin')))
@@ -132,6 +148,8 @@ try {
   if (check) report();
   else install();
 } catch (error) {
-  console.error(`\nThe install stopped: ${error.message}`);
+  console.error(`\nThe install stopped / توقف التثبيت: ${error.message}`);
+  console.error('أسهل بديل: Docker Desktop ثم `docker compose up -d` (README).');
+  console.error('للتبليغ: أرسل هذا النص مع ناتج `bash scripts/install.sh --check`.');
   process.exit(1);
 }
