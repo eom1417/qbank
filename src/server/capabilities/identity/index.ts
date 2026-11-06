@@ -34,6 +34,7 @@ interface IdentitySettings {
   /** Where a replaced pairing code is saved (the data directory). */
   dataDir: string;
   requirePairingCode: boolean;
+  localPeers: readonly string[];
   publicOrigin: string | null;
 }
 
@@ -64,6 +65,7 @@ export function createIdentity(settings: IdentitySettings): IdentityModule {
                 savePairingToken(settings.dataDir, code),
               ),
         requirePairingCode: settings.requirePairingCode,
+        localPeers: settings.localPeers,
         publicOrigin: settings.publicOrigin,
       }),
   };

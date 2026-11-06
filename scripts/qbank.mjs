@@ -97,6 +97,12 @@ function announce() {
     console.log(`On your phone (same Wi-Fi): http://${address}:${API_PORT}/#pair=${code}`);
     console.log('Anyone with that link can open your QBank: keep it to your own devices.');
   }
+  // In Docker (M25) this computer is recognised through Docker's network; if a setup is ever
+  // not, the owner still gets in with the link below, printed only to their own terminal.
+  if (process.env.QBANK_SHOW_PAIRING_LINK === '1') {
+    const code = readFileSync(join(DATA_DIR, 'pairing-token'), 'utf8').trim();
+    console.log(`If QBank asks this computer for a code, open: ${local}/#pair=${code}`);
+  }
   if (openBrowser) openInBrowser(local);
 }
 
@@ -113,7 +119,8 @@ async function main() {
   start('QBank', process.execPath, [join(ROOT, 'dist/src/server/main.js')], {
     QBANK_MODE: 'local',
     QBANK_DATA_DIR: DATA_DIR,
-    QBANK_API_HOST: lan ? '0.0.0.0' : '127.0.0.1',
+    // Docker sets 0.0.0.0 (inside the container); compose.yaml publishes it to loopback only.
+    QBANK_API_HOST: process.env.QBANK_API_HOST ?? (lan ? '0.0.0.0' : '127.0.0.1'),
     QBANK_API_PORT: API_PORT,
     QBANK_AI_HOST_URL: `http://127.0.0.1:${AI_HOST_PORT}`,
     QBANK_AI_HOST_TOKEN: token,

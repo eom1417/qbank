@@ -1,0 +1,19 @@
+# QBank with Docker (M25): `docker compose up -d`, then open http://localhost:3000.
+# Your data stays in the "qbank-data" volume across updates (`docker compose pull` or `--build`).
+services:
+  qbank:
+    build: .
+    image: qbank:local
+    # This computer only. Never publish it on 0.0.0.0: the next line is what makes Docker's
+    # network safe to count as this computer (QBANK_LOCAL_PEERS).
+    ports:
+      - '127.0.0.1:3000:3000'
+    environment:
+      # Docker's networks (Linux bridges, and Docker Desktop on macOS and Windows).
+      QBANK_LOCAL_PEERS: 172.16.0.0/12,192.168.65.0/24
+    volumes:
+      - qbank-data:/data
+    restart: unless-stopped
+
+volumes:
+  qbank-data:

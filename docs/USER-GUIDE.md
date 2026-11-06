@@ -6,6 +6,16 @@ subscription.
 
 ## 1. Install and run
 
+**Easiest, on Windows, macOS and Linux: Docker.** Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) once, then in the QBank folder:
+
+```bash
+docker compose up -d        # the first time it builds QBank (about 10 minutes)
+```
+
+Open **http://localhost:3000**. Your data is in Docker's `qbank-data` volume and stays across updates (`git pull`, then `docker compose up -d --build`). Only this computer can reach it. If it ever asks for a code, `docker compose logs qbank` shows a ready link.
+
+**Or without Docker:**
+
 ```bash
 bash scripts/install.sh     # once: tools, packages, the build and a `qbank` command
 qbank                       # starts QBank and opens it in your browser

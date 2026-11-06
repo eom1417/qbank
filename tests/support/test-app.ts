@@ -49,6 +49,8 @@ interface TestAppOptions {
   local?: boolean;
   /** Local mode that pairs this computer only with the code too. */
   requirePairingCode?: boolean;
+  /** Extra socket addresses that count as this computer (Docker, M25). */
+  localPeers?: string[];
   /** A built web app for the API to serve. */
   webDir?: string;
   aiHost?: () => { url: string; token: string | null };
@@ -56,13 +58,9 @@ interface TestAppOptions {
   aiHosts?: AiHostsConfig;
 }
 
-async function startTestApp(options: TestAppOptions = {}): Promise<TestApp> {
-  const clock = options.clock ?? { now: () => new Date() };
-  const db = createDb(testDatabaseUrl());
-  await migrateToLatest(db);
-  // Test database only (TEST_DATABASE_URL); every owned table cascades from account.
-  await sql`truncate table account cascade`.execute(db);
-  const config = {
+/** The app's configuration for a test suite: accounts mode unless `local`, no AI host. */
+function testConfig(options: TestAppOptions) {
+  return {
     mode: options.local ? ('local' as const) : ('accounts' as const),
     databaseUrl: '',
     host: '127.0.0.1',
@@ -70,6 +68,7 @@ async function startTestApp(options: TestAppOptions = {}): Promise<TestApp> {
     cookieSecure: false,
     trustProxy: false,
     requirePairingCode: options.requirePairingCode ?? false,
+    localPeers: options.localPeers ?? [],
     devOutbox: true,
     allowedOrigins: [ORIGIN],
     sessionTtlDays: 30,
@@ -86,6 +85,15 @@ async function startTestApp(options: TestAppOptions = {}): Promise<TestApp> {
     aiHosts: options.aiHosts ?? SINGLE_AI_HOST,
     webDir: options.webDir ?? null,
   };
+}
+
+async function startTestApp(options: TestAppOptions = {}): Promise<TestApp> {
+  const clock = options.clock ?? { now: () => new Date() };
+  const db = createDb(testDatabaseUrl());
+  await migrateToLatest(db);
+  // Test database only (TEST_DATABASE_URL); every owned table cascades from account.
+  await sql`truncate table account cascade`.execute(db);
+  const config = testConfig(options);
   const pairingToken = options.local ? TEST_PAIRING_TOKEN : null;
   // No test reaches the web: a source link "opens" unless its URL says it is dead.
   const checkLink = (url: string) => Promise.resolve(!url.includes('dead'));

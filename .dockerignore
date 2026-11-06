@@ -1,0 +1,14 @@
+.git
+node_modules
+**/node_modules
+dist
+.data
+.env
+.env.*
+test-results
+playwright-report
+design-lab
+.genesis/.pylib
+.claude/settings.local.json
+REMOTE-AUTH-BRIEF.md
+vendor/*.tar.xz

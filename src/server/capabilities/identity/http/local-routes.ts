@@ -1,3 +1,4 @@
+import { BlockList, isIP, isIPv6 } from 'node:net';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import { PairRequest, type PairingCodeResponse } from '../../../../contracts/identity.js';
 import { AppError } from '../../../platform/errors/index.js';
@@ -16,13 +17,37 @@ const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);
 const PROXY_HEADERS = ['x-forwarded-for', 'x-forwarded-host', 'forwarded', 'x-real-ip'];
 
 /**
- * A request from this computer itself: a loopback socket, no proxy in between (a proxy may carry
- * a visitor from anywhere), and a loopback Host (a DNS-rebinding page cannot claim that name).
+ * The configured peers that also count as this computer (M25): Docker's network, when the port
+ * is published to the host's loopback only. Addresses or CIDR ranges, IPv4 or IPv6.
  */
-function isFromThisComputer(request: FastifyRequest): boolean {
+function peersOf(list: readonly string[]): BlockList {
+  const peers = new BlockList();
+  for (const entry of list) {
+    const [address = '', bits] = entry.split('/');
+    const family = isIPv6(address) ? 'ipv6' : 'ipv4';
+    if (!isIP(address)) throw new Error(`QBANK_LOCAL_PEERS: not an address: ${entry}`);
+    if (bits === undefined) peers.addAddress(address, family);
+    else peers.addSubnet(address, Number(bits), family);
+  }
+  return peers;
+}
+
+/** The peer's address, an IPv4 one even when the socket reports it IPv4-mapped. */
+const socketAddress = (request: FastifyRequest) =>
+  (request.socket.remoteAddress ?? '').replace(/^::ffff:(?=\d+\.)/, '');
+
+/**
+ * A request from this computer itself: a loopback socket (or a configured peer), no proxy in
+ * between (a proxy may carry a visitor from anywhere), and a loopback Host (a DNS-rebinding page
+ * cannot claim that name).
+ */
+function isFromThisComputer(request: FastifyRequest, peers: BlockList): boolean {
   if (PROXY_HEADERS.some((name) => request.headers[name] !== undefined)) return false;
   const host = (request.headers.host ?? '').replace(/:\d+$/, '');
-  return LOOPBACK_ADDRESSES.has(request.socket.remoteAddress ?? '') && LOOPBACK_HOSTS.has(host);
+  if (!LOOPBACK_HOSTS.has(host)) return false;
+  const address = socketAddress(request);
+  if (LOOPBACK_ADDRESSES.has(address)) return true;
+  return isIP(address) !== 0 && peers.check(address, isIPv6(address) ? 'ipv6' : 'ipv4');
 }
 
 interface LocalRouteOptions {
@@ -32,6 +57,7 @@ interface LocalRouteOptions {
   cookieSecure: boolean;
   /** Never pair this computer without the code (for installs reached through a TCP tunnel). */
   requirePairingCode: boolean;
+  localPeers: readonly string[];
 }
 
 /** A wrong pairing code may be tried this often per address before a pause. */
@@ -40,6 +66,7 @@ const PAIRING_ATTEMPTS = { max: 10, windowMs: 15 * 60_000 };
 /** Local mode (DEC-31): browsers pair with the install instead of signing in. */
 export function registerLocalRoutes(app: FastifyInstance, options: LocalRouteOptions) {
   const { deps, requireActor, pairing, cookieSecure } = options;
+  const peers = peersOf(options.localPeers);
   const attempts = createAttemptLimiter({ ...PAIRING_ATTEMPTS, now: () => deps.clock.now() });
   app.get('/api/local/pairing', async (request): Promise<PairingCodeResponse> => {
     await requireActor(request);
@@ -55,7 +82,7 @@ export function registerLocalRoutes(app: FastifyInstance, options: LocalRouteOpt
     const { token, locale } = parseInput(PairRequest, request.body ?? {});
     if (attempts.blocked(request.ip)) throw new AppError('too_many_attempts');
     const proof = {
-      fromThisComputer: !options.requirePairingCode && isFromThisComputer(request),
+      fromThisComputer: !options.requirePairingCode && isFromThisComputer(request, peers),
       presented: token,
       expected: pairing.current(),
     };

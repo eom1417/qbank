@@ -1,0 +1,99 @@
+# M25: QBank installs and upgrades on clean machines, the way a new owner does it.
+# Docker on every change to the install; the macOS install (10x the minutes of Linux on a private
+# repository) weekly, on demand, and when the install itself changes.
+name: Clean install
+on:
+  pull_request:
+    paths: ['Dockerfile', 'compose.yaml', '.dockerignore', 'scripts/**', 'package*.json',
+            'migrations/**', 'ai-host/**', 'vendor/**', '.github/workflows/install.yml']
+  push:
+    branches: [main]
+    paths: ['Dockerfile', 'compose.yaml', '.dockerignore', 'scripts/**', 'package*.json',
+            'migrations/**', 'ai-host/**', 'vendor/**', '.github/workflows/install.yml']
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: clean-install-${{ github.ref }}
+  cancel-in-progress: true
+env:
+  COMPOSE_PROJECT_NAME: qbank
+  PEERS: 172.16.0.0/12,192.168.65.0/24
+jobs:
+  docker:
+    name: Docker (build, run, upgrade from main)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - name: The previous version (main) makes data, when it already had Docker
+        id: previous
+        run: |
+          git worktree add ../previous origin/main
+          if [ -f ../previous/Dockerfile ]; then
+            docker build -t qbank:previous ../previous
+            docker run -d --name previous -p 127.0.0.1:3000:3000 -e QBANK_LOCAL_PEERS="$PEERS" \
+              -v qbank_qbank-data:/data qbank:previous
+            node scripts/smoke.mjs http://localhost:3000
+            docker rm -f previous
+            echo "upgrade=--after-upgrade" >> "$GITHUB_OUTPUT"
+          fi
+      - name: This version, on the same data
+        run: |
+          docker compose up -d --build
+          node scripts/smoke.mjs http://localhost:3000 ${{ steps.previous.outputs.upgrade }}
+      - name: The data survives a restart
+        run: |
+          docker compose restart
+          node scripts/smoke.mjs http://localhost:3000 --after-upgrade
+      - name: Logs
+        if: failure()
+        run: docker compose logs --no-color | tail -200
+
+  fresh-linux:
+    name: Fresh install (Ubuntu, install.sh)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+      - name: Install as a new owner would
+        run: bash scripts/install.sh
+      - name: Start and use it
+        run: |
+          (~/.local/bin/qbank --no-open > qbank.log 2>&1 &)
+          node scripts/smoke.mjs http://localhost:3000
+      - name: Logs
+        if: failure()
+        run: tail -200 qbank.log
+
+  fresh-macos:
+    name: Fresh install (macOS, install.sh)
+    if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'macos')
+    runs-on: macos-14
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install as a new owner would (Homebrew brings Node and the reading tools)
+        run: bash scripts/install.sh
+      - name: Start and use it
+        run: |
+          (~/.local/bin/qbank --no-open > qbank.log 2>&1 &)
+          node scripts/smoke.mjs http://localhost:3000
+      - name: Logs
+        if: failure()
+        run: tail -200 qbank.log

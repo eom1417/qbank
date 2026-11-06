@@ -11,6 +11,8 @@ const Env = z.object({
   QBANK_TRUST_PROXY: z.enum(['true', 'false']).default('false'),
   /** 'true': this computer pairs with the code too (QBank reached through a TCP tunnel). */
   QBANK_REQUIRE_PAIRING_CODE: z.enum(['true', 'false']).default('false'),
+  /** Addresses or CIDR ranges that also count as this computer (Docker's network, M25). */
+  QBANK_LOCAL_PEERS: z.string().default(''),
   QBANK_DEV_OUTBOX: z.enum(['true', 'false']).default('false'),
   QBANK_ALLOWED_ORIGINS: z.string().default(''),
   QBANK_SESSION_TTL_DAYS: z.coerce.number().int().min(1).max(400).optional(),
@@ -46,6 +48,11 @@ export interface AppConfig {
   /** True only when a local reverse proxy (Vite dev, nginx) sets X-Forwarded-Host. */
   trustProxy: boolean;
   requirePairingCode: boolean;
+  /**
+   * Socket addresses that count as this computer besides loopback: Docker's network, where the
+   * port is published to the host's loopback only (compose.yaml). Never a LAN range.
+   */
+  localPeers: readonly string[];
   /** Exposes GET /api/dev/outbox (local mail adapter). Local development and tests only. */
   devOutbox: boolean;
   /** Extra origins allowed to send mutating requests besides the request's own host. */
@@ -132,6 +139,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     cookieSecure: (parsed.QBANK_COOKIE_SECURE ?? defaults.cookieSecure) === 'true',
     trustProxy: parsed.QBANK_TRUST_PROXY === 'true',
     requirePairingCode: parsed.QBANK_REQUIRE_PAIRING_CODE === 'true',
+    localPeers: parsed.QBANK_LOCAL_PEERS.split(',')
+      .map((peer) => peer.trim())
+      .filter(Boolean),
     devOutbox: parsed.QBANK_DEV_OUTBOX === 'true',
     allowedOrigins: parsed.QBANK_ALLOWED_ORIGINS.split(',')
       .map((origin) => origin.trim())

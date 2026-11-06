@@ -168,6 +168,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     pairingToken,
     dataDir: config.imports.dataDir,
     requirePairingCode: config.requirePairingCode,
+    localPeers: config.localPeers,
     publicOrigin: config.allowedOrigins[0] ?? null,
   });
   identity.register(app);

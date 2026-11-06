@@ -24,6 +24,7 @@ export interface IdentityRouteOptions {
   /** Local mode when set: the install's pairing code (DEC-31). Accounts mode otherwise. */
   pairing: PairingCode | null;
   requirePairingCode: boolean;
+  localPeers: readonly string[];
   /** Where links in emails point: the app's configured origin, never a request header. */
   publicOrigin: string | null;
 }
@@ -71,6 +72,7 @@ export function registerIdentityRoutes(app: FastifyInstance, options: IdentityRo
       pairing,
       cookieSecure,
       requirePairingCode: options.requirePairingCode,
+      localPeers: options.localPeers,
     });
 
   app.post('/api/auth/sign-out', async (request, reply) => {

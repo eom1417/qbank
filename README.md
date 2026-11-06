@@ -7,10 +7,24 @@ provider you chose.
 
 > **بالعربي:** QBank يحوّل كتبك وملفات أسئلتك إلى بنك أسئلة خاص بك، على جهازك أنت. مفتوح المصدر
 > (MIT)، بلا حساب ولا خادم ولا اشتراك عندنا. تربط اشتراكك أو مفتاحك في Claude أو ChatGPT أو غيرهما.
-> التثبيت بأمر واحد: `bash scripts/install.sh` ثم `qbank` ويفتح في المتصفح. على ويندوز داخل WSL.
+> الأسهل: ثبّت Docker Desktop مرة، ثم `docker compose up -d` وافتح `http://localhost:3000`. أو بلا Docker: `bash scripts/install.sh` ثم `qbank`.
 > ويمكن تشغيله منصة بحسابات، لكل حساب ربط ذكاء اصطناعي خاص به، وقنوات نشر لـagents (واتساب، تيليجرام).
 
 ## Install and run
+
+### The easiest way: Docker (Windows, macOS, Linux)
+
+Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) once, then:
+
+```bash
+git clone https://github.com/eom1417/qbank.git qbank && cd qbank
+docker compose up -d                   # first time: builds QBank (about 10 minutes)
+```
+
+Open **http://localhost:3000**. Your data stays in Docker's `qbank-data` volume across updates
+(`git pull && docker compose up -d --build`). QBank is reachable from this computer only.
+
+### Without Docker
 
 One command on macOS (Homebrew) and Linux (apt or dnf). It needs Node.js 24.10+ (on macOS it
 installs it with Homebrew), and it is safe to run again: it only adds what is missing.

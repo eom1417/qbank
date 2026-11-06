@@ -5,6 +5,16 @@ QBank يحوّل كتبك وملفات أسئلتك (PDF) إلى بنك أسئل
 
 ## 1. التثبيت والتشغيل
 
+**الأسهل، على ويندوز والماك ولينكس: Docker.** ثبّت [Docker Desktop](https://www.docker.com/products/docker-desktop/) مرة واحدة، ثم في مجلد QBank:
+
+```bash
+docker compose up -d        # أول مرة يبني QBank (قرابة 10 دقائق)
+```
+
+وافتح **http://localhost:3000**. بياناتك في مخزن Docker اسمه `qbank-data` وتبقى مع التحديثات (`git pull` ثم `docker compose up -d --build`). لا يصل إليه إلا هذا الجهاز. وإن طلب منك رمزاً، تجد رابطاً جاهزاً في `docker compose logs qbank`.
+
+**أو بلا Docker:**
+
 ```bash
 bash scripts/install.sh     # مرة واحدة: الأدوات والحزم والبناء وأمر qbank
 qbank                       # يشغّل QBank ويفتحه في المتصفح

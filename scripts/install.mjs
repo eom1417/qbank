@@ -53,13 +53,16 @@ const READING_TOOLS = {
 
 const readingToolsOk = () => ['pdftoppm', 'mutool', 'tesseract'].every(has);
 
+const splitFirst = ([command, ...args]) => [command, args];
+
 function installReadingTools() {
   if (readingToolsOk()) return;
   const manager = ['brew', 'apt', 'dnf'].find((name) => has(name === 'apt' ? 'apt-get' : name));
   if (!manager)
     throw new Error('Install poppler, MuPDF (mutool) and Tesseract (ara + eng), then run again.');
-  const [command, ...args] = READING_TOOLS[manager];
-  run(command, args);
+  // A fresh machine's package lists can be old enough that install finds nothing: refresh first.
+  if (manager === 'apt') run(...splitFirst(asRoot(['apt-get', 'update'])));
+  run(...splitFirst(READING_TOOLS[manager]));
 }
 
 /** The vendored providers kit, checked against its lock, with its own exact dependencies. */
