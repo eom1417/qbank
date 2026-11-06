@@ -82,7 +82,7 @@ jobs:
   fresh-macos:
     name: Fresh install (macOS, install.sh)
     if: github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'macos')
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
