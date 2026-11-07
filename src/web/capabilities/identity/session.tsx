@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import { z } from 'zod';
 import {
   AccountResponse,
@@ -15,12 +15,16 @@ import { useI18n } from '../../platform/i18n/i18n.js';
 type SessionState =
   | { status: 'loading' }
   | { status: 'signed-out' }
+  /** The server did not answer: never shown as signed out, which would offer a wrong sign-in. */
+  | { status: 'unreachable' }
   | { status: 'signed-in'; account: AccountResponse };
 
 interface Session {
   state: SessionState;
   /** Local install (DEC-31) or accounts; null until the server says. */
   mode: AppMode | null;
+  /** Asks the server again after it did not answer (also done by itself every few seconds). */
+  retry(): void;
   /** Local mode: pairs this browser with the install's pairing code. */
   pair(token: string): Promise<void>;
   signIn(input: SignInRequest): Promise<void>;
@@ -84,23 +88,39 @@ function useApplySavedPreferences(state: SessionState) {
   }, [preferences, setLocale, setTheme, setSkin]);
 }
 
+/** How often an unanswered start is retried by itself, so a restarted server is picked up. */
+const RETRY_MS = 5000;
+
+async function loadSession(): Promise<{ mode: AppMode; state: SessionState }> {
+  const { mode } = await apiRequest('GET', '/api/meta', AppMetaResponse);
+  return { mode, state: await (mode === 'local' ? loadLocal() : loadAccount()) };
+}
+
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<SessionState>({ status: 'loading' });
   const [mode, setMode] = useState<AppMode | null>(null);
   useApplySavedPreferences(state);
-  useEffect(() => {
-    apiRequest('GET', '/api/meta', AppMetaResponse)
-      .then(({ mode: current }) => {
-        setMode(current);
-        return current === 'local' ? loadLocal() : loadAccount();
-      })
-      .then(setState, () => setState({ status: 'signed-out' }));
+  const retry = useCallback(() => {
+    loadSession().then(
+      (loaded) => {
+        setMode(loaded.mode);
+        setState(loaded.state);
+      },
+      () => setState({ status: 'unreachable' }),
+    );
   }, []);
+  useEffect(retry, [retry]);
+  useEffect(() => {
+    if (state.status !== 'unreachable') return;
+    const timer = setInterval(retry, RETRY_MS);
+    return () => clearInterval(timer);
+  }, [state.status, retry]);
   const signedIn = (account: AccountResponse) => setState({ status: 'signed-in', account });
   const post = (path: string, body: unknown) => apiRequest('POST', path, AccountResponse, body);
   const session: Session = {
     state,
     mode,
+    retry,
     pair: async (token) => signedIn(await pairWith(token)),
     signIn: async (input) => signedIn(await post('/api/auth/sign-in', input)),
     signUp: async (input) => signedIn(await post('/api/auth/sign-up', input)),

@@ -34,6 +34,18 @@ test('another browser is asked for the code, and a wrong one is refused', async 
   await expect(page.getByRole('heading', { name: 'مكتبتك فارغة' })).toBeVisible();
 });
 
+test('a server that does not answer says so, never shows a sign-in, and recovers', async ({
+  page,
+}) => {
+  await page.route('**/api/meta', (route) => route.fulfill({ status: 502, body: '' }));
+  await page.goto(`${LOCAL_WEB_URL}/#pair=${code()}`);
+  await expect(page.getByRole('heading', { name: 'خادم QBank لا يرد' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'تسجيل الدخول' })).toHaveCount(0);
+  await page.unroute('**/api/meta');
+  await page.getByRole('button', { name: 'أعد المحاولة الآن' }).click();
+  await expect(page.getByRole('heading', { name: 'مكتبتك فارغة' })).toBeVisible();
+});
+
 test('backs up now, and previews a restore before anything changes (M17.2)', async ({ page }) => {
   await page.goto(`${LOCAL_WEB_URL}/#pair=${code()}`);
   await page.getByRole('link', { name: 'الإعدادات' }).click();
