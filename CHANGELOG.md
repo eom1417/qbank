@@ -1,6 +1,13 @@
 # Changelog / سجل التغييرات
 
-## 0.9.0-beta (2026-11-06): the first trial / أول تجربة
+Versions (DEC-38): `MAJOR.MINOR.PATCH`. `0.x` while QBank is tried; **`1.0.0` is the first release
+the owner approves**. Then PATCH for small fixes, MINOR for new features, MAJOR for a fundamental
+change.
+
+الإصدارات: `0.x` أثناء التجربة، و**`1.0.0` أول إصدار يعتمده المالك**. بعده: الخانة الأخيرة للإصلاحات
+الصغيرة، والوسطى للميزات الجديدة، والأولى للتغيير الجوهري.
+
+## 0.1.0 (2026-11-06): the first trial / أول تجربة
 
 The first version for a small group of testers. / أول نسخة لمجموعة صغيرة من المختبرين.
 
@@ -9,6 +16,10 @@ The first version for a small group of testers. / أول نسخة لمجموعة
 - Docker: one command on Windows, macOS and Linux; data kept across updates; this computer only.
 - `install.sh` on macOS and Linux, proven from scratch in CI on every install change.
 - Failure messages say, in Arabic and English, what stopped and what to do.
+- Your own server for family and friends: `compose.server.yaml` (QBank, PostgreSQL, automatic
+  HTTPS with Caddy), open sign-up, one AI host per account, reset links without e-mail
+  (`docs/SELF-HOST.md`). / خادمك الخاص لأهلك وأصحابك برابط https.
+- A server that does not answer says so and retries by itself, instead of showing a sign-in.
 
 ### Questions from your files / الأسئلة من ملفاتك
 

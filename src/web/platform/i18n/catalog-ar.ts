@@ -113,6 +113,10 @@ export const ar: Record<MessageKey, string> = {
   'field.invalid': 'هذه القيمة غير صالحة.',
   'field.tooShort': 'هذه القيمة قصيرة جداً.',
   'common.loading': 'جارٍ التحميل…',
+  'session.unreachable.title': 'خادم QBank لا يرد',
+  'session.unreachable.lead':
+    'بياناتك محفوظة. قد يكون QBank يبدأ أو يعيد التشغيل: هذه الصفحة تحاول من جديد وحدها كل بضع ثوانٍ. إن طال الأمر فتأكد أن QBank يعمل على الجهاز الذي يشغّله.',
+  'session.unreachable.retry': 'أعد المحاولة الآن',
   'shell.nav.library': 'المكتبة',
   'shell.nav.settings': 'الإعدادات',
   'shell.nav.signIn': 'تسجيل الدخول',

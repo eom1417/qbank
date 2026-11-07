@@ -121,6 +121,10 @@ export const en = {
   'field.invalid': 'This value is not valid.',
   'field.tooShort': 'This value is too short.',
   'common.loading': 'Loading…',
+  'session.unreachable.title': 'The QBank server is not answering',
+  'session.unreachable.lead':
+    'Your data is safe. QBank may be starting or restarting: this page tries again by itself every few seconds. If it lasts, make sure QBank is running on the computer that hosts it.',
+  'session.unreachable.retry': 'Try again now',
   'shell.nav.library': 'Library',
   'shell.nav.settings': 'Settings',
   'shell.nav.signIn': 'Sign in',

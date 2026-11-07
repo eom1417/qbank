@@ -39,7 +39,7 @@ function PreferenceSwitches() {
 function AccountLinks() {
   const { t } = useI18n();
   const { state, mode, signOut } = useSession();
-  if (state.status === 'loading' || mode === null) return null;
+  if (state.status === 'loading' || state.status === 'unreachable' || mode === null) return null;
   if (state.status === 'signed-out') {
     return mode === 'local' ? null : <Link to="/sign-in">{t('shell.nav.signIn')}</Link>;
   }
