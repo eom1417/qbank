@@ -16,6 +16,10 @@ The first version for a small group of testers. / أول نسخة لمجموعة
 - Docker: one command on Windows, macOS and Linux; data kept across updates; this computer only.
 - `install.sh` on macOS and Linux, proven from scratch in CI on every install change.
 - Failure messages say, in Arabic and English, what stopped and what to do.
+- Your own server for family and friends: `compose.server.yaml` (QBank, PostgreSQL, automatic
+  HTTPS with Caddy), open sign-up, one AI host per account, reset links without e-mail
+  (`docs/SELF-HOST.md`). / خادمك الخاص لأهلك وأصحابك برابط https.
+- A server that does not answer says so and retries by itself, instead of showing a sign-in.
 
 ### Questions from your files / الأسئلة من ملفاتك
 

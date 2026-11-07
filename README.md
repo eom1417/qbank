@@ -8,7 +8,7 @@ provider you chose.
 > **بالعربي:** QBank يحوّل كتبك وملفات أسئلتك إلى بنك أسئلة خاص بك، على جهازك أنت. مفتوح المصدر
 > (MIT)، بلا حساب ولا خادم ولا اشتراك عندنا. تربط اشتراكك أو مفتاحك في Claude أو ChatGPT أو غيرهما.
 > الأسهل: ثبّت Docker Desktop مرة، ثم `docker compose up -d` وافتح `http://localhost:3000`. أو بلا Docker: `bash scripts/install.sh` ثم `qbank`.
-> ويمكن تشغيله منصة بحسابات، لكل حساب ربط ذكاء اصطناعي خاص به، وقنوات نشر لـagents (واتساب، تيليجرام).
+> ويمكن تشغيله منصة بحسابات، لكل حساب ربط ذكاء اصطناعي خاص به، وقنوات نشر لـagents (واتساب، تيليجرام). ولتشغيله على خادمك لأهلك وأصحابك برابط https: [`docs/SELF-HOST.md`](docs/SELF-HOST.md).
 
 | Study with the book's explanation                                                                           | Your library                                                                          |
 | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
@@ -71,6 +71,10 @@ qbank                                  # starts QBank and opens http://127.0.0.1
   numbers, apart from your study. See [`docs/CHANNELS.md`](docs/CHANNELS.md).
 
 ## Run it as a shared server
+
+For family and friends on your own machine, with HTTPS and no cloud bill: one command with
+[`compose.server.yaml`](compose.server.yaml) (QBank, PostgreSQL and Caddy). Step by step, in Arabic
+with an English summary: [`docs/SELF-HOST.md`](docs/SELF-HOST.md).
 
 `QBANK_MODE=accounts` (with `DATABASE_URL` for PostgreSQL) gives sign-up and sign-in. Each account
 links its own AI providers in its own AI host, started on demand and isolated in its own folder;
