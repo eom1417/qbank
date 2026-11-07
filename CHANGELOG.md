@@ -1,6 +1,13 @@
 # Changelog / سجل التغييرات
 
-## 0.9.0-beta (2026-11-06): the first trial / أول تجربة
+Versions (DEC-38): `MAJOR.MINOR.PATCH`. `0.x` while QBank is tried; **`1.0.0` is the first release
+the owner approves**. Then PATCH for small fixes, MINOR for new features, MAJOR for a fundamental
+change.
+
+الإصدارات: `0.x` أثناء التجربة، و**`1.0.0` أول إصدار يعتمده المالك**. بعده: الخانة الأخيرة للإصلاحات
+الصغيرة، والوسطى للميزات الجديدة، والأولى للتغيير الجوهري.
+
+## 0.1.0 (2026-11-06): the first trial / أول تجربة
 
 The first version for a small group of testers. / أول نسخة لمجموعة صغيرة من المختبرين.
 
