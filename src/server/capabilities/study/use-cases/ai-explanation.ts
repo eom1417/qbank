@@ -2,7 +2,7 @@ import type { AiTarget } from '../../../../contracts/providers.js';
 import { AiExplanation, type AiExplanationResponse } from '../../../../contracts/study.js';
 import { AppError } from '../../../platform/errors/index.js';
 import type { Actor } from '../../identity/index.js';
-import type { Snapshot } from '../domain/grading.js';
+import type { Snapshot } from '../../exam-rules/index.js';
 import type { StudyDeps } from './deps.js';
 import { ownedSession } from './sessions.js';
 

@@ -1,18 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { agentOf, newChannel, questionIdsOf } from '../support/channels.js';
-import { ownerWithBank } from '../support/client.js';
+import { agentOf, bankWith, newChannel, questionIdsOf } from '../support/channels.js';
 import { useReviewSuite } from '../support/questions.js';
 
-const { app, seed } = useReviewSuite();
+const suite = useReviewSuite();
+const { app } = suite;
 
 /** An owner, a bank with `count` ready questions, and a channel on it. */
 async function channelWith(count: number, settings: Parameters<typeof newChannel>[2] = {}) {
-  const { owner, bankId } = await ownerWithBank(app());
-  const ids = await seed(
-    owner,
-    bankId,
-    Array.from({ length: count }, (_, i) => ({ stem: `Question ${i + 1}?`, answers: ['B'] })),
-  );
+  const { owner, bankId, ids } = await bankWith(suite, count);
   const channel = await newChannel(owner, bankId, settings);
   return { owner, bankId, ids, channel, agent: agentOf(app(), channel.key) };
 }
@@ -71,12 +66,12 @@ describe('a key reaches its own channel only', () => {
     };
     expect((await a.agent.answer(otherDelivery)).statusCode).toBe(404);
     expect((await agentOf(app(), 'qbc_wrong').batch()).statusCode).toBe(401);
-    await a.owner.patch(`/api/channels/${a.channel.id}`, { paused: true });
+    await a.owner.post(`/api/shares/${a.channel.id}/pause`);
     expect((await a.agent.batch()).json().error.code).toBe('channel_paused');
-    const renewed = (await a.owner.post(`/api/channels/${a.channel.id}/key`, {})).json();
+    const renewed = (await a.owner.post(`/api/shares/${a.channel.id}/secret`)).json();
     expect((await a.agent.stats()).statusCode).toBe(401);
-    expect((await agentOf(app(), renewed.key).stats()).statusCode).toBe(200);
-    await b.owner.delete(`/api/channels/${b.channel.id}`);
+    expect((await agentOf(app(), renewed.secret).stats()).statusCode).toBe(200);
+    await b.owner.delete(`/api/shares/${b.channel.id}`);
     expect((await b.agent.stats()).statusCode).toBe(401);
   });
 });

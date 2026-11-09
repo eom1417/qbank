@@ -28,6 +28,11 @@ if (config.mode === 'local') {
   backUp();
   setInterval(backUp, 60 * 60_000).unref();
 }
+// Shares keep receivers' records only as long as their policy says (DEC-39): checked hourly.
+const purgeShares = () =>
+  void app.sharing.purge(systemClock.now()).catch((error: unknown) => app.log.error(error));
+purgeShares();
+setInterval(purgeShares, 60 * 60_000).unref();
 if (pairingToken) {
   app.log.info(
     `QBank is running for you only. To pair another browser (a phone), open #pair=<code> with the code in ${config.imports.dataDir}/pairing-token`,

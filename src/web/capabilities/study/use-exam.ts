@@ -2,9 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import type { ExamStateResponse, ItemResponse } from '../../../contracts/study.js';
 import { ApiError } from '../../platform/api/client.js';
+import type { SaveStatus } from '../exam-ui/SaveState.js';
 import { fetchExamState, flagExamItem, openExamItem, saveChoice } from './api.js';
-
-export type SaveStatus = 'idle' | 'saving' | 'saved' | 'failed';
 
 /**
  * An exam in the browser (UI-17): the server keeps the answers, the flags and the clock; the

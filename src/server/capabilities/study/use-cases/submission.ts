@@ -1,6 +1,5 @@
 import type { SessionRow } from '../adapters/session-repository.js';
-import { isOverdue } from '../domain/exam.js';
-import { isCorrect, type Snapshot } from '../domain/grading.js';
+import { isCorrect, isOverdue, type Snapshot } from '../../exam-rules/index.js';
 import type { StudyDeps } from './deps.js';
 import { noteDifficulty } from './difficulty.js';
 

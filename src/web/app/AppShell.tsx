@@ -50,6 +50,7 @@ function AccountLinks() {
       </NavLink>
       <NavLink to="/search">{t('nav.search')}</NavLink>
       <NavLink to="/analytics">{t('nav.analytics')}</NavLink>
+      <NavLink to="/sharing">{t('sharing.title')}</NavLink>
       <NavLink to="/settings">{t('shell.nav.settings')}</NavLink>
       <NavLink to="/help">{t('help.link')}</NavLink>
       {mode === 'accounts' && (

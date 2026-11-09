@@ -2,12 +2,12 @@ import { useCallback } from 'react';
 import { Alert, MutedText, Stack, Subtitle } from '../../design-system/index.js';
 import { useQuery } from '../../platform/api/use-query.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
-import { fetchChannelStats } from './api.js';
+import { fetchShareStats } from './api.js';
 
-/** One channel's own numbers (DEC-36): what it sent and how its recipients answered. */
+/** An agent share's own numbers (DEC-36): what it sent and how its recipients answered. */
 export function ChannelStatsView({ id }: { id: string }) {
   const { t, locale } = useI18n();
-  const { state } = useQuery(useCallback(() => fetchChannelStats(id), [id]));
+  const { state } = useQuery(useCallback(() => fetchShareStats(id), [id]));
   if (state.status === 'loading') return <MutedText>{t('common.loading')}</MutedText>;
   if (state.status === 'error') return <Alert tone="error">{t(state.error)}</Alert>;
   const s = state.data;

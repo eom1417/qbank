@@ -8,42 +8,6 @@ import { z } from 'zod';
 
 const Letter = z.string().regex(/^[A-J]$/);
 
-/** How a channel is set up by its owner. */
-export const ChannelSettings = z
-  .object({
-    name: z.string().trim().min(1).max(100),
-    /** Empty: every chapter of the bank. */
-    chapterIds: z.array(z.uuid()).max(200),
-    batchSize: z.number().int().min(1).max(10),
-    /** When every question has gone out: start a new cycle, or stop sending. */
-    whenDone: z.enum(['restart', 'stop']),
-  })
-  .strict();
-export type ChannelSettings = z.infer<typeof ChannelSettings>;
-
-export const ChannelUpdate = ChannelSettings.partial()
-  .extend({ paused: z.boolean().optional() })
-  .strict();
-
-export const ChannelView = ChannelSettings.extend({
-  id: z.uuid(),
-  bankId: z.uuid(),
-  /** The key's first characters, to recognise it; the key itself is shown once. */
-  keyPrefix: z.string(),
-  paused: z.boolean(),
-  cycle: z.number().int(),
-  createdAt: z.iso.datetime(),
-  lastUsedAt: z.iso.datetime().nullable(),
-}).strict();
-export type ChannelView = z.infer<typeof ChannelView>;
-
-export const ChannelListResponse = z.object({ channels: z.array(ChannelView) }).strict();
-export type ChannelListResponse = z.infer<typeof ChannelListResponse>;
-
-/** A new channel or a new key: the key is in this answer only, never again. */
-export const ChannelKeyResponse = z.object({ channel: ChannelView, key: z.string() }).strict();
-export type ChannelKeyResponse = z.infer<typeof ChannelKeyResponse>;
-
 /** A channel's own numbers: what it sent and how its recipients answered. */
 export const ChannelStats = z
   .object({

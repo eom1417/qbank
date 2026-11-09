@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import {
-  isCorrect,
-  pickBatch,
-} from '../../../src/server/capabilities/channels/domain/selection.js';
+import { pickBatch } from '../../../src/server/capabilities/channels/domain/selection.js';
+import { isCorrect } from '../../../src/server/capabilities/exam-rules/index.js';
 import { createRateLimit } from '../../../src/server/platform/http/rate-limit.js';
 
 const READY = ['a', 'b', 'c'];

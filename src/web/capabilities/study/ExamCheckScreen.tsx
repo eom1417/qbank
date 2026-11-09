@@ -3,7 +3,6 @@ import { Link, useNavigate, useParams } from 'react-router';
 import {
   Alert,
   buttonClass,
-  Card,
   ConfirmButton,
   Heading,
   MutedText,
@@ -13,6 +12,7 @@ import {
 import { useQuery } from '../../platform/api/use-query.js';
 import { useAction } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
+import { CheckSummary } from '../exam-ui/CheckSummary.js';
 import { fetchExamState, submitExam } from './api.js';
 
 /**
@@ -30,19 +30,11 @@ export function ExamCheckScreen() {
   });
   if (state.status !== 'ready') return <MutedText>{t('common.loading')}</MutedText>;
   const items = state.data.items;
-  const unanswered = items.filter((i) => !i.answered);
   const back = (position: number) => `/exam/sessions/${sessionId}?at=${position}`;
   return (
     <Stack>
       <Heading>{t('exam.check.title')}</Heading>
-      <Card>
-        <MutedText>
-          {t('exam.check.answered')} {items.length - unanswered.length} ·{' '}
-          {t('exam.check.unanswered')} {unanswered.length} · {t('exam.check.flagged')}{' '}
-          {items.filter((i) => i.flagged).length}
-        </MutedText>
-      </Card>
-      {unanswered.length > 0 && <Alert tone="info">{t('exam.check.warning')}</Alert>}
+      <CheckSummary items={items} />
       <Row>
         {items
           .filter((i) => (!i.answered || i.flagged) && i.changeable)

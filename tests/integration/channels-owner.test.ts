@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { agentOf, newChannel, questionIdsOf } from '../support/channels.js';
+import { agentOf, newChannel, questionIdsOf, studySnapshot } from '../support/channels.js';
 import { ownerWithBank, registeredBrowser } from '../support/client.js';
 import { useReviewSuite } from '../support/questions.js';
 import { answer, startTutor } from '../support/study.js';
@@ -14,14 +14,14 @@ describe("the owner's channels (DEC-36)", () => {
     const { response, key, id } = await newChannel(owner, bankId);
     expect(response.statusCode).toBe(201);
     expect(key).toMatch(/^qbc_/);
-    const list = (await owner.get(`/api/banks/${bankId}/channels`)).json();
-    expect(list.channels[0]).toMatchObject({ id, keyPrefix: key.slice(0, 10) });
+    const list = (await owner.get(`/api/shares?bankId=${bankId}`)).json();
+    expect(list.shares[0]).toMatchObject({ id, keyPrefix: key.slice(0, 10) });
     expect(JSON.stringify(list)).not.toContain(key);
     const { browser: stranger } = await registeredBrowser(app());
-    expect((await stranger.get(`/api/banks/${bankId}/channels`)).statusCode).toBe(404);
-    expect((await stranger.get(`/api/channels/${id}/stats`)).statusCode).toBe(404);
-    expect((await stranger.delete(`/api/channels/${id}`)).statusCode).toBe(404);
-    const invalid = await owner.post(`/api/banks/${bankId}/channels`, { name: 'x', batchSize: 99 });
+    expect((await stranger.get(`/api/shares?bankId=${bankId}`)).statusCode).toBe(404);
+    expect((await stranger.get(`/api/shares/${id}/stats`)).statusCode).toBe(404);
+    expect((await stranger.delete(`/api/shares/${id}`)).statusCode).toBe(404);
+    const invalid = await owner.post(`/api/banks/${bankId}/shares`, { kind: 'agent', name: 'x' });
     expect(invalid.statusCode).toBe(400);
   });
 });
@@ -32,26 +32,7 @@ describe('a channel stays apart from study (DEC-36)', () => {
     const ids = await seed(owner, bankId, QUESTIONS);
     const sessionId = await startTutor(owner, bankId, 1);
     await answer(owner, sessionId, 0, ['B']);
-    const db = app.db();
-    const snapshot = async () => ({
-      summary: (await owner.get(`/api/analytics/summary?bankId=${bankId}`)).json(),
-      items: await db
-        .selectFrom('study_item')
-        .selectAll()
-        .where('session_id', '=', sessionId)
-        .execute(),
-      marks: await db
-        .selectFrom('question_mark')
-        .selectAll()
-        .where('question_id', 'in', ids)
-        .execute(),
-      questions: await db
-        .selectFrom('question')
-        .select(['id', 'version', 'difficulty', 'difficulty_kind', 'status'])
-        .where('id', 'in', ids)
-        .orderBy('id')
-        .execute(),
-    });
+    const snapshot = () => studySnapshot(app.db(), owner, { bankId, sessionId, questionIds: ids });
     const before = await snapshot();
     const agent = agentOf(app(), (await newChannel(owner, bankId, { batchSize: 4 })).key);
     const batch = (await agent.batch()).json();
@@ -70,7 +51,7 @@ describe('channel numbers and sessions', () => {
     const two = await newChannel(owner, bankId, { batchSize: 1 });
     await agentOf(app(), one.key).batch();
     await agentOf(app(), one.key).batch();
-    const stats = async (id: string) => (await owner.get(`/api/channels/${id}/stats`)).json();
+    const stats = async (id: string) => (await owner.get(`/api/shares/${id}/stats`)).json();
     expect(await stats(one.id)).toMatchObject({ sentTotal: 4, batches: 2, ready: 4 });
     expect(await stats(two.id)).toMatchObject({ sentTotal: 0, batches: 0, ready: 4 });
   });

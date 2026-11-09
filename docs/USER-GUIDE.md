@@ -114,7 +114,33 @@ the question page.
 - **Search:** in question text, options and notes.
 - **Results report:** an HTML file you download for yourself.
 
-## 7. Look and feel
+## 7. Sharing
+
+Every way questions leave your bank is a "share"; the bank itself stays private. From the bank
+page → **Shares** (the old publishing channels are there too):
+
+- **Start from a preset:** **formal exam** (a link with an access code, one timed attempt, only the
+  score after submitting), **open practice** (the answer and explanation after each question),
+  **daily WhatsApp/Telegram question**, or **API/MCP** for an agent with a key. Then change what you
+  want: chapters and number of questions, who gets in, start and end, attempts and duration, what
+  is shown and when, and whether results keep names and for how many days.
+- **The card:** before publishing you see a plain-language card of what you chose, and a warning if
+  some of these questions already went out in another share. People who open the link see the same
+  card before they start.
+- **The link** is shown once. Whoever opens it needs no account: they read the card, type their
+  name (and the access code if you set one) and take the exam on the same exam page. Exam and
+  practice links work only on QBank hosted on a server, not on the local copy on your computer.
+- **Results are yours alone:** every attempt and how each question fared. They never change your
+  own study, mastery or analytics.
+- **Controls:** pause or resume, end, renew the link or key (the old one stops at once), archive or
+  delete. Changed settings apply to new attempts only, and each share keeps a record of what
+  happened.
+- **Exam questions are reserved:** they do not go out through agent shares while the exam is not
+  archived, unless you turn the reservation off.
+
+Connecting an agent step by step: `docs/CHANNELS.md`.
+
+## 8. Look and feel
 
 **Settings → Look and experience** has four experiences:
 
@@ -126,7 +152,7 @@ the question page.
 The look changes at once and is saved for you. Every experience works in light and dark, and in
 Arabic and English.
 
-## 8. AI (optional)
+## 9. AI (optional)
 
 **Settings → AI providers:**
 
@@ -139,7 +165,7 @@ Arabic and English.
 - Provider tools (Claude Code and Codex) **update themselves**, so new models appear without a
   step from you.
 
-## 9. Backups and restore
+## 10. Backups and restore
 
 - **Daily automatic backups** of everything: QBank keeps the 7 newest, plus one from each of the 4
   weeks before them.
@@ -149,11 +175,11 @@ Arabic and English.
   iCloud, OneDrive), and every backup is copied there.
 - **First time?** In the empty library press **Make the sample bank**: ten questions with answers and explanations, ready to study in seconds, with no file and no AI.
 - **Send feedback** (Help): say what you tried and what happened; a GitHub issue opens filled in for you to send. No text of your questions or files goes into it.
-- **Publishing channels** (bank page → Publishing channels): an outside agent (WhatsApp, Telegram, n8n…) takes the bank's questions in batches that never repeat, with the channel's own key, shown once. Each channel keeps its own numbers; your study is never touched. How to connect one: `docs/CHANNELS.md`.
+- **Shares:** to give questions from a bank to an agent or to people by a link, see "Sharing" above.
 - **Export a bank** to a ZIP file, and restore it as a new bank. The file holds no keys or sign-ins; it keeps the AI's work (study notes, change badges, "the file says", difficulty).
 - **Deleting a bank, or all your data,** shows what goes before anything happens.
 
-## 10. When something goes wrong
+## 11. When something goes wrong
 
 - **"System health"** in Settings shows the AI service, disk space, the last backup and the last
   failed import. The home page shows a notice only when something needs your attention.

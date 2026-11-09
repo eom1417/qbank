@@ -13,14 +13,20 @@ export class ApiError extends Error {
   }
 }
 
-async function send(method: string, path: string, body?: unknown): Promise<Response> {
+async function send(
+  method: string,
+  path: string,
+  body?: unknown,
+  headers: Record<string, string> = {},
+): Promise<Response> {
   const form = body instanceof FormData;
   try {
     return await fetch(path, {
       method,
       credentials: 'same-origin',
       // A FormData body (a file upload) sets its own multipart content type.
-      headers: body === undefined || form ? {} : { 'content-type': 'application/json' },
+      headers:
+        body === undefined || form ? headers : { ...headers, 'content-type': 'application/json' },
       body: body === undefined ? null : form ? body : JSON.stringify(body),
     });
   } catch {
@@ -32,17 +38,25 @@ async function send(method: string, path: string, body?: unknown): Promise<Respo
  * The raw response, for APIs with their own error shape (the AI providers kit replies with
  * its tagged errors). Network failures still throw `ApiError('network')`.
  */
-export const apiRaw = (method: 'GET' | 'POST', path: string, body?: unknown) =>
-  send(method, path, body);
+export const apiRaw = (
+  method: 'GET' | 'POST',
+  path: string,
+  body?: unknown,
+  headers?: Record<string, string>,
+) => send(method, path, body, headers);
 
-/** The one HTTP client of the SPA: responses are validated against the shared contracts. */
+/**
+ * The one HTTP client of the SPA: responses are validated against the shared contracts.
+ * `headers` carry extra credentials, e.g. a shared exam's attempt token (M30).
+ */
 export async function apiRequest<S extends z.ZodType>(
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
   path: string,
   schema: S,
   body?: unknown,
+  headers?: Record<string, string>,
 ): Promise<z.infer<S>> {
-  const response = await send(method, path, body);
+  const response = await send(method, path, body, headers);
   const json: unknown = response.status === 204 ? null : await response.json().catch(() => null);
   if (!response.ok) {
     const parsed = ErrorResponse.safeParse(json);

@@ -1,68 +1,31 @@
 import type { FastifyInstance } from 'fastify';
-import {
-  ChannelSettings,
-  ChannelUpdate,
-  type ChannelKeyResponse,
-  type ChannelListResponse,
-  type ChannelStats,
-  type ChannelView,
-} from '../../../../contracts/channels.js';
-import { parseInput } from '../../../platform/http/validate.js';
+import type { ShareSecretResponse, ShareView } from '../../../../contracts/sharing.js';
 import type { RequireActor } from '../../identity/index.js';
 import type { ChannelsDeps } from '../use-cases/deps.js';
-import {
-  channelStats,
-  createChannel,
-  listChannels,
-  ownedChannel,
-  removeChannel,
-  renewKey,
-  updateChannel,
-} from '../use-cases/manage.js';
+import { removeShare } from '../use-cases/manage.js';
+import { controlShare, renewSecret, type Control } from '../use-cases/shares-control.js';
 
-type BankParams = { Params: { bankId: string } };
 type IdParams = { Params: { id: string } };
 
-/** The owner's channel screens (signed in): set up, pause, new key, delete, numbers. */
+const CONTROLS: readonly Control[] = ['pause', 'resume', 'end', 'archive'];
+
+/** The owner's controls over a share (signed in, DEC-39): pause, end, archive, renew, delete. */
 export function registerOwnerRoutes(
   app: FastifyInstance,
   deps: ChannelsDeps,
   requireActor: RequireActor,
 ) {
-  app.get<BankParams>(
-    '/api/banks/:bankId/channels',
-    async (request): Promise<ChannelListResponse> =>
-      listChannels(deps, await requireActor(request), request.params.bankId),
-  );
-
-  app.post<BankParams>('/api/banks/:bankId/channels', async (request, reply) => {
-    const actor = await requireActor(request);
-    const settings = parseInput(ChannelSettings, request.body);
-    const created: ChannelKeyResponse = await createChannel(
-      deps,
-      actor,
-      request.params.bankId,
-      settings,
+  for (const control of CONTROLS)
+    app.post<IdParams>(`/api/shares/:id/${control}`, async (request): Promise<ShareView> =>
+      controlShare(deps, await requireActor(request), request.params.id, control),
     );
-    return reply.status(201).send(created);
-  });
 
-  app.patch<IdParams>('/api/channels/:id', async (request): Promise<ChannelView> => {
-    const actor = await requireActor(request);
-    return updateChannel(deps, actor, request.params.id, parseInput(ChannelUpdate, request.body));
-  });
-
-  app.post<IdParams>('/api/channels/:id/key', async (request): Promise<ChannelKeyResponse> =>
-    renewKey(deps, await requireActor(request), request.params.id),
+  app.post<IdParams>('/api/shares/:id/secret', async (request): Promise<ShareSecretResponse> =>
+    renewSecret(deps, await requireActor(request), request.params.id),
   );
 
-  app.delete<IdParams>('/api/channels/:id', async (request, reply) => {
-    await removeChannel(deps, await requireActor(request), request.params.id);
+  app.delete<IdParams>('/api/shares/:id', async (request, reply) => {
+    await removeShare(deps, await requireActor(request), request.params.id);
     return reply.status(204).send();
-  });
-
-  app.get<IdParams>('/api/channels/:id/stats', async (request): Promise<ChannelStats> => {
-    const row = await ownedChannel(deps, await requireActor(request), request.params.id);
-    return channelStats(deps, row);
   });
 }

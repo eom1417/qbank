@@ -1,24 +1,13 @@
 import { Link, useParams, useSearchParams } from 'react-router';
 import type { ItemResponse } from '../../../contracts/study.js';
-import { Alert, Button, buttonClass, MutedText, Row, Stack } from '../../design-system/index.js';
+import { buttonClass, MutedText, Stack } from '../../design-system/index.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
-import { QuestionCard } from './QuestionBody.js';
-import { ExamClock } from './ExamClock.js';
-import { ExamMap } from './ExamMap.js';
-import { useExam, type SaveStatus } from './use-exam.js';
-
-const SAVE_TEXT = { saving: 'exam.saving', saved: 'exam.saved', failed: 'exam.notSaved' } as const;
-
-/** Whether the last choice reached the server: never claims a save it did not confirm. */
-function SaveState({ status }: { status: SaveStatus }) {
-  const { t } = useI18n();
-  if (status === 'idle') return null;
-  return status === 'failed' ? (
-    <Alert tone="error">{t(SAVE_TEXT.failed)}</Alert>
-  ) : (
-    <Alert tone="info">{t(SAVE_TEXT[status])}</Alert>
-  );
-}
+import { ExamMap } from '../exam-ui/ExamMap.js';
+import { ExamMoves } from '../exam-ui/ExamMoves.js';
+import { ExamProgress } from '../exam-ui/ExamProgress.js';
+import { QuestionCard } from '../exam-ui/QuestionCard.js';
+import { SaveState } from '../exam-ui/SaveState.js';
+import { useExam } from './use-exam.js';
 
 /** The question with no hint of its answer: no marks, no explanation (FR-13-006, UAT-051). */
 function ExamQuestion({
@@ -32,7 +21,8 @@ function ExamQuestion({
   const choices = item.options.map((o) => ({ value: o.letter, label: `${o.label} ${o.text}` }));
   return (
     <QuestionCard
-      item={item}
+      question={item}
+      pictureUrl={(id) => `/api/media/${id}`}
       choices={choices}
       selected={item.saved}
       disabled={!item.changeable}
@@ -56,41 +46,33 @@ export function ExamScreen() {
   const onZero = () => void (perQuestion && !atEnd ? exam.go(item.position + 1) : exam.refresh());
   return (
     <Stack>
-      <Row>
-        <MutedText>
-          {t('exam.question')} {item.position + 1} {t('exam.of')} {item.total}
-        </MutedText>
-        <ExamClock
-          key={`${item.position}:${state.secondsLeft}`}
-          seconds={state.secondsLeft}
-          onZero={onZero}
-        />
-      </Row>
+      <ExamProgress
+        position={item.position}
+        total={item.total}
+        secondsLeft={state.secondsLeft}
+        onZero={onZero}
+      />
       <ExamQuestion item={item} onChoose={(chosen) => void exam.choose(chosen)} />
       <SaveState status={exam.saving} />
-      <Row>
-        <Button variant="ghost" onClick={() => void exam.toggleFlag()}>
-          {t(item.examFlag ? 'exam.unflag' : 'exam.flag')}
-        </Button>
-        <Button
-          variant="secondary"
-          disabled={perQuestion || item.position === 0}
-          onClick={() => void exam.go(item.position - 1)}
-        >
-          {t('exam.previous')}
-        </Button>
-        <Button
-          variant="secondary"
-          disabled={atEnd}
-          onClick={() => void exam.go(item.position + 1)}
-        >
-          {t('exam.next')}
-        </Button>
-        <Link className={buttonClass()} to={`/exam/sessions/${sessionId}/check`}>
-          {t('exam.check')}
-        </Link>
-      </Row>
-      <ExamMap state={state} onGo={(p) => void exam.go(p)} />
+      <ExamMoves
+        position={item.position}
+        flagged={item.examFlag}
+        onFlag={() => void exam.toggleFlag()}
+        canPrevious={!perQuestion && item.position > 0}
+        canNext={!atEnd}
+        onGo={(p) => void exam.go(p)}
+        check={
+          <Link className={buttonClass()} to={`/exam/sessions/${sessionId}/check`}>
+            {t('exam.check')}
+          </Link>
+        }
+      />
+      <ExamMap
+        items={state.items}
+        current={state.position}
+        canGo={(i) => i.changeable || !perQuestion}
+        onGo={(p) => void exam.go(p)}
+      />
     </Stack>
   );
 }

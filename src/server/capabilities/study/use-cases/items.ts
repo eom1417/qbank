@@ -2,8 +2,7 @@ import type { ItemResponse, SummaryResponse } from '../../../../contracts/study.
 import { AppError, notFound } from '../../../platform/errors/index.js';
 import type { Actor } from '../../identity/index.js';
 import type { ItemRow, SessionRow } from '../adapters/session-repository.js';
-import { canChange } from '../domain/exam.js';
-import { isCorrect, type Snapshot } from '../domain/grading.js';
+import { canChange, isCorrect, type Snapshot } from '../../exam-rules/index.js';
 import type { StudyDeps } from './deps.js';
 import { noteDifficulty } from './difficulty.js';
 import { getSession, ownedSession } from './sessions.js';

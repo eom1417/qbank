@@ -7,6 +7,24 @@ change.
 الإصدارات: `0.x` أثناء التجربة، و**`1.0.0` أول إصدار يعتمده المالك**. بعده: الخانة الأخيرة للإصلاحات
 الصغيرة، والوسطى للميزات الجديدة، والأولى للتغيير الجوهري.
 
+## Unreleased / لم يصدر بعد
+
+### Governed sharing (M30, DEC-39; in progress) / المشاركة المحكومة (قيد التنفيذ)
+
+- One "share" for every way a bank's questions leave it: an agent (the publishing channels), an
+  exam link or a practice link. The bank itself stays private. / كل خروج لأسئلة البنك «مشاركة».
+- One policy of six questions (what, who, when and how much, what receivers see, what the owner
+  keeps, control), enforced by one gate on the server for the agent API, MCP and links.
+- A plain-language card from the policy, shown to the owner before publishing and to receivers
+  before they start; presets (formal exam, open practice, daily WhatsApp/Telegram question,
+  API/MCP); an append-only record per share; an exposure warning before publishing.
+- Exam and practice links for people without an account (`/t/<link>`), on a server only; results
+  go to the owner and never touch the owner's own study. Exam questions are reserved from agent
+  shares while the exam is not archived.
+- Pause, end and renew act at once; a changed policy is a new version for new attempts only.
+- Agent API `/api/channel/v1` unchanged, with two possible new answers: `not_revealed_yet` before
+  the share's reveal time, and `share_limit_reached` (429) at the daily batch limit.
+
 ## 0.1.0 (2026-11-06): the first trial / أول تجربة
 
 The first version for a small group of testers. / أول نسخة لمجموعة صغيرة من المختبرين.

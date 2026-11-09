@@ -14,21 +14,9 @@ import {
 import { useQuery } from '../../platform/api/use-query.js';
 import { useAction } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
+import { CountCard } from '../exam-ui/CountCard.js';
 import { fetchSummary, retryWrong } from './api.js';
 import { ExamResult } from './ExamResult.js';
-
-/** A count and what it is out of: rates never hide their denominator (FR-12-010). */
-function Count({ label, value, of }: { label: string; value: number; of: number }) {
-  const { t } = useI18n();
-  return (
-    <Card>
-      <Subtitle>{label}</Subtitle>
-      <p>
-        {value} {t('study.summary.outOf')} {of}
-      </p>
-    </Card>
-  );
-}
 
 /** The end of a session (UI-15, JY-07): honest counts, mistakes to retry, or a kind word. */
 export function SummaryScreen() {
@@ -47,10 +35,10 @@ export function SummaryScreen() {
     <Stack>
       <Heading>{t('study.summary.title')}</Heading>
       <Grid>
-        <Count label={t('study.summary.answered')} value={s.answered} of={s.total} />
-        <Count label={t('study.summary.correct')} value={s.correct} of={s.answered} />
-        <Count label={t('study.summary.wrong')} value={s.wrong} of={s.answered} />
-        <Count label={t('study.summary.skipped')} value={s.skipped} of={s.total} />
+        <CountCard label={t('study.summary.answered')} value={s.answered} of={s.total} />
+        <CountCard label={t('study.summary.correct')} value={s.correct} of={s.answered} />
+        <CountCard label={t('study.summary.wrong')} value={s.wrong} of={s.answered} />
+        <CountCard label={t('study.summary.skipped')} value={s.skipped} of={s.total} />
       </Grid>
       <MutedText>
         {t('study.summary.time')} {s.seconds}
