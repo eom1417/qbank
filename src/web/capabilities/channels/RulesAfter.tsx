@@ -1,6 +1,7 @@
 import type { RevealLevel } from '../../../contracts/sharing.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
-import { fill, levelKey } from './policy-sentences.js';
+import { fill } from '../../platform/i18n/fill.js';
+import { levelKey } from './policy-sentences.js';
 import { RuleChoice, RuleNumber } from './RuleFields.js';
 import { RuleGroup, type RuleProps } from './RuleGroup.js';
 import { RETENTION_DAYS, REVEAL_HOURS } from './rule-options.js';

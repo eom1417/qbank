@@ -15,22 +15,3 @@ test('a new owner studies the sample bank within two minutes, with no file and n
   await expect(page.getByRole('heading', { name: 'ابدأ جلسة Tutor' })).toBeVisible();
   await expect(page.getByText('الجاهز هو هذا العدد فقط: 10', { exact: false })).toBeVisible();
 });
-
-test('feedback opens a GitHub issue filled in by the owner, with the report (M28.2)', async ({
-  page,
-  context,
-}) => {
-  await context.route('https://github.com/**', (route) => route.fulfill({ body: 'issue form' }));
-  await signUp(page, newLearner('feedback'), AR);
-  await page.goto('/help');
-  await page.getByLabel('النوع').selectOption({ label: 'قراءة سيئة لملف' });
-  await page.getByLabel('ماذا كنت تحاول أن تفعل؟').fill('استيراد ملف القلب');
-  await page.getByLabel('ماذا حدث بدلاً من ذلك؟').fill('قرأ 3 من 40');
-  const popup = page.waitForEvent('popup');
-  await page.getByRole('button', { name: 'افتح البلاغ على GitHub' }).click();
-  const issue = new URL((await popup).url());
-  expect(issue.pathname).toBe('/eom1417/qbank/issues/new');
-  expect(issue.searchParams.get('title')).toBe('[reading] استيراد ملف القلب');
-  expect(issue.searchParams.get('body')).toContain('قرأ 3 من 40');
-  expect(issue.searchParams.get('body')).toContain('System report');
-});

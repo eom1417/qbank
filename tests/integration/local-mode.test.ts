@@ -16,7 +16,10 @@ async function pair(headers: Record<string, string>, payload: object = {}) {
 
 describe('local mode', () => {
   it('reports its mode and has no sign-up or password sign-in', async () => {
-    expect((await app().inject({ url: '/api/meta' })).json()).toEqual({ mode: 'local' });
+    expect((await app().inject({ url: '/api/meta' })).json()).toEqual({
+      mode: 'local',
+      operatorName: null,
+    });
     for (const url of ['/api/auth/sign-up', '/api/auth/sign-in', '/api/account/password']) {
       const response = await app().inject({
         method: 'POST',

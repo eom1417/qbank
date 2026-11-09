@@ -10,6 +10,11 @@ interface NewAccount extends Account {
   termsAcceptedAt: Date;
 }
 
+export interface AccountContact {
+  email: string;
+  displayName: string;
+}
+
 export interface AccountRepository {
   insert(account: NewAccount): Promise<'created' | 'email_taken'>;
   findCredentials(email: string): Promise<{ id: string; passwordHash: string } | undefined>;
@@ -17,6 +22,8 @@ export interface AccountRepository {
   findById(id: string): Promise<Account | undefined>;
   update(id: string, changes: UpdateAccountRequest): Promise<void>;
   setPasswordHash(id: string, passwordHash: string): Promise<void>;
+  /** E-mail and name of each account found, by id (the operator's console, DEC-40). */
+  contactsOf(ids: readonly string[]): Promise<Map<string, AccountContact>>;
   /** Deletes the account; everything it owns goes with it (database cascades). */
   delete(id: string): Promise<boolean>;
 }
@@ -35,6 +42,7 @@ const fromRow = (row: AccountRow): Account => ({
     explanationMode: row.explanation_mode,
     reviewReminders: row.review_reminders,
   },
+  operatorConfirmed: row.operator_confirmed_at !== null,
 });
 
 /** Column names for a partial update; undefined fields are left untouched. */
@@ -66,6 +74,16 @@ async function insertAccount(db: Db, account: NewAccount) {
       terms_accepted_at: account.termsAcceptedAt,
     })
     .execute();
+}
+
+async function findContacts(db: Db, ids: readonly string[]) {
+  if (ids.length === 0) return new Map<string, AccountContact>();
+  const rows = await db
+    .selectFrom('account')
+    .select(['id', 'email', 'display_name'])
+    .where('id', 'in', [...ids])
+    .execute();
+  return new Map(rows.map((r) => [r.id, { email: r.email, displayName: r.display_name }]));
 }
 
 export function createAccountRepository(db: Db): AccountRepository {
@@ -105,6 +123,7 @@ export function createAccountRepository(db: Db): AccountRepository {
         .where('id', '=', id)
         .execute();
     },
+    contactsOf: (ids) => findContacts(db, ids),
     async delete(id) {
       const result = await db.deleteFrom('account').where('id', '=', id).executeTakeFirst();
       return result.numDeletedRows > 0n;

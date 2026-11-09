@@ -1,6 +1,6 @@
 import { TextField } from '../../design-system/index.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
-import { fill } from './policy-sentences.js';
+import { fill } from '../../platform/i18n/fill.js';
 import { fromLocalInput, toLocalInput } from './policy-form.js';
 import { RuleChoice, RuleNumber } from './RuleFields.js';
 import { RuleGroup, type RuleProps } from './RuleGroup.js';

@@ -4,7 +4,7 @@ import { useQuery } from '../../platform/api/use-query.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { fetchTaxonomy } from '../library/taxonomy-api.js';
 import { fetchExposure } from './api.js';
-import { fill } from './policy-sentences.js';
+import { fill } from '../../platform/i18n/fill.js';
 import { toggleChapter } from './policy-form.js';
 import type { RuleProps } from './RuleGroup.js';
 import { RulesReveal, RulesRecords } from './RulesAfter.js';

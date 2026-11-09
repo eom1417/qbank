@@ -20,8 +20,16 @@ const TEXT: Record<Locale, { subject: string; body: (link: string) => string }> 
   },
 };
 
-/** The reset e-mail in the account's own language. The token travels in the URL fragment. */
+/** The page that sets a new password. The token travels in the URL fragment, never to a server. */
+export const resetLink = (appOrigin: string, token: string): string =>
+  `${appOrigin}/reset-password#token=${token}`;
+
+/** The token of the reset link written in a message, if it has one. */
+export const resetTokenIn = (text: string): string | null =>
+  /\/reset-password#token=([\w-]+)/.exec(text)?.[1] ?? null;
+
+/** The reset e-mail in the account's own language. */
 export function resetEmail(locale: Locale, appOrigin: string, token: string) {
-  const link = `${appOrigin}/reset-password#token=${token}`;
+  const link = resetLink(appOrigin, token);
   return { subject: TEXT[locale].subject, text: TEXT[locale].body(link) };
 }

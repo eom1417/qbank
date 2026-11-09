@@ -90,6 +90,8 @@ export const AccountResponse = z
     email: z.string(),
     displayName: z.string(),
     preferences: AccountPreferences,
+    /** The server's declared operator (DEC-40): set by QBANK_OPERATOR_EMAIL, never from the UI. */
+    isOperator: z.boolean(),
   })
   .strict();
 export type AccountResponse = z.infer<typeof AccountResponse>;
@@ -98,7 +100,10 @@ export type AccountResponse = z.infer<typeof AccountResponse>;
 export const AppMode = z.enum(['local', 'accounts']);
 export type AppMode = z.infer<typeof AppMode>;
 
-export const AppMetaResponse = z.object({ mode: AppMode }).strict();
+/** `operatorName`: who runs this server, shown to every user (DEC-40); null on a local install. */
+export const AppMetaResponse = z
+  .object({ mode: AppMode, operatorName: z.string().nullable() })
+  .strict();
 export type AppMetaResponse = z.infer<typeof AppMetaResponse>;
 
 /** Pairs this browser with a local install: by its pairing code, or by being the computer itself. */

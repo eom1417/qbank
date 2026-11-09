@@ -10,6 +10,7 @@ import { createChannels } from './capabilities/channels/index.js';
 import { registerHealth } from './capabilities/health/index.js';
 import { createPortability } from './capabilities/portability/index.js';
 import { createLibrary } from './capabilities/library/index.js';
+import { createOperator } from './capabilities/operator/index.js';
 import { createProviders } from './capabilities/providers/index.js';
 import { createQuestions } from './capabilities/questions/index.js';
 import { createSources } from './capabilities/sources/index.js';
@@ -76,6 +77,7 @@ function registerImports(
   providers.register(app);
   const sources = createSources({
     log: app.log,
+    workers: config.imports.workers,
     db,
     clock,
     blobs: parts.blobs,
@@ -177,12 +179,14 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     requirePairingCode: config.requirePairingCode,
     localPeers: config.localPeers,
     publicOrigin: config.allowedOrigins[0] ?? null,
+    operator: config.operator,
   });
   identity.register(app);
   const checks = deps.checkLink ? { checkLink: deps.checkLink } : {};
   const content = registerContent(app, { config, db, clock, ...checks }, identity);
   if (config.devOutbox) registerOutboxRoute(app, db);
   registerOperations(app, deps, identity, content);
+  if (config.mode === 'accounts') registerOperator(app, deps, identity, content);
   app.get('/api/health', async () => ({ status: 'ok' }));
   return app;
 }
@@ -220,4 +224,26 @@ declare module 'fastify' {
     /** Governed sharing's retention purge (DEC-39): main.ts runs it hourly. */
     sharing: { purge(now: Date): Promise<number> };
   }
+}
+
+/** The operator's console (M31, DEC-40): accounts mode only; a local install has no operator. */
+function registerOperator(
+  app: FastifyInstance,
+  { config, db, clock }: AppDeps,
+  identity: IdentityModule,
+  content: ReturnType<typeof registerContent>,
+) {
+  createOperator({
+    db,
+    clock,
+    newId,
+    version: config.version,
+    requireActor: identity.requireActor,
+    requireOperator: identity.requireOperator,
+    contactsOf: identity.contactsOf,
+    resetRequests: identity.resetRequests,
+    resetLink: identity.resetLink,
+    listQueue: content.sources.listQueue,
+    workers: config.imports.workers,
+  }).register(app);
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { feedbackUrl } from '../../../src/web/capabilities/help/FeedbackCard.js';
+import { feedbackMessage, feedbackUrl } from '../../../src/web/capabilities/help/feedback-note.js';
 
 const issue = (url: string) => {
   const parsed = new URL(url);
@@ -26,5 +26,19 @@ describe('feedback as a prefilled GitHub issue (M28.2)', () => {
     const { body } = issue(feedbackUrl('idea', 'Dark mode on the phone', '   ', null));
     expect(body).not.toContain('System report');
     expect(body).not.toContain('What happened');
+  });
+});
+
+describe("feedback to the server's operator (M31, B1)", () => {
+  it('carries the kind and both answers, trimmed', () => {
+    expect(feedbackMessage('reading', '  Import my PDF ', ' Read 3 of 40 ')).toBe(
+      '[reading] Import my PDF\n\nRead 3 of 40',
+    );
+  });
+
+  it('leaves an empty second answer out', () => {
+    expect(feedbackMessage('idea', 'Dark mode on the phone', '   ')).toBe(
+      '[idea] Dark mode on the phone',
+    );
   });
 });

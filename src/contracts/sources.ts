@@ -177,6 +177,8 @@ export const ImportResponse = z
     stage: ImportStage,
     pagesTotal: z.number().int(),
     pagesDone: z.number().int(),
+    /** Waiting imports (any account's) that start before this one; null once it runs (M31, B2). */
+    queuePosition: z.number().int().min(0).nullable(),
     questionsFound: z.number().int(),
     questionsReview: z.number().int(),
     /** What the AI step did: `not_used`, `done`, or why it stopped (`invalid_key`, …). */

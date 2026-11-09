@@ -8,7 +8,7 @@ import { parseInput } from '../../../platform/http/validate.js';
 import type { IdentityDeps } from '../use-cases/deps.js';
 import type { PairingCode } from '../adapters/pairing-token.js';
 import { pairBrowser, signOutOtherDevices } from '../use-cases/local-owner.js';
-import { toAccountResponse } from './presenters.js';
+import { accountView } from './presenters.js';
 import type { RequireActor } from './require-actor.js';
 import { readSessionToken, setSessionCookie } from './session-cookie.js';
 
@@ -93,6 +93,6 @@ export function registerLocalRoutes(app: FastifyInstance, options: LocalRouteOpt
     attempts.clear(request.ip);
     const { account, session } = paired;
     setSessionCookie(reply, session, cookieSecure);
-    return toAccountResponse(account);
+    return accountView(deps, account);
   });
 }

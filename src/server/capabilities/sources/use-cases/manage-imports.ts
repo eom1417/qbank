@@ -48,6 +48,7 @@ export async function getImport(
 ): Promise<ImportResponse> {
   const { job, source } = await ownedJob(deps, actor, jobId);
   const pages = await deps.imports.reportPages(job.id);
+  const queuePosition = await deps.imports.queuePosition(job.id, deps.clock.now());
   return {
     id: job.id,
     sourceId: source.id,
@@ -56,6 +57,7 @@ export async function getImport(
     stage: job.stage,
     pagesTotal: job.pages_total,
     pagesDone: job.pages_done,
+    queuePosition,
     questionsFound: job.questions_found,
     questionsReview: job.questions_review,
     aiOutcome: job.ai_outcome,

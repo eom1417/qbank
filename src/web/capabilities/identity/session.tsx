@@ -23,6 +23,10 @@ interface Session {
   state: SessionState;
   /** Local install (DEC-31) or accounts; null until the server says. */
   mode: AppMode | null;
+  /** Who runs this server (DEC-40), from /api/meta; null on a local install or until known. */
+  operatorName: string | null;
+  /** The signed-in account is this server's declared operator (the server still enforces it). */
+  isOperator: boolean;
   /** Asks the server again after it did not answer (also done by itself every few seconds). */
   retry(): void;
   /** Local mode: pairs this browser with the install's pairing code. */
@@ -91,19 +95,19 @@ function useApplySavedPreferences(state: SessionState) {
 /** How often an unanswered start is retried by itself, so a restarted server is picked up. */
 const RETRY_MS = 5000;
 
-async function loadSession(): Promise<{ mode: AppMode; state: SessionState }> {
-  const { mode } = await apiRequest('GET', '/api/meta', AppMetaResponse);
-  return { mode, state: await (mode === 'local' ? loadLocal() : loadAccount()) };
+async function loadSession() {
+  const meta = await apiRequest('GET', '/api/meta', AppMetaResponse);
+  return { meta, state: await (meta.mode === 'local' ? loadLocal() : loadAccount()) };
 }
 
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<SessionState>({ status: 'loading' });
-  const [mode, setMode] = useState<AppMode | null>(null);
+  const [meta, setMeta] = useState<AppMetaResponse | null>(null);
   useApplySavedPreferences(state);
   const retry = useCallback(() => {
     loadSession().then(
       (loaded) => {
-        setMode(loaded.mode);
+        setMeta(loaded.meta);
         setState(loaded.state);
       },
       () => setState({ status: 'unreachable' }),
@@ -119,7 +123,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const post = (path: string, body: unknown) => apiRequest('POST', path, AccountResponse, body);
   const session: Session = {
     state,
-    mode,
+    mode: meta?.mode ?? null,
+    operatorName: meta?.operatorName ?? null,
+    isOperator: state.status === 'signed-in' && state.account.isOperator,
     retry,
     pair: async (token) => signedIn(await pairWith(token)),
     signIn: async (input) => signedIn(await post('/api/auth/sign-in', input)),

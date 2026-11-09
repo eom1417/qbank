@@ -1,7 +1,8 @@
 import type { ShareKind } from '../../../contracts/sharing.js';
 import { Badge, Card, MutedText, Row, Stack, Title } from '../../design-system/index.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
-import { fill, policySentences, type AnyPolicy, type PolicyLineId } from './policy-sentences.js';
+import { fill } from '../../platform/i18n/fill.js';
+import { policySentences, type AnyPolicy, type PolicyLineId } from './policy-sentences.js';
 import { KIND_ICON } from './share-labels.js';
 
 const LINE_ICON: Record<PolicyLineId, string> = {

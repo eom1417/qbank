@@ -30,13 +30,18 @@ export const helpEn = {
     'Open the bank, then the file’s report. Analytics shows, per file, what was found, ready, waiting, duplicated or missing an answer.',
   'help.rights.title': 'Which files may I upload?',
   'help.rights.body':
-    'Only files you may use for your own study. Never upload pages that identify a patient. QBank is for personal libraries: it has no store and no public sharing.',
+    'Only files you may use for your own study. Never upload pages that identify a patient. Your banks stay private: a question leaves them only through a share you set up yourself, under the rules you choose.',
   'help.privacy.title': 'Where is my data?',
   'help.privacy.body':
     'On your own computer, in QBank’s data folder. AI tasks send only the pages they need to the AI provider you chose. You can export or delete anything from Settings.',
+  'help.privacy.body.server':
+    'On a QBank server run by {operator}. Only they have technical access to the server itself; inside the app, other users never see your banks. AI tasks send only the pages they need to the AI provider you chose. You can export or delete everything from Settings.',
+  'server.operator.fallback': 'the server operator',
   'support.title': 'Report a problem',
   'support.lead':
     'This builds a report without your questions, files or notes. Read it, then copy it into a message or an issue for the QBank project.',
+  'support.lead.server':
+    'This builds a report without your questions, files or notes. Read it, then copy it into a message to {operator}, who runs this server.',
   'support.build': 'Build the report',
   'support.copy': 'Copy the report',
   'support.copied': 'Copied',

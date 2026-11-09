@@ -28,7 +28,7 @@ export const cliLoginEn = {
   'cliLogin.expired': 'The sign-in took longer than 15 minutes. Start again.',
   'cliLogin.cancelled': 'Sign-in cancelled.',
   'cliLogin.replaced': 'A newer sign-in replaced this one.',
-  'cliLogin.unavailable': 'This provider’s program is not available on this computer.',
+  'cliLogin.unavailable': 'This provider’s program is not available where QBank runs.',
   'cliLogin.again': 'Start again',
   'cliLogin.signOut': 'Sign out',
   'cliLogin.signOut.confirm': 'Sign out of this provider',

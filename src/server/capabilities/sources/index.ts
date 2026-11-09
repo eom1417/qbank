@@ -16,6 +16,7 @@ import {
 } from './use-cases/portability.js';
 import { registerImportRoutes, registerSourceRoutes } from './http/routes.js';
 import type { SourcesDeps } from './use-cases/deps.js';
+import { listQueue } from './use-cases/import-queue.js';
 import { createImportWorker } from './worker.js';
 import { linkOpens } from './adapters/link-check.js';
 
@@ -38,6 +39,8 @@ interface SourcesSettings {
   /** The sample bank's PDF (M28.1). */
   samplePdf: string;
   originalRetentionDays: number;
+  /** Imports running at once across accounts (`imports.workers`, M31); one when absent. */
+  workers?: number;
   log: SourcesDeps['log'];
   /** Whether a source link opens; the real web unless a test replaces it. */
   checkLink?: (url: string) => Promise<boolean>;
@@ -59,9 +62,12 @@ export function createSources(settings: SourcesSettings) {
     maxPages: settings.maxPages,
     samplePdf: settings.samplePdf,
     originalRetentionMs: settings.originalRetentionDays * 24 * 60 * 60_000,
+    workers: settings.workers ?? 1,
   };
   return {
     worker: createImportWorker(deps),
+    /** The server-wide import queue for the operator's card (M31, B2). */
+    listQueue: () => listQueue(deps),
     /** The bank's sources for an export, without originals (M13). */
     sourcesOfBank: (ownerId: string, bankId: string) => sourcesOfBank(deps, ownerId, bankId),
     /** The stored originals of a bank, erased with it (FR-19-005). */

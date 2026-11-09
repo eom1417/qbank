@@ -5,6 +5,8 @@ export interface Account {
   email: string;
   displayName: string;
   preferences: AccountPreferences;
+  /** Confirmed from the server's shell as the operator's own account (DEC-40). */
+  operatorConfirmed?: boolean;
 }
 
 /** Defaults for a new account; the locale comes from the sign-up screen. */

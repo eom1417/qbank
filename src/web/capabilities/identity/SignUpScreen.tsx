@@ -14,6 +14,7 @@ import {
 import { text, useSubmit } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { EmailField } from './fields.js';
+import { useOperatorFill } from './mode-copy.js';
 import { useSession } from './session.js';
 
 function SignUpFields({ fieldError }: { fieldError(name: string): string | undefined }) {
@@ -46,6 +47,20 @@ function SignUpFields({ fieldError }: { fieldError(name: string): string | undef
   );
 }
 
+/** Who runs this server and a link to what that means for your data (M31, B3). */
+function OperatorLine() {
+  const { t } = useI18n();
+  const { operatorName } = useSession();
+  const withOperator = useOperatorFill();
+  if (!operatorName) return null;
+  return (
+    <Row>
+      <MutedText>{withOperator(t('auth.signUp.operator'))}</MutedText>
+      <Link to="/help#privacy">{t('auth.signUp.whereData')}</Link>
+    </Row>
+  );
+}
+
 export function SignUpScreen() {
   const { t, locale } = useI18n();
   const { signUp } = useSession();
@@ -67,6 +82,7 @@ export function SignUpScreen() {
     <NarrowColumn>
       <Heading>{t('auth.signUp.title')}</Heading>
       <MutedText>{t('auth.signUp.intro')}</MutedText>
+      <OperatorLine />
       <Card>
         <form className="qb-stack" onSubmit={form.onSubmit} noValidate>
           {form.error && <Alert tone="error">{t(form.error)}</Alert>}

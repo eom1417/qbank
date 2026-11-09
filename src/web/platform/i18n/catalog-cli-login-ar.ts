@@ -30,7 +30,7 @@ export const cliLoginAr: Record<keyof typeof cliLoginEn, string> = {
   'cliLogin.expired': 'استغرق الدخول أكثر من 15 دقيقة. ابدأ من جديد.',
   'cliLogin.cancelled': 'أُلغي تسجيل الدخول.',
   'cliLogin.replaced': 'حلّ محلّه تسجيل دخول أحدث.',
-  'cliLogin.unavailable': 'برنامج هذا المزوّد غير موجود على هذا الجهاز.',
+  'cliLogin.unavailable': 'برنامج هذا المزوّد غير موجود حيث يعمل QBank.',
   'cliLogin.again': 'ابدأ من جديد',
   'cliLogin.signOut': 'تسجيل الخروج',
   'cliLogin.signOut.confirm': 'سجّل الخروج من هذا المزوّد',

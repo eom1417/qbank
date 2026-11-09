@@ -16,12 +16,14 @@ import { providersAr } from './catalog-providers-ar.js';
 import { triageAr } from './catalog-triage-ar.js';
 import { channelsAr } from './catalog-channels-ar.js';
 import { takeAr } from './catalog-take-ar.js';
+import { operatorAr } from './catalog-operator-ar.js';
 
 export const ar: Record<MessageKey, string> = {
   ...providersAr,
   ...triageAr,
   ...channelsAr,
   ...takeAr,
+  ...operatorAr,
   ...localAr,
   ...reviewAr,
   ...duplicatesAr,
@@ -56,7 +58,7 @@ export const ar: Record<MessageKey, string> = {
   'library.title': 'مكتبتي',
   'sample.title': 'جرّب بنكاً جاهزاً',
   'sample.lead':
-    'عشرة أسئلة طبية عامة بإجاباتها وشروحها، تُقرأ على جهازك بلا ذكاء اصطناعي، فتذاكر خلال دقيقتين قبل أن ترفع ملفاتك.',
+    'عشرة أسئلة طبية عامة بإجاباتها وشروحها، جاهزة بلا ذكاء اصطناعي، فتذاكر خلال دقيقتين قبل أن ترفع ملفاتك.',
   'sample.start': 'جهّز البنك التجريبي',
   'sample.bankName': 'بنك تجريبي',
   'feedback.title': 'أرسل ملاحظة',
@@ -107,6 +109,7 @@ export const ar: Record<MessageKey, string> = {
   'error.wrong_code': 'رمز الدخول غير صحيح.',
   'error.links_unavailable': 'روابط الاختبار والتمرين تحتاج QBank على خادم (راجع دليل الاستضافة).',
   'error.not_revealed_yet': 'لم يحن وقت عرض الإجابات بعد.',
+  'error.operator_only': 'هذه الصفحة لمدير الخادم فقط.',
   'error.backup_too_new': 'هذه النسخة من إصدار أحدث من QBank. حدّث QBank ثم استرجعها.',
   'error.page_too_large':
     'في الملف صفحة أكبر من أي صفحة كتاب (أكثر من 70 سم). صدّره من جديد بحجم صفحة عادي.',
@@ -124,7 +127,7 @@ export const ar: Record<MessageKey, string> = {
   'common.loading': 'جارٍ التحميل…',
   'session.unreachable.title': 'خادم QBank لا يرد',
   'session.unreachable.lead':
-    'بياناتك محفوظة. قد يكون QBank يبدأ أو يعيد التشغيل: هذه الصفحة تحاول من جديد وحدها كل بضع ثوانٍ. إن طال الأمر فتأكد أن QBank يعمل على الجهاز الذي يشغّله.',
+    'بياناتك محفوظة. قد يكون QBank يبدأ أو يعيد التشغيل: هذه الصفحة تحاول من جديد وحدها كل بضع ثوانٍ. إن طال الأمر فتأكد أن QBank ما زال يعمل حيث يُستضاف، أو أخبر من يديره.',
   'session.unreachable.retry': 'أعد المحاولة الآن',
   'shell.nav.library': 'المكتبة',
   'shell.nav.settings': 'الإعدادات',

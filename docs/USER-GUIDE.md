@@ -4,7 +4,13 @@ QBank turns your own books and question PDFs into a private question bank, on yo
 There is no account, server or subscription of ours. AI is optional: if you want it, it is your own
 subscription.
 
+> **Opened QBank from a link someone sent you?** Then it runs on a server that person looks after,
+> not on your computer. Install nothing: sign up from the link, then read section 12.
+
 ## 1. Install and run
+
+This section is for running QBank on your own computer. On a server you install nothing (section
+12).
 
 **Easiest, on Windows, macOS and Linux: Docker.** Install [Docker Desktop](https://www.docker.com/products/docker-desktop/) once, then in the QBank folder:
 
@@ -186,3 +192,23 @@ Arabic and English.
 - **The log** is at `.data/app/logs/qbank.log`. It holds no questions or notes.
 - **"Report a problem"** in Help builds a report with no content in it, which you read and then
   copy.
+- **On a server:** the log and system health are with the server operator. Send them feedback from
+  Help (section 12).
+
+## 12. On a server someone else runs
+
+- **Who runs it:** their name is in "Where is my data?" in Help. Your banks are on their server, and
+  only they have technical access to the server. Inside the app nobody else sees your banks, not even
+  the operator: their screen holds feedback, password-reset requests and the import queue only. You
+  can export or delete everything from Settings.
+- **Feedback:** "Send feedback" in Help reaches the operator inside QBank. No text of your questions
+  goes with it unless you type it.
+- **Forgot your password:** tap "Forgot password" and enter your e-mail. No e-mail arrives: your
+  request reaches the operator, who sends you the reset link by WhatsApp or a message. The link works
+  once, for one hour; if it runs out, the operator makes a new one without you asking again.
+- **Imports wait their turn:** the server imports files for several people. If your file waits, you
+  see its place ("two files before yours"), and it starts by itself. Someone else's big book never
+  holds your file back: every account gets its turn.
+- **Not on a server:** the pairing code, "Your other devices" and backups in Settings belong to the
+  local install. On a server you open QBank from any device with your account, and backups are the
+  operator's job.

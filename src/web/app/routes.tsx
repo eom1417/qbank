@@ -38,6 +38,7 @@ import { TakeApp } from '../capabilities/take/TakeApp.js';
 import { RouteError } from './RouteError.js';
 import { SettingsPage } from './SettingsPage.js';
 import { ProvidersScreen } from '../capabilities/providers/ProvidersScreen.js';
+import { OperatorScreen } from '../capabilities/operator/OperatorScreen.js';
 
 export const router = createBrowserRouter([
   // A shared exam or practice (DEC-39): people without an account, outside the app's shell.
@@ -234,6 +235,14 @@ export const router = createBrowserRouter([
         element: (
           <Private>
             <ProvidersScreen />
+          </Private>
+        ),
+      },
+      {
+        path: '/operator',
+        element: (
+          <Private>
+            <OperatorScreen />
           </Private>
         ),
       },

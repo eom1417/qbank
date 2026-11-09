@@ -9,6 +9,20 @@ change.
 
 ## Unreleased / لم يصدر بعد
 
+### Ready to launch on a server (M31, DEC-40; in progress) / جاهز للإطلاق على الخادم (قيد التنفيذ)
+
+- The server operator is a declared role: the account whose e-mail is `QBANK_OPERATOR_EMAIL`,
+  never the first to sign up. `QBANK_OPERATOR_NAME` is the name users see. / «مدير الخادم» دور معلن.
+- One "Server administration" screen for the operator: users' feedback, password-reset requests
+  (Copy link or WhatsApp, no command line) and the import queue. Never anyone's banks or questions.
+- "Send feedback" on a server reaches the operator inside QBank instead of a GitHub page.
+- Imports are taken fairly across accounts, several at once (`QBANK_IMPORT_WORKERS`, one per
+  account), and a waiting file shows its place in the queue.
+- Honest texts per mode: on a server, "Where is my data?", the privacy page and the support report
+  name who runs it, instead of "on your computer"; a test fails on any local-only claim a server
+  user could read. "No public sharing" is gone from both modes (governed sharing, DEC-39).
+- Self-host guide: installing and updating from a private repository with a read-only GitHub token.
+
 ### Governed sharing (M30, DEC-39; in progress) / المشاركة المحكومة (قيد التنفيذ)
 
 - One "share" for every way a bank's questions leave it: an agent (the publishing channels), an

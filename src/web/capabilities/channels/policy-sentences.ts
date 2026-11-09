@@ -1,5 +1,6 @@
 import type { RevealLevel, ShareKind, SharePolicy } from '../../../contracts/sharing.js';
 import type { PublicPolicy } from '../../../contracts/take.js';
+import { fill } from '../../platform/i18n/fill.js';
 import type { MessageKey } from '../../platform/i18n/i18n.js';
 
 /** The owner's policy, or the same policy as receivers get it (never the access code). */
@@ -16,12 +17,6 @@ export interface PolicyLine {
   id: PolicyLineId;
   text: string;
 }
-
-/** Puts `{name}` values into a translated template; an unknown name stays as written. */
-export const fill = (template: string, vars: Record<string, string | number>): string =>
-  template.replace(/\{(\w+)\}/g, (whole, name: string) =>
-    name in vars ? String(vars[name]) : whole,
-  );
 
 const SEP = ' · ';
 const DAYS_IN_YEAR = 365;
