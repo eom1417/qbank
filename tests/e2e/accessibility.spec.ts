@@ -75,6 +75,7 @@ async function auditEverything(page: Page, locale: string, theme: string) {
   screens.push(
     `${bank}/duplicates`,
     `${bank}/channels`,
+    '/sharing',
     question,
     '/study',
     '/study/plan',

@@ -1,8 +1,12 @@
-import type { ExamStateResponse } from '../../../contracts/study.js';
 import { Button, Row, Stack, Subtitle } from '../../design-system/index.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 
-type MapItem = ExamStateResponse['items'][number];
+/** One number of the map: where it is, and whether it is answered or flagged. */
+export interface MapItem {
+  position: number;
+  answered: boolean;
+  flagged: boolean;
+}
 
 /** A symbol and words with each number, never colour alone (FR-13-008). */
 function labelOf(
@@ -15,11 +19,15 @@ function labelOf(
 }
 
 /** The numbers of the exam, answered, empty and flagged, to move around as the rules allow. */
-export function ExamMap({
-  state,
+export function ExamMap<T extends MapItem>({
+  items,
+  current,
+  canGo,
   onGo,
 }: {
-  state: ExamStateResponse;
+  items: readonly T[];
+  current: number;
+  canGo(item: T): boolean;
   onGo(position: number): void;
 }) {
   const { t } = useI18n();
@@ -27,11 +35,11 @@ export function ExamMap({
     <Stack>
       <Subtitle>{t('exam.map')}</Subtitle>
       <Row>
-        {state.items.map((item) => (
+        {items.map((item) => (
           <Button
             key={item.position}
-            variant={item.position === state.position ? 'primary' : 'secondary'}
-            disabled={!item.changeable && state.timing === 'per_question'}
+            variant={item.position === current ? 'primary' : 'secondary'}
+            disabled={!canGo(item)}
             onClick={() => onGo(item.position)}
           >
             {labelOf(item, t)}

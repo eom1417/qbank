@@ -15,11 +15,13 @@ import { healthAr } from './catalog-health-ar.js';
 import { providersAr } from './catalog-providers-ar.js';
 import { triageAr } from './catalog-triage-ar.js';
 import { channelsAr } from './catalog-channels-ar.js';
+import { takeAr } from './catalog-take-ar.js';
 
 export const ar: Record<MessageKey, string> = {
   ...providersAr,
   ...triageAr,
   ...channelsAr,
+  ...takeAr,
   ...localAr,
   ...reviewAr,
   ...duplicatesAr,
@@ -98,6 +100,13 @@ export const ar: Record<MessageKey, string> = {
   'error.question_locked': 'انتهى وقت هذا السؤال؛ لم يعد بالإمكان تغيير إجابته.',
   'error.pairing_required': 'رمز الربط غير صحيح. انسخه من جديد من الجهاز الذي يشغّل QBank.',
   'error.channel_paused': 'هذه القناة موقوفة مؤقتاً. شغّلها لتُرسل من جديد.',
+  'error.share_not_started': 'لم يُفتح بعد. راجع وقت البداية.',
+  'error.share_ended': 'انتهى ولم يعد يقبل الإجابات.',
+  'error.share_limit_reached': 'وصلت هذه المشاركة إلى الحد المسموح حالياً.',
+  'error.attempts_used': 'استخدمت كل المحاولات المسموحة.',
+  'error.wrong_code': 'رمز الدخول غير صحيح.',
+  'error.links_unavailable': 'روابط الاختبار والتمرين تحتاج QBank على خادم (راجع دليل الاستضافة).',
+  'error.not_revealed_yet': 'لم يحن وقت عرض الإجابات بعد.',
   'error.backup_too_new': 'هذه النسخة من إصدار أحدث من QBank. حدّث QBank ثم استرجعها.',
   'error.page_too_large':
     'في الملف صفحة أكبر من أي صفحة كتاب (أكثر من 70 سم). صدّره من جديد بحجم صفحة عادي.',

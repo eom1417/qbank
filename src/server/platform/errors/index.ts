@@ -32,6 +32,13 @@ const STATUS: Record<ErrorCode, number> = {
   ai_host_unavailable: 503,
   ai_host_busy: 503,
   channel_paused: 409,
+  share_not_started: 409,
+  share_ended: 409,
+  share_limit_reached: 429,
+  attempts_used: 409,
+  wrong_code: 403,
+  links_unavailable: 409,
+  not_revealed_yet: 409,
   internal: 500,
 };
 

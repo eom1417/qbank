@@ -1,44 +1,16 @@
-/** English strings of the publishing channels (M23, DEC-36). */
+import { sharingEn } from './catalog-sharing-en.js';
+
+/** English strings of sharing (M23 channels, M30 governed sharing; DEC-36, DEC-39). */
 export const channelsEn = {
-  'channels.open': 'Publishing channels',
-  'channels.title': 'Publishing channels',
-  'channels.lead':
-    'A channel lets an outside agent (WhatsApp, Telegram, n8n…) take a few questions from this bank each day, never the same twice until all have gone out. Its numbers are its own: your study is never touched.',
-  'channels.empty': 'No channels yet.',
-  'channels.new': 'New channel',
-  'channels.name': 'Channel name',
-  'channels.chapters': 'Chapters (none chosen: the whole bank)',
-  'channels.batchSize': 'Questions per batch',
-  'channels.whenDone': 'When every question has gone out',
-  'channels.whenDone.restart': 'Start again in a new order',
-  'channels.whenDone.stop': 'Stop sending',
-  'channels.create': 'Create channel',
-  'channels.key.title': 'The channel key: copy it now',
-  'channels.key.once':
-    'This is the only time it is shown. Give it to your agent; whoever holds it can take this channel’s questions, nothing else.',
-  'channels.key.copy': 'Copy key',
-  'channels.key.copied': 'Copied',
-  'channels.key.example': 'Your agent asks for the next batch like this:',
-  'channels.key.prefix': 'Key',
-  'channels.paused': 'Paused',
-  'channels.active': 'Sending',
-  'channels.lastUsed': 'Last used',
-  'channels.neverUsed': 'Not used yet',
-  'channels.pause': 'Pause',
-  'channels.resume': 'Resume',
-  'channels.renew': 'New key',
-  'channels.renewConfirm': 'The old key stops now: confirm',
-  'channels.delete': 'Delete channel',
-  'channels.deleteConfirm': 'Delete it and its numbers: confirm',
-  'channels.stats.show': 'Show numbers',
-  'channels.stats.hide': 'Hide numbers',
-  'channels.stats.cycle': 'Cycle',
-  'channels.stats.progress': 'Sent this cycle',
+  ...sharingEn,
+  'channels.open': 'Sharing',
+  'channels.stats.cycle': 'Round',
+  'channels.stats.progress': 'Sent this round',
   'channels.stats.sent': 'Sent in all',
   'channels.stats.batches': 'Batches',
   'channels.stats.answers': 'Answers received',
-  'channels.stats.correct': 'Right',
+  'channels.stats.correct': 'Correct',
   'channels.stats.questions': 'Questions sent',
   'channels.stats.times': 'times',
   'channels.stats.recent': 'Latest batches',
-} as const;
+};

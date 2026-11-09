@@ -1,7 +1,7 @@
 import { sql } from 'kysely';
 import type { Db } from '../../../platform/db/index.js';
 import type { StudyKind } from '../../../platform/db/schema.js';
-import type { Snapshot } from '../domain/grading.js';
+import type { Snapshot } from '../../exam-rules/index.js';
 
 export interface NewSession {
   id: string;

@@ -1,27 +1,52 @@
 import { z } from 'zod';
 import {
-  ChannelKeyResponse,
-  ChannelListResponse,
-  ChannelStats,
-  ChannelView,
-  type ChannelSettings,
-} from '../../../contracts/channels.js';
+  ExposureResponse,
+  ShareEventsResponse,
+  ShareListResponse,
+  ShareResultsResponse,
+  ShareSecretResponse,
+  ShareStatsResponse,
+  ShareView,
+  type CreateShareRequest,
+} from '../../../contracts/sharing.js';
 import { apiRequest } from '../../platform/api/client.js';
 
-/** The owner's publishing channels of a bank (DEC-36). */
-export const fetchChannels = (bankId: string) =>
-  apiRequest('GET', `/api/banks/${bankId}/channels`, ChannelListResponse);
+/** The owner's shares (DEC-39): one bank's, or every bank's when `bankId` is left out. */
+export const fetchShares = (bankId?: string) =>
+  apiRequest(
+    'GET',
+    bankId ? `/api/shares?bankId=${encodeURIComponent(bankId)}` : '/api/shares',
+    ShareListResponse,
+  );
 
-export const createChannel = (bankId: string, settings: ChannelSettings) =>
-  apiRequest('POST', `/api/banks/${bankId}/channels`, ChannelKeyResponse, settings);
+/** A new share; its key or link is in this answer only. */
+export const createShare = (bankId: string, request: CreateShareRequest) =>
+  apiRequest('POST', `/api/banks/${bankId}/shares`, ShareSecretResponse, request);
 
-export const setPaused = (id: string, paused: boolean) =>
-  apiRequest('PATCH', `/api/channels/${id}`, ChannelView, { paused });
+export type ShareAction = 'pause' | 'resume' | 'end' | 'archive';
 
-export const renewKey = (id: string) =>
-  apiRequest('POST', `/api/channels/${id}/key`, ChannelKeyResponse, {});
+/** Question 6, control: one lifecycle step. */
+export const changeShare = (id: string, action: ShareAction) =>
+  apiRequest('POST', `/api/shares/${id}/${action}`, ShareView, {});
 
-export const deleteChannel = (id: string) => apiRequest('DELETE', `/api/channels/${id}`, z.null());
+/** A new key or link; the old one stops at once. */
+export const renewSecret = (id: string) =>
+  apiRequest('POST', `/api/shares/${id}/secret`, ShareSecretResponse, {});
 
-export const fetchChannelStats = (id: string) =>
-  apiRequest('GET', `/api/channels/${id}/stats`, ChannelStats);
+export const deleteShare = (id: string) => apiRequest('DELETE', `/api/shares/${id}`, z.null());
+
+export const fetchShareEvents = (id: string) =>
+  apiRequest('GET', `/api/shares/${id}/events`, ShareEventsResponse);
+
+export const fetchShareStats = (id: string) =>
+  apiRequest('GET', `/api/shares/${id}/stats`, ShareStatsResponse);
+
+export const fetchShareResults = (id: string) =>
+  apiRequest('GET', `/api/shares/${id}/results`, ShareResultsResponse);
+
+/** Before publishing: how much of this choice is already out, or reserved by an exam. */
+export const fetchExposure = (bankId: string, chapterIds: string[], fixedQuestionIds: string[]) =>
+  apiRequest('POST', `/api/banks/${bankId}/shares/exposure`, ExposureResponse, {
+    chapterIds,
+    fixedQuestionIds,
+  });

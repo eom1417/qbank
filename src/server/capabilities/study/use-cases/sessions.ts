@@ -10,10 +10,9 @@ import { isId } from '../../../platform/ids.js';
 import type { Actor } from '../../identity/index.js';
 import type { PoolQuestion } from '../../questions/index.js';
 import type { SessionRow } from '../adapters/session-repository.js';
-import type { Snapshot } from '../domain/grading.js';
-import { deadlineFor } from '../domain/exam.js';
+import { deadlineFor, shuffled, type Snapshot } from '../../exam-rules/index.js';
 import { settleOverdue } from './submission.js';
-import { candidatesFor, mixGroups, shuffled, smartMix } from '../domain/selection.js';
+import { candidatesFor, mixGroups, smartMix } from '../domain/selection.js';
 import { DEFAULT_SHARES } from '../domain/smart-mix.js';
 import type { StudyDeps } from './deps.js';
 

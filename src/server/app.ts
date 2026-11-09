@@ -114,15 +114,20 @@ function registerContent(app: FastifyInstance, deps: ContentDeps, identity: Iden
     ai: providers.importAi,
   });
   study.register(app);
-  createChannels({
+  const channels = createChannels({
     db: deps.db,
     clock: deps.clock,
     newId,
     requireActor: identity.requireActor,
     questions,
     ownsBank: library.ownsBank,
+    bankNameOf: async (ownerId: string, bankId: string) =>
+      (await library.findBank(ownerId, bankId))?.name ?? null,
     pathOf: blobs.pathOf,
-  }).register(app);
+    linksEnabled: deps.config.mode !== 'local',
+  });
+  channels.register(app);
+  app.decorate('sharing', { purge: channels.purge });
   createPortability(
     {
       library,
@@ -212,5 +217,7 @@ declare module 'fastify' {
     importWorker: { drain(): Promise<number> };
     /** The daily backup (local mode): main.ts runs it on a timer, tests call it directly. */
     backups: Backups;
+    /** Governed sharing's retention purge (DEC-39): main.ts runs it hourly. */
+    sharing: { purge(now: Date): Promise<number> };
   }
 }

@@ -1,33 +1,15 @@
 import { useNavigate, useParams } from 'react-router';
 import type { ItemResponse } from '../../../contracts/study.js';
-import { Alert, Button, type Choice, MutedText, Row, Stack } from '../../design-system/index.js';
+import { Alert, Button, MutedText, Row, Stack } from '../../design-system/index.js';
 import { useAction } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
-import { QuestionCard } from './QuestionBody.js';
+import { markedChoices } from '../exam-ui/choices.js';
+import { QuestionCard } from '../exam-ui/QuestionCard.js';
 import { AiExplainCard } from './AiExplainCard.js';
 import { finishStudy } from './api.js';
 import { MarksBar } from './MarksBar.js';
 import { SolutionView } from './SolutionView.js';
 import { useTutor } from './use-tutor.js';
-
-/** Right answers are marked only once the solution is known (UAT-041). */
-function choicesOf(item: ItemResponse, t: ReturnType<typeof useI18n>['t']): Choice[] {
-  const right = new Set(item.solution?.answers ?? []);
-  const chosen = new Set(item.solution?.chosen ?? []);
-  return item.options.map((o) => {
-    const mark: Choice['mark'] = right.has(o.letter)
-      ? 'right'
-      : chosen.has(o.letter)
-        ? 'wrong'
-        : undefined;
-    return {
-      value: o.letter,
-      label: `${o.label} ${o.text}`,
-      mark: item.solution ? mark : undefined,
-      markLabel: mark && t(`study.mark.${mark}`),
-    };
-  });
-}
 
 /** The question as asked, its options marked only once answered. */
 function QuestionView({ tutor }: { tutor: ReturnType<typeof useTutor> }) {
@@ -35,8 +17,9 @@ function QuestionView({ tutor }: { tutor: ReturnType<typeof useTutor> }) {
   const item = tutor.item as ItemResponse;
   return (
     <QuestionCard
-      item={item}
-      choices={choicesOf(item, t)}
+      question={item}
+      pictureUrl={(id) => `/api/media/${id}`}
+      choices={markedChoices(item.options, item.solution, t)}
       selected={tutor.selected}
       disabled={item.solution !== null}
       onChoose={tutor.setSelected}

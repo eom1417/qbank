@@ -1,44 +1,61 @@
 import { useCallback, useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { Alert, EmptyState, Heading, MutedText, Stack } from '../../design-system/index.js';
+import type { ShareSecretResponse } from '../../../contracts/sharing.js';
+import {
+  Alert,
+  Button,
+  EmptyState,
+  Heading,
+  MutedText,
+  Row,
+  Stack,
+} from '../../design-system/index.js';
 import { useQuery } from '../../platform/api/use-query.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
-import { fetchChannels } from './api.js';
-import { ChannelCard } from './ChannelCard.js';
-import { NewChannelForm } from './NewChannelForm.js';
-import { NewKeyNotice } from './NewKeyNotice.js';
+import { fetchShares } from './api.js';
+import { NewShareFlow } from './NewShareFlow.js';
+import { SecretNotice } from './SecretNotice.js';
+import { ShareItem } from './ShareItem.js';
 
-/** A bank's publishing channels (M23, DEC-36): set up, keys shown once, each one's numbers. */
+/** A bank's sharing (M30, DEC-39): every share with its rules, controls, record and results. */
 export function ChannelsScreen() {
   const { t } = useI18n();
   const bankId = useParams()['bankId'] ?? '';
-  const { state, reload } = useQuery(useCallback(() => fetchChannels(bankId), [bankId]));
-  const [newKey, setNewKey] = useState<string | null>(null);
-  const keyShown = (key: string) => {
-    setNewKey(key);
+  const { state, reload } = useQuery(useCallback(() => fetchShares(bankId), [bankId]));
+  const [secret, setSecret] = useState<ShareSecretResponse | null>(null);
+  const [adding, setAdding] = useState(false);
+  const shown = (created: ShareSecretResponse) => {
+    setSecret(created);
+    setAdding(false);
     reload();
   };
   if (state.status === 'loading') return <MutedText>{t('common.loading')}</MutedText>;
   if (state.status === 'error') return <Alert tone="error">{t(state.error)}</Alert>;
-  const { channels } = state.data;
+  const { shares } = state.data;
   return (
     <Stack>
       <Link to={`/banks/${bankId}`}>{t('review.back')}</Link>
-      <Heading>{t('channels.title')}</Heading>
-      <MutedText>{t('channels.lead')}</MutedText>
-      {newKey && <NewKeyNotice channelKey={newKey} />}
-      {channels.length === 0 && (
-        <EmptyState title={t('channels.title')} description={t('channels.empty')} />
+      <Heading>{t('sharing.title')}</Heading>
+      <MutedText>{t('sharing.lead')}</MutedText>
+      {secret && <SecretNotice created={secret} onDone={() => setSecret(null)} />}
+      {adding ? (
+        <NewShareFlow bankId={bankId} onCancel={() => setAdding(false)} onCreated={shown} />
+      ) : (
+        <Row>
+          <Button onClick={() => setAdding(true)}>{t('sharing.new')}</Button>
+        </Row>
       )}
-      {channels.map((channel) => (
-        <ChannelCard key={channel.id} channel={channel} onChanged={reload} onNewKey={keyShown} />
+      {shares.length === 0 && !adding && (
+        <EmptyState title={t('sharing.title')} description={t('sharing.empty')} />
+      )}
+      {shares.map((share) => (
+        <ShareItem key={share.id} share={share} onChanged={reload} onSecret={shown} />
       ))}
-      <NewChannelForm bankId={bankId} onCreated={keyShown} />
     </Stack>
   );
 }
 
-/** The way from a bank to its channels. */
+/** The way from a bank to its sharing. */
 export function ChannelsLink({ bankId }: { bankId: string }) {
   const { t } = useI18n();
   return <Link to={`/banks/${bankId}/channels`}>{t('channels.open')}</Link>;

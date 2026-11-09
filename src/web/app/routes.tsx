@@ -33,11 +33,15 @@ import { ImportReportScreen } from '../capabilities/sources/ImportReportScreen.j
 import { ImportScreen } from '../capabilities/sources/ImportScreen.js';
 import { SourcesCard } from '../capabilities/sources/SourcesCard.js';
 import { AppShell } from './AppShell.js';
+import { SharingHubScreen } from '../capabilities/channels/SharingHubScreen.js';
+import { TakeApp } from '../capabilities/take/TakeApp.js';
 import { RouteError } from './RouteError.js';
 import { SettingsPage } from './SettingsPage.js';
 import { ProvidersScreen } from '../capabilities/providers/ProvidersScreen.js';
 
 export const router = createBrowserRouter([
+  // A shared exam or practice (DEC-39): people without an account, outside the app's shell.
+  { path: '/t/:token', element: <TakeApp />, errorElement: <RouteError /> },
   {
     element: <AppShell />,
     errorElement: <RouteError />,
@@ -105,6 +109,14 @@ export const router = createBrowserRouter([
       {
         path: '/help',
         element: <HelpScreen />,
+      },
+      {
+        path: '/sharing',
+        element: (
+          <Private>
+            <SharingHubScreen />
+          </Private>
+        ),
       },
       {
         path: '/analytics',

@@ -1,39 +1,10 @@
 import type { channelsEn } from './catalog-channels-en.js';
+import { sharingAr } from './catalog-sharing-ar.js';
 
-/** Arabic strings of the publishing channels; the same keys as catalog-channels-en.ts. */
+/** Arabic strings of sharing; the same keys as catalog-channels-en.ts. */
 export const channelsAr: Record<keyof typeof channelsEn, string> = {
-  'channels.open': 'قنوات النشر',
-  'channels.title': 'قنوات النشر',
-  'channels.lead':
-    'القناة تسمح لبرنامج خارجي (agent مثل واتساب أو تيليجرام أو n8n) أن يأخذ من هذا البنك أسئلة قليلة كل يوم، ولا يتكرر سؤال حتى تُرسل الأسئلة كلها. إحصاءاتها خاصة بها، ولا تمس مذاكرتك أبداً.',
-  'channels.empty': 'لا توجد قنوات بعد.',
-  'channels.new': 'قناة جديدة',
-  'channels.name': 'اسم القناة',
-  'channels.chapters': 'الفصول (بلا اختيار: البنك كله)',
-  'channels.batchSize': 'عدد الأسئلة في الدفعة',
-  'channels.whenDone': 'عند إرسال كل الأسئلة',
-  'channels.whenDone.restart': 'ابدأ من جديد بترتيب مختلف',
-  'channels.whenDone.stop': 'توقف عن الإرسال',
-  'channels.create': 'أنشئ القناة',
-  'channels.key.title': 'مفتاح القناة: انسخه الآن',
-  'channels.key.once':
-    'هذه المرة الوحيدة التي يظهر فيها. أعطه للبرنامج الخارجي؛ من يملكه يأخذ أسئلة هذه القناة فقط، لا شيء غيرها.',
-  'channels.key.copy': 'انسخ المفتاح',
-  'channels.key.copied': 'نُسخ',
-  'channels.key.example': 'يطلب البرنامج الخارجي الدفعة التالية هكذا:',
-  'channels.key.prefix': 'المفتاح',
-  'channels.paused': 'موقوفة',
-  'channels.active': 'تُرسل',
-  'channels.lastUsed': 'آخر استخدام',
-  'channels.neverUsed': 'لم تُستخدم بعد',
-  'channels.pause': 'أوقفها مؤقتاً',
-  'channels.resume': 'شغّلها',
-  'channels.renew': 'مفتاح جديد',
-  'channels.renewConfirm': 'المفتاح القديم يتوقف الآن: أكّد',
-  'channels.delete': 'احذف القناة',
-  'channels.deleteConfirm': 'احذفها مع إحصاءاتها: أكّد',
-  'channels.stats.show': 'اعرض الإحصاءات',
-  'channels.stats.hide': 'أخفِ الإحصاءات',
+  ...sharingAr,
+  'channels.open': 'المشاركات',
   'channels.stats.cycle': 'الدورة',
   'channels.stats.progress': 'أُرسل في هذه الدورة',
   'channels.stats.sent': 'أُرسل إجمالاً',

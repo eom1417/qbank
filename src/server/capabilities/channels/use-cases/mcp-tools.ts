@@ -2,9 +2,8 @@ import { z } from 'zod';
 import { BatchRequest, ChannelAnswerRequest } from '../../../../contracts/channels.js';
 import { AppError } from '../../../platform/errors/index.js';
 import type { ChannelRow } from '../adapters/channel-repository.js';
-import { batchAnswers, nextBatch, recordAnswer } from './agent.js';
+import { agentStats, batchAnswers, nextBatch, recordAnswer } from './agent.js';
 import type { ChannelsDeps } from './deps.js';
-import { channelStats } from './manage.js';
 
 /** The channel's tools for an agent that speaks MCP (M23.6): the same four as the REST API. */
 export const MCP_TOOLS = [
@@ -48,7 +47,7 @@ export function callTool(deps: ChannelsDeps, row: ChannelRow, name: string, inpu
     case 'record_answer':
       return recordAnswer(deps, row, parsed(ChannelAnswerRequest, input));
     case 'channel_stats':
-      return channelStats(deps, row);
+      return agentStats(deps, row);
     default:
       throw new AppError('not_found');
   }

@@ -33,6 +33,13 @@ export const ErrorCode = z.enum([
   'ai_host_unavailable',
   'ai_host_busy',
   'channel_paused',
+  'share_not_started',
+  'share_ended',
+  'share_limit_reached',
+  'attempts_used',
+  'wrong_code',
+  'links_unavailable',
+  'not_revealed_yet',
   'internal',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;

@@ -4,6 +4,7 @@ import { createRateLimit } from '../../../platform/http/rate-limit.js';
 import { sendPng } from '../../../platform/http/send-png.js';
 import { parseInput } from '../../../platform/http/validate.js';
 import {
+  agentStats,
   batchAnswers,
   channelOfKey,
   channelPicture,
@@ -11,7 +12,6 @@ import {
   recordAnswer,
 } from '../use-cases/agent.js';
 import type { ChannelsDeps } from '../use-cases/deps.js';
-import { channelStats } from '../use-cases/manage.js';
 import { registerMcpRoute } from './mcp-route.js';
 
 type IdParams = { Params: { id: string } };
@@ -46,7 +46,7 @@ export function registerAgentRoutes(app: FastifyInstance, deps: ChannelsDeps) {
     return recordAnswer(deps, row, parseInput(ChannelAnswerRequest, request.body));
   });
 
-  app.get('/api/channel/v1/stats', async (request) => channelStats(deps, await channelOf(request)));
+  app.get('/api/channel/v1/stats', async (request) => agentStats(deps, await channelOf(request)));
 
   registerMcpRoute(app, deps, channelOf);
 

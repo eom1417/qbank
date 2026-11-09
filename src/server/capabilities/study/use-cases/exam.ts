@@ -2,8 +2,7 @@ import type { AnswerImpactResponse, ExamStateResponse } from '../../../../contra
 import { AppError, notFound } from '../../../platform/errors/index.js';
 import { isId } from '../../../platform/ids.js';
 import type { Actor } from '../../identity/index.js';
-import { canChange, secondsLeft } from '../domain/exam.js';
-import { isCorrect } from '../domain/grading.js';
+import { canChange, isCorrect, secondsLeft } from '../../exam-rules/index.js';
 import type { StudyDeps } from './deps.js';
 import { itemAt, toItem } from './items.js';
 import { ownedSession } from './sessions.js';

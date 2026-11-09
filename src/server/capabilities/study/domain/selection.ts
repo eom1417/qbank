@@ -1,6 +1,7 @@
 import type { StudyKind } from '../../../../contracts/study.js';
 import type { PoolQuestion } from '../../questions/index.js';
 import { stateOf, type Attempt, type QuestionState } from './mastery.js';
+import { shuffled } from '../../exam-rules/index.js';
 import { DEFAULT_SHARES, mixCounts, type MixGroup, type Shares } from './smart-mix.js';
 
 /** Every graded answer of the owner's, by question, oldest first. */
@@ -48,16 +49,6 @@ export function candidatesFor(
   now: Date,
 ) {
   return oncePerText(pool.filter((q) => fitsKind(kind, stateIn(history, q.id, now))));
-}
-
-/** A fair random order (Fisher–Yates) with the given source of randomness. */
-export function shuffled<T>(items: readonly T[], random: () => number): T[] {
-  const result = [...items];
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(random() * (i + 1));
-    [result[i], result[j]] = [result[j] as T, result[i] as T];
-  }
-  return result;
 }
 
 /** The pool sorted into the three Smart Mix groups, each text once. */
