@@ -16,6 +16,8 @@ interface AccountTable {
   explanation_mode: Generated<'after_answer' | 'on_request'>;
   review_reminders: Generated<'off' | 'daily' | 'weekly'>;
   terms_accepted_at: Date;
+  /** Set only from the server's shell (scripts/confirm-operator.mjs), never by the API (DEC-40). */
+  operator_confirmed_at: Generated<Date | null>;
   created_at: CreatedAt;
 }
 
@@ -43,6 +45,17 @@ interface PasswordResetTable {
   created_at: CreatedAt;
   expires_at: Date;
   used_at: Date | null;
+}
+
+/** A user's note to the server operator (M31, DEC-40). */
+interface FeedbackTable {
+  id: string;
+  owner_id: string;
+  message: string;
+  screen: Generated<string>;
+  version: string;
+  created_at: CreatedAt;
+  closed_at: Date | null;
 }
 
 interface MailOutboxTable {
@@ -317,6 +330,7 @@ export interface Database extends ChannelTables {
   bank: BankTable;
   password_reset: PasswordResetTable;
   mail_outbox: MailOutboxTable;
+  feedback: FeedbackTable;
   chapter: ChapterTable;
   topic: TopicTable;
   tag: TagTable;

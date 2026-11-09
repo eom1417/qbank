@@ -12,6 +12,7 @@ const stopped = {
   stage: 'needs_review',
   pagesTotal: 2,
   pagesDone: 2,
+  queuePosition: null,
   questionsFound: 8,
   questionsReview: 8,
   aiOutcome: 'no_quota',

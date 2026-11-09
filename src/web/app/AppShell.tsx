@@ -38,7 +38,7 @@ function PreferenceSwitches() {
 /** Navigation; a local install has no sign-in or sign-out, only paired browsers (DEC-31). */
 function AccountLinks() {
   const { t } = useI18n();
-  const { state, mode, signOut } = useSession();
+  const { state, mode, isOperator, signOut } = useSession();
   if (state.status === 'loading' || state.status === 'unreachable' || mode === null) return null;
   if (state.status === 'signed-out') {
     return mode === 'local' ? null : <Link to="/sign-in">{t('shell.nav.signIn')}</Link>;
@@ -53,6 +53,7 @@ function AccountLinks() {
       <NavLink to="/sharing">{t('sharing.title')}</NavLink>
       <NavLink to="/settings">{t('shell.nav.settings')}</NavLink>
       <NavLink to="/help">{t('help.link')}</NavLink>
+      {isOperator && <NavLink to="/operator">{t('operator.nav')}</NavLink>}
       {mode === 'accounts' && (
         <Button variant="secondary" onClick={() => void signOut()}>
           {t('shell.signOut')}

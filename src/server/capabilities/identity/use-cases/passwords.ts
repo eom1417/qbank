@@ -4,8 +4,8 @@ import type {
 } from '../../../../contracts/identity.js';
 import { AppError } from '../../../platform/errors/index.js';
 import { generateToken, hashToken } from '../adapters/tokens.js';
-import type { Actor } from '../domain/account.js';
-import { resetEmail, resetExpiresAt } from '../domain/password-reset.js';
+import type { Account, Actor } from '../domain/account.js';
+import { resetEmail, resetExpiresAt, resetLink } from '../domain/password-reset.js';
 import type { IdentityDeps } from './deps.js';
 
 /**
@@ -16,11 +16,17 @@ export async function requestPasswordReset(deps: IdentityDeps, email: string, ap
   const credentials = await deps.accounts.findCredentials(email);
   if (!credentials) return;
   const account = await deps.accounts.findById(credentials.id);
-  if (!account) return;
+  if (account) await issueReset(deps, account, appOrigin);
+}
+
+/** Writes a new one-hour reset for the account and mails its link; returns the link (DEC-40). */
+export async function issueReset(deps: IdentityDeps, account: Account, appOrigin: string) {
   const token = generateToken();
-  await deps.resets.insert(hashToken(token), account.id, resetExpiresAt(deps.clock.now()));
+  const expiresAt = resetExpiresAt(deps.clock.now());
+  await deps.resets.insert(hashToken(token), account.id, expiresAt);
   const message = resetEmail(account.preferences.locale, appOrigin, token);
   await deps.mailer.send({ to: account.email, ...message });
+  return { link: resetLink(appOrigin, token), expiresAt };
 }
 
 /** Sets a new password from a one-time link and signs every device out (revocation). */

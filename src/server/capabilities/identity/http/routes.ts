@@ -10,7 +10,7 @@ import type { IdentityDeps } from '../use-cases/deps.js';
 import { endSession } from '../use-cases/sessions.js';
 import { registerAccountRoutes, registerPasswordRoutes } from './account-routes.js';
 import { registerLocalRoutes } from './local-routes.js';
-import { toAccountResponse } from './presenters.js';
+import { accountView } from './presenters.js';
 import type { RequireActor } from './require-actor.js';
 import { clearSessionCookie, readSessionToken, setSessionCookie } from './session-cookie.js';
 import type { PairingCode } from '../adapters/pairing-token.js';
@@ -27,6 +27,8 @@ export interface IdentityRouteOptions {
   localPeers: readonly string[];
   /** Where links in emails point: the app's configured origin, never a request header. */
   publicOrigin: string | null;
+  /** Who runs this server, told to every visitor (DEC-40); null when nobody is declared. */
+  operatorName: string | null;
 }
 
 /** Sign-up and password sign-in exist only in accounts mode. */
@@ -35,7 +37,7 @@ function registerSignInRoutes(app: FastifyInstance, options: IdentityRouteOption
   app.post('/api/auth/sign-up', async (request, reply) => {
     const { account, session } = await signUp(deps, parseInput(SignUpRequest, request.body));
     setSessionCookie(reply, session, cookieSecure);
-    return reply.status(201).send(toAccountResponse(account));
+    return reply.status(201).send(accountView(deps, account));
   });
 
   // Wrong passwords per address and per email: guessing stops long before it could work.
@@ -55,14 +57,17 @@ function registerSignInRoutes(app: FastifyInstance, options: IdentityRouteOption
     });
     attempts.clear(`email:${input.email}`);
     setSessionCookie(reply, session, cookieSecure);
-    return toAccountResponse(account);
+    return accountView(deps, account);
   });
   registerPasswordRoutes(app, options);
 }
 
 export function registerIdentityRoutes(app: FastifyInstance, options: IdentityRouteOptions) {
   const { deps, requireActor, cookieSecure, pairing } = options;
-  const meta: AppMetaResponse = { mode: pairing === null ? 'accounts' : 'local' };
+  const meta: AppMetaResponse = {
+    mode: pairing === null ? 'accounts' : 'local',
+    operatorName: options.operatorName,
+  };
   app.get('/api/meta', async () => meta);
   if (pairing === null) registerSignInRoutes(app, options);
   else
@@ -84,7 +89,7 @@ export function registerIdentityRoutes(app: FastifyInstance, options: IdentityRo
 
   app.get('/api/auth/me', async (request) => {
     const actor = await requireActor(request);
-    return toAccountResponse(await getAccount(deps, actor));
+    return accountView(deps, await getAccount(deps, actor));
   });
 
   registerAccountRoutes(app, options);

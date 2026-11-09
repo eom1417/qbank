@@ -40,6 +40,7 @@ export const ErrorCode = z.enum([
   'wrong_code',
   'links_unavailable',
   'not_revealed_yet',
+  'operator_only',
   'internal',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;

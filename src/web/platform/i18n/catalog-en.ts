@@ -15,6 +15,7 @@ import { providersEn } from './catalog-providers-en.js';
 import { triageEn } from './catalog-triage-en.js';
 import { channelsEn } from './catalog-channels-en.js';
 import { takeEn } from './catalog-take-en.js';
+import { operatorEn } from './catalog-operator-en.js';
 
 /** English UI strings. catalog-ar.ts must define exactly the same keys (enforced by its type). */
 export const en = {
@@ -22,6 +23,7 @@ export const en = {
   ...triageEn,
   ...channelsEn,
   ...takeEn,
+  ...operatorEn,
   ...localEn,
   ...reviewEn,
   ...duplicatesEn,
@@ -57,7 +59,7 @@ export const en = {
   'library.title': 'My library',
   'sample.title': 'Try a ready bank',
   'sample.lead':
-    'Ten general medical questions with their answers and explanations, read on this computer with no AI, so you can study within two minutes, before your own files.',
+    'Ten general medical questions with their answers and explanations, ready with no AI, so you can study within two minutes, before your own files.',
   'sample.start': 'Make the sample bank',
   'sample.bankName': 'Sample bank',
   'feedback.title': 'Send feedback',
@@ -116,6 +118,7 @@ export const en = {
   'error.links_unavailable':
     'Exam and practice links need QBank on a server (see the self-host guide).',
   'error.not_revealed_yet': 'The answers are not shown yet.',
+  'error.operator_only': 'Only the server operator can open this.',
   'error.backup_too_new': 'This backup comes from a newer QBank. Update QBank, then restore it.',
   'error.page_too_large':
     'A page of this file is larger than any book page (over 70 cm). Export it again at a normal page size.',
@@ -133,7 +136,7 @@ export const en = {
   'common.loading': 'Loading…',
   'session.unreachable.title': 'The QBank server is not answering',
   'session.unreachable.lead':
-    'Your data is safe. QBank may be starting or restarting: this page tries again by itself every few seconds. If it lasts, make sure QBank is running on the computer that hosts it.',
+    'Your data is safe. QBank may be starting or restarting: this page tries again by itself every few seconds. If it lasts, make sure QBank is still running where it is hosted, or tell whoever runs it.',
   'session.unreachable.retry': 'Try again now',
   'shell.nav.library': 'Library',
   'shell.nav.settings': 'Settings',

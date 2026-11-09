@@ -24,4 +24,6 @@ export interface SourcesDeps {
   samplePdf: string;
   /** How long an original stays after its import ends, unless the user deletes it first. */
   originalRetentionMs: number;
+  /** Imports running at once across accounts, never two for one account (M31, B2). */
+  workers: number;
 }

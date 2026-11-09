@@ -11,7 +11,7 @@ const AI_HOST_TOKEN = 'e2e-ai-host-token-not-a-secret-0001';
 const AI_HOST_HOME = resolve('.data/e2e-ai-host');
 
 /** Dedicated E2E database: env (CI) or the git-ignored .env.local written by setup.sh. */
-function e2eDatabaseUrl(): string {
+export function e2eDatabaseUrl(): string {
   const fromEnv = process.env['E2E_DATABASE_URL'];
   if (fromEnv) return fromEnv;
   const file = existsSync('.env.local') ? readFileSync('.env.local', 'utf8') : '';
@@ -40,6 +40,9 @@ const apiEnv = {
   QBANK_AI_HOST_TOKEN: AI_HOST_TOKEN,
   // Uploaded originals of the E2E runs, apart from the development data.
   QBANK_DATA_DIR: '.data/e2e-app',
+  // The server's declared operator (DEC-40), used by tests/e2e/operator.spec.ts.
+  QBANK_OPERATOR_EMAIL: 'operator@example.test',
+  QBANK_OPERATOR_NAME: 'أبو سالم',
 };
 
 export default defineConfig({

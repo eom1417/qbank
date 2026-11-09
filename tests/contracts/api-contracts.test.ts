@@ -19,9 +19,16 @@ describe('public response contracts', () => {
       reviewReminders: 'off',
     } as const;
     const account = { id: ID, email: 'a@b.test', displayName: 'A', preferences };
-    const response = toAccountResponse({ ...account, passwordHash: 'secret' } as typeof account);
-    expect(AccountResponse.parse(response)).toEqual(account);
-    expect(Object.keys(response).sort()).toEqual(['displayName', 'email', 'id', 'preferences']);
+    const withHash = { ...account, passwordHash: 'secret' } as typeof account;
+    const response = toAccountResponse(withHash, false);
+    expect(AccountResponse.parse(response)).toEqual({ ...account, isOperator: false });
+    expect(Object.keys(response).sort()).toEqual([
+      'displayName',
+      'email',
+      'id',
+      'isOperator',
+      'preferences',
+    ]);
   });
 
   it('bank response matches its schema with ISO dates and an archived flag', () => {

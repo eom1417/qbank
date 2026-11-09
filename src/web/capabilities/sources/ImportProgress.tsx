@@ -3,7 +3,8 @@ import { Link } from 'react-router';
 import type { ImportResponse } from '../../../contracts/sources.js';
 import { Alert, Badge, Button, MutedText, Row } from '../../design-system/index.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
-import { cancelImport, fetchImport, FINISHED_STAGES } from './api.js';
+import { fill } from '../../platform/i18n/fill.js';
+import { cancelImport, fetchImport, FINISHED_STAGES, queueMessage } from './api.js';
 
 const POLL_MS = 2000;
 
@@ -16,6 +17,13 @@ export function usePolledImport(initial: ImportResponse) {
     return () => clearTimeout(timer);
   }, [job]);
   return [job, setJob] as const;
+}
+
+/** A waiting file's place in the server's queue, instead of a bare "waiting". */
+export function QueueNote({ job }: { job: ImportResponse }) {
+  const { t, locale } = useI18n();
+  const place = job.stage === 'queued' ? queueMessage(locale, job.queuePosition) : null;
+  return place && <MutedText>{fill(t(place.key), { n: place.n })}</MutedText>;
 }
 
 /** Live progress of one file: its stage, pages read of the range, questions found so far. */
@@ -42,6 +50,7 @@ export function ImportProgressRow({ initial, onCancel }: RowProps) {
         {done &&
           ` · ${t('source.questions')}: ${job.questionsFound} · ${t('source.review')}: ${job.questionsReview}`}
       </MutedText>
+      <QueueNote job={job} />
       {job.stage === 'completed' && <Alert tone="success">{t('import.completedNotice')}</Alert>}
       {job.stage === 'queued' && onCancel && (
         <Button

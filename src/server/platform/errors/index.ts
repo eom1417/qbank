@@ -39,6 +39,7 @@ const STATUS: Record<ErrorCode, number> = {
   wrong_code: 403,
   links_unavailable: 409,
   not_revealed_yet: 409,
+  operator_only: 403,
   internal: 500,
 };
 

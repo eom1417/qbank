@@ -10,7 +10,7 @@ import { createDb, type Db } from '../../src/server/platform/db/index.js';
 
 export const ORIGIN = 'http://qbank.test';
 
-function testDatabaseUrl(): string {
+export function testDatabaseUrl(): string {
   const fromEnv = process.env['TEST_DATABASE_URL'];
   if (fromEnv) return fromEnv;
   const file = existsSync('.env.local') ? readFileSync('.env.local', 'utf8') : '';
@@ -56,7 +56,12 @@ interface TestAppOptions {
   aiHost?: () => { url: string; token: string | null };
   /** One AI host per account (DEC-35) instead of the single fake one. */
   aiHosts?: AiHostsConfig;
+  /** The declared operator (DEC-40); defaults to OPERATOR_EMAIL in accounts mode. */
+  operator?: { email: string | null; name: string | null };
 }
+
+/** The e-mail the test server declares as its operator unless a suite says otherwise (M31). */
+export const OPERATOR_EMAIL = 'operator@example.com';
 
 /** The app's configuration for a test suite: accounts mode unless `local`, no AI host. */
 function testConfig(options: TestAppOptions) {
@@ -80,7 +85,13 @@ function testConfig(options: TestAppOptions) {
       // Tests run the import worker themselves (tests/support/imports.ts).
       worker: false,
       originalRetentionDays: 7,
+      workers: 2,
     },
+    operator:
+      options.operator ??
+      (options.local
+        ? { email: null, name: null }
+        : { email: OPERATOR_EMAIL, name: 'Test Operator' }),
     aiHost: options.aiHost?.() ?? NO_AI_HOST,
     aiHosts: options.aiHosts ?? SINGLE_AI_HOST,
     webDir: options.webDir ?? null,

@@ -1,7 +1,7 @@
-import type { Locale } from '../../../contracts/identity.js';
+import type { AppMode, Locale } from '../../../contracts/identity.js';
 
 /** One titled section of a legal page. */
-export interface LegalSection {
+interface LegalSection {
   heading: string;
   body: string;
 }
@@ -12,7 +12,7 @@ type LegalPage = 'terms' | 'privacy';
  * Draft legal texts (FR-20-005..007). They describe what the product actually does today and
  * must be reviewed by a qualified person before public launch (FR-20-009, plan step M17.6).
  */
-export const LEGAL: Record<Locale, Record<LegalPage, LegalSection[]>> = {
+const LEGAL: Record<Locale, Record<LegalPage, LegalSection[]>> = {
   en: {
     terms: [
       {
@@ -21,7 +21,7 @@ export const LEGAL: Record<Locale, Record<LegalPage, LegalSection[]>> = {
       },
       {
         heading: 'Personal, non-commercial use',
-        body: 'The service builds personal libraries. It has no store, no public sharing and no resale of questions or publishers’ answers.',
+        body: 'The service builds personal libraries. It has no store and no resale of questions or publishers’ answers; a question leaves a bank only through a share its owner sets up and controls.',
       },
       {
         heading: 'Honest answers',
@@ -59,7 +59,7 @@ export const LEGAL: Record<Locale, Record<LegalPage, LegalSection[]>> = {
       },
       {
         heading: 'استخدام شخصي غير تجاري',
-        body: 'الخدمة تبني مكتبات شخصية. لا يوجد فيها متجر ولا مشاركة عامة ولا إعادة بيع لأسئلة أو لإجابات الناشرين.',
+        body: 'الخدمة تبني مكتبات شخصية. لا يوجد فيها متجر ولا إعادة بيع لأسئلة أو لإجابات الناشرين، ولا يخرج سؤال من بنك إلا بمشاركة ينشئها صاحبه ويتحكم فيها.',
       },
       {
         heading: 'إجابات صادقة',
@@ -90,3 +90,45 @@ export const LEGAL: Record<Locale, Record<LegalPage, LegalSection[]>> = {
     ],
   },
 };
+
+/**
+ * The privacy page on a server (M31, B3): the first three sections say where the data really is;
+ * the last one is the same in both modes. `{operator}` is filled by the screen (DEC-40).
+ */
+const SERVER_PRIVACY: Record<Locale, LegalSection[]> = {
+  en: [
+    {
+      heading: 'Private by default',
+      body: 'Every bank, file, image, question, note, session and report belongs to your account only. This QBank runs on a server run by {operator}, and nothing is sent to its makers. Only {operator} has technical access to that server; no screen in the app shows your content to anyone else.',
+    },
+    {
+      heading: 'What we keep after an import',
+      body: 'The extracted questions, their options, keys, explanations, needed images and source page references, in QBank’s storage on that server. The original PDF is erased a few days after its import ends (7 by default), or at once when you delete it.',
+    },
+    {
+      heading: 'AI processing',
+      body: 'When you run an AI task, the pages it needs are sent to the AI provider you signed in to; that provider’s terms apply. Your sign-ins and keys stay in a folder of your account’s own on the server, apart from every other account, and are never exported.',
+    },
+  ],
+  ar: [
+    {
+      heading: 'خاص افتراضياً',
+      body: 'كل بنك وملف وصورة وسؤال وملاحظة وجلسة وتقرير ملك لحسابك وحدك. يعمل QBank هنا على خادم يديره {operator}، ولا يُرسل شيء إلى صانعيه. ووحده {operator} يستطيع الوصول التقني إلى الخادم، ولا تعرض أي شاشة في التطبيق محتواك لغيرك.',
+    },
+    {
+      heading: 'ما نحتفظ به بعد الاستيراد',
+      body: 'الأسئلة المستخرجة وخياراتها ومفاتيحها وشروحها، والصور اللازمة، ومرجع صفحة المصدر، في تخزين QBank على ذلك الخادم. ويُمحى ملف PDF الأصلي بعد أيام من انتهاء استيراده (7 افتراضياً)، أو فوراً عندما تحذفه.',
+    },
+    {
+      heading: 'المعالجة بالذكاء الاصطناعي',
+      body: 'عندما تشغّل مهمة AI تُرسل الصفحات التي تحتاجها إلى مزوّد AI الذي سجّلت دخولك فيه، وتسري شروطه. تسجيلات دخولك ومفاتيحك تبقى في مجلد خاص بحسابك على الخادم، منفصل عن كل حساب آخر، ولا تُصدَّر أبداً.',
+    },
+  ],
+};
+
+/** The sections a reader in this mode sees: a server reads its own privacy page. */
+export function legalSections(locale: Locale, page: LegalPage, mode: AppMode | null) {
+  const local = LEGAL[locale][page];
+  if (page !== 'privacy' || mode !== 'accounts') return local;
+  return [...SERVER_PRIVACY[locale], ...local.slice(SERVER_PRIVACY[locale].length)];
+}

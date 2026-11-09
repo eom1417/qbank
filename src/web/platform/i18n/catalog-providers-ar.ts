@@ -3,13 +3,13 @@ import type { providersEn } from './catalog-providers-en.js';
 /** Arabic strings of the AI providers screens; the same keys as catalog-providers-en.ts. */
 export const providersAr: Record<keyof typeof providersEn, string> = {
   'error.ai_host_unavailable':
-    'خدمة الذكاء الاصطناعي لا تعمل على هذا الجهاز. شغّلها ثم أعد المحاولة.',
+    'خدمة الذكاء الاصطناعي لا تعمل الآن. شغّلها، أو اطلب ذلك ممن يستضيف QBank، ثم أعد المحاولة.',
   'error.ai_host_busy': 'خدمة الذكاء الاصطناعي مشغولة للجميع الآن. أعد المحاولة بعد دقائق.',
   'providers.title': 'مزوّدو الذكاء الاصطناعي',
   'providers.withoutAi':
     'الذكاء الاصطناعي اختياري. بدونه يعمل كل شيء: الاستيراد (صفحات نصية وممسوحة)، والمراجعة، والـTutor والامتحانات، والتحليلات، والتصدير والنسخ الاحتياطي. مع ذكائك الاصطناعي: يُفحص كل سؤال وتُحسم إجابته بنموذجين وحَكَم، ويمكن تحسين الأسئلة، وقراءة الصفحات كاملة، وتقديم الشروح.',
   'providers.intro':
-    'ذكاؤك الاصطناعي أنت: اشتراكات تسجّل دخولها على هذا الجهاز، أو مفاتيح API. كل طلب يستخدم حساباتك أنت.',
+    'ذكاؤك الاصطناعي أنت: اشتراكات تسجّل دخولها من هنا، أو مفاتيح API. كل طلب يستخدم حساباتك أنت.',
   'providers.refreshAll': 'افحص الكل من جديد',
   'providers.status.ready': 'جاهز',
   'providers.status.warning': 'يحتاج انتباهاً',
@@ -45,7 +45,7 @@ export const providersAr: Record<keyof typeof providersEn, string> = {
   'providers.install': 'ثبّت',
   'providers.update': 'حدّث',
   'providers.readOnly': 'المزوّدون يديرهم من يشغّل هذا الخادم، وتستطيع رؤيتهم هنا.',
-  'providers.notInstalled': 'غير مثبت على هذا الجهاز',
+  'providers.notInstalled': 'غير مثبت حيث يعمل QBank',
   'providers.version': 'الإصدار',
   'providers.remove': 'احذف',
   'providers.confirmRemove': 'تأكيد الحذف',

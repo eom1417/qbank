@@ -14,7 +14,7 @@ import {
   confirmPasswordReset,
   requestPasswordReset,
 } from '../use-cases/passwords.js';
-import { toAccountResponse } from './presenters.js';
+import { accountView } from './presenters.js';
 import type { IdentityRouteOptions } from './routes.js';
 import { readSessionToken } from './session-cookie.js';
 
@@ -24,7 +24,7 @@ export function registerAccountRoutes(app: FastifyInstance, options: IdentityRou
   app.patch('/api/account', async (request) => {
     const actor = await requireActor(request);
     const changes = parseInput(UpdateAccountRequest, request.body);
-    return toAccountResponse(await updateAccount(deps, actor, changes));
+    return accountView(deps, await updateAccount(deps, actor, changes));
   });
 }
 

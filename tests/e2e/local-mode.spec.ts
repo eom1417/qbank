@@ -64,3 +64,24 @@ test('backs up now, and previews a restore before anything changes (M17.2)', asy
   await page.getByRole('link', { name: 'المكتبة' }).click();
   await expect(page.getByRole('heading', { name: 'مكتبتك فارغة' })).toBeVisible();
 });
+
+// On a local install feedback still opens GitHub; on a server it goes to the operator (M31).
+test('feedback opens a GitHub issue filled in by the owner, with the report (M28.2)', async ({
+  page,
+  context,
+}) => {
+  await context.route('https://github.com/**', (route) => route.fulfill({ body: 'issue form' }));
+  await page.goto(`${LOCAL_WEB_URL}/#pair=${code()}`);
+  await expect(page.getByRole('heading', { name: 'مكتبتك فارغة' })).toBeVisible();
+  await page.goto(`${LOCAL_WEB_URL}/help`);
+  await page.getByLabel('النوع').selectOption({ label: 'قراءة سيئة لملف' });
+  await page.getByLabel('ماذا كنت تحاول أن تفعل؟').fill('استيراد ملف القلب');
+  await page.getByLabel('ماذا حدث بدلاً من ذلك؟').fill('قرأ 3 من 40');
+  const popup = page.waitForEvent('popup');
+  await page.getByRole('button', { name: 'افتح البلاغ على GitHub' }).click();
+  const issue = new URL((await popup).url());
+  expect(issue.pathname).toBe('/eom1417/qbank/issues/new');
+  expect(issue.searchParams.get('title')).toBe('[reading] استيراد ملف القلب');
+  expect(issue.searchParams.get('body')).toContain('قرأ 3 من 40');
+  expect(issue.searchParams.get('body')).toContain('System report');
+});

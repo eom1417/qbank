@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_POLICIES, type SharePolicy } from '../../../src/contracts/sharing.js';
 import type { PublicPolicy } from '../../../src/contracts/take.js';
 import {
-  fill,
   levelKey,
   policySentences,
   type Speaker,
 } from '../../../src/web/capabilities/channels/policy-sentences.js';
+import { fill } from '../../../src/web/platform/i18n/fill.js';
 import { ar } from '../../../src/web/platform/i18n/catalog-ar.js';
 import { en } from '../../../src/web/platform/i18n/catalog-en.js';
 

@@ -2,19 +2,12 @@ import type { Selectable } from 'kysely';
 import { sql } from 'kysely';
 import { isForeignKeyViolation } from '../../../platform/db/errors.js';
 import type { Db } from '../../../platform/db/index.js';
-import type { Database, ImportStage } from '../../../platform/db/schema.js';
+import type { Database } from '../../../platform/db/schema.js';
+import { claimNext, listQueue, queuePosition } from './import-queue.js';
 
 export type SourceRow = Selectable<Database['source']>;
 export type JobRow = Selectable<Database['import_job']>;
 export type PageRow = Selectable<Database['import_page']>;
-
-const RUNNING: readonly ImportStage[] = [
-  'queued',
-  'reading',
-  'extracting',
-  'verifying',
-  'matching',
-];
 
 type NewSource = Omit<SourceRow, 'byte_size'> & { byte_size: number };
 type NewJob = Pick<
@@ -51,32 +44,6 @@ async function create(db: Db, source: NewSource, job: NewJob): Promise<'created'
     throw error;
   }
 }
-
-/**
- * Takes the next runnable job for `leaseMs`; another worker skips it (FOR UPDATE SKIP LOCKED).
- * A lease that ran out (a crashed worker) makes the job runnable again.
- */
-const claimNext = (db: Db, now: Date, leaseMs: number) =>
-  db.transaction().execute(async (trx) => {
-    const job = await trx
-      .selectFrom('import_job')
-      .selectAll()
-      .where('stage', 'in', RUNNING)
-      .where((eb) => eb.or([eb('locked_until', 'is', null), eb('locked_until', '<', now)]))
-      .orderBy('created_at')
-      .limit(1)
-      .forUpdate()
-      .skipLocked()
-      .executeTakeFirst();
-    if (!job) return undefined;
-    const lockedUntil = new Date(now.getTime() + leaseMs);
-    await trx
-      .updateTable('import_job')
-      .set({ locked_until: lockedUntil })
-      .where('id', '=', job.id)
-      .execute();
-    return job;
-  });
 
 const savePage = (db: Db, page: NewPage) =>
   db
@@ -225,6 +192,8 @@ export function createImportRepository(db: Db) {
         .executeTakeFirst(),
     reportPages: (jobId: string) => reportPages(db, jobId),
     claimNext: (now: Date, leaseMs: number) => claimNext(db, now, leaseMs),
+    queuePosition: (jobId: string, now: Date) => queuePosition(db, jobId, now),
+    listQueue: (now: Date, limit: number) => listQueue(db, now, limit),
     update: (jobId: string, changes: JobChanges) =>
       db.updateTable('import_job').set(changes).where('id', '=', jobId).execute(),
     savePage: (page: NewPage) => savePage(db, page),

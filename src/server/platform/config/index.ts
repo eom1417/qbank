@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { AppMode } from '../../../contracts/identity.js';
 
+/** A blank line in .env (`NAME=`) means "not set", never an invalid value that stops the server. */
+const unsetIfBlank = (value: unknown) =>
+  typeof value === 'string' && value.trim() === '' ? undefined : value;
+
 const Env = z.object({
   QBANK_MODE: AppMode.default('local'),
   /** Unset in local mode: the bundled PGlite database under QBANK_DATA_DIR. */
@@ -40,6 +44,18 @@ const Env = z.object({
   QBANK_SAMPLE_PDF: z.string().min(1).default('samples/sample-bank.pdf'),
   /** The release, passed by the launcher from package.json (`dev` when run another way). */
   QBANK_VERSION: z.string().min(1).default('dev'),
+  /** The server's operator (DEC-40): the account with this e-mail; unset = no operator. */
+  QBANK_OPERATOR_EMAIL: z.preprocess(
+    unsetIfBlank,
+    z.string().trim().toLowerCase().pipe(z.email()).optional(),
+  ),
+  /** The name every user sees as running this server ("Run by …"). */
+  QBANK_OPERATOR_NAME: z.preprocess(unsetIfBlank, z.string().trim().min(1).max(80).optional()),
+  /** Imports run at once, at most one per account (M31, B2). */
+  QBANK_IMPORT_WORKERS: z.preprocess(
+    unsetIfBlank,
+    z.coerce.number().int().min(1).max(8).default(2),
+  ),
 });
 
 export interface AppConfig {
@@ -72,7 +88,11 @@ export interface AppConfig {
     worker: boolean;
     /** Days an original stays after its import ends unless the user deletes it (DEC-13). */
     originalRetentionDays: number;
+    /** Imports running at once across accounts, never two for one account (M31, B2). */
+    workers: number;
   };
+  /** Accounts mode only (DEC-40): who runs the server; both null on a local install. */
+  operator: { email: string | null; name: string | null };
   /**
    * The AI host (ai-host/): the vendored T3 AI Providers Kit on a loopback port. Without a token
    * the providers screens report it as unavailable.
@@ -131,6 +151,12 @@ function databaseUrlOf(parsed: z.infer<typeof Env>): string {
   throw new Error('DATABASE_URL is required in accounts mode');
 }
 
+/** A local install has no operator: its one owner already is the whole audience. */
+function operatorOf(parsed: z.infer<typeof Env>): AppConfig['operator'] {
+  if (parsed.QBANK_MODE === 'local') return { email: null, name: null };
+  return { email: parsed.QBANK_OPERATOR_EMAIL ?? null, name: parsed.QBANK_OPERATOR_NAME ?? null };
+}
+
 /** Local defaults: plain http on this computer or its network, and a paired browser stays paired. */
 const LOCAL_DEFAULTS = { cookieSecure: 'false', sessionTtlDays: 400 } as const;
 const ACCOUNTS_DEFAULTS = { cookieSecure: 'true', sessionTtlDays: 30 } as const;
@@ -162,7 +188,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       maxPages: parsed.QBANK_MAX_PAGES,
       worker: parsed.QBANK_WORKER === 'true',
       originalRetentionDays: parsed.QBANK_ORIGINAL_RETENTION_DAYS,
+      workers: parsed.QBANK_IMPORT_WORKERS,
     },
+    operator: operatorOf(parsed),
     aiHost: { url: parsed.QBANK_AI_HOST_URL, token: parsed.QBANK_AI_HOST_TOKEN ?? null },
     aiHosts: aiHostsOf(parsed, env),
     webDir: parsed.QBANK_WEB_DIR === 'none' ? null : parsed.QBANK_WEB_DIR,

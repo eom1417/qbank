@@ -92,6 +92,22 @@ export const FINISHED_STAGES = new Set([
   'cancelled',
 ]);
 
+type AheadRule = Exclude<Intl.LDMLPluralRule, 'zero'>;
+
+/**
+ * What a waiting import says about its place (M31, B2): how many files start before it, in the
+ * UI language's plural form; null once it runs. Never whose files they are.
+ */
+export function queueMessage(
+  locale: string,
+  position: number | null,
+): { key: 'import.queue.next' | `import.queue.ahead.${AheadRule}`; n: number } | null {
+  if (position === null) return null;
+  if (position === 0) return { key: 'import.queue.next', n: 0 };
+  const rule = new Intl.PluralRules(locale).select(position);
+  return { key: `import.queue.ahead.${rule === 'zero' ? 'other' : rule}`, n: position };
+}
+
 export const fetchImportMedia = (id: string) =>
   apiRequest('GET', `/api/imports/${id}/media`, MediaListResponse);
 
