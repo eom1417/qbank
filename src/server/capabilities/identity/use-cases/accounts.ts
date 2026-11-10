@@ -43,7 +43,8 @@ export async function signIn(deps: IdentityDeps, input: SignInRequest): Promise<
   const credentials = await deps.accounts.findCredentials(input.email);
   const hashToCheck = credentials?.passwordHash ?? (await decoy(deps));
   const matches = await deps.passwords.verify(hashToCheck, input.password);
-  if (!credentials || !matches) throw new AppError('invalid_credentials');
+  // An account made by Google sign-in has no password (M32): nothing ever matches it.
+  if (!credentials?.passwordHash || !matches) throw new AppError('invalid_credentials');
   const account = await loadAccount(deps, credentials.id);
   return { account, session: await issueSession(deps, account.id) };
 }

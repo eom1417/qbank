@@ -4,6 +4,7 @@ import { migrateToLatest } from './migrator.js';
 import { systemClock } from './platform/clock.js';
 import { loadConfig } from './platform/config/index.js';
 import { createDb } from './platform/db/index.js';
+import { startHeartbeat } from './platform/heartbeat.js';
 import { createRotatingLog } from './platform/logging/rotating-file.js';
 
 const config = loadConfig();
@@ -22,6 +23,8 @@ process.once('SIGTERM', shutdown);
 process.once('SIGINT', shutdown);
 
 await app.listen({ host: config.host, port: config.port });
+// The uptime ping (M32): the owner's uptime service alerts them when it stops.
+if (config.heartbeatUrl) startHeartbeat({ url: config.heartbeatUrl, warn: (m) => app.log.warn(m) });
 if (config.mode === 'local') {
   // The daily backup (M17.2): checked at start and every hour; it runs once a day.
   const backUp = () => void app.backups.runDue().catch((error: unknown) => app.log.error(error));

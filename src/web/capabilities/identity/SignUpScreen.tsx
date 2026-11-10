@@ -1,3 +1,4 @@
+import { useState, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import type { SignUpRequest } from '../../../contracts/identity.js';
 import {
@@ -9,12 +10,14 @@ import {
   MutedText,
   NarrowColumn,
   Row,
+  Stack,
   TextField,
 } from '../../design-system/index.js';
 import { text, useSubmit } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { EmailField } from './fields.js';
-import { useOperatorFill } from './mode-copy.js';
+import { GoogleButton, GoogleErrorAlert } from './GoogleButton.js';
+import { OperatorLine } from './OperatorLine.js';
 import { useSession } from './session.js';
 
 function SignUpFields({ fieldError }: { fieldError(name: string): string | undefined }) {
@@ -47,21 +50,53 @@ function SignUpFields({ fieldError }: { fieldError(name: string): string | undef
   );
 }
 
-/** Who runs this server and a link to what that means for your data (M31, B3). */
-function OperatorLine() {
+/** What every sign-up shows around its form: who runs the site, the terms and the way back. */
+function SignUpFrame({ children }: { children: ReactNode }) {
   const { t } = useI18n();
-  const { operatorName } = useSession();
-  const withOperator = useOperatorFill();
-  if (!operatorName) return null;
   return (
-    <Row>
-      <MutedText>{withOperator(t('auth.signUp.operator'))}</MutedText>
-      <Link to="/help#privacy">{t('auth.signUp.whereData')}</Link>
-    </Row>
+    <NarrowColumn>
+      <Heading>{t('auth.signUp.title')}</Heading>
+      <MutedText>{t('auth.signUp.intro')}</MutedText>
+      <OperatorLine />
+      <Card>{children}</Card>
+      <Row>
+        <Link to="/terms">{t('auth.signUp.readTerms')}</Link>
+        <Link to="/privacy">{t('auth.signUp.readPrivacy')}</Link>
+      </Row>
+      <Link to="/sign-in">{t('auth.signUp.toSignIn')}</Link>
+    </NarrowColumn>
   );
 }
 
+/** Google-only server (DEC-42): the button stays off until the terms are accepted. */
+function GoogleSignUp() {
+  const { t } = useI18n();
+  const [accepted, setAccepted] = useState(false);
+  return (
+    <SignUpFrame>
+      <Stack>
+        <GoogleErrorAlert />
+        <MutedText>{t('auth.google.signUpHint')}</MutedText>
+        <Checkbox
+          name="acceptTerms"
+          label={t('auth.field.terms')}
+          checked={accepted}
+          onChange={(event) => setAccepted(event.target.checked)}
+        />
+        <GoogleButton acceptTerms disabled={!accepted} />
+      </Stack>
+    </SignUpFrame>
+  );
+}
+
+/** E-mail and password, or on a Google-only server the Google button (DEC-42). */
 export function SignUpScreen() {
+  const { signInMethod } = useSession();
+  return signInMethod === 'google' ? <GoogleSignUp /> : <PasswordSignUp />;
+}
+
+/** The e-mail and password form (password servers). */
+function PasswordSignUp() {
   const { t, locale } = useI18n();
   const { signUp } = useSession();
   const form = useSubmit((data) =>
@@ -79,24 +114,14 @@ export function SignUpScreen() {
     return key && t(key);
   };
   return (
-    <NarrowColumn>
-      <Heading>{t('auth.signUp.title')}</Heading>
-      <MutedText>{t('auth.signUp.intro')}</MutedText>
-      <OperatorLine />
-      <Card>
-        <form className="qb-stack" onSubmit={form.onSubmit} noValidate>
-          {form.error && <Alert tone="error">{t(form.error)}</Alert>}
-          <SignUpFields fieldError={fieldError} />
-          <Button type="submit" busy={form.busy}>
-            {t('auth.signUp.submit')}
-          </Button>
-        </form>
-      </Card>
-      <Row>
-        <Link to="/terms">{t('auth.signUp.readTerms')}</Link>
-        <Link to="/privacy">{t('auth.signUp.readPrivacy')}</Link>
-      </Row>
-      <Link to="/sign-in">{t('auth.signUp.toSignIn')}</Link>
-    </NarrowColumn>
+    <SignUpFrame>
+      <form className="qb-stack" onSubmit={form.onSubmit} noValidate>
+        {form.error && <Alert tone="error">{t(form.error)}</Alert>}
+        <SignUpFields fieldError={fieldError} />
+        <Button type="submit" busy={form.busy}>
+          {t('auth.signUp.submit')}
+        </Button>
+      </form>
+    </SignUpFrame>
   );
 }

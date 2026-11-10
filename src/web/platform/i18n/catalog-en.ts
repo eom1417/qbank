@@ -168,7 +168,6 @@ export const en = {
   'landing.signIn': 'I already have an account',
   'legal.terms.title': 'Terms of use',
   'legal.privacy.title': 'Privacy policy',
-  'legal.draft': 'Draft pending legal review before public launch.',
   'settings.title': 'Settings',
   'settings.profile.title': 'Profile',
   'settings.saved': 'Saved.',

@@ -1,4 +1,4 @@
-import type { FeedbackItem, QueueItem } from '../../../contracts/operator.js';
+import type { FeedbackItem, QueueItem, ServerStatusResponse } from '../../../contracts/operator.js';
 
 const newestFirst = (a: { createdAt: string }, b: { createdAt: string }) =>
   b.createdAt.localeCompare(a.createdAt);
@@ -17,4 +17,16 @@ export function queueOrder(items: readonly QueueItem[]): QueueItem[] {
 /** A WhatsApp share link with the text ready; the operator picks the person in WhatsApp. */
 export function whatsappUrl(message: string): string {
   return `https://wa.me/?text=${encodeURIComponent(message)}`;
+}
+
+/** A backup older than this is late: the service runs daily, so two days means it stopped. */
+export const BACKUP_LATE_MS = 48 * 60 * 60 * 1000;
+
+/** How the last backup stands: none ever ran, it failed, it is late, or all is well. */
+export type BackupHealth = 'none' | 'failed' | 'late' | 'ok';
+
+export function backupHealth(backup: ServerStatusResponse['backup'], now: Date): BackupHealth {
+  if (!backup) return 'none';
+  if (!backup.ok) return 'failed';
+  return now.getTime() - Date.parse(backup.at) > BACKUP_LATE_MS ? 'late' : 'ok';
 }

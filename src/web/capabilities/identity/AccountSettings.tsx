@@ -1,6 +1,14 @@
 import { z } from 'zod';
 import type { AccountPreferences } from '../../../contracts/identity.js';
-import { Button, SelectField, TextField } from '../../design-system/index.js';
+import {
+  Button,
+  Card,
+  MutedText,
+  SelectField,
+  Stack,
+  Subtitle,
+  TextField,
+} from '../../design-system/index.js';
 import { apiRequest } from '../../platform/api/client.js';
 import { text } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
@@ -144,9 +152,24 @@ function PasswordCard() {
   );
 }
 
+/** Google-only server (DEC-42): no password to change, only which Google account signs in. */
+function GoogleCard({ email }: { email: string }) {
+  const { t } = useI18n();
+  return (
+    <Card>
+      <Stack>
+        <Subtitle>{t('settings.google.title')}</Subtitle>
+        <MutedText>
+          {t('settings.google.signedInAs')} <bdi>{email}</bdi>
+        </MutedText>
+      </Stack>
+    </Card>
+  );
+}
+
 /** Account settings (UI-25): every value is saved on the server, so it follows the user's devices. */
 export function AccountSettings() {
-  const { state, mode } = useSession();
+  const { state, mode, signInMethod } = useSession();
   if (state.status !== 'signed-in') return null;
   const { account } = state;
   return (
@@ -155,7 +178,8 @@ export function AccountSettings() {
       <SkinCard />
       <AppearanceCard preferences={account.preferences} />
       <StudyCard preferences={account.preferences} />
-      {mode === 'accounts' && <PasswordCard />}
+      {signInMethod === 'google' && <GoogleCard email={account.email} />}
+      {mode === 'accounts' && signInMethod !== 'google' && <PasswordCard />}
     </>
   );
 }

@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { feedbackMessage, feedbackUrl } from '../../../src/web/capabilities/help/feedback-note.js';
+import {
+  feedbackMessage,
+  feedbackUrl,
+  KINDS,
+} from '../../../src/web/capabilities/help/feedback-note.js';
+import { ar } from '../../../src/web/platform/i18n/catalog-ar.js';
+import { en } from '../../../src/web/platform/i18n/catalog-en.js';
 
 const issue = (url: string) => {
   const parsed = new URL(url);
@@ -29,16 +35,24 @@ describe('feedback as a prefilled GitHub issue (M28.2)', () => {
   });
 });
 
-describe("feedback to the server's operator (M31, B1)", () => {
-  it('carries the kind and both answers, trimmed', () => {
-    expect(feedbackMessage('reading', '  Import my PDF ', ' Read 3 of 40 ')).toBe(
-      '[reading] Import my PDF\n\nRead 3 of 40',
+describe("feedback to the server's operator (M31 B1, M32)", () => {
+  it("carries the kind in the sender's words and both answers, trimmed", () => {
+    expect(feedbackMessage(ar['feedback.kind.reading'], '  Import my PDF ', ' Read 3 of 40 ')).toBe(
+      `[${ar['feedback.kind.reading']}] Import my PDF\n\nRead 3 of 40`,
     );
   });
 
   it('leaves an empty second answer out', () => {
-    expect(feedbackMessage('idea', 'Dark mode on the phone', '   ')).toBe(
-      '[idea] Dark mode on the phone',
+    expect(feedbackMessage(en['feedback.kind.idea'], 'Dark mode on the phone', '   ')).toBe(
+      `[${en['feedback.kind.idea']}] Dark mode on the phone`,
     );
+  });
+
+  it('names every kind in Arabic for an Arabic sender, never the English tag', () => {
+    for (const kind of KINDS) {
+      const label = ar[`feedback.kind.${kind}`];
+      expect(label).not.toBe(kind);
+      expect(feedbackMessage(label, 'x', '')).toBe(`[${label}] x`);
+    }
   });
 });

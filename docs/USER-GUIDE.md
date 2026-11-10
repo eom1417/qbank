@@ -197,18 +197,25 @@ Arabic and English.
 
 ## 12. On a server someone else runs
 
+- **Signing in:** on a server set up for Google, press "Continue with Google" and pick your Google
+  account. There is no password to make or forget, and QBank never sees your Google password: it
+  gets only your e-mail and name. Had you signed up with your e-mail before, sign in with the
+  Google account of the same e-mail and you find all your banks.
 - **Who runs it:** their name is in "Where is my data?" in Help. Your banks are on their server, and
   only they have technical access to the server. Inside the app nobody else sees your banks, not even
-  the operator: their screen holds feedback, password-reset requests and the import queue only. You
+  the operator: their screen holds feedback, the import queue and the server's backups only. You
   can export or delete everything from Settings.
-- **Feedback:** "Send feedback" in Help reaches the operator inside QBank. No text of your questions
-  goes with it unless you type it.
-- **Forgot your password:** tap "Forgot password" and enter your e-mail. No e-mail arrives: your
-  request reaches the operator, who sends you the reset link by WhatsApp or a message. The link works
-  once, for one hour; if it runs out, the operator makes a new one without you asking again.
+- **Your data and backups:** the server is backed up every day by itself; it keeps the 7 newest
+  daily copies and 4 weekly ones and deletes older ones, so something you delete stays in the
+  backups a few weeks at most. The Terms and Privacy pages say the same.
+- **Feedback:** "Send feedback" in Help reaches the operator inside QBank, with its kind in your
+  language. No text of your questions goes with it unless you type it.
+- **A server without Google sign-in:** you sign in with your e-mail and a password. Forgot it? Tap
+  "Forgot password" and enter your e-mail. No e-mail arrives: your request reaches the operator,
+  who sends you the reset link by WhatsApp or a message. The link works once, for one hour.
 - **Imports wait their turn:** the server imports files for several people. If your file waits, you
   see its place ("two files before yours"), and it starts by itself. Someone else's big book never
   holds your file back: every account gets its turn.
 - **Not on a server:** the pairing code, "Your other devices" and backups in Settings belong to the
   local install. On a server you open QBank from any device with your account, and backups are the
-  operator's job.
+  server's job.

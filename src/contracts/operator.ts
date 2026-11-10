@@ -71,3 +71,20 @@ export const QueueResponse = z
   .object({ workers: z.number().int().min(1), items: z.array(QueueItem) })
   .strict();
 export type QueueResponse = z.infer<typeof QueueResponse>;
+
+/** The server's own health for its operator (M32): the last automatic backup, if any ran. */
+export const ServerStatusResponse = z
+  .object({
+    backup: z
+      .object({
+        /** When the last backup finished, and whether it succeeded. */
+        at: z.iso.datetime(),
+        ok: z.boolean(),
+        /** Backups kept on the server (daily and weekly). */
+        kept: z.number().int().min(0),
+      })
+      .strict()
+      .nullable(),
+  })
+  .strict();
+export type ServerStatusResponse = z.infer<typeof ServerStatusResponse>;

@@ -6,6 +6,7 @@ import {
   type QueueResponse,
   type ResetLinkResponse,
   type ResetRequestListResponse,
+  type ServerStatusResponse,
 } from '../../../../contracts/operator.js';
 import { notFound } from '../../../platform/errors/index.js';
 import { parseInput } from '../../../platform/http/validate.js';
@@ -59,7 +60,10 @@ function registerResetRoutes(app: FastifyInstance, deps: OperatorDeps, gate: Req
   );
 }
 
-/** The operator's console (DEC-40): feedback, resets and the queue; never a bank or a question. */
+/**
+ * The operator's console (DEC-40): feedback, resets, the queue and the server's status (M32);
+ * never a bank or a question.
+ */
 export function registerOperatorRoutes(
   app: FastifyInstance,
   deps: OperatorDeps,
@@ -77,6 +81,10 @@ export function registerOperatorRoutes(
   app.get('/api/operator/queue', async (request): Promise<QueueResponse> => {
     await requireOperator(request);
     return { workers: deps.workers, items: await deps.listQueue() };
+  });
+  app.get('/api/operator/status', async (request): Promise<ServerStatusResponse> => {
+    await requireOperator(request);
+    return { backup: await deps.backupStatus() };
   });
   registerResetRoutes(app, deps, requireOperator);
 }

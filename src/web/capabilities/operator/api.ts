@@ -4,6 +4,7 @@ import {
   QueueResponse,
   ResetLinkResponse,
   ResetRequestListResponse,
+  ServerStatusResponse,
   type FeedbackRequest,
 } from '../../../contracts/operator.js';
 import { apiRequest } from '../../platform/api/client.js';
@@ -25,6 +26,9 @@ export const resetLink = (accountId: string) =>
     `/api/operator/resets/${encodeURIComponent(accountId)}/link`,
     ResetLinkResponse,
   );
+
+/** The server's own health (M32): the last automatic backup, or null if none ran yet. */
+export const fetchStatus = () => apiRequest('GET', '/api/operator/status', ServerStatusResponse);
 
 export const fetchQueue = () => apiRequest('GET', '/api/operator/queue', QueueResponse);
 

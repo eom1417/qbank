@@ -10,9 +10,17 @@ import {
 import { text, useSubmit } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { EmailField } from './fields.js';
+import { GoogleSignIn } from './GoogleSignIn.js';
 import { useSession } from './session.js';
 
+/** E-mail and password, or on a Google-only server the Google button (DEC-42). */
 export function SignInScreen() {
+  const { signInMethod } = useSession();
+  return signInMethod === 'google' ? <GoogleSignIn /> : <PasswordSignIn />;
+}
+
+/** The e-mail and password form (password servers). */
+function PasswordSignIn() {
   const { t } = useI18n();
   const { signIn } = useSession();
   const form = useSubmit((data) =>

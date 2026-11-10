@@ -1,4 +1,4 @@
-import type { Selectable, Updateable } from 'kysely';
+import { sql, type Selectable, type Updateable } from 'kysely';
 import { isUniqueViolation } from '../../../platform/db/errors.js';
 import type { Db } from '../../../platform/db/index.js';
 import type { Database } from '../../../platform/db/schema.js';
@@ -6,7 +6,9 @@ import { skinOf, type UpdateAccountRequest } from '../../../../contracts/identit
 import type { Account } from '../domain/account.js';
 
 interface NewAccount extends Account {
-  passwordHash: string;
+  /** Null for an account made by Google sign-in (M32): no password ever signs it in. */
+  passwordHash: string | null;
+  googleSub?: string;
   termsAcceptedAt: Date;
 }
 
@@ -17,9 +19,15 @@ export interface AccountContact {
 
 export interface AccountRepository {
   insert(account: NewAccount): Promise<'created' | 'email_taken'>;
-  findCredentials(email: string): Promise<{ id: string; passwordHash: string } | undefined>;
-  findPasswordHash(id: string): Promise<string | undefined>;
+  findCredentials(email: string): Promise<{ id: string; passwordHash: string | null } | undefined>;
+  findPasswordHash(id: string): Promise<string | null | undefined>;
   findById(id: string): Promise<Account | undefined>;
+  /** The account linked to this Google subject (M32, DEC-42). */
+  findByGoogleSub(sub: string): Promise<Account | undefined>;
+  /** The account with this e-mail, whatever its case. */
+  findByEmail(email: string): Promise<Account | undefined>;
+  /** Links an account to a Google subject; false when it is already linked (or the sub is taken). */
+  linkGoogle(id: string, sub: string): Promise<boolean>;
   update(id: string, changes: UpdateAccountRequest): Promise<void>;
   setPasswordHash(id: string, passwordHash: string): Promise<void>;
   /** E-mail and name of each account found, by id (the operator's console, DEC-40). */
@@ -43,6 +51,7 @@ const fromRow = (row: AccountRow): Account => ({
     reviewReminders: row.review_reminders,
   },
   operatorConfirmed: row.operator_confirmed_at !== null,
+  googleLinked: row.google_sub !== null,
 });
 
 /** Column names for a partial update; undefined fields are left untouched. */
@@ -64,6 +73,7 @@ async function insertAccount(db: Db, account: NewAccount) {
       id: account.id,
       email: account.email,
       password_hash: account.passwordHash,
+      google_sub: account.googleSub ?? null,
       display_name: account.displayName,
       locale: p.locale,
       theme: p.theme,
@@ -74,6 +84,32 @@ async function insertAccount(db: Db, account: NewAccount) {
       terms_accepted_at: account.termsAcceptedAt,
     })
     .execute();
+}
+
+/** The one account with this id, Google subject or e-mail (in any case). */
+async function findAccount(db: Db, key: 'id' | 'google_sub' | 'email', value: string) {
+  const query = db.selectFrom('account').selectAll();
+  const row = await (
+    key === 'email'
+      ? query.where(sql<string>`lower(email)`, '=', value.toLowerCase())
+      : query.where(key, '=', value)
+  ).executeTakeFirst();
+  return row && fromRow(row);
+}
+
+async function linkGoogle(db: Db, id: string, sub: string): Promise<boolean> {
+  try {
+    const result = await db
+      .updateTable('account')
+      .set({ google_sub: sub })
+      .where('id', '=', id)
+      .where('google_sub', 'is', null)
+      .executeTakeFirst();
+    return result.numUpdatedRows > 0n;
+  } catch (error) {
+    if (isUniqueViolation(error)) return false;
+    throw error;
+  }
 }
 
 async function findContacts(db: Db, ids: readonly string[]) {
@@ -109,10 +145,10 @@ export function createAccountRepository(db: Db): AccountRepository {
     async findPasswordHash(id) {
       return (await byId(id).select('password_hash').executeTakeFirst())?.password_hash;
     },
-    async findById(id) {
-      const row = await byId(id).selectAll().executeTakeFirst();
-      return row && fromRow(row);
-    },
+    findById: (id) => findAccount(db, 'id', id),
+    findByGoogleSub: (sub) => findAccount(db, 'google_sub', sub),
+    findByEmail: (email) => findAccount(db, 'email', email),
+    linkGoogle: (id, sub) => linkGoogle(db, id, sub),
     async update(id, changes) {
       await db.updateTable('account').set(toChanges(changes)).where('id', '=', id).execute();
     },

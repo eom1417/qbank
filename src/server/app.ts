@@ -180,6 +180,7 @@ export function buildApp(deps: AppDeps): FastifyInstance {
     localPeers: config.localPeers,
     publicOrigin: config.allowedOrigins[0] ?? null,
     operator: config.operator,
+    google: config.google,
   });
   identity.register(app);
   const checks = deps.checkLink ? { checkLink: deps.checkLink } : {};
@@ -245,5 +246,6 @@ function registerOperator(
     resetLink: identity.resetLink,
     listQueue: content.sources.listQueue,
     workers: config.imports.workers,
+    backupStatusFile: config.backupStatusFile,
   }).register(app);
 }

@@ -101,8 +101,12 @@ export const AppMode = z.enum(['local', 'accounts']);
 export type AppMode = z.infer<typeof AppMode>;
 
 /** `operatorName`: who runs this server, shown to every user (DEC-40); null on a local install. */
+/** How people sign in: pairing (local), e-mail and password, or Google only (M32, DEC-42). */
+export const SignInMethod = z.enum(['pairing', 'password', 'google']);
+export type SignInMethod = z.infer<typeof SignInMethod>;
+
 export const AppMetaResponse = z
-  .object({ mode: AppMode, operatorName: z.string().nullable() })
+  .object({ mode: AppMode, operatorName: z.string().nullable(), signIn: SignInMethod })
   .strict();
 export type AppMetaResponse = z.infer<typeof AppMetaResponse>;
 

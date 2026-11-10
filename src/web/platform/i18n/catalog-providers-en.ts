@@ -7,6 +7,8 @@ export const providersEn = {
   'providers.title': 'AI providers',
   'providers.withoutAi':
     'AI is optional. Without it everything works: importing (text and scanned pages), review, Tutor and exams, analytics, export and backups. With your AI: every question is checked and its answer settled by two models and a judge, questions can be improved, whole pages read, and explanations given.',
+  'providers.withoutAi.server':
+    'AI is optional. Without it everything works: importing (text and scanned pages), review, Tutor and exams, analytics and export. With your AI: every question is checked and its answer settled by two models and a judge, questions can be improved, whole pages read, and explanations given.',
   'providers.intro':
     'Your own AI: subscriptions you sign in to here, or API keys. Every request uses your own accounts.',
   'providers.refreshAll': 'Check all again',

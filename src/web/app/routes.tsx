@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from 'react-router';
 import { Home, Private, Public } from './route-guards.js';
 import { LegalScreen } from '../capabilities/about/LegalScreen.js';
 import { OutboxScreen } from '../capabilities/devtools/OutboxScreen.js';
+import { PasswordOnly } from '../capabilities/identity/PasswordOnly.js';
 import { ForgotPasswordScreen } from '../capabilities/identity/ForgotPasswordScreen.js';
 import { ResetPasswordScreen } from '../capabilities/identity/ResetPasswordScreen.js';
 import { SignInScreen } from '../capabilities/identity/SignInScreen.js';
@@ -265,12 +266,21 @@ export const router = createBrowserRouter([
       {
         path: '/forgot-password',
         element: (
-          <Public>
-            <ForgotPasswordScreen />
-          </Public>
+          <PasswordOnly>
+            <Public>
+              <ForgotPasswordScreen />
+            </Public>
+          </PasswordOnly>
         ),
       },
-      { path: '/reset-password', element: <ResetPasswordScreen /> },
+      {
+        path: '/reset-password',
+        element: (
+          <PasswordOnly>
+            <ResetPasswordScreen />
+          </PasswordOnly>
+        ),
+      },
       { path: '/terms', element: <LegalScreen page="terms" /> },
       { path: '/privacy', element: <LegalScreen page="privacy" /> },
       { path: '/dev/outbox', element: <OutboxScreen /> },

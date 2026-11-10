@@ -14,6 +14,7 @@ const OPERATOR_ROUTES: [method: 'GET' | 'POST', url: string][] = [
   ['GET', '/api/operator/resets'],
   ['POST', `/api/operator/resets/${SOME_ID}/link`],
   ['GET', '/api/operator/queue'],
+  ['GET', '/api/operator/status'],
 ];
 
 type Client = ReturnType<typeof createClient>;
@@ -39,7 +40,7 @@ describe('who the operator is (DEC-40)', () => {
 
   it('names the operator to every visitor in /api/meta', async () => {
     const meta = (await createClient(app()).get('/api/meta')).json();
-    expect(meta).toEqual({ mode: 'accounts', operatorName: 'Test Operator' });
+    expect(meta).toEqual({ mode: 'accounts', operatorName: 'Test Operator', signIn: 'password' });
   });
 });
 

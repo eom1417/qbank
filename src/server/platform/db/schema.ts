@@ -6,7 +6,10 @@ type CreatedAt = ColumnType<Date, Date | undefined, never>;
 interface AccountTable {
   id: string;
   email: string;
-  password_hash: string;
+  /** Null for an account that signs in with Google only (M32, DEC-42). */
+  password_hash: string | null;
+  /** Google's stable id for the person; set on their first Google sign-in. */
+  google_sub: Generated<string | null>;
   display_name: string;
   locale: 'ar' | 'en';
   theme: Generated<'system' | 'light' | 'dark'>;

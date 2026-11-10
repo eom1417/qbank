@@ -16,9 +16,12 @@ export function feedbackUrl(kind: Kind, tried: string, happened: string, report:
   return `${NEW_ISSUE}?${query.toString()}`;
 }
 
-/** The note the server's operator reads (M31): the kind, then the user's own two answers. */
-export function feedbackMessage(kind: Kind, tried: string, happened: string): string {
-  const parts = [`[${kind}] ${tried.trim()}`];
+/**
+ * The note the server's operator reads (M31, M32): the kind in the sender's words (e.g. «مشكلة»),
+ * then their two answers. The GitHub issue above keeps its English tag for issue titles.
+ */
+export function feedbackMessage(kindLabel: string, tried: string, happened: string): string {
+  const parts = [`[${kindLabel}] ${tried.trim()}`];
   if (happened.trim()) parts.push(happened.trim());
   return parts.join('\n\n');
 }

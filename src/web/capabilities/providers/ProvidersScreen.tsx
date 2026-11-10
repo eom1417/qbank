@@ -4,6 +4,7 @@ import { useQuery } from '../../platform/api/use-query.js';
 import { errorMessageKey } from '../../platform/api/messages.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { useAction } from '../../platform/forms/use-submit.js';
+import { useModeCopy } from '../identity/mode-copy.js';
 import { AddProviderCard } from './AddProviderCard.js';
 import { DisclosureNote } from './DisclosureNote.js';
 import { ProviderAccessContext } from './access.js';
@@ -26,6 +27,7 @@ function useErrorText() {
 /** Every AI provider of this install (the T3 AI Providers Kit, DEC-30), live. */
 export function ProvidersScreen() {
   const { t } = useI18n();
+  const copy = useModeCopy();
   const { state } = useProviderState();
   const drivers = useQuery(fetchDrivers).state;
   const access = useQuery(fetchProviderAccess).state;
@@ -50,7 +52,7 @@ export function ProvidersScreen() {
           </Button>
         </Row>
         <MutedText>{t('providers.intro')}</MutedText>
-        <Alert tone="info">{t('providers.withoutAi')}</Alert>
+        <Alert tone="info">{copy('providers.withoutAi')}</Alert>
         <DisclosureNote />
         {error.text && <Alert tone="error">{error.text}</Alert>}
         {state.providers.map((provider) => (

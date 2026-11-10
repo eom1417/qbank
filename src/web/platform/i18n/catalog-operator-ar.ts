@@ -53,4 +53,23 @@ export const operatorAr: Record<keyof typeof operatorEn, string> = {
   'import.queue.ahead.few': 'في الطابور: قبلك {n} ملفات، ويبدأ ملفك تلقائياً بعدها.',
   'import.queue.ahead.many': 'في الطابور: قبلك {n} ملفاً، ويبدأ ملفك تلقائياً بعدها.',
   'import.queue.ahead.other': 'في الطابور: قبلك {n} ملف، ويبدأ ملفك تلقائياً بعدها.',
+  'auth.google.continue': 'متابعة بحساب Google',
+  'auth.google.signUpHint':
+    'يُنشأ حسابك هنا ببريد حسابك في Google، ولا نرى كلمة مرور Google أبداً.',
+  'auth.google.error.google': 'تعذّر الدخول بحساب Google. حاول مرة أخرى.',
+  'auth.google.error.terms': 'وافق على الشروط أولاً لإنشاء حسابك.',
+  'auth.google.error.too_many_attempts':
+    'محاولات كثيرة خلال وقت قصير. انتظر ربع ساعة ثم حاول من جديد.',
+  'settings.google.title': 'الدخول',
+  'settings.google.signedInAs': 'تدخل بحساب Google:',
+  'operator.backup.title': 'النسخ الاحتياطي',
+  'operator.backup.last': 'آخر نسخة احتياطية {when}',
+  'operator.backup.ok': 'نجحت',
+  'operator.backup.failedBadge': 'فشلت',
+  'operator.backup.kept': 'النسخ المحفوظة على الخادم: {n}',
+  'operator.backup.none': 'لم تُنفَّذ نسخة احتياطية بعد على هذا الخادم.',
+  'operator.backup.failed':
+    'فشلت آخر نسخة احتياطية. راجع خدمة النسخ على الخادم قبل أن تتعرض البيانات للخطر.',
+  'operator.backup.late':
+    'مضى على آخر نسخة احتياطية أكثر من يومين. تأكد أن خدمة النسخ ما زالت تعمل.',
 };

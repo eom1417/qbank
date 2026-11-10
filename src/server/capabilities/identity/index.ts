@@ -1,7 +1,8 @@
 import type { FastifyInstance } from 'fastify';
 import type { Clock } from '../../platform/clock.js';
 import type { Db } from '../../platform/db/index.js';
-import { AppError } from '../../platform/errors/index.js';
+import type { GoogleConfig } from '../../platform/config/index.js';
+import { AppError, notFound } from '../../platform/errors/index.js';
 import type { Mailer } from '../../platform/mail/index.js';
 import { newId } from '../../platform/ids.js';
 import { createAccountRepository, type AccountContact } from './adapters/account-repository.js';
@@ -62,6 +63,8 @@ interface IdentitySettings {
   publicOrigin: string | null;
   /** The server's declared operator (DEC-40, `config.operator`); both null on a local install. */
   operator: { email: string | null; name: string | null };
+  /** Google-only sign-in (M32, DEC-42, `config.google`); null for pairing or passwords. */
+  google: GoogleConfig | null;
 }
 
 function identityDeps(settings: IdentitySettings) {
@@ -75,7 +78,7 @@ function identityDeps(settings: IdentitySettings) {
     clock: settings.clock,
     newId,
     sessionTtlDays: settings.sessionTtlDays,
-    operatorEmail: settings.operator.email,
+    operator: { email: settings.operator.email, provenByGoogle: settings.google !== null },
   };
 }
 
@@ -87,8 +90,10 @@ export function createIdentity(settings: IdentitySettings): IdentityModule {
     requireOperator: createRequireOperator(deps, requireActor),
     deleteAccount: (accountId) => deps.accounts.delete(accountId),
     contactsOf: (ids) => deps.accounts.contactsOf(ids),
-    resetRequests: () => listResetRequests(deps),
-    resetLink: (accountId) => {
+    // A Google server has no passwords, so nobody waits for a reset link (M32, DEC-42).
+    resetRequests: async () => (settings.google ? [] : listResetRequests(deps)),
+    resetLink: async (accountId) => {
+      if (settings.google) throw notFound();
       // Links point at the configured app, never at a header the caller sent.
       if (!settings.publicOrigin) throw new AppError('forbidden_origin');
       return resetLinkFor(deps, accountId, settings.publicOrigin);
@@ -108,6 +113,7 @@ export function createIdentity(settings: IdentitySettings): IdentityModule {
         localPeers: settings.localPeers,
         publicOrigin: settings.publicOrigin,
         operatorName: settings.operator.name,
+        google: settings.google,
       }),
   };
 }

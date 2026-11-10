@@ -84,7 +84,9 @@ describe('server copy (M31, B3)', () => {
     for (const base of bases) expect(KEYS).toContain(base);
     for (const locale of ['ar', 'en'] as const) {
       const local = bases.map((key) => CATALOGS[locale][key as MessageKey]);
-      const legal = legalSections(locale, 'privacy', 'local').map((s) => s.body);
+      const legal = (['terms', 'privacy'] as const).flatMap((page) =>
+        legalSections(locale, page, 'local').map((s) => s.body),
+      );
       expect([...local, ...legal].filter((text) => text.includes('{operator}'))).toEqual([]);
     }
   });
@@ -92,5 +94,28 @@ describe('server copy (M31, B3)', () => {
   it('keeps the local texts local: the privacy answer still says where a local install keeps data', () => {
     expect(en['help.privacy.body']).toContain('your own computer');
     expect(claimsIn(en['help.privacy.body.server'])).toEqual([]);
+  });
+});
+
+describe('day-one trust texts (M32)', () => {
+  it('shows final legal pages in every mode: no draft wording (M32)', () => {
+    const modes = ['local', 'accounts', null] as const;
+    const texts = (['ar', 'en'] as const).flatMap((locale) =>
+      modes.flatMap((mode) =>
+        (['terms', 'privacy'] as const).flatMap((page) =>
+          legalSections(locale, page, mode).map((s) => `${s.heading} ${s.body}`),
+        ),
+      ),
+    );
+    expect(texts.length).toBeGreaterThan(0);
+    expect(texts.filter((text) => /draft|مسودة|المراجعة القانونية/i.test(text))).toEqual([]);
+    expect(Object.keys(en).filter((key) => key.startsWith('legal.draft'))).toEqual([]);
+  });
+
+  it('does not tell a server user to run backups: the server makes them (M32)', () => {
+    expect(modeKey('providers.withoutAi', 'accounts')).toBe('providers.withoutAi.server');
+    expect(en['providers.withoutAi']).toContain('backups');
+    expect(en['providers.withoutAi.server']).not.toMatch(/backup/i);
+    expect(ar['providers.withoutAi.server']).not.toContain('النسخ الاحتياطي');
   });
 });
