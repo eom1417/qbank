@@ -9,7 +9,14 @@ change.
 
 ## Unreleased / لم يصدر بعد
 
-### Day-one trust on a server (M32, DEC-42; in progress) / ثقة اليوم الأول على الخادم (قيد التنفيذ)
+## 0.2.0 (2026-11-10): ready to self-host for a group / جاهز للاستضافة لمجموعة
+
+Shares with one policy and one gate (M30), a server ready for a group with an operator, fair
+imports and honest texts (M31), and day-one trust: Google sign-in, automatic backups, an uptime
+ping and final legal pages (M32). A new README in English and Arabic.
+/ المشاركات بقواعد موحدة، وخادم جاهز لمجموعة، وثقة اليوم الأول.
+
+### Day-one trust on a server (M32, DEC-42) / ثقة اليوم الأول على الخادم
 
 - Sign in with Google only on a server with a Google client (`QBANK_GOOGLE_CLIENT_ID`,
   `QBANK_GOOGLE_CLIENT_SECRET`): no passwords, no reset, a verified e-mail. An existing e-mail
