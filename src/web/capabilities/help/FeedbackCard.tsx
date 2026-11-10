@@ -98,7 +98,8 @@ function ServerFeedback() {
   const [sent, setSent] = useState(false);
   const send = useAction(async () => {
     setSent(false);
-    const message = feedbackMessage(fields.kind, fields.tried, fields.happened);
+    const kind = t(`feedback.kind.${fields.kind}`);
+    const message = feedbackMessage(kind, fields.tried, fields.happened);
     await sendFeedback({ message, screen: window.location.pathname });
     fields.clear();
     setSent(true);

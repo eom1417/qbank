@@ -1,6 +1,20 @@
 # QBank on your own server for family and friends: anyone with the link signs up and links their
 # own AI provider. Guide: docs/SELF-HOST.md. Settings come from .env next to this file
 # (copy deploy/server.env.example). Start: docker compose -f compose.server.yaml up -d --build
+
+# What the backup and restore services share (M32): the same Postgres tools as the database, the
+# scripts, the backups volume, and libpq's own settings (the password stays out of every log).
+x-backup-base: &backup-base
+  image: postgres:17-alpine
+  environment: &backup-env
+    PGHOST: db
+    PGUSER: qbank
+    PGDATABASE: qbank
+    PGPASSWORD: ${POSTGRES_PASSWORD}
+  depends_on:
+    db:
+      condition: service_healthy
+
 services:
   db:
     image: postgres:17-alpine
@@ -32,12 +46,50 @@ services:
       QBANK_OPERATOR_EMAIL:
       QBANK_OPERATOR_NAME:
       QBANK_IMPORT_WORKERS: ${QBANK_IMPORT_WORKERS:-2}
+      # AI sessions at once across the server; 6 suits 8 GB of memory.
+      QBANK_AI_HOSTS_MAX: ${QBANK_AI_HOSTS_MAX:-6}
+      # Optional, from .env, unset when missing: Google sign-in (both or neither), and the uptime
+      # ping (an https address from an uptime service, which alerts you when the pings stop).
+      QBANK_GOOGLE_CLIENT_ID:
+      QBANK_GOOGLE_CLIENT_SECRET:
+      QBANK_HEARTBEAT_URL:
+      # The last backup, shown on the operator's console.
+      QBANK_BACKUP_STATUS_FILE: /backups/status.json
     volumes:
       - qbank-data:/data
+      - qbank-backups:/backups:ro
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
+
+  # Daily backups (M32): the database and the data volume into the qbank-backups volume, 7 days
+  # and 4 Sundays kept, status.json for the operator. QBANK_BACKUP_COPY_TO in .env (a folder on
+  # this machine, e.g. a mounted disk or a synced folder) also gets each new archive.
+  backup:
+    <<: *backup-base
+    command: ['sh', '/scripts/server-backup.sh']
+    environment:
+      <<: *backup-env
+      QBANK_BACKUP_COPY_TO: ${QBANK_BACKUP_COPY_TO:+/copy}
+    volumes:
+      - ./scripts:/scripts:ro
+      - qbank-data:/data:ro
+      - qbank-backups:/backups
+      # Without QBANK_BACKUP_COPY_TO this mounts the backups volume again, unused.
+      - ${QBANK_BACKUP_COPY_TO:-qbank-backups}:/copy
+    restart: unless-stopped
+
+  # Restore (docs/SELF-HOST.md), never started with the others: stop qbank and backup, then
+  # docker compose -f compose.server.yaml run --rm restore /backups/daily/qbank-YYYY-MM-DD.tar.gz
+  restore:
+    <<: *backup-base
+    profiles: ['restore']
+    entrypoint: ['sh', '/scripts/server-restore.sh']
+    volumes:
+      - ./scripts:/scripts:ro
+      - qbank-data:/data
+      - qbank-backups:/backups:ro
 
   # HTTPS: Caddy gets and renews a free certificate for QBANK_DOMAIN by itself (needs ports 80
   # and 443 to reach this machine), and passes requests to QBank.
@@ -56,4 +108,5 @@ services:
 volumes:
   qbank-db:
   qbank-data:
+  qbank-backups:
   caddy-data:

@@ -1,6 +1,6 @@
 import type { InjectOptions } from 'fastify';
 import { describe, expect, it } from 'vitest';
-import { ORIGIN, TEST_PAIRING_TOKEN, useTestApp } from '../support/test-app.js';
+import { LOCAL_META, ORIGIN, TEST_PAIRING_TOKEN, useTestApp } from '../support/test-app.js';
 
 // Local mode (DEC-31): one owner, no sign-up; browsers pair from this computer or with the code.
 const app = useTestApp({ local: true });
@@ -16,10 +16,7 @@ async function pair(headers: Record<string, string>, payload: object = {}) {
 
 describe('local mode', () => {
   it('reports its mode and has no sign-up or password sign-in', async () => {
-    expect((await app().inject({ url: '/api/meta' })).json()).toEqual({
-      mode: 'local',
-      operatorName: null,
-    });
+    expect((await app().inject({ url: '/api/meta' })).json()).toEqual(LOCAL_META);
     for (const url of ['/api/auth/sign-up', '/api/auth/sign-in', '/api/account/password']) {
       const response = await app().inject({
         method: 'POST',

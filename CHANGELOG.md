@@ -9,6 +9,27 @@ change.
 
 ## Unreleased / لم يصدر بعد
 
+### Day-one trust on a server (M32, DEC-42; in progress) / ثقة اليوم الأول على الخادم (قيد التنفيذ)
+
+- Sign in with Google only on a server with a Google client (`QBANK_GOOGLE_CLIENT_ID`,
+  `QBANK_GOOGLE_CLIENT_SECRET`): no passwords, no reset, a verified e-mail. An existing e-mail
+  account is linked on its first Google sign-in, and the operator (the verified
+  `QBANK_OPERATOR_EMAIL`) needs no confirmation command. A server without a Google client and the
+  local install are unchanged. / الدخول بحساب Google وحده على الخادم.
+- Automatic daily backups of the database and the files (7 daily and 4 weekly kept, an optional
+  copy to another disk with `QBANK_BACKUP_COPY_TO`), restore with `scripts/server-restore.sh`, and
+  the last backup shown in Server administration.
+- An uptime heartbeat every 5 minutes to the owner's uptime service (`QBANK_HEARTBEAT_URL`).
+- An 8 GB server with 6 AI sessions at once by default.
+- Final terms and privacy pages in plain words, with no "draft" notice: who runs the server, what
+  is stored, who can see it, AI only through your own provider, backups and how long they keep
+  what you delete. / الشروط والخصوصية نهائية بلا «مسودة».
+- Small texts: "AI is optional" no longer lists backups as something a server user runs, and
+  feedback reaches the operator with its kind in the sender's language («مشكلة»); GitHub issues
+  keep the English tag.
+- Self-host guide: 8 GB server, Google sign-in step by step, and a new
+  `docs/SELF-HOST-OPERATIONS.md` for backups, restore, the uptime alert and password-mode servers.
+
 ### Ready to launch on a server (M31, DEC-40; in progress) / جاهز للإطلاق على الخادم (قيد التنفيذ)
 
 - The server operator is a declared role: the account whose e-mail is `QBANK_OPERATOR_EMAIL`,

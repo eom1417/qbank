@@ -3,12 +3,15 @@ import {
   SignInRequest,
   SignUpRequest,
   type AppMetaResponse,
+  type SignInMethod,
 } from '../../../../contracts/identity.js';
+import type { GoogleConfig } from '../../../platform/config/index.js';
 import { parseInput } from '../../../platform/http/validate.js';
 import { getAccount, signIn, signUp } from '../use-cases/accounts.js';
 import type { IdentityDeps } from '../use-cases/deps.js';
 import { endSession } from '../use-cases/sessions.js';
 import { registerAccountRoutes, registerPasswordRoutes } from './account-routes.js';
+import { registerGoogleRoutes } from './google-routes.js';
 import { registerLocalRoutes } from './local-routes.js';
 import { accountView } from './presenters.js';
 import type { RequireActor } from './require-actor.js';
@@ -29,6 +32,20 @@ export interface IdentityRouteOptions {
   publicOrigin: string | null;
   /** Who runs this server, told to every visitor (DEC-40); null when nobody is declared. */
   operatorName: string | null;
+  /** Accounts mode with a Google client: Google is the only way in (M32, DEC-42). */
+  google: GoogleConfig | null;
+}
+
+function signInMethod(options: IdentityRouteOptions): SignInMethod {
+  if (options.pairing !== null) return 'pairing';
+  return options.google === null ? 'password' : 'google';
+}
+
+/** Accounts mode: Google only when a client is set, otherwise e-mail and password. */
+function registerAccountsSignIn(app: FastifyInstance, options: IdentityRouteOptions) {
+  const { google } = options;
+  if (google === null) return registerSignInRoutes(app, options);
+  registerGoogleRoutes(app, { ...options, google });
 }
 
 /** Sign-up and password sign-in exist only in accounts mode. */
@@ -67,9 +84,10 @@ export function registerIdentityRoutes(app: FastifyInstance, options: IdentityRo
   const meta: AppMetaResponse = {
     mode: pairing === null ? 'accounts' : 'local',
     operatorName: options.operatorName,
+    signIn: signInMethod(options),
   };
   app.get('/api/meta', async () => meta);
-  if (pairing === null) registerSignInRoutes(app, options);
+  if (pairing === null) registerAccountsSignIn(app, options);
   else
     registerLocalRoutes(app, {
       deps,

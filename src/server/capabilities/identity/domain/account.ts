@@ -7,6 +7,8 @@ export interface Account {
   preferences: AccountPreferences;
   /** Confirmed from the server's shell as the operator's own account (DEC-40). */
   operatorConfirmed?: boolean;
+  /** Linked to a Google account, whose verified e-mail it carries (M32, DEC-42). */
+  googleLinked?: boolean;
 }
 
 /** Defaults for a new account; the locale comes from the sign-up screen. */

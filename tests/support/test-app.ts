@@ -5,7 +5,7 @@ import { afterAll, beforeAll } from 'vitest';
 import { buildApp } from '../../src/server/app.js';
 import { migrateToLatest } from '../../src/server/migrator.js';
 import type { Clock } from '../../src/server/platform/clock.js';
-import type { AiHostsConfig } from '../../src/server/platform/config/index.js';
+import type { AiHostsConfig, GoogleConfig } from '../../src/server/platform/config/index.js';
 import { createDb, type Db } from '../../src/server/platform/db/index.js';
 
 export const ORIGIN = 'http://qbank.test';
@@ -58,10 +58,30 @@ interface TestAppOptions {
   aiHosts?: AiHostsConfig;
   /** The declared operator (DEC-40); defaults to OPERATOR_EMAIL in accounts mode. */
   operator?: { email: string | null; name: string | null };
+  /** Google-only sign-in against a fake Google (M32, DEC-42). */
+  google?: GoogleConfig;
+  /** The backup service's status file, read by the operator's console (M32). */
+  backupStatusFile?: string;
 }
 
 /** The e-mail the test server declares as its operator unless a suite says otherwise (M31). */
 export const OPERATOR_EMAIL = 'operator@example.com';
+
+/** What /api/meta says on a local install: no operator, and browsers pair (DEC-31, DEC-40). */
+export const LOCAL_META = { mode: 'local', operatorName: null, signIn: 'pairing' } as const;
+
+/** What only a server has (M31, M32): its operator, Google sign-in and backup status. */
+function serverParts(options: TestAppOptions) {
+  const operator = options.local
+    ? { email: null, name: null }
+    : { email: OPERATOR_EMAIL, name: 'Test Operator' };
+  return {
+    operator: options.operator ?? operator,
+    google: options.google ?? null,
+    backupStatusFile: options.backupStatusFile ?? null,
+    heartbeatUrl: null,
+  };
+}
 
 /** The app's configuration for a test suite: accounts mode unless `local`, no AI host. */
 function testConfig(options: TestAppOptions) {
@@ -87,11 +107,7 @@ function testConfig(options: TestAppOptions) {
       originalRetentionDays: 7,
       workers: 2,
     },
-    operator:
-      options.operator ??
-      (options.local
-        ? { email: null, name: null }
-        : { email: OPERATOR_EMAIL, name: 'Test Operator' }),
+    ...serverParts(options),
     aiHost: options.aiHost?.() ?? NO_AI_HOST,
     aiHosts: options.aiHosts ?? SINGLE_AI_HOST,
     webDir: options.webDir ?? null,

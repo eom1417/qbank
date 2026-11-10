@@ -22,6 +22,10 @@ export function e2eDatabaseUrl(): string {
 
 const LOCAL_API_PORT = '3102';
 const LOCAL_WEB_PORT = 5181;
+/** The Google-only server of tests/e2e/google-sign-in.spec.ts (M32), on the spec's fake Google. */
+const GOOGLE_API_PORT = '3103';
+const GOOGLE_WEB_PORT = 5182;
+const FAKE_GOOGLE = 'http://127.0.0.1:3194';
 /** The local-mode install of tests/e2e/local-mode.spec.ts (PGlite, emptied per run). */
 export const LOCAL_DATA_DIR = '.data/e2e-local';
 export const LOCAL_WEB_URL = `http://127.0.0.1:${LOCAL_WEB_PORT}`;
@@ -43,6 +47,21 @@ const apiEnv = {
   // The server's declared operator (DEC-40), used by tests/e2e/operator.spec.ts.
   QBANK_OPERATOR_EMAIL: 'operator@example.test',
   QBANK_OPERATOR_NAME: 'أبو سالم',
+};
+
+const googleApiEnv = {
+  ...apiEnv,
+  QBANK_API_PORT: GOOGLE_API_PORT,
+  QBANK_ALLOWED_ORIGINS: `http://127.0.0.1:${GOOGLE_WEB_PORT}`,
+  QBANK_DATA_DIR: '.data/e2e-google',
+  // It shares the E2E database: only the main API may take imports, whose files live in its own
+  // data folder (a second worker took them and could not find their files).
+  QBANK_WORKER: 'false',
+  QBANK_GOOGLE_CLIENT_ID: 'e2e-google-client.apps.googleusercontent.com',
+  QBANK_GOOGLE_CLIENT_SECRET: 'e2e-google-secret-not-a-secret',
+  QBANK_GOOGLE_AUTH_URL: `${FAKE_GOOGLE}/auth`,
+  QBANK_GOOGLE_TOKEN_URL: `${FAKE_GOOGLE}/token`,
+  QBANK_OPERATOR_EMAIL: 'google-operator@example.test',
 };
 
 export default defineConfig({
@@ -106,6 +125,21 @@ export default defineConfig({
       command: `npx vite --port ${LOCAL_WEB_PORT} --strictPort`,
       url: LOCAL_WEB_URL,
       env: { QBANK_API_PORT: LOCAL_API_PORT },
+      reuseExistingServer: false,
+      timeout: 60_000,
+    },
+    {
+      // Google-only sign-in (DEC-42); the database is the E2E one (every e-mail is unique).
+      command: 'node --import tsx src/server/main.ts',
+      url: `http://127.0.0.1:${GOOGLE_API_PORT}/api/health`,
+      env: googleApiEnv,
+      reuseExistingServer: false,
+      timeout: 60_000,
+    },
+    {
+      command: `npx vite --port ${GOOGLE_WEB_PORT} --strictPort`,
+      url: `http://127.0.0.1:${GOOGLE_WEB_PORT}`,
+      env: { QBANK_API_PORT: GOOGLE_API_PORT },
       reuseExistingServer: false,
       timeout: 60_000,
     },

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { FeedbackItem, QueueItem } from '../../../src/contracts/operator.js';
 import {
+  BACKUP_LATE_MS,
+  backupHealth,
   openFeedback,
   queueOrder,
   whatsappUrl,
@@ -74,5 +76,27 @@ describe("a waiting import's place in the queue (M31, B2)", () => {
   it('uses one/other in English, with the count', () => {
     expect(queueMessage('en', 1)?.key).toBe('import.queue.ahead.one');
     expect(queueMessage('en', 4)).toEqual({ key: 'import.queue.ahead.other', n: 4 });
+  });
+});
+
+describe('backup health for the operator (M32)', () => {
+  const now = new Date('2026-11-10T12:00:00.000Z');
+  const at = (msAgo: number) => new Date(now.getTime() - msAgo).toISOString();
+
+  it('warns when no backup has run yet', () => {
+    expect(backupHealth(null, now)).toBe('none');
+  });
+
+  it('warns when the last backup failed, however recent', () => {
+    expect(backupHealth({ at: at(60_000), ok: false, kept: 3 }, now)).toBe('failed');
+  });
+
+  it('warns when the last good backup is older than 48 hours', () => {
+    expect(backupHealth({ at: at(BACKUP_LATE_MS + 1), ok: true, kept: 7 }, now)).toBe('late');
+  });
+
+  it('is fine up to 48 hours after a good backup', () => {
+    expect(backupHealth({ at: at(BACKUP_LATE_MS), ok: true, kept: 7 }, now)).toBe('ok');
+    expect(backupHealth({ at: at(0), ok: true, kept: 1 }, now)).toBe('ok');
   });
 });

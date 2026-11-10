@@ -1,6 +1,7 @@
 import type { QueueItem } from '../../../../contracts/operator.js';
 import type { Clock } from '../../../platform/clock.js';
 import type { OperatorDirectory } from '../../identity/index.js';
+import type { BackupStatus } from '../adapters/backup-status-file.js';
 import type { FeedbackRepository } from '../adapters/feedback-repository.js';
 
 /**
@@ -17,4 +18,6 @@ export interface OperatorDeps extends OperatorDirectory {
   listQueue(): Promise<QueueItem[]>;
   /** Imports that run at once (`config.imports.workers`). */
   workers: number;
+  /** The last automatic backup (M32), read from the backup service's status file; null if none. */
+  backupStatus(): Promise<BackupStatus | null>;
 }

@@ -56,6 +56,16 @@ const Env = z.object({
     unsetIfBlank,
     z.coerce.number().int().min(1).max(8).default(2),
   ),
+  /** Google sign-in (M32, DEC-42): with both set, a server signs people in with Google only. */
+  QBANK_GOOGLE_CLIENT_ID: z.preprocess(unsetIfBlank, z.string().min(1).optional()),
+  QBANK_GOOGLE_CLIENT_SECRET: z.preprocess(unsetIfBlank, z.string().min(1).optional()),
+  /** Google's endpoints; overridden only by tests, which run a fake Google. */
+  QBANK_GOOGLE_AUTH_URL: z.url().default('https://accounts.google.com/o/oauth2/v2/auth'),
+  QBANK_GOOGLE_TOKEN_URL: z.url().default('https://oauth2.googleapis.com/token'),
+  /** Written by the backup service (compose.server.yaml); its operator sees the last run (M32). */
+  QBANK_BACKUP_STATUS_FILE: z.preprocess(unsetIfBlank, z.string().min(1).optional()),
+  /** Pinged every few minutes while the server runs; an uptime service alerts when it stops. */
+  QBANK_HEARTBEAT_URL: z.preprocess(unsetIfBlank, z.url({ protocol: /^https$/ }).optional()),
 });
 
 export interface AppConfig {
@@ -93,6 +103,11 @@ export interface AppConfig {
   };
   /** Accounts mode only (DEC-40): who runs the server; both null on a local install. */
   operator: { email: string | null; name: string | null };
+  /** Accounts mode with a Google client: Google is the only way in (DEC-42); null otherwise. */
+  google: GoogleConfig | null;
+  /** The backup service's status file, and the uptime ping (M32); null when not set. */
+  backupStatusFile: string | null;
+  heartbeatUrl: string | null;
   /**
    * The AI host (ai-host/): the vendored T3 AI Providers Kit on a loopback port. Without a token
    * the providers screens report it as unavailable.
@@ -106,6 +121,13 @@ export interface AppConfig {
   samplePdf: string;
   /** The release this install runs, for the support report. */
   version: string;
+}
+
+export interface GoogleConfig {
+  clientId: string;
+  clientSecret: string;
+  authUrl: string;
+  tokenUrl: string;
 }
 
 export interface AiHostsConfig {
@@ -157,6 +179,17 @@ function operatorOf(parsed: z.infer<typeof Env>): AppConfig['operator'] {
   return { email: parsed.QBANK_OPERATOR_EMAIL ?? null, name: parsed.QBANK_OPERATOR_NAME ?? null };
 }
 
+/** Google sign-in needs accounts mode and both halves of the client; half of it is a mistake. */
+function googleOf(parsed: z.infer<typeof Env>): GoogleConfig | null {
+  const id = parsed.QBANK_GOOGLE_CLIENT_ID;
+  const secret = parsed.QBANK_GOOGLE_CLIENT_SECRET;
+  if (parsed.QBANK_MODE === 'local' || (!id && !secret)) return null;
+  if (!id || !secret)
+    throw new Error('Set both QBANK_GOOGLE_CLIENT_ID and QBANK_GOOGLE_CLIENT_SECRET, or neither');
+  const urls = { authUrl: parsed.QBANK_GOOGLE_AUTH_URL, tokenUrl: parsed.QBANK_GOOGLE_TOKEN_URL };
+  return { clientId: id, clientSecret: secret, ...urls };
+}
+
 /** Local defaults: plain http on this computer or its network, and a paired browser stays paired. */
 const LOCAL_DEFAULTS = { cookieSecure: 'false', sessionTtlDays: 400 } as const;
 const ACCOUNTS_DEFAULTS = { cookieSecure: 'true', sessionTtlDays: 30 } as const;
@@ -191,6 +224,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       workers: parsed.QBANK_IMPORT_WORKERS,
     },
     operator: operatorOf(parsed),
+    google: googleOf(parsed),
+    backupStatusFile: parsed.QBANK_BACKUP_STATUS_FILE ?? null,
+    heartbeatUrl: parsed.QBANK_HEARTBEAT_URL ?? null,
     aiHost: { url: parsed.QBANK_AI_HOST_URL, token: parsed.QBANK_AI_HOST_TOKEN ?? null },
     aiHosts: aiHostsOf(parsed, env),
     webDir: parsed.QBANK_WEB_DIR === 'none' ? null : parsed.QBANK_WEB_DIR,

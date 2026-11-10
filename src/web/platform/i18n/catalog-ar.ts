@@ -156,7 +156,6 @@ export const ar: Record<MessageKey, string> = {
   'landing.signIn': 'لدي حساب بالفعل',
   'legal.terms.title': 'شروط الاستخدام',
   'legal.privacy.title': 'سياسة الخصوصية',
-  'legal.draft': 'مسودة تنتظر المراجعة القانونية قبل الإطلاق العام.',
   'settings.title': 'الإعدادات',
   'settings.profile.title': 'الملف الشخصي',
   'settings.saved': 'تم الحفظ.',

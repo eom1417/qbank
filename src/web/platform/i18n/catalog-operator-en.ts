@@ -53,4 +53,23 @@ export const operatorEn = {
   'import.queue.ahead.few': 'In the queue: {n} files ahead of yours. Yours starts by itself.',
   'import.queue.ahead.many': 'In the queue: {n} files ahead of yours. Yours starts by itself.',
   'import.queue.ahead.other': 'In the queue: {n} files ahead of yours. Yours starts by itself.',
+  'auth.google.continue': 'Continue with Google',
+  'auth.google.signUpHint':
+    'Your account here uses the e-mail of your Google account. QBank never sees your Google password.',
+  'auth.google.error.google': 'Could not sign in with Google. Try again.',
+  'auth.google.error.terms': 'Agree to the terms first to create your account.',
+  'auth.google.error.too_many_attempts':
+    'Too many tries in a short time. Wait a quarter of an hour, then try again.',
+  'settings.google.title': 'Signing in',
+  'settings.google.signedInAs': 'You sign in with Google:',
+  'operator.backup.title': 'Backups',
+  'operator.backup.last': 'Last backup {when}',
+  'operator.backup.ok': 'Succeeded',
+  'operator.backup.failedBadge': 'Failed',
+  'operator.backup.kept': 'Backups kept on the server: {n}',
+  'operator.backup.none': 'No backup has run on this server yet.',
+  'operator.backup.failed':
+    'The last backup failed. Check the backup service on the server before data is at risk.',
+  'operator.backup.late':
+    'The last backup is more than two days old. Check that the backup service is still running.',
 } as const;

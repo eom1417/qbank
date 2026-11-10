@@ -5,6 +5,7 @@ import type { PasswordHasher } from '../adapters/password-hasher.js';
 import type { PasswordResetRepository } from '../adapters/password-reset-repository.js';
 import type { ResetOutbox } from '../adapters/reset-outbox.js';
 import type { SessionRepository } from '../adapters/session-repository.js';
+import type { OperatorDeclaration } from '../domain/operator.js';
 
 export interface IdentityDeps {
   accounts: AccountRepository;
@@ -16,6 +17,6 @@ export interface IdentityDeps {
   clock: Clock;
   newId: () => string;
   sessionTtlDays: number;
-  /** The declared operator's e-mail (DEC-40); null when the server declares none. */
-  operatorEmail: string | null;
+  /** The declared operator (DEC-40): e-mail null when the server declares none. */
+  operator: OperatorDeclaration;
 }

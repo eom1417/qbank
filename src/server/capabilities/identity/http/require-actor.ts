@@ -30,7 +30,7 @@ export function createRequireOperator(
   return async (request) => {
     const actor = await requireActor(request);
     const account = await deps.accounts.findById(actor.accountId);
-    if (!account || !isOperator(account, deps.operatorEmail)) throw new AppError('operator_only');
+    if (!account || !isOperator(account, deps.operator)) throw new AppError('operator_only');
     return actor;
   };
 }

@@ -1,21 +1,23 @@
 # QBank على خادمك الخاص (للأهل والأصحاب)
 
 تشغّل QBank على جهاز افتراضي عندك برابط https، فيفتحه أي أحد تعطيه الرابط من جواله أو حاسبه،
-ويسجّل حسابه، ويربط مزوّد الذكاء الاصطناعي الخاص به، ويبني بنوكه. كل حساب لا يرى إلا بياناته.
-لا تكاليف غير جهازك، ولا خدمة خارجية.
+ويدخل بحساب Google، ويربط مزوّد الذكاء الاصطناعي الخاص به، ويبني بنوكه. كل حساب لا يرى إلا
+بياناته. لا تكاليف غير جهازك: عميل Google للدخول مجاني، وخدمة تنبيه السقوط اختيارية ومجانية.
 
 > للاستخدام الشخصي على جهازك وحدك لا تحتاج هذا الدليل: `docker compose up -d` يكفي (README).
 
 ## ما تحتاجه
 
-| الشيء        | المقترح                                                          |
-| ------------ | ---------------------------------------------------------------- |
-| جهاز افتراضي | Ubuntu 24.04، ومعالجان، وذاكرة 4GB، وقرص 30GB (يكفي 5–20 شخصاً)  |
-| نطاق         | مثل `qbank.example.com`، يشير سجلّه `A` إلى عنوان IP العام لبيتك |
-| الراوتر      | تحويل المنفذين 80 و443 إلى الجهاز الافتراضي                      |
+| الشيء        | المقترح                                                             |
+| ------------ | ------------------------------------------------------------------- |
+| جهاز افتراضي | Ubuntu 24.04، و2–4 معالجات، وذاكرة 8GB، وقرص 50GB (يكفي 5–20 شخصاً) |
+| نطاق         | مثل `qbank.example.com`، يشير سجلّه `A` إلى عنوان IP العام لبيتك    |
+| الراوتر      | تحويل المنفذين 80 و443 إلى الجهاز الافتراضي                         |
+| حساب Google  | لإنشاء «عميل Google» يدخل به الناس (القسم «الدخول بحساب Google»)    |
 
-المنفذ 80 يلزم لإصدار شهادة https المجانية وتجديدها تلقائياً. إن كان مزوّد الإنترنت لا يعطيك
-عنواناً عاماً (CGNAT)، فتحتاج نفقاً مثل Cloudflare Tunnel، وهذا خارج هذا الدليل.
+ذاكرة 8GB تتسع لست جلسات AI معاً واستيرادين. والمنفذ 80 يلزم لإصدار شهادة https المجانية
+وتجديدها تلقائياً. إن كان مزوّد الإنترنت لا يعطيك عنواناً عاماً (CGNAT)، فتحتاج نفقاً مثل Cloudflare
+Tunnel، وهذا خارج هذا الدليل.
 
 ## مفتاح قراءة فقط (المستودع خاص)
 
@@ -56,35 +58,69 @@ git config --add credential.helper \
 # 3. الإعدادات: النطاق، وكلمة سر لقاعدة البيانات، وأنت مديراً للخادم
 cp deploy/server.env.example .env
 sed -i "s/^POSTGRES_PASSWORD=.*/POSTGRES_PASSWORD=$(openssl rand -hex 24)/" .env
-nano .env    # QBANK_DOMAIN و QBANK_OPERATOR_EMAIL و QBANK_OPERATOR_NAME
+nano .env    # QBANK_DOMAIN و QBANK_OPERATOR_EMAIL و QBANK_OPERATOR_NAME وعميل Google
 
 # 4. التشغيل
 sudo docker compose -f compose.server.yaml up -d --build
 ```
 
-البناء الأول يأخذ 5–15 دقيقة. بعده افتح `https://نطاقك`: تظهر صفحة QBank. سجّل حسابك بالبريد الذي
-كتبته في `QBANK_OPERATOR_EMAIL`، ثم أكّده من الخادم **قبل أن ترسل الرابط لأحد**:
+البناء الأول يأخذ 5–15 دقيقة. بعده افتح `https://نطاقك`: تظهر صفحة QBank.
 
-```bash
-sudo docker compose -f compose.server.yaml exec qbank node scripts/confirm-operator.mjs
-```
+- **مع عميل Google** (المقترح، القسم التالي): اضغط «متابعة بحساب Google» بالحساب الذي بريده في
+  `QBANK_OPERATOR_EMAIL`، فتظهر لك «إدارة الخادم» مباشرة. لا تأكيد من الخادم: Google أثبت أن البريد
+  لك.
+- **بلا عميل Google:** يبقى الدخول بالبريد وكلمة المرور، وتأكيد المدير من الخادم (قسم «خادم بكلمات
+  المرور» في [`SELF-HOST-OPERATIONS.md`](SELF-HOST-OPERATIONS.md)).
 
-يعرض الأمر اسم الحساب ووقت تسجيله، فاكتب `yes` إن كان حسابك. حدّث الصفحة، فتظهر لك «إدارة الخادم».
 ثم أرسل الرابط لمن تريد.
 
-لماذا التأكيد؟ البريد في `.env` يسمّي المدير فقط. ولو سبقك أحد بالتسجيل بهذا البريد لما صار مديراً،
-لأن من يدخل الخادم وحده (أنت) يؤكد. وإن عرض الأمر حساباً ليس لك، فاكتب بريداً آخر لك في
-`QBANK_OPERATOR_EMAIL`، وأعد التشغيل، وسجّل به، ثم أكّده.
+## الدخول بحساب Google
 
-### إعدادات الخادم في `.env`
+مع عميل Google يدخل الناس بحساباتهم في Google وحدها: لا كلمات مرور تُنسى، ولا «نسيت كلمة المرور»،
+ولا بريد يُكتب خطأً، لأن Google يعطي QBank البريد موثّقاً والاسم فقط. ومن سجّل قبل ذلك ببريد وكلمة
+مرور يدخل بحساب Google الذي له البريد نفسه، فيُربط حسابه القديم ببياناته كلها. إنشاء العميل مجاني،
+ويُعمل مرة واحدة:
 
-| الإعداد                | معناه                                                                                          |
-| ---------------------- | ---------------------------------------------------------------------------------------------- |
-| `QBANK_DOMAIN`         | العنوان الذي يفتحه أصحابك                                                                      |
-| `POSTGRES_PASSWORD`    | كلمة سر طويلة لقاعدة البيانات (يكتبها الأمر أعلاه)                                             |
-| `QBANK_OPERATOR_EMAIL` | بريد مدير الخادم (أنت). حسابك بهذا البريد يصير المدير بعد تأكيده بالأمر أعلاه، لا بالتسجيل وحده |
-| `QBANK_OPERATOR_NAME`  | الاسم الذي يراه المستخدمون في «أين بياناتي؟» وصفحة الخصوصية، مثل اسمك الأول                    |
-| `QBANK_IMPORT_WORKERS` | عدد الاستيرادات التي تعمل معاً، ولا يأخذ حساب واحد أكثر من واحد. 2 يناسب خادم 4GB              |
+1. افتح [Google Cloud Console](https://console.cloud.google.com/) بحسابك، وأنشئ مشروعاً جديداً
+   (مثل `qbank`) من قائمة المشاريع أعلى الصفحة.
+2. **APIs & Services** ثم **OAuth consent screen** (قد تسمى Google Auth Platform ثم Branding):
+   - User type: **External**.
+   - App name: `QBank` أو اسم خادمك، وUser support email: بريدك، وDeveloper contact: بريدك.
+   - Scopes: `openid` و`email` و`profile` فقط (الأساسية، ولا تحتاج مراجعة من Google).
+   - Audience: اضغط **Publish app** ليدخل أي حساب Google، أو أبقه في Testing وأضف بريد كل شخص في
+     **Test users** (100 بحد أقصى).
+3. **Credentials** ثم **Create credentials** ثم **OAuth client ID**:
+   - Application type: **Web application**، وName: `QBank`.
+   - Authorized redirect URIs: `https://<نطاقك>/api/auth/google/callback` حرفياً، مثل
+     `https://qbank.example.com/api/auth/google/callback`.
+   - اضغط Create، فيظهر **Client ID** و**Client secret**.
+4. ضعهما في `.env`:
+
+   ```bash
+   nano .env
+   # QBANK_GOOGLE_CLIENT_ID=....apps.googleusercontent.com
+   # QBANK_GOOGLE_CLIENT_SECRET=...
+   ```
+
+5. أعد التشغيل: `sudo docker compose -f compose.server.yaml up -d`.
+
+افتح صفحة الدخول: يظهر زر Google وحده. المدير هو صاحب حساب Google الذي بريده في
+`QBANK_OPERATOR_EMAIL`، بلا أمر تأكيد. Client secret سرّ: لا ترسله لأحد، وإن تسرّب فأنشئ غيره من
+Credentials واحذف القديم. ضع القيمتين معاً أو احذفهما معاً؛ واحدة دون الأخرى توقف QBank عن البدء.
+
+## إعدادات الخادم في `.env`
+
+| الإعداد                                                | معناه                                                                                                              |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `QBANK_DOMAIN`                                         | العنوان الذي يفتحه أصحابك                                                                                          |
+| `POSTGRES_PASSWORD`                                    | كلمة سر طويلة لقاعدة البيانات (يكتبها الأمر أعلاه)                                                                 |
+| `QBANK_OPERATOR_EMAIL`                                 | بريد مدير الخادم (أنت). مع Google: حساب Google بهذا البريد هو المدير. بلا Google: بعد تأكيده من الخادم فقط         |
+| `QBANK_OPERATOR_NAME`                                  | الاسم الذي يراه المستخدمون في «أين بياناتي؟» وصفحة الخصوصية، مثل اسمك الأول                                        |
+| `QBANK_IMPORT_WORKERS`                                 | عدد الاستيرادات التي تعمل معاً، ولا يأخذ حساب واحد أكثر من واحد. 2 يناسب خادم 8GB                                  |
+| `QBANK_GOOGLE_CLIENT_ID` و`QBANK_GOOGLE_CLIENT_SECRET` | عميل Google (القسم السابق). معهما يكون الدخول بـ Google وحده                                                       |
+| `QBANK_AI_HOSTS_MAX`                                   | جلسات AI التي تعمل معاً لكل الحسابات، 6 افتراضياً على الخادم. ومن يأتي بعد امتلائها يُطلب منه المحاولة بعد دقائق   |
+| `QBANK_BACKUP_COPY_TO`                                 | اختياري: مجلد على قرص آخر تُنسخ إليه كل نسخة احتياطية جديدة ([`SELF-HOST-OPERATIONS.md`](SELF-HOST-OPERATIONS.md)) |
+| `QBANK_HEARTBEAT_URL`                                  | اختياري: رابط خدمة مراقبة تنبّهك إن توقف الخادم ([`SELF-HOST-OPERATIONS.md`](SELF-HOST-OPERATIONS.md))             |
 
 لا تترك قيمة فارغة: احذف السطر بدل ذلك. وبعد أي تعديل في `.env` شغّل
 `sudo docker compose -f compose.server.yaml up -d` ليأخذ QBank الإعداد الجديد.
@@ -95,12 +131,12 @@ sudo docker compose -f compose.server.yaml exec qbank node scripts/confirm-opera
 
 كلها من مجلد `qbank`:
 
-| تريد                 | الأمر                                                             |
-| -------------------- | ----------------------------------------------------------------- |
-| تحديث لآخر إصدار     | انظر «التحديث» أدناه                                              |
-| رؤية السجل عند مشكلة | `sudo docker compose -f compose.server.yaml logs -f qbank`        |
-| إيقاف                | `sudo docker compose -f compose.server.yaml down` (البيانات تبقى) |
-| صديق نسي كلمة المرور | «إدارة الخادم» ثم «طلبات الاستعادة» (القسم التالي)                |
+| تريد                 | الأمر                                                                   |
+| -------------------- | ----------------------------------------------------------------------- |
+| تحديث لآخر إصدار     | انظر «التحديث» أدناه                                                    |
+| رؤية السجل عند مشكلة | `sudo docker compose -f compose.server.yaml logs -f qbank`              |
+| إيقاف                | `sudo docker compose -f compose.server.yaml down` (البيانات تبقى)       |
+| آخر نسخة احتياطية    | «إدارة الخادم»، أو [`SELF-HOST-OPERATIONS.md`](SELF-HOST-OPERATIONS.md) |
 
 ### التحديث
 
@@ -111,66 +147,41 @@ unset GH_TOKEN
 sudo docker compose -f compose.server.yaml up -d --build
 ```
 
-التحديث يحدّث قاعدة البيانات وحده عند التشغيل، ولا يمس البيانات. خذ نسخة احتياطية قبله.
+التحديث يحدّث قاعدة البيانات وحده عند التشغيل، ولا يمس البيانات. تأكد قبله أن آخر نسخة احتياطية
+نجحت، أو خذ نسخة الآن ([`SELF-HOST-OPERATIONS.md`](SELF-HOST-OPERATIONS.md)).
 
 ## إدارة الخادم
 
-تظهر هذه الشاشة لك وحدك (الحساب الذي بريده `QBANK_OPERATOR_EMAIL`)، وفيها ثلاث بطاقات. لا ترى فيها
+تظهر هذه الشاشة لك وحدك (الحساب الذي بريده `QBANK_OPERATOR_EMAIL`). لا ترى فيها
 بنوك أحد ولا أسئلته، والخادم يرفض أي طلب منك لبيانات غيرك.
 
 - **الملاحظات:** «أرسل ملاحظة» في صفحة المساعدة تصل إليك هنا: النص، والشاشة، والإصدار، والوقت،
   ومن أرسلها. لا يُرفق معها نص من الأسئلة إلا ما يكتبه صاحبها، ولكل حساب 10 ملاحظات في الساعة.
   أغلق الملاحظة إذا عالجتها.
-- **طلبات الاستعادة:** انظر القسم التالي.
+- **النسخ الاحتياطي:** وقت آخر نسخة، وهل نجحت، وعدد النسخ المحفوظة. وتنبيه إن فشلت أو تأخرت أكثر من
+  يومين.
+- **طلبات الاستعادة:** على خادم بكلمات المرور فقط ([`SELF-HOST-OPERATIONS.md`](SELF-HOST-OPERATIONS.md)).
 - **طابور الاستيراد:** المهام الجارية والمنتظرة: الحساب، وعدد الصفحات، ومنذ متى، وزر «أوقف» للمهمة
   العالقة. ويرى كل مستخدم ترتيب ملفه فقط، دون أسماء أصحاب الملفات الأخرى.
 
-## صديق نسي كلمة المرور
+## النسخ الاحتياطي، وتنبيه السقوط، وكلمات المرور
 
-الخادم لا يرسل إيميلات، فيمر الطلب بك:
-
-1. يضغط صاحبك «نسيت كلمة المرور» ويكتب بريده. تقول له الصفحة إن طلبه وصل إليك.
-2. افتح «إدارة الخادم» ثم «طلبات الاستعادة»: ترى بريده، ووقت الطلب، والمدة الباقية.
-3. اضغط «انسخ الرابط» وأرسله بأي طريقة، أو «أرسل بالواتساب» فيفتح الواتساب برسالة جاهزة. الرابط
-   لمرة واحدة وصالح لساعة، وإن انتهى قبل أن تراه فاضغط «أنشئ رابطاً جديداً»، ولا يحتاج صاحبك أن
-   يطلب من جديد.
-
-أنت لا ترى كلمة مروره ولا تغيّرها، وكل نسخ للرابط يُكتب في السجل.
-
-**بديل بسطر الأوامر** (إن لم تفتح الشاشة لأي سبب):
-
-```bash
-sudo docker compose -f compose.server.yaml exec qbank node scripts/reset-link.mjs بريده@example.com
-```
-
-## النسخ الاحتياطي
-
-شيئان تحفظهما: قاعدة البيانات، ومجلد البيانات (الملفات المرفوعة وتسجيلات دخول المزوّدين).
-
-```bash
-mkdir -p ~/qbank-backups
-# قاعدة البيانات
-sudo docker compose -f compose.server.yaml exec -T db pg_dump -U qbank qbank \
-  | gzip > ~/qbank-backups/db-$(date +%F).sql.gz
-# مجلد البيانات
-sudo docker run --rm -v qbank_qbank-data:/data -v ~/qbank-backups:/out alpine \
-  tar czf /out/data-$(date +%F).tar.gz -C /data .
-```
-
-اسم المجلد `qbank_qbank-data` يتبع اسم مجلد التثبيت (`qbank`)؛ تأكد منه بـ `sudo docker volume ls`.
-ولنسخة يومية تلقائية ضع الأمرين في سكربت وأضفه إلى `sudo crontab -e`. والأفضل نسخ مجلد
-`qbank-backups` إلى جهاز آخر، لأن النسخة على نفس القرص لا تنفع إن تعطل القرص.
+في [`SELF-HOST-OPERATIONS.md`](SELF-HOST-OPERATIONS.md): النسخ الاحتياطي اليومي التلقائي والاستعادة،
+وتنبيهك إن توقف الخادم، وخادم بلا عميل Google (تأكيد المدير، وصديق نسي كلمة المرور).
 
 ## الأمان باختصار
 
 - أي أحد معه الرابط يستطيع إنشاء حساب. هذا مقصود. لا تنشر الرابط علناً إن لم ترده عاماً.
-- مدير الخادم يسمّيه بريده في `.env`، ولا يصير مديراً إلا بعد تأكيده من الخادم
-  (`confirm-operator.mjs`)، فلا يكسب شيئاً من يسجّل بهذا البريد قبلك. والمدير يرى الملاحظات وطلبات
-  الاستعادة والطابور فقط.
+- مدير الخادم يسمّيه بريده في `.env`. مع Google لا يدخل بهذا البريد إلا صاحبه، لأن Google يوثّقه.
+  وبلا Google لا يصير مديراً إلا بعد تأكيده من الخادم (`confirm-operator.mjs`)، فلا يكسب شيئاً من
+  يسجّل بهذا البريد قبلك. والمدير يرى الملاحظات والطابور والنسخ الاحتياطي (وطلبات الاستعادة بلا
+  Google) فقط.
 - رمز GitHub للقراءة فقط ولهذا المستودع وحده، ولا يُحفظ على الخادم. إن شككت فيه فاحذفه من GitHub
   وأنشئ غيره.
 - قاعدة البيانات وQBank لا يصل إليهما أحد من خارج الجهاز؛ Caddy وحده على المنفذين 80 و443.
-- كلمات المرور مخزّنة مشفّرة (argon2)، وكل حساب له مزوّد ذكاء خاص به لا يراه غيره.
+- مع Google لا يحفظ QBank كلمة مرور لأحد. وبلا Google تُحفظ كلمات المرور مشفّرة (argon2). وكل حساب
+  له مزوّد ذكاء خاص به لا يراه غيره.
+- النسخ الاحتياطية فيها كل البيانات: من يصل إلى القرص الآخر يصل إليها، فاحمه كما تحمي الخادم.
 - حدّث النظام دورياً: `sudo apt update && sudo apt upgrade`.
 
 ---
@@ -179,22 +190,29 @@ sudo docker run --rm -v qbank_qbank-data:/data -v ~/qbank-backups:/out alpine \
 
 QBank for a group on your own server: Docker, Postgres and Caddy (automatic HTTPS).
 
-1. Ubuntu VM (2 vCPU, 4 GB RAM, 30 GB disk), a domain pointing at it, ports 80/443 forwarded.
+1. Ubuntu VM (2–4 vCPU, 8 GB RAM, 50 GB disk), a domain pointing at it, ports 80/443 forwarded.
 2. The repository is private: make a fine-grained GitHub token with **Contents: Read-only** on this
    repository only. Clone with the commands above: the token is read with `read -rs`, handed to git
    by a credential helper from the environment, and never lands in shell history, the remote URL
    or the disk. The repository's git config then asks for it again on every update.
 3. `cp deploy/server.env.example .env`; set `QBANK_DOMAIN`, a random `POSTGRES_PASSWORD`,
    `QBANK_OPERATOR_EMAIL` (you), `QBANK_OPERATOR_NAME` (the name users see) and
-   `QBANK_IMPORT_WORKERS` (imports at once, one per account; 2 on 4 GB). Never leave a value empty.
-4. `sudo docker compose -f compose.server.yaml up -d --build`, open `https://<your domain>`, sign
-   up with the operator e-mail, then confirm it from the server before sharing the link:
-   `sudo docker compose -f compose.server.yaml exec qbank node scripts/confirm-operator.mjs`
-   (it shows the account's name and sign-up time; type `yes`). Reload: you get "Server
-   administration". The e-mail alone grants nothing, so whoever signs up with it first gains nothing.
-5. Update: enter the token, `git pull`, `unset GH_TOKEN`, then `up -d --build` (commands above).
-6. Server administration: users' feedback, password-reset requests (Copy link or WhatsApp; a link
-   works once, for one hour, and can be renewed) and the import queue. Never anyone's banks or
-   questions. Fallback for a reset: `sudo docker compose -f compose.server.yaml exec qbank node
-scripts/reset-link.mjs <email>`.
-7. Back up with `pg_dump` and a tar of the `qbank-data` volume (commands above).
+   `QBANK_IMPORT_WORKERS` (imports at once, one per account; 2 on 8 GB). AI sessions at once:
+   `QBANK_AI_HOSTS_MAX`, 6 by default on a server. Never leave a value empty.
+4. Google sign-in (recommended): in Google Cloud Console create a project; APIs & Services → OAuth
+   consent screen: External, app name, support e-mail, scopes `openid`, `email`, `profile`, then
+   publish the app or add test users; Credentials → Create credentials → OAuth client ID → Web
+   application, authorized redirect URI `https://<domain>/api/auth/google/callback`. Put
+   `QBANK_GOOGLE_CLIENT_ID` and `QBANK_GOOGLE_CLIENT_SECRET` in `.env` (both or neither) and
+   restart. People then sign in with Google only: no passwords, no reset; an existing e-mail
+   account is linked on its first Google sign-in.
+5. `sudo docker compose -f compose.server.yaml up -d --build`, open `https://<your domain>`. With
+   Google, sign in with the operator e-mail's Google account: you get "Server administration" at
+   once, no confirmation command. Without Google, sign up with that e-mail and confirm it from the
+   server (`SELF-HOST-OPERATIONS.md`).
+6. Update: enter the token, `git pull`, `unset GH_TOKEN`, then `up -d --build` (commands above).
+7. Server administration: users' feedback, the import queue and the last backup (and password-reset
+   requests without Google). Never anyone's banks or questions.
+8. Backups run daily by themselves (7 daily and 4 weekly kept), an optional second copy goes to
+   `QBANK_BACKUP_COPY_TO`, and `QBANK_HEARTBEAT_URL` pings an uptime service that alerts you when
+   the server stops: `SELF-HOST-OPERATIONS.md`.

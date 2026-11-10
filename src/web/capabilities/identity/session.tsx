@@ -4,6 +4,7 @@ import {
   AccountResponse,
   AppMetaResponse,
   type AppMode,
+  type SignInMethod,
   type SignInRequest,
   type SignUpRequest,
   type UpdateAccountRequest,
@@ -25,6 +26,11 @@ interface Session {
   mode: AppMode | null;
   /** Who runs this server (DEC-40), from /api/meta; null on a local install or until known. */
   operatorName: string | null;
+  /**
+   * How people sign in here (DEC-42): pairing (local), password, or Google only. Named apart from
+   * `signIn()` below; null until the server says.
+   */
+  signInMethod: SignInMethod | null;
   /** The signed-in account is this server's declared operator (the server still enforces it). */
   isOperator: boolean;
   /** Asks the server again after it did not answer (also done by itself every few seconds). */
@@ -125,6 +131,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     state,
     mode: meta?.mode ?? null,
     operatorName: meta?.operatorName ?? null,
+    signInMethod: meta?.signIn ?? null,
     isOperator: state.status === 'signed-in' && state.account.isOperator,
     retry,
     pair: async (token) => signedIn(await pairWith(token)),
