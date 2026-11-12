@@ -33,7 +33,7 @@
     "eslint": "10.14.0",
     "eslint-plugin-react-hooks": "7.1.1",
     "jscpd": "5.4.2",
-    "knip": "6.44.1",
+    "knip": "6.44.2",
     "prettier": "3.9.10",
     "secretlint": "13.1.0",
     "tsx": "4.23.15",
