@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CaseView, OptionPictures } from './pictures.js';
 import { RevealLevel, SharePolicy, ShareStatus } from './sharing.js';
 
 /**
@@ -82,6 +83,8 @@ const Feedback = z
     correct: z.boolean(),
     answers: z.array(Letter),
     explanation: z.string().nullable(),
+    /** The explanation's own pictures, only when the explanation is shown (M34). */
+    pictureIds: z.array(z.uuid()),
   })
   .strict();
 
@@ -95,6 +98,8 @@ export const TakeItemResponse = z
     multiSelect: z.boolean(),
     /** Fetched with the attempt token: `/api/take/v1/attempt/pictures/:id`. */
     pictureIds: z.array(z.uuid()),
+    optionPictureIds: OptionPictures(z.uuid()),
+    case: CaseView(z.uuid()).nullable(),
     saved: z.array(Letter),
     flagged: z.boolean(),
     changeable: z.boolean(),
@@ -134,6 +139,7 @@ export const TakeResultResponse = z
             correct: z.boolean(),
             answers: z.array(Letter),
             explanation: z.string().nullable(),
+            pictureIds: z.array(z.uuid()),
           })
           .strict(),
       )

@@ -1,5 +1,7 @@
 import type { Db } from '../../../platform/db/index.js';
+import type { PlacedPictures } from '../../exam-rules/index.js';
 import { exactKey } from '../domain/similarity.js';
+import { placedPicturesOf } from './placed-pictures.js';
 
 /** Where a study session draws from (FR-12-001, FR-03-006); empty lists mean "any". */
 export interface PoolFilter {
@@ -26,9 +28,14 @@ export interface PoolQuestion {
   multiSelect: boolean;
   explanation: string | null;
   version: number;
+  /** Shown to the owner before the reveal: the question's own and any unplaced pictures. */
   pictureIds: string[];
+  /** Every picture by placement, with the shared case (M34). */
+  placed: PlacedPictures;
   exactKey: string;
 }
+
+const NO_PICTURES: PlacedPictures = { question: [], options: {}, explanation: [], case: null };
 
 const some = (list: readonly string[] | undefined): list is readonly string[] =>
   list !== undefined && list.length > 0;
@@ -50,6 +57,7 @@ function poolQuery(db: Db, ownerId: string, filter: PoolFilter) {
       'q.multi_select',
       'q.explanation',
       'q.version',
+      'q.case_id',
     ])
     .where('q.owner_id', '=', ownerId)
     .where('q.status', '=', 'eligible')
@@ -74,21 +82,6 @@ function poolQuery(db: Db, ownerId: string, filter: PoolFilter) {
   return query.orderBy('q.created_at').orderBy('q.source_seq');
 }
 
-async function picturesOf(db: Db, ownerId: string, ids: readonly string[]) {
-  if (ids.length === 0) return new Map<string, string[]>();
-  const rows = await db
-    .selectFrom('media')
-    .select(['id', 'question_id'])
-    .where('owner_id', '=', ownerId)
-    .where('question_id', 'in', ids)
-    .orderBy('position')
-    .execute();
-  const byQuestion = new Map<string, string[]>();
-  for (const row of rows)
-    byQuestion.set(row.question_id, [...(byQuestion.get(row.question_id) ?? []), row.id]);
-  return byQuestion;
-}
-
 /**
  * The owner's eligible questions in the chosen banks, chapters, topics, sources, tags and marks
  * (only `eligible` ones are ever studied, FR-11-002), each ready to snapshot.
@@ -100,11 +93,7 @@ export async function studyPool(
 ): Promise<PoolQuestion[]> {
   if (filter.bankIds.length === 0) return [];
   const rows = await poolQuery(db, ownerId, filter).execute();
-  const pictures = await picturesOf(
-    db,
-    ownerId,
-    rows.map((row) => row.id),
-  );
+  const pictures = await placedPicturesOf(db, ownerId, rows);
   return rows.map((row) => {
     const options = row.options as Option[];
     return {
@@ -118,7 +107,8 @@ export async function studyPool(
       multiSelect: row.multi_select,
       explanation: row.explanation,
       version: row.version,
-      pictureIds: pictures.get(row.id) ?? [],
+      pictureIds: pictures.get(row.id)?.shown ?? [],
+      placed: pictures.get(row.id)?.placed ?? NO_PICTURES,
       exactKey: exactKey({ id: row.id, stem: row.stem, options }),
     };
   });

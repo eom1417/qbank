@@ -13,6 +13,7 @@ import { createPairRepository } from './adapters/pair-repository.js';
 import { createInsights } from './adapters/insights.js';
 import { createPortability, type RestoredQuestion } from './adapters/portability.js';
 import { searchQuestions, type SearchFilter } from './adapters/search.js';
+import { placedPicturesById } from './adapters/placed-pictures.js';
 import { createMarkRepository, studyPool, type PoolFilter } from './adapters/study-pool.js';
 import { detectDuplicates } from './use-cases/duplicates.js';
 import type { ImportedQuestion } from './domain/imported.js';
@@ -80,6 +81,9 @@ function sharedInterface(settings: QuestionsSettings, deps: Deps) {
   return {
     /** The owner's eligible questions in a study scope, ready to snapshot (M9). */
     studyPool: (ownerId: string, filter: PoolFilter) => studyPool(settings.db, ownerId, filter),
+    /** Pictures of these questions by placement, with their shared cases (M34). */
+    placedPicturesOf: (ownerId: string, questionIds: readonly string[]) =>
+      placedPicturesById(settings.db, ownerId, questionIds),
     marksOf: createMarkRepository(settings.db).marksOf,
     ...createInsights(settings.db),
     questionsOfBank: portability.questionsOfBank,

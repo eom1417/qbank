@@ -1,8 +1,9 @@
-import { useCallback, type ReactNode } from 'react';
+import { useCallback, useMemo, type ReactNode } from 'react';
 import { useParams } from 'react-router';
 import type { TakeResultResponse, TakeStateResponse } from '../../../contracts/take.js';
 import { Alert, Button, MutedText, NarrowColumn, PageShell } from '../../design-system/index.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
+import { attemptApi } from './api.js';
 import { TakeExam } from './TakeExam.js';
 import { TakeLanding } from './TakeLanding.js';
 import { TakeResult } from './TakeResult.js';
@@ -43,6 +44,12 @@ function AttemptView({
   return <TakeExam attempt={useAttempt(token, first, ended)} />;
 }
 
+/** The handed-in attempt's result; its pictures come with the attempt token. */
+function ResultView({ token, result }: { token: string; result: TakeResultResponse }) {
+  const api = useMemo(() => attemptApi(token), [token]);
+  return <TakeResult api={api} result={result} />;
+}
+
 /** What the link shows now: an error to retry, the rules, the attempt or the result. */
 function TakeBody({ take }: { take: ReturnType<typeof useTake> }) {
   const { t } = useI18n();
@@ -59,7 +66,7 @@ function TakeBody({ take }: { take: ReturnType<typeof useTake> }) {
   if (!entry) return <MutedText>{t('common.loading')}</MutedText>;
   if (entry.phase === 'landing')
     return <TakeLanding landing={entry.landing} onStart={take.start} />;
-  if (entry.phase === 'result') return <TakeResult result={entry.result} />;
+  if (entry.phase === 'result') return <ResultView token={entry.token} result={entry.result} />;
   return <AttemptView token={entry.token} first={entry.state} onResult={take.showResult} />;
 }
 

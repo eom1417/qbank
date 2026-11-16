@@ -2,6 +2,7 @@ import type { ItemResponse } from '../../../contracts/study.js';
 import { Stack } from '../../design-system/index.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { AnswerVerdict } from '../exam-ui/AnswerVerdict.js';
+import { PictureGrid } from '../exam-ui/QuestionCard.js';
 import { useSession } from '../identity/session.js';
 import { StudyNoteCard } from '../review/StudyNoteCard.js';
 
@@ -23,6 +24,7 @@ export function SolutionView({ solution }: { solution: Solution }) {
         startOpen={mode === 'after_answer'}
         emptyText={t('study.explanation.none')}
       />
+      <PictureGrid ids={solution.pictureIds} pictureUrl={(id) => `/api/media/${id}`} />
       <StudyNoteCard note={solution.studyNote} />
     </Stack>
   );

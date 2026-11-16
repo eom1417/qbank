@@ -13,6 +13,10 @@ import { useI18n } from '../../platform/i18n/i18n.js';
 interface CardQuestion {
   stem: string;
   pictureIds: readonly string[];
+  /** Pictures shown with each option, by its letter (M34). */
+  optionPictureIds: Readonly<Record<string, readonly string[]>>;
+  /** The case several questions share, shown in full with each of them (M34, Z8). */
+  case: { text: string; pictures: readonly string[] } | null;
   multiSelect: boolean;
 }
 
@@ -28,7 +32,29 @@ interface QuestionCardProps {
   children?: ReactNode;
 }
 
-/** A question: its stem, enlargeable pictures (FR-12-009) and its options. */
+/** Enlargeable pictures in a grid; the one picture grid of every solving screen (M34). */
+export function PictureGrid({
+  ids,
+  pictureUrl,
+}: {
+  ids: readonly string[];
+  pictureUrl(id: string): string | null;
+}) {
+  const { t } = useI18n();
+  if (ids.length === 0) return null;
+  return (
+    <Grid>
+      {ids.map((id) => {
+        const src = pictureUrl(id);
+        return src === null ? null : (
+          <ZoomableImage key={id} src={src} alt={t('editor.pictures')} zoom={1} />
+        );
+      })}
+    </Grid>
+  );
+}
+
+/** A question: its shared case, stem, enlargeable pictures (FR-12-009) and its options. */
 export function QuestionCard({
   question,
   pictureUrl,
@@ -39,20 +65,20 @@ export function QuestionCard({
   children,
 }: QuestionCardProps) {
   const { t } = useI18n();
-  const pictures = question.pictureIds.map((id) => ({ id, src: pictureUrl(id) }));
+  const optionPictures = Object.entries(question.optionPictureIds).filter(
+    ([, ids]) => ids.length > 0,
+  );
   return (
     <Card>
       <Stack>
-        <p dir="auto">{question.stem}</p>
-        {pictures.length > 0 && (
-          <Grid>
-            {pictures.map(({ id, src }) =>
-              src === null ? null : (
-                <ZoomableImage key={id} src={src} alt={t('editor.pictures')} zoom={1} />
-              ),
-            )}
-          </Grid>
+        {question.case && (
+          <Stack>
+            <p dir="auto">{question.case.text}</p>
+            <PictureGrid ids={question.case.pictures} pictureUrl={pictureUrl} />
+          </Stack>
         )}
+        <p dir="auto">{question.stem}</p>
+        <PictureGrid ids={question.pictureIds} pictureUrl={pictureUrl} />
         <ChoiceList
           legend={t('study.choices')}
           choices={choices}
@@ -61,6 +87,12 @@ export function QuestionCard({
           disabled={disabled}
           onChange={onChoose}
         />
+        {optionPictures.map(([letter, ids]) => (
+          <Stack key={letter}>
+            <p>{`${t('study.optionPictures')} ${letter}`}</p>
+            <PictureGrid ids={ids} pictureUrl={pictureUrl} />
+          </Stack>
+        ))}
         {children}
       </Stack>
     </Card>

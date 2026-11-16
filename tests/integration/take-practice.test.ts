@@ -30,7 +30,12 @@ describe('practice by a link (M30)', () => {
     expect(state.allowed).toEqual({ navigation: 'free', flag: true, feedbackEachQuestion: true });
     expect((await taker.item(0)).json().feedback).toBeNull();
     const saved = TakeItemResponse.parse((await taker.choose(0, ['A'])).json());
-    expect(saved.feedback).toEqual({ correct: false, answers: ['B'], explanation: null });
+    expect(saved.feedback).toEqual({
+      correct: false,
+      answers: ['B'],
+      explanation: null,
+      pictureIds: [],
+    });
     expect(saved.changeable).toBe(false);
     expect((await taker.choose(0, ['B'])).json().error.code).toBe('already_answered');
   });
@@ -47,8 +52,8 @@ describe('practice by a link (M30)', () => {
   });
 });
 
-describe("an attempt's pictures (paused until M34)", () => {
-  // A share's pictures may be the explanation (M34 gives each picture its place): none goes out.
+describe("an attempt's pictures imported before placements (Q65)", () => {
+  // A picture without a place may be the explanation: none goes out.
   it('lists no picture and serves none, even of a question the attempt asks', async () => {
     const { ids, share } = await linkWith(2, 'exam', { content: { size: 1 } });
     const pictures = await Promise.all(ids.map((id) => storeFigure(app.db(), id)));

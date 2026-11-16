@@ -31,6 +31,7 @@ const question = (id: string, text = id): PoolQuestion => ({
   explanation: null,
   version: 1,
   pictureIds: [],
+  placed: { question: ['p1'], options: {}, explanation: ['p2'], case: null },
   exactKey: text,
 });
 
@@ -60,8 +61,9 @@ describe('the draw of an attempt', () => {
     expect(new Set(drawn.map((q) => q.exactKey)).size).toBe(2);
   });
 
-  it('keeps a snapshot of exactly what is asked', () => {
+  it('keeps a snapshot of exactly what is asked, with where each picture belongs (M34)', () => {
     const snapshot = snapshotOf(question('q1'));
+    expect(snapshot.placed?.explanation).toEqual(['p2']);
     expect(Object.keys(snapshot).sort()).toEqual(
       [
         'answers',
@@ -70,6 +72,7 @@ describe('the draw of an attempt', () => {
         'multiSelect',
         'options',
         'pictureIds',
+        'placed',
         'stem',
         'version',
       ].sort(),

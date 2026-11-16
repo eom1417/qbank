@@ -26,6 +26,7 @@ export const studyAr: Record<keyof typeof studyEn, string> = {
   'study.of': 'من',
   'study.answered': 'أُجيب',
   'study.choices': 'إجابتك',
+  'study.optionPictures': 'صور الخيار',
   'study.submit': 'أرسل إجابتي',
   'study.correct': 'صحيح',
   'study.wrong': 'غير صحيح',

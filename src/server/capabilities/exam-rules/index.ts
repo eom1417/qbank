@@ -9,5 +9,16 @@ export {
   secondsLeft,
   type ExamTiming,
 } from './domain/timing.js';
-export { isCorrect, type Snapshot } from './domain/grading.js';
+export {
+  isCorrect,
+  type CaseView,
+  type PlacedPictures,
+  type Snapshot,
+} from './domain/grading.js';
+export {
+  mayServePicture,
+  picturesBeforeReveal,
+  picturesWithExplanation,
+  placePictures,
+} from './domain/pictures.js';
 export { shuffled } from './domain/shuffle.js';

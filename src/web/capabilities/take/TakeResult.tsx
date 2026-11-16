@@ -10,6 +10,10 @@ import {
 } from '../../design-system/index.js';
 import { useI18n, type MessageKey } from '../../platform/i18n/i18n.js';
 import { CountCard } from '../exam-ui/CountCard.js';
+import type { AttemptApi } from './api.js';
+import { ExplanationPictures } from './ExplanationPictures.js';
+
+type PictureApi = Pick<AttemptApi, 'picture'>;
 
 type Score = NonNullable<TakeResultResponse['score']>;
 type Item = NonNullable<TakeResultResponse['items']>[number];
@@ -41,7 +45,7 @@ function ScoreView({ score }: { score: Score }) {
 }
 
 /** One answer as revealed: right or not in words, what was chosen, and the right answer. */
-function ItemView({ item }: { item: Item }) {
+function ItemView({ api, item }: { api: PictureApi; item: Item }) {
   const { t } = useI18n();
   const verdict = item.correct ? `✓ ${t('study.correct')}` : `✕ ${t('study.wrong')}`;
   const chosen = item.chosen.length > 0 ? item.chosen.join(', ') : t('take.result.noAnswer');
@@ -53,6 +57,7 @@ function ItemView({ item }: { item: Item }) {
         {item.answers.join(', ')}
       </p>
       {item.explanation !== null && <p dir="auto">{item.explanation}</p>}
+      <ExplanationPictures api={api} ids={item.pictureIds} />
     </li>
   );
 }
@@ -75,7 +80,7 @@ function Later({ result }: { result: TakeResultResponse }) {
 }
 
 /** The end of an attempt: exactly what the server revealed, nothing more. */
-export function TakeResult({ result }: { result: TakeResultResponse }) {
+export function TakeResult({ api, result }: { api: PictureApi; result: TakeResultResponse }) {
   const { t } = useI18n();
   return (
     <Stack>
@@ -92,7 +97,7 @@ export function TakeResult({ result }: { result: TakeResultResponse }) {
             <Subtitle>{t('take.result.items')}</Subtitle>
             <ol className="qb-steps">
               {result.items.map((item) => (
-                <ItemView key={item.position} item={item} />
+                <ItemView key={item.position} api={api} item={item} />
               ))}
             </ol>
           </Stack>
