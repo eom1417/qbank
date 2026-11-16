@@ -66,6 +66,7 @@ export function takerOf(app: FastifyInstance, linkToken: string) {
     useToken: (token: string) => void (attemptToken = token),
     state: () => call('GET', '/attempt'),
     item: (position: number | string) => call('GET', `/attempt/items/${position}`),
+    peek: (position: number) => call('GET', `/attempt/items/${position}/peek`),
     choose: (position: number, chosen: string[]) =>
       call('PUT', `/attempt/items/${position}`, { chosen }),
     flag: (position: number, flagged: boolean) =>
