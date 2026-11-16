@@ -7,7 +7,12 @@
 
 1. في Coolify: تطبيق جديد من المستودع عبر GitHub App، ونوع البناء **Docker Compose**، والملف
    `/compose.coolify.yaml`.
-2. النطاق على خدمة `qbank` مع المنفذ 3000: `https://qbank.example.com:3000`.
+2. النطاق على خدمة `qbank` (يصل Traefik إلى المنفذ 3000 لأنه الوحيد الذي تعلنه الصورة):
+   - خلف Cloudflare Tunnel يصل الطلب إلى Traefik عبر http، فاكتب النطاق `http://qbank.example.com`.
+     أما `https://` فيجعل Traefik يعيد التوجيه إلى https بلا نهاية. HTTPS هنا من Cloudflare، ففعّل
+     فيه «Always Use HTTPS»، لأن جلسة الدخول لا تُحفظ على http.
+   - وبلا نفق (المنفذان 80 و443 إلى الخادم مباشرة) اكتب `https://qbank.example.com`، فيصدر Traefik
+     الشهادة بنفسه.
 3. المتغيرات:
    - `QBANK_DOMAIN`: النطاق وحده بلا `https://` (مثل `qbank.example.com`)، ومنه تُبنى الأصول المسموحة.
    - `SERVICE_PASSWORD_POSTGRES`: يولّده Coolify بنفسه ويحفظه سراً. لا تكتبه في المستودع.
