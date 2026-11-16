@@ -62,6 +62,10 @@ interface TestAppOptions {
   google?: GoogleConfig;
   /** The backup service's status file, read by the operator's console (M32). */
   backupStatusFile?: string;
+  /** Proxies whose forwarded headers count, and which edge headers they carry. */
+  proxy?: { trusted: string[]; headers: 'none' | 'cloudflare' };
+  /** Origins besides ORIGIN (the public https address behind a proxy). */
+  extraOrigins?: string[];
 }
 
 /** The e-mail the test server declares as its operator unless a suite says otherwise (M31). */
@@ -83,6 +87,15 @@ function serverParts(options: TestAppOptions) {
   };
 }
 
+/** Who may reach the app: its origins and the proxies in front of it (none unless a suite says). */
+function networkParts(options: TestAppOptions) {
+  return {
+    allowedOrigins: [ORIGIN, ...(options.extraOrigins ?? [])],
+    trustedProxies: options.proxy?.trusted ?? [],
+    proxyHeaders: options.proxy?.headers ?? ('none' as const),
+  };
+}
+
 /** The app's configuration for a test suite: accounts mode unless `local`, no AI host. */
 function testConfig(options: TestAppOptions) {
   return {
@@ -91,11 +104,10 @@ function testConfig(options: TestAppOptions) {
     host: '127.0.0.1',
     port: 0,
     cookieSecure: false,
-    trustProxy: false,
     requirePairingCode: options.requirePairingCode ?? false,
     localPeers: options.localPeers ?? [],
     devOutbox: true,
-    allowedOrigins: [ORIGIN],
+    ...networkParts(options),
     sessionTtlDays: 30,
     logLevel: 'silent' as const,
     imports: {

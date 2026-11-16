@@ -37,8 +37,10 @@ services:
     environment:
       DATABASE_URL: postgres://qbank:${POSTGRES_PASSWORD}@db:5432/qbank
       QBANK_API_HOST: 0.0.0.0
-      # Caddy in front sets the forwarded host; only it can reach this container.
+      # Caddy in front sets the forwarded host and the visitor's address; only it (on this
+      # compose network) can reach this container.
       QBANK_TRUST_PROXY: 'true'
+      QBANK_TRUSTED_PROXIES: container-networks
       QBANK_ALLOWED_ORIGINS: https://${QBANK_DOMAIN:?set QBANK_DOMAIN in .env}
       # The server's operator (DEC-40) and how many imports run at once, from .env. The two
       # operator lines have no value here on purpose: a line missing from .env stays unset (no

@@ -9,8 +9,8 @@
    `/compose.coolify.yaml`.
 2. النطاق على خدمة `qbank` (يصل Traefik إلى المنفذ 3000 لأنه الوحيد الذي تعلنه الصورة):
    - خلف Cloudflare Tunnel يصل الطلب إلى Traefik عبر http، فاكتب النطاق `http://qbank.example.com`.
-     أما `https://` فيجعل Traefik يعيد التوجيه إلى https بلا نهاية. HTTPS هنا من Cloudflare، ففعّل
-     فيه «Always Use HTTPS»، لأن جلسة الدخول لا تُحفظ على http.
+     أما `https://` فيجعل Traefik يعيد التوجيه إلى https بلا نهاية. HTTPS هنا من Cloudflare، وQBank
+     نفسه يحوّل زائر http إلى https بالمسار نفسه (انظر المتغيرين أدناه).
    - وبلا نفق (المنفذان 80 و443 إلى الخادم مباشرة) اكتب `https://qbank.example.com`، فيصدر Traefik
      الشهادة بنفسه.
 3. المتغيرات:
@@ -19,6 +19,11 @@
    - اختياري: `QBANK_OPERATOR_EMAIL` و`QBANK_OPERATOR_NAME` (مدير الخادم)، و`QBANK_GOOGLE_CLIENT_ID`
      و`QBANK_GOOGLE_CLIENT_SECRET` معاً، و`QBANK_HEARTBEAT_URL`. الفارغ يعني غير مفعّل.
    - `QBANK_IMPORT_WORKERS` (افتراضياً 2) و`QBANK_AI_HOSTS_MAX` (افتراضياً 4) لخادم 12 GB و4 vCPU.
+   - خلف Cloudflare Tunnel: `QBANK_PROXY_HEADERS=cloudflare`، و`QBANK_TRUSTED_PROXIES` =
+     `container-networks,<عنوان النفق>`. عنوان النفق هو ما يضعه Traefik في `X-Forwarded-For` لطلبات
+     النفق (على Coolify غالباً `10.0.1.1`، بوابة شبكة `coolify` حين يعمل cloudflared على الخادم نفسه).
+     عندها يعرف QBank عنوان كل زائر من `CF-Connecting-IP`، فلكل زائر حدّه في محاولات الدخول، ويحوّل
+     http إلى https. ولا يصدّق هذه الرؤوس إلا إذا مرّ الطلب كله بعناوين موثوقة، فلا يزوّرها أحد.
 4. Auto Deploy يتبع الفرع المضبوط في التطبيق؛ كل دفع إليه ينشر من جديد.
 
 البيانات في ثلاثة مجلدات Docker دائمة لا يمسها إعادة النشر: `qbank-db` و`qbank-data` و`qbank-backups`

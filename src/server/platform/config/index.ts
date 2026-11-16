@@ -13,6 +13,10 @@ const Env = z.object({
   QBANK_API_PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   QBANK_COOKIE_SECURE: z.enum(['true', 'false']).optional(),
   QBANK_TRUST_PROXY: z.enum(['true', 'false']).default('false'),
+  /** With QBANK_TRUST_PROXY: addresses, CIDR ranges, `loopback`, `container-networks`. */
+  QBANK_TRUSTED_PROXIES: z.preprocess(unsetIfBlank, z.string().default('loopback')),
+  /** `cloudflare`: behind Cloudflare Tunnel, its headers name the visitor and the scheme. */
+  QBANK_PROXY_HEADERS: z.preprocess(unsetIfBlank, z.enum(['none', 'cloudflare']).default('none')),
   /** 'true': this computer pairs with the code too (QBank reached through a TCP tunnel). */
   QBANK_REQUIRE_PAIRING_CODE: z.enum(['true', 'false']).default('false'),
   /** Addresses or CIDR ranges that also count as this computer (Docker's network, M25). */
@@ -75,8 +79,13 @@ export interface AppConfig {
   host: string;
   port: number;
   cookieSecure: boolean;
-  /** True only when a local reverse proxy (Vite dev, nginx) sets X-Forwarded-Host. */
-  trustProxy: boolean;
+  /**
+   * Proxies allowed to name the visitor (X-Forwarded-*): empty unless QBANK_TRUST_PROXY=true,
+   * then QBANK_TRUSTED_PROXIES (default `loopback`: Vite dev, nginx on this computer).
+   */
+  trustedProxies: readonly string[];
+  /** `cloudflare`: CF-Connecting-IP and CF-Visitor count when every hop is trusted. */
+  proxyHeaders: 'none' | 'cloudflare';
   requirePairingCode: boolean;
   /**
    * Socket addresses that count as this computer besides loopback: Docker's network, where the
@@ -194,6 +203,13 @@ function googleOf(parsed: z.infer<typeof Env>): GoogleConfig | null {
 const LOCAL_DEFAULTS = { cookieSecure: 'false', sessionTtlDays: 400 } as const;
 const ACCOUNTS_DEFAULTS = { cookieSecure: 'true', sessionTtlDays: 30 } as const;
 
+/** A comma-separated setting as its non-empty, trimmed entries. */
+const listOf = (value: string) =>
+  value
+    .split(',')
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
 /** The only place that reads the process environment; fails fast on invalid values. */
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
   const parsed = Env.parse(env);
@@ -204,15 +220,12 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     host: parsed.QBANK_API_HOST,
     port: parsed.QBANK_API_PORT,
     cookieSecure: (parsed.QBANK_COOKIE_SECURE ?? defaults.cookieSecure) === 'true',
-    trustProxy: parsed.QBANK_TRUST_PROXY === 'true',
+    trustedProxies: listOf(parsed.QBANK_TRUST_PROXY === 'true' ? parsed.QBANK_TRUSTED_PROXIES : ''),
+    proxyHeaders: parsed.QBANK_PROXY_HEADERS,
     requirePairingCode: parsed.QBANK_REQUIRE_PAIRING_CODE === 'true',
-    localPeers: parsed.QBANK_LOCAL_PEERS.split(',')
-      .map((peer) => peer.trim())
-      .filter(Boolean),
+    localPeers: listOf(parsed.QBANK_LOCAL_PEERS),
     devOutbox: parsed.QBANK_DEV_OUTBOX === 'true',
-    allowedOrigins: parsed.QBANK_ALLOWED_ORIGINS.split(',')
-      .map((origin) => origin.trim())
-      .filter(Boolean),
+    allowedOrigins: listOf(parsed.QBANK_ALLOWED_ORIGINS),
     sessionTtlDays: parsed.QBANK_SESSION_TTL_DAYS ?? defaults.sessionTtlDays,
     logLevel: parsed.QBANK_LOG_LEVEL,
     imports: {

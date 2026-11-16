@@ -33,8 +33,11 @@ services:
     environment:
       DATABASE_URL: postgres://qbank:${SERVICE_PASSWORD_POSTGRES}@db:5432/qbank
       QBANK_API_HOST: 0.0.0.0
-      # Only Traefik reaches this container; it sets the forwarded host and address.
+      # Only Traefik reaches this container (on its compose network). Behind Cloudflare Tunnel
+      # add the tunnel's address and QBANK_PROXY_HEADERS=cloudflare (docs/SELF-HOST-COOLIFY.md).
       QBANK_TRUST_PROXY: 'true'
+      QBANK_TRUSTED_PROXIES: ${QBANK_TRUSTED_PROXIES:-container-networks}
+      QBANK_PROXY_HEADERS: ${QBANK_PROXY_HEADERS:-none}
       QBANK_ALLOWED_ORIGINS: https://${QBANK_DOMAIN:?set QBANK_DOMAIN}
       # Blank means unset (no operator, no Google sign-in, no uptime ping): see config/index.ts.
       QBANK_OPERATOR_EMAIL: ${QBANK_OPERATOR_EMAIL:-}
@@ -62,6 +65,9 @@ services:
       dockerfile: deploy/backup.Dockerfile
     command: ['sh', '/scripts/server-backup.sh']
     environment: *pg-client
+    healthcheck:
+      test: ['CMD', 'pg_isready', '-q']
+      interval: 60s
     volumes:
       - qbank-data:/data:ro
       - qbank-backups:/backups

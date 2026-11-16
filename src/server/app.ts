@@ -23,6 +23,7 @@ import { handleError } from './platform/http/error-handler.js';
 import { requestForLog, type RotatingLog } from './platform/logging/rotating-file.js';
 import { createOriginGuard } from './platform/http/origin-guard.js';
 import { registerWebApp } from './platform/http/web-app.js';
+import { createProxyTrust, registerCloudflareEdge } from './platform/http/trusted-proxy.js';
 import { newId } from './platform/ids.js';
 import { createDiskBlobStore } from './platform/storage/blob-store.js';
 import { createOutboxMailer, registerOutboxRoute } from './platform/mail/index.js';
@@ -152,6 +153,7 @@ function registerContent(app: FastifyInstance, deps: ContentDeps, identity: Iden
 /** Composition root: wires platform owners and capabilities into one Fastify instance. */
 export function buildApp(deps: AppDeps): FastifyInstance {
   const { config, db, clock, pairingToken } = deps;
+  const trust = createProxyTrust(config.trustedProxies);
   const app = Fastify({
     logger: {
       level: config.logLevel,
@@ -160,9 +162,11 @@ export function buildApp(deps: AppDeps): FastifyInstance {
       ...(deps.log ? { stream: deps.log } : {}),
     },
     bodyLimit: 1024 * 1024,
-    // Only a proxy on this computer (the dev server) may name the visitor's address.
-    trustProxy: config.trustProxy ? ['127.0.0.1', '::1'] : false,
+    // Only proxies we run (QBANK_TRUSTED_PROXIES) may name the visitor's address.
+    trustProxy: config.trustedProxies.length > 0 && ((address: string) => trust(address)),
   });
+  if (config.proxyHeaders === 'cloudflare')
+    registerCloudflareEdge(app, trust, config.allowedOrigins);
   app.register(cookie);
   app.addHook('onRequest', createOriginGuard(config.allowedOrigins));
   app.setErrorHandler(handleError);
