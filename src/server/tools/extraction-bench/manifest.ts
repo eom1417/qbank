@@ -1,7 +1,7 @@
-import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { run } from '../vision-cost/shell.js';
 
 // M34 P0 step 1: `node --import tsx src/server/tools/extraction-bench/manifest.ts [corpusDir]`
 // Writes `<corpusDir>/MANIFEST.json`: each file's fingerprint, pages and images. An image object
@@ -42,15 +42,12 @@ export function summarise(rows: readonly ImageRow[]) {
 }
 
 function pageCount(file: string): number {
-  const info = execFileSync('pdfinfo', [file], { encoding: 'utf8' });
+  const info = run('pdfinfo', [file]);
   return Number(/^Pages:\s+(\d+)/m.exec(info)?.[1] ?? 0);
 }
 
 function textPages(file: string, pages: number): number {
-  const text = execFileSync('pdftotext', ['-layout', file, '-'], {
-    encoding: 'utf8',
-    maxBuffer: 1 << 28,
-  });
+  const text = run('pdftotext', ['-layout', file, '-']);
   const withText = text.split('\f').filter((page) => page.replace(/\s/g, '').length > 40);
   return Math.min(withText.length, pages);
 }
@@ -58,10 +55,7 @@ function textPages(file: string, pages: number): number {
 function describe(dir: string, name: string) {
   const file = join(dir, name);
   const pages = pageCount(file);
-  const listing = execFileSync('pdfimages', ['-list', file], {
-    encoding: 'utf8',
-    maxBuffer: 1 << 28,
-  });
+  const listing = run('pdfimages', ['-list', file]);
   return {
     file: name,
     sha256: createHash('sha256').update(readFileSync(file)).digest('hex'),

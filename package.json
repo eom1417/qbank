@@ -15,6 +15,12 @@
     "start": "node --env-file-if-exists=.env.local dist/src/server/main.js",
     "test": "vitest run",
     "bench:extraction": "node --import tsx src/server/tools/extraction-bench/main.ts",
+    "bench:truth": "node --import tsx src/server/tools/extraction-bench/truth-main.ts",
+    "bench:truth-samples": "node --import tsx src/server/tools/extraction-bench/truth-samples.ts",
+    "bench:review-sample": "node --import tsx src/server/tools/extraction-bench/review-sample.ts",
+    "bench:manifest": "node --import tsx src/server/tools/extraction-bench/manifest.ts",
+    "bench:vision-prepare": "node --import tsx src/server/tools/vision-cost/prepare.ts",
+    "bench:vision": "node --import tsx src/server/tools/vision-cost/run.ts",
     "bench:answers": "node --env-file-if-exists=.env.local --import tsx src/server/tools/answer-bench/main.ts",
     "qbank": "node scripts/qbank.mjs",
     "bench:perf": "vitest run --config vitest.perf.config.ts"
