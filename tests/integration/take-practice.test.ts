@@ -47,20 +47,15 @@ describe('practice by a link (M30)', () => {
   });
 });
 
-describe("an attempt's pictures (M30)", () => {
-  it('serves the pictures of questions the attempt asks, and no other', async () => {
+describe("an attempt's pictures (paused until M34)", () => {
+  // A share's pictures may be the explanation (M34 gives each picture its place): none goes out.
+  it('lists no picture and serves none, even of a question the attempt asks', async () => {
     const { ids, share } = await linkWith(2, 'exam', { content: { size: 1 } });
     const pictures = await Promise.all(ids.map((id) => storeFigure(app.db(), id)));
     const taker = takerOf(app(), share.token);
     await taker.start({ name: 'Viewer' });
-    const shown = (await taker.item(0)).json().pictureIds as string[];
-    const [asked] = shown;
-    expect(shown).toHaveLength(1);
-    const response = await taker.picture(asked ?? '');
-    expect([response.statusCode, response.headers['content-type']]).toEqual([200, 'image/png']);
-    const other = pictures.find((id) => id !== asked) ?? '';
-    expect((await taker.picture(other)).statusCode).toBe(404);
-    expect((await takerOf(app(), share.token).picture(asked ?? '')).statusCode).toBe(401);
+    expect((await taker.item(0)).json().pictureIds).toEqual([]);
+    for (const id of pictures) expect((await taker.picture(id)).statusCode).toBe(404);
   });
 });
 

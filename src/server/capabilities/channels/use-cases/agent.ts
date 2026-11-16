@@ -1,3 +1,4 @@
+import { sharedPictureIds } from '../domain/shared-pictures.js';
 import type {
   BatchAnswersResponse,
   BatchResponse,
@@ -33,7 +34,7 @@ const outgoing = (question: Ready, deliveryId: string) => ({
   stem: question.stem,
   options: question.options.map((o) => ({ letter: o.letter, text: o.text })),
   multiSelect: question.multiSelect,
-  pictures: question.pictureIds.map((id) => `/api/channel/v1/pictures/${id}`),
+  pictures: sharedPictureIds(question.pictureIds).map((id) => `/api/channel/v1/pictures/${id}`),
 });
 
 /** A saved batch as the agent sees it, from its deliveries (asking again with the same key). */
@@ -211,7 +212,7 @@ export function agentStats(deps: ChannelsDeps, row: ChannelRow): Promise<Channel
 export async function channelPicture(deps: ChannelsDeps, row: ChannelRow, mediaId: string) {
   enforce(deps, row, 'view');
   const media = isId(mediaId) ? await deps.questions.findMedia(row.owner_id, mediaId) : null;
-  if (!media?.question_id || !(await deps.channels.hasSent(row.id, media.question_id)))
-    throw notFound();
+  if (!media?.question_id || sharedPictureIds([mediaId]).length === 0) throw notFound();
+  if (!(await deps.channels.hasSent(row.id, media.question_id))) throw notFound();
   return deps.pathOf(media.blob_key);
 }

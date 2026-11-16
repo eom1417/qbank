@@ -47,8 +47,9 @@ async function pictureOf(questionId: string) {
   return id;
 }
 
-describe("a channel's pictures (DEC-36)", () => {
-  it('serves the pictures of questions it sent, and no other picture', async () => {
+describe("a channel's pictures (paused until M34)", () => {
+  // A picture may be the explanation (M34 gives each picture its place): none goes out.
+  it('lists no picture and serves none, even of a question it sent', async () => {
     const { owner, bankId } = await ownerWithBank(app());
     const [sentId = '', keptId = ''] = await seed(owner, bankId, [
       { stem: 'One?' },
@@ -64,9 +65,8 @@ describe("a channel's pictures (DEC-36)", () => {
       .where('id', '=', keptId)
       .execute();
     const batch = (await agent.batch()).json();
-    expect(batch.questions[0].pictures).toEqual([`/api/channel/v1/pictures/${sentPicture}`]);
-    const picture = await agent.picture(sentPicture);
-    expect([picture.statusCode, picture.headers['content-type']]).toEqual([200, 'image/png']);
+    expect(batch.questions[0].pictures).toEqual([]);
+    expect((await agent.picture(sentPicture)).statusCode).toBe(404);
     expect((await agent.picture(keptPicture)).statusCode).toBe(404);
     const other = await ownerWithBank(app(), 'Other');
     const otherAgent = agentOf(app(), (await newChannel(other.owner, other.bankId)).key);

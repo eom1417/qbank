@@ -1,3 +1,4 @@
+import { sharedPictureIds } from '../domain/shared-pictures.js';
 import type { TakeItemResponse, TakeResultResponse } from '../../../../contracts/take.js';
 import { AppError, notFound } from '../../../platform/errors/index.js';
 import { isCorrect, type Snapshot } from '../../exam-rules/index.js';
@@ -141,7 +142,9 @@ export async function submitAttempt(
 /** A picture of a question this attempt asks; any other picture is not found. */
 export async function attemptPicture(deps: ChannelsDeps, taking: Taking, mediaId: string) {
   const items = await deps.attempts.itemsOf(taking.attempt.id);
-  const asked = items.some((item) => (item.snapshot as Snapshot).pictureIds.includes(mediaId));
+  const asked = items.some((item) =>
+    sharedPictureIds((item.snapshot as Snapshot).pictureIds).includes(mediaId),
+  );
   const media = asked ? await deps.questions.findMedia(taking.attempt.owner_id, mediaId) : null;
   if (!media) throw notFound();
   return deps.pathOf(media.blob_key);

@@ -1,3 +1,4 @@
+import { sharedPictureIds } from '../domain/shared-pictures.js';
 import type {
   TakeItemResponse,
   TakeResultResponse,
@@ -41,7 +42,7 @@ export function itemView(taking: Taking, item: AttemptItemRow, now: Date): TakeI
     stem: snapshot.stem,
     options: snapshot.options.map(({ letter, label, text }) => ({ letter, label, text })),
     multiSelect: snapshot.multiSelect,
-    pictureIds: snapshot.pictureIds,
+    pictureIds: sharedPictureIds(snapshot.pictureIds),
     saved: item.chosen ?? [],
     flagged: item.flagged,
     changeable: lockOf(taking.share, taking.attempt, item, now) === null,
