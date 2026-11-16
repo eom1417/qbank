@@ -169,6 +169,8 @@ sudo docker compose -f compose.server.yaml up -d --build
 في [`SELF-HOST-OPERATIONS.md`](SELF-HOST-OPERATIONS.md): النسخ الاحتياطي اليومي التلقائي والاستعادة،
 وتنبيهك إن توقف الخادم، وخادم بلا عميل Google (تأكيد المدير، وصديق نسي كلمة المرور).
 
+على Coolify بدل Caddy: [`SELF-HOST-COOLIFY.md`](SELF-HOST-COOLIFY.md).
+
 ## الأمان باختصار
 
 - أي أحد معه الرابط يستطيع إنشاء حساب. هذا مقصود. لا تنشر الرابط علناً إن لم ترده عاماً.
