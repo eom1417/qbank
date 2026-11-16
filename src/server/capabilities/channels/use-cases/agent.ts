@@ -1,15 +1,15 @@
-import { sharedPictureIds } from '../domain/shared-pictures.js';
 import type {
   BatchAnswersResponse,
   BatchResponse,
   ChannelAnswerResponse,
   ChannelStats,
 } from '../../../../contracts/channels.js';
-import { isCorrect } from '../../exam-rules/index.js';
+import { isCorrect, mayServePicture, picturesBeforeReveal } from '../../exam-rules/index.js';
 import { AppError, notFound } from '../../../platform/errors/index.js';
 import { isId } from '../../../platform/ids.js';
 import type { ChannelRow } from '../adapters/channel-repository.js';
 import { hashOf, keyIn } from '../adapters/keys.js';
+import { snapshotOf } from '../domain/attempt-draw.js';
 import { revealNow, reveals } from '../domain/policy.js';
 import { pickBatch } from '../domain/selection.js';
 import type { ChannelsDeps } from './deps.js';
@@ -27,15 +27,29 @@ export async function channelOfKey(deps: ChannelsDeps, authorization: string | u
   return row;
 }
 
-/** A question as it goes out: never its answer; its pictures through the channel's route. */
-const outgoing = (question: Ready, deliveryId: string) => ({
-  deliveryId,
-  questionId: question.id,
-  stem: question.stem,
-  options: question.options.map((o) => ({ letter: o.letter, text: o.text })),
-  multiSelect: question.multiSelect,
-  pictures: sharedPictureIds(question.pictureIds).map((id) => `/api/channel/v1/pictures/${id}`),
-});
+/** Pictures go out through the channel's own route. */
+const urlsOf = (ids: readonly string[]) => ids.map((id) => `/api/channel/v1/pictures/${id}`);
+
+/**
+ * A question as it goes out: never its answer; the pictures that belong to the question, its
+ * options and its case (M34), never the explanation's or one without a place (Q65).
+ */
+function outgoing(question: Ready, deliveryId: string) {
+  const shown = picturesBeforeReveal(snapshotOf(question), 'shared');
+  const optionPictures = Object.fromEntries(
+    Object.entries(shown.optionPictureIds).map(([letter, ids]) => [letter, urlsOf(ids)]),
+  );
+  return {
+    deliveryId,
+    questionId: question.id,
+    stem: question.stem,
+    options: question.options.map((o) => ({ letter: o.letter, text: o.text })),
+    multiSelect: question.multiSelect,
+    pictures: urlsOf(shown.pictureIds),
+    optionPictures,
+    case: shown.case && { text: shown.case.text, pictures: urlsOf(shown.case.pictureIds) },
+  };
+}
 
 /** A saved batch as the agent sees it, from its deliveries (asking again with the same key). */
 async function batchView(deps: ChannelsDeps, row: ChannelRow, batchId: string, done: boolean) {
@@ -155,6 +169,12 @@ export async function batchAnswers(
   const explained = reveals(level, 'explained');
   await deps.channels.touch(row.id, deps.clock.now());
   const deliveries = await deps.channels.deliveriesOf(batch.id);
+  const placed = explained
+    ? await deps.questions.placedPicturesOf(
+        row.owner_id,
+        deliveries.map((d) => d.question_id),
+      )
+    : undefined;
   const answers = await Promise.all(
     deliveries.map(async (d) => {
       const question = await deps.questions.findQuestion(row.owner_id, d.question_id);
@@ -166,6 +186,7 @@ export async function batchAnswers(
         questionId: d.question_id,
         answers: question?.answer_letters ?? [],
         ...shown,
+        pictures: urlsOf(placed?.get(d.question_id)?.placed.explanation ?? []),
       };
     }),
   );
@@ -208,11 +229,35 @@ export function agentStats(deps: ChannelsDeps, row: ChannelRow): Promise<Channel
   return channelStats(deps, row);
 }
 
-/** A picture of a question this channel has sent; any other picture is not found. */
+/** The questions this channel sent that place the picture anywhere (their case's too, Z8). */
+async function sentHolders(deps: ChannelsDeps, row: ChannelRow, mediaId: string) {
+  const sent = await deps.channels.firstSentOf(row.id);
+  const pictures = await deps.questions.placedPicturesOf(row.owner_id, [...sent.keys()]);
+  return [...pictures].flatMap(([questionId, { placed }]) => {
+    const ids = [placed.question, Object.values(placed.options), placed.explanation];
+    const all = [...ids.flat(2), ...(placed.case?.pictureIds ?? [])];
+    const sentAt = sent.get(questionId);
+    return all.includes(mediaId) && sentAt ? [{ questionId, placed, sentAt }] : [];
+  });
+}
+
+/**
+ * A picture of a ready question this channel has sent, where it belongs to that question (M34):
+ * its own, its options', its case's (whichever question of the case keeps the file, Z8), and the
+ * explanation's only once the batch answers give the explanation. Any other is not found.
+ */
 export async function channelPicture(deps: ChannelsDeps, row: ChannelRow, mediaId: string) {
   enforce(deps, row, 'view');
   const media = isId(mediaId) ? await deps.questions.findMedia(row.owner_id, mediaId) : null;
-  if (!media?.question_id || sharedPictureIds([mediaId]).length === 0) throw notFound();
-  if (!(await deps.channels.hasSent(row.id, media.question_id))) throw notFound();
+  const holders = media ? await sentHolders(deps, row, mediaId) : [];
+  if (!media || holders.length === 0) throw notFound();
+  const ready = new Map((await readyQuestions(deps, row)).map((q) => [q.id, q]));
+  const shows = holders.some(({ questionId, placed, sentAt }) => {
+    const question = ready.get(questionId);
+    const explained = reveals(revealedLevel(deps, row, sentAt), 'explained');
+    const snapshot = question && { ...snapshotOf(question), placed };
+    return snapshot !== undefined && mayServePicture(snapshot, mediaId, 'shared', explained);
+  });
+  if (!shows) throw notFound();
   return deps.pathOf(media.blob_key);
 }

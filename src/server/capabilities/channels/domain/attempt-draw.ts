@@ -43,9 +43,13 @@ export function drawQuestions(
   return picked.length < size ? null : shuffled(picked, random);
 }
 
-/** The question as the attempt keeps it, whatever happens to it in the bank afterwards. */
+/**
+ * The question as the attempt keeps it, whatever happens to it in the bank afterwards, with
+ * where each of its pictures belongs (M34): only placed pictures ever go out of a share.
+ */
 export function snapshotOf(question: PoolQuestion): Snapshot {
   const { stem, options, answers, multiSelect, explanation, pictureIds, chapterId, version } =
     question;
-  return { stem, options, answers, multiSelect, explanation, pictureIds, chapterId, version };
+  const kept = { stem, options, answers, multiSelect, explanation, pictureIds, chapterId };
+  return { ...kept, version, placed: question.placed };
 }

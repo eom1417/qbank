@@ -87,7 +87,13 @@ export async function answerAll(taker: Taker, total: number, chosen: string[]) {
 }
 
 /** A figure stored for the question in the test app's data folder, as an import leaves one. */
-export async function storeFigure(db: Db, questionId: string) {
+/** Where a stored figure belongs (M34); none for one imported before placements (Q65). */
+export interface FigurePlace {
+  placement: 'question' | 'option' | 'explanation' | 'case';
+  optionLetter?: string;
+}
+
+export async function storeFigure(db: Db, questionId: string, place?: FigurePlace) {
   const { owner_id, source_id } = await db
     .selectFrom('question')
     .select(['owner_id', 'source_id'])
@@ -98,7 +104,13 @@ export async function storeFigure(db: Db, questionId: string) {
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, blobKey), Buffer.from('89504e470d0a1a0a', 'hex'));
   const box = JSON.stringify({ x0: 0, y0: 0, x1: 1, y1: 1 });
-  const shape = { position: 0, page: 1, width: 10, height: 10, low_quality: false };
+  const { count } = await db
+    .selectFrom('media')
+    .select((eb) => eb.fn.countAll<string>().as('count'))
+    .where('question_id', '=', questionId)
+    .executeTakeFirstOrThrow();
+  const position = Number(count);
+  const shape = { position, page: 1, width: 10, height: 10, low_quality: false };
   const figure = { kind: 'figure', modality: null, link: 'certain', quality: '{}' } as const;
   await db
     .insertInto('media')
@@ -111,8 +123,26 @@ export async function storeFigure(db: Db, questionId: string) {
       box,
       ...shape,
       ...figure,
+      placement: place?.placement ?? null,
+      option_letter: place?.optionLetter ?? null,
       created_at: new Date(),
     })
     .execute();
+  return id;
+}
+
+/** Makes the questions share one case (M34, Z8); its pictures are stored with `placement: 'case'`. */
+export async function seedCase(db: Db, questionIds: readonly string[], text: string) {
+  const first = await db
+    .selectFrom('question')
+    .select(['owner_id', 'source_id'])
+    .where('id', '=', questionIds[0] ?? '')
+    .executeTakeFirstOrThrow();
+  const id = randomUUID();
+  await db
+    .insertInto('question_case')
+    .values({ id, owner_id: first.owner_id, source_id: first.source_id, text })
+    .execute();
+  await db.updateTable('question').set({ case_id: id }).where('id', 'in', questionIds).execute();
   return id;
 }

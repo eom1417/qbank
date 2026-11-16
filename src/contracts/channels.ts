@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CaseView, OptionPictures } from './pictures.js';
 
 /**
  * Publishing channels (M23, DEC-36): an outside agent (WhatsApp, Telegram, n8n…) takes batches of
@@ -50,6 +51,8 @@ const BatchQuestion = z
     options: z.array(z.object({ letter: Letter, text: z.string() }).strict()),
     multiSelect: z.boolean(),
     pictures: z.array(z.string()),
+    optionPictures: OptionPictures(z.string()),
+    case: CaseView(z.string()).nullable(),
   })
   .strict();
 
@@ -76,6 +79,8 @@ export const BatchAnswersResponse = z
           questionId: z.uuid(),
           answers: z.array(Letter),
           explanation: z.string().nullable(),
+          /** The explanation's own pictures, sent only with the answers (M34). */
+          pictures: z.array(z.string()),
           /** From the AI's study note, when the question has one (DEC-34). */
           topic: z.string().nullable(),
           keyIdea: z.string().nullable(),

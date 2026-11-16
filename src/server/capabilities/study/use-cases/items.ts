@@ -2,7 +2,13 @@ import type { ItemResponse, SummaryResponse } from '../../../../contracts/study.
 import { AppError, notFound } from '../../../platform/errors/index.js';
 import type { Actor } from '../../identity/index.js';
 import type { ItemRow, SessionRow } from '../adapters/session-repository.js';
-import { canChange, isCorrect, type Snapshot } from '../../exam-rules/index.js';
+import {
+  canChange,
+  isCorrect,
+  picturesBeforeReveal,
+  picturesWithExplanation,
+  type Snapshot,
+} from '../../exam-rules/index.js';
 import type { StudyDeps } from './deps.js';
 import { noteDifficulty } from './difficulty.js';
 import { getSession, ownedSession } from './sessions.js';
@@ -37,6 +43,7 @@ async function solutionOf(deps: StudyDeps, actor: Actor, item: ItemRow, snapshot
     correct: item.correct === true,
     answers: snapshot.answers,
     explanation: snapshot.explanation,
+    pictureIds: picturesWithExplanation(snapshot),
     studyNote,
   };
 }
@@ -52,6 +59,7 @@ async function toItem(
   const [mark] = item.question_id
     ? await deps.questions.marksOf(actor.accountId, [item.question_id])
     : [];
+  const pictures = picturesBeforeReveal(snapshot, 'owner');
 
   return {
     position: item.position,
@@ -60,7 +68,9 @@ async function toItem(
     stem: snapshot.stem,
     options: snapshot.options,
     multiSelect: snapshot.multiSelect,
-    pictureIds: snapshot.pictureIds,
+    pictureIds: pictures.pictureIds,
+    optionPictureIds: pictures.optionPictureIds,
+    case: pictures.case && { text: pictures.case.text, pictures: pictures.case.pictureIds },
     flagged: mark?.flagged ?? false,
     favorite: mark?.favorite ?? false,
     solution: solutionShown(session, item) ? await solutionOf(deps, actor, item, snapshot) : null,

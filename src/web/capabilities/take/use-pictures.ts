@@ -1,5 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
+import type { TakeItemResponse } from '../../../contracts/take.js';
 import type { AttemptApi } from './api.js';
+
+type CardPictures = Pick<TakeItemResponse, 'pictureIds' | 'optionPictureIds' | 'case'>;
+
+/** Every picture a question card shows (M34): the question's, its options' and its case's. */
+export const cardPictureIds = (item: CardPictures): string[] => [
+  ...(item.case?.pictures ?? []),
+  ...item.pictureIds,
+  ...Object.values(item.optionPictureIds).flat(),
+];
 
 /**
  * A question's pictures, fetched with the attempt token and shown from local object

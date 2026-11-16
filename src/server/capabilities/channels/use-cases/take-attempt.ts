@@ -1,7 +1,6 @@
-import { sharedPictureIds } from '../domain/shared-pictures.js';
 import type { TakeItemResponse, TakeResultResponse } from '../../../../contracts/take.js';
 import { AppError, notFound } from '../../../platform/errors/index.js';
-import { isCorrect, type Snapshot } from '../../exam-rules/index.js';
+import { isCorrect, mayServePicture, type Snapshot } from '../../exam-rules/index.js';
 import type { AttemptRow, EndedBy } from '../adapters/attempt-repository.js';
 import type { ChannelRow } from '../adapters/channel-repository.js';
 import { bearerOf, hashOf } from '../adapters/keys.js';
@@ -9,7 +8,7 @@ import { choiceProblem, endingOf, lockOf, navigationOf } from '../domain/attempt
 import type { ShareState } from '../domain/policy.js';
 import type { ChannelsDeps } from './deps.js';
 import { enforce } from './governance.js';
-import { itemView, resultView, stateView, type Taking } from './take-views.js';
+import { explainedNow, itemView, resultView, stateView, type Taking } from './take-views.js';
 
 /** Ends an attempt once, and records it in the share's ledger. */
 async function finish(deps: ChannelsDeps, row: ChannelRow, attempt: AttemptRow, by: EndedBy) {
@@ -139,11 +138,15 @@ export async function submitAttempt(
   return attemptResult(deps, { ...taking, attempt });
 }
 
-/** A picture of a question this attempt asks; any other picture is not found. */
+/**
+ * A picture this attempt shows now (M34): of a question it asks, where it belongs; the
+ * explanation's only once that explanation shows. Any other picture is not found.
+ */
 export async function attemptPicture(deps: ChannelsDeps, taking: Taking, mediaId: string) {
   const items = await deps.attempts.itemsOf(taking.attempt.id);
+  const now = deps.clock.now();
   const asked = items.some((item) =>
-    sharedPictureIds((item.snapshot as Snapshot).pictureIds).includes(mediaId),
+    mayServePicture(item.snapshot as Snapshot, mediaId, 'shared', explainedNow(taking, item, now)),
   );
   const media = asked ? await deps.questions.findMedia(taking.attempt.owner_id, mediaId) : null;
   if (!media) throw notFound();

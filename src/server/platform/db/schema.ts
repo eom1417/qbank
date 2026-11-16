@@ -1,4 +1,5 @@
 import type { ChannelTables } from './schema-channels.js';
+import type { ImportTables } from './schema-import.js';
 import type { ColumnType, Generated } from 'kysely';
 
 type CreatedAt = ColumnType<Date, Date | undefined, never>;
@@ -10,6 +11,8 @@ interface AccountTable {
   password_hash: string | null;
   /** Google's stable id for the person; set on their first Google sign-in. */
   google_sub: Generated<string | null>;
+  /** When the account agreed to have its files read by its own AI (M34, Z4). */
+  ai_consent_at: Generated<Date | null>;
   display_name: string;
   locale: 'ar' | 'en';
   theme: Generated<'system' | 'light' | 'dark'>;
@@ -138,7 +141,9 @@ interface ImportJobTable {
   /** The model chosen for that instance; its default when null. */
   ai_model: Generated<string | null>;
   /** 'verify': the AI checks open answers; 'read': it reads whole pages. */
-  ai_mode: Generated<'verify' | 'read' | 'recheck'>;
+  ai_mode: Generated<'verify' | 'read' | 'recheck' | 'pipeline'>;
+  /** The reading curriculum's version a `pipeline` job ran with (M34). */
+  curriculum_version: Generated<string | null>;
   /** What the AI improves (`Enhancements`, DEC-34); null without AI. */
   ai_enhance: ColumnType<unknown, string | null | undefined, string>;
   /** The model of each triage role (`TriageModels`), or null for the instance default. */
@@ -198,6 +203,7 @@ interface QuestionTable {
   version: ColumnType<number, number | undefined, number>;
   source_occurrence: ColumnType<number, number | undefined, number>;
   source_seq: ColumnType<number, number | undefined, number>;
+  case_id: ColumnType<string | null, string | null | undefined, string | null>;
   /** The owner left it for later (M7.3); it stays in review, listed after the rest. */
   deferred_at: ColumnType<Date | null, Date | null | undefined, Date | null>;
   /** Newer medical information, kept apart from the book's answer (FR-24-002, DEC-16). */
@@ -249,7 +255,7 @@ interface QuestionTagTable {
   question_id: string;
   tag_id: string;
   owner_id: string;
-  origin: 'suggested' | 'manual';
+  origin: 'suggested' | 'manual' | 'import';
 }
 
 interface QuestionVersionTable {
@@ -278,6 +284,9 @@ interface MediaTable {
   quality: ColumnType<unknown, string, string>;
   low_quality: boolean;
   created_at: Date;
+  /** Where it belongs (M34); null for a picture imported before placements (Q65). */
+  placement: Generated<'question' | 'option' | 'explanation' | 'case' | null>;
+  option_letter: Generated<string | null>;
 }
 
 export type StudyKind =
@@ -327,7 +336,7 @@ interface QuestionMarkTable {
   updated_at: Date;
 }
 
-export interface Database extends ChannelTables {
+export interface Database extends ChannelTables, ImportTables {
   account: AccountTable;
   auth_session: AuthSessionTable;
   bank: BankTable;

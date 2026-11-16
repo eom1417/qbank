@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CaseView, OptionPictures } from './pictures.js';
 import { AiTarget } from './providers.js';
 import { QuestionOption, SavedStudyNote } from './questions.js';
 
@@ -113,6 +114,8 @@ const Solution = z
     answers: z.array(z.string()),
     /** The book's explanation as printed; null says "not available" (FR-12-004). */
     explanation: z.string().nullable(),
+    /** The explanation's own pictures: shown only with it (M34, Z1). */
+    pictureIds: z.array(z.uuid()),
     /** The AI's study note on the question as it is now, apart from the book's (DEC-34). */
     studyNote: SavedStudyNote.nullable(),
   })
@@ -128,6 +131,8 @@ export const ItemResponse = z
     options: z.array(QuestionOption),
     multiSelect: z.boolean(),
     pictureIds: z.array(z.uuid()),
+    optionPictureIds: OptionPictures(z.uuid()),
+    case: CaseView(z.uuid()).nullable(),
     flagged: z.boolean(),
     favorite: z.boolean(),
     solution: Solution.nullable(),

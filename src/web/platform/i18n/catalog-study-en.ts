@@ -24,6 +24,7 @@ export const studyEn = {
   'study.of': 'of',
   'study.answered': 'answered',
   'study.choices': 'Your answer',
+  'study.optionPictures': 'Pictures for option',
   'study.submit': 'Send my answer',
   'study.correct': 'Right',
   'study.wrong': 'Not right',

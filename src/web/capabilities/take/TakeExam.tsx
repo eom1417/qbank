@@ -13,29 +13,33 @@ import { navigationOf } from './take-flow.js';
 import { TakeBanner } from './TakeBanner.js';
 import { TakeCheck } from './TakeCheck.js';
 import type { useAttempt } from './use-attempt.js';
-import { usePictures } from './use-pictures.js';
+import { ExplanationPictures } from './ExplanationPictures.js';
+import { cardPictureIds, usePictures } from './use-pictures.js';
 
 type Attempt = ReturnType<typeof useAttempt>;
 
 /** In a practice that reveals answers: the answer right after the choice is saved. */
-function Feedback({ item }: { item: TakeItemResponse }) {
+function Feedback({ attempt, item }: { attempt: Attempt; item: TakeItemResponse }) {
   const { feedback } = item;
   if (!feedback) return null;
   return (
-    <AnswerVerdict
-      correct={feedback.correct}
-      answers={feedback.answers}
-      explanation={feedback.explanation}
-      startOpen={true}
-      emptyText={null}
-    />
+    <>
+      <AnswerVerdict
+        correct={feedback.correct}
+        answers={feedback.answers}
+        explanation={feedback.explanation}
+        startOpen={true}
+        emptyText={null}
+      />
+      <ExplanationPictures api={attempt.api} ids={feedback.pictureIds} />
+    </>
   );
 }
 
 /** The question as the share shows it, marked only once the server reveals the answer. */
 function TakeQuestion({ attempt, item }: { attempt: Attempt; item: TakeItemResponse }) {
   const { t } = useI18n();
-  const pictureUrl = usePictures(attempt.api, item.pictureIds);
+  const pictureUrl = usePictures(attempt.api, cardPictureIds(item));
   const { feedback } = item;
   const reveal = feedback && { answers: feedback.answers, chosen: item.saved };
   return (
@@ -50,7 +54,7 @@ function TakeQuestion({ attempt, item }: { attempt: Attempt; item: TakeItemRespo
       >
         {!item.changeable && !feedback && <MutedText>{t('exam.locked')}</MutedText>}
       </QuestionCard>
-      <Feedback key={item.position} item={item} />
+      <Feedback key={item.position} attempt={attempt} item={item} />
     </>
   );
 }

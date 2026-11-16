@@ -3,6 +3,7 @@ import { DEFAULT_POLICIES } from '../../src/contracts/sharing.js';
 import type { Db } from '../../src/server/platform/db/index.js';
 import { ownerWithBank, type createClient } from './client.js';
 import type { useReviewSuite } from './questions.js';
+import { seedCase, storeFigure } from './take.js';
 
 type Browser = ReturnType<typeof createClient>;
 
@@ -124,3 +125,22 @@ export async function studySnapshot(
       .execute(),
   };
 }
+
+/**
+ * Every place a picture can have, on one question (M34): its own, option B's, the
+ * explanation's, its case's (with the case text), and one imported before placements (Q65).
+ */
+export async function placedFigures(db: Db, questionId: string) {
+  const caseText = 'A 60-year-old man has had chest pain for an hour.';
+  await seedCase(db, [questionId], caseText);
+  return {
+    caseText,
+    question: await storeFigure(db, questionId, { placement: 'question' }),
+    option: await storeFigure(db, questionId, { placement: 'option', optionLetter: 'B' }),
+    explanation: await storeFigure(db, questionId, { placement: 'explanation' }),
+    caseFigure: await storeFigure(db, questionId, { placement: 'case' }),
+    unplaced: await storeFigure(db, questionId),
+  };
+}
+
+export type PlacedFigures = Awaited<ReturnType<typeof placedFigures>>;

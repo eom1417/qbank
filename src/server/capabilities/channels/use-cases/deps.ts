@@ -23,7 +23,10 @@ export interface ChannelsDeps {
   linksEnabled: boolean;
   /** The channel's own counts (its tables only). */
   numbers(channelId: string, cycle: number): ReturnType<typeof channelNumbers>;
-  questions: Pick<Questions, 'studyPool' | 'findQuestion' | 'findMedia' | 'studyNoteOf'>;
+  questions: Pick<
+    Questions,
+    'studyPool' | 'findQuestion' | 'findMedia' | 'studyNoteOf' | 'placedPicturesOf'
+  >;
   ownsBank(ownerId: string, bankId: string): Promise<boolean>;
   /** The bank's name for the owner's list of shares; null when it is not the owner's. */
   bankNameOf(ownerId: string, bankId: string): Promise<string | null>;

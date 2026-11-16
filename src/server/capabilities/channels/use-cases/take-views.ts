@@ -1,10 +1,15 @@
-import { sharedPictureIds } from '../domain/shared-pictures.js';
 import type {
   TakeItemResponse,
   TakeResultResponse,
   TakeStateResponse,
 } from '../../../../contracts/take.js';
-import { isCorrect, secondsLeft, type Snapshot } from '../../exam-rules/index.js';
+import {
+  isCorrect,
+  picturesBeforeReveal,
+  picturesWithExplanation,
+  secondsLeft,
+  type Snapshot,
+} from '../../exam-rules/index.js';
 import type { AttemptItemRow, AttemptRow } from '../adapters/attempt-repository.js';
 import type { ChannelRow } from '../adapters/channel-repository.js';
 import { lockOf, navigationOf, scoreOf, timingOf } from '../domain/attempt.js';
@@ -23,14 +28,45 @@ export interface Taking {
 
 const snapshotIn = (item: AttemptItemRow) => item.snapshot as Snapshot;
 
+/** The explanation's pictures where the explanation itself shows (M34); none elsewhere. */
+const explanationPictures = (snapshot: Snapshot, explained: boolean) =>
+  explained ? picturesWithExplanation(snapshot) : [];
+
 /** Practice with an immediate reveal: the answer once the question is answered. */
 function feedbackOf(share: ShareState, item: AttemptItemRow) {
   if (!feedbackEachQuestion(share) || item.chosen === null) return null;
   const snapshot = snapshotIn(item);
+  const explained = reveals(share.policy.reveal.level, 'explained');
   return {
     correct: isCorrect(item.chosen, snapshot.answers),
     answers: snapshot.answers,
-    explanation: reveals(share.policy.reveal.level, 'explained') ? snapshot.explanation : null,
+    explanation: explained ? snapshot.explanation : null,
+    pictureIds: explanationPictures(snapshot, explained),
+  };
+}
+
+/** The level a handed-in attempt's result shows now; nothing while it is under way. */
+function resultLevel({ share, attempt }: Taking, now: Date) {
+  if (attempt.status === 'active' || !attempt.submitted_at) return null;
+  return revealNow(share, attempt.submitted_at, now);
+}
+
+/** Whether this item's explanation shows now: in its feedback, or in the attempt's result. */
+export function explainedNow(taking: Taking, item: AttemptItemRow, now: Date): boolean {
+  const { share } = taking;
+  const answered = feedbackEachQuestion(share) && item.chosen !== null;
+  if (answered && reveals(share.policy.reveal.level, 'explained')) return true;
+  const result = resultLevel(taking, now);
+  return result !== null && reveals(result.level, 'explained');
+}
+
+/** The pictures a share shows with the question, before any reveal (M34, Q65). */
+function questionPictures(snapshot: Snapshot) {
+  const shown = picturesBeforeReveal(snapshot, 'shared');
+  return {
+    pictureIds: shown.pictureIds,
+    optionPictureIds: shown.optionPictureIds,
+    case: shown.case && { text: shown.case.text, pictures: shown.case.pictureIds },
   };
 }
 
@@ -42,7 +78,7 @@ export function itemView(taking: Taking, item: AttemptItemRow, now: Date): TakeI
     stem: snapshot.stem,
     options: snapshot.options.map(({ letter, label, text }) => ({ letter, label, text })),
     multiSelect: snapshot.multiSelect,
-    pictureIds: sharedPictureIds(snapshot.pictureIds),
+    ...questionPictures(snapshot),
     saved: item.chosen ?? [],
     flagged: item.flagged,
     changeable: lockOf(taking.share, taking.attempt, item, now) === null,
@@ -95,8 +131,9 @@ export function resultView(
   now: Date,
 ): TakeResultResponse {
   const { share, attempt } = taking;
-  if (attempt.status === 'active' || !attempt.submitted_at) return NOTHING_YET;
-  const { level, moreAt } = revealNow(share, attempt.submitted_at, now);
+  const result = resultLevel(taking, now);
+  if (!result) return NOTHING_YET;
+  const { level, moreAt } = result;
   const explained = reveals(level, 'explained');
   return {
     status: 'submitted',
@@ -114,6 +151,7 @@ export function resultView(
           correct: item.correct === true,
           answers: snapshotIn(item).answers,
           explanation: explained ? snapshotIn(item).explanation : null,
+          pictureIds: explanationPictures(snapshotIn(item), explained),
         }))
       : null,
   };

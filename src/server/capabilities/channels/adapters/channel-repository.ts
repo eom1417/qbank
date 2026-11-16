@@ -89,14 +89,19 @@ function deliveryQueries(db: Db) {
         .where('channel_id', '=', channelId)
         .where('id', '=', id)
         .executeTakeFirst(),
-    hasSent: async (channelId: string, questionId: string) =>
-      (await db
-        .selectFrom('channel_delivery')
-        .select('id')
-        .where('channel_id', '=', channelId)
-        .where('question_id', '=', questionId)
-        .executeTakeFirst()) !== undefined,
+    firstSentOf: (channelId: string) => firstSentOf(db, channelId),
   };
+}
+
+/** When the channel first sent each question it has sent, by question. */
+async function firstSentOf(db: Db, channelId: string) {
+  const rows = await db
+    .selectFrom('channel_delivery')
+    .select((eb) => ['question_id', eb.fn.min('sent_at').as('first')])
+    .where('channel_id', '=', channelId)
+    .groupBy('question_id')
+    .execute();
+  return new Map(rows.map((row) => [row.question_id, new Date(row.first)]));
 }
 
 interface NewBatch {

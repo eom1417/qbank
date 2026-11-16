@@ -82,6 +82,7 @@ const snapshotOf = (q: PoolQuestion, reason: Snapshot['reason']): Snapshot => ({
   multiSelect: q.multiSelect,
   explanation: q.explanation,
   pictureIds: q.pictureIds,
+  placed: q.placed,
   chapterId: q.chapterId,
   version: q.version,
 });
