@@ -170,6 +170,7 @@ export const sharingEn = {
   'sharing.form.startsAt': 'Opens at (empty: now)',
   'sharing.form.endsAt': 'Closes at (empty: no end)',
   'sharing.form.attempts': 'Attempts per person',
+  'sharing.form.timer': 'Set a time limit',
   'sharing.form.duration': 'Time for the whole attempt',
   'sharing.form.minutes': '{n} minutes',
   'sharing.form.navigation': 'Moving between questions',

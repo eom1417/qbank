@@ -1,6 +1,6 @@
 import { PictureGrid } from '../exam-ui/QuestionCard.js';
 import type { AttemptApi } from './api.js';
-import { usePictures } from './use-pictures.js';
+import { useOwnPictures } from './use-pictures.js';
 
 /**
  * The explanation's own pictures (M34), shown only where the server revealed the explanation:
@@ -13,5 +13,5 @@ export function ExplanationPictures({
   api: Pick<AttemptApi, 'picture'>;
   ids: readonly string[];
 }) {
-  return <PictureGrid ids={ids} pictureUrl={usePictures(api, ids)} />;
+  return <PictureGrid ids={ids} pictureUrl={useOwnPictures(api, ids)} />;
 }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type {
   TakeItemResponse,
   TakeResultResponse,
@@ -9,6 +9,7 @@ import type { MessageKey } from '../../platform/i18n/i18n.js';
 import type { SaveStatus } from '../exam-ui/SaveState.js';
 import { attemptApi, type AttemptApi } from './api.js';
 import { saveChoice } from './take-flow.js';
+import { useAttemptAhead } from './use-attempt-ahead.js';
 
 /** How long to wait before asking again when the time is up but the server still runs it. */
 const TIME_UP_RECHECK_MS = 2000;
@@ -53,13 +54,21 @@ function useItem(api: AttemptApi, server: ReturnType<typeof useServerState>, gua
   const { refresh, finish } = server;
   const [item, setItem] = useState<TakeItemResponse | null>(null);
   const [saving, setSaving] = useState<SaveStatus>('idle');
+  const { ahead, pictures } = useAttemptAhead(api, item);
+  const wanted = useRef<number | null>(null);
+  // A question read ahead shows at once; opening it on the server then confirms it (M34 U3).
   const go = useCallback(
     async (position: number) => {
-      setItem(await api.open(position));
+      wanted.current = position;
+      const early = ahead.ready(position);
+      if (early) setItem(early);
       setSaving('idle');
+      const opened = await api.open(position);
+      if (wanted.current !== position) return;
+      setItem(opened);
       await refresh();
     },
-    [api, refresh],
+    [api, ahead, refresh],
   );
   const choose = async (chosen: string[]) => {
     if (!item) return;
@@ -74,7 +83,7 @@ function useItem(api: AttemptApi, server: ReturnType<typeof useServerState>, gua
   const toggleFlag = () => {
     if (item) guard(api.flag(item.position, !item.flagged).then(setItem).then(refresh));
   };
-  return { item, saving, go, choose, toggleFlag };
+  return { item, saving, pictures, go, choose, toggleFlag };
 }
 
 /**

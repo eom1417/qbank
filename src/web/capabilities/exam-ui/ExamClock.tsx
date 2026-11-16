@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { MutedText } from '../../design-system/index.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
+import { clockText } from './clock-text.js';
 
 /**
  * The time left, as the server last said, counted down here. At zero the server is asked again:
@@ -19,7 +20,10 @@ export function ExamClock({ seconds, onZero }: { seconds: number | null; onZero(
   if (left === null) return null;
   return (
     <MutedText>
-      {t('exam.timeLeft')} <span role="timer">{left}</span>
+      {t('exam.timeLeft')}{' '}
+      <span role="timer" dir="ltr">
+        {clockText(left)}
+      </span>
     </MutedText>
   );
 }

@@ -1,42 +1,30 @@
-import { useCallback, useEffect, useState } from 'react';
-import type { TakeItemResponse } from '../../../contracts/take.js';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { AttemptApi } from './api.js';
-
-type CardPictures = Pick<TakeItemResponse, 'pictureIds' | 'optionPictureIds' | 'case'>;
-
-/** Every picture a question card shows (M34): the question's, its options' and its case's. */
-export const cardPictureIds = (item: CardPictures): string[] => [
-  ...(item.case?.pictures ?? []),
-  ...item.pictureIds,
-  ...Object.values(item.optionPictureIds).flat(),
-];
+import { pictureCache, type PictureCache } from './picture-cache.js';
 
 /**
- * A question's pictures, fetched with the attempt token and shown from local object
- * addresses, released when the question changes. A picture that fails stays out of view.
+ * Pictures shown from the attempt's picture cache: those not there yet are fetched, and the
+ * page shows each as it arrives. A picture that fails stays out of view.
  */
-export function usePictures(api: Pick<AttemptApi, 'picture'>, ids: readonly string[]) {
-  const [urls, setUrls] = useState<Record<string, string>>({});
+export function usePictures(cache: PictureCache, ids: readonly string[]) {
+  const [, setArrived] = useState(0);
   const key = ids.join(',');
   useEffect(() => {
     let active = true;
-    const made: string[] = [];
-    for (const id of key ? key.split(',') : []) {
-      api.picture(id).then(
-        (blob) => {
-          if (!active) return;
-          const url = URL.createObjectURL(blob);
-          made.push(url);
-          setUrls((all) => ({ ...all, [id]: url }));
-        },
-        () => undefined,
-      );
-    }
+    for (const id of key ? key.split(',') : [])
+      if (cache.url(id) === null)
+        void cache.load(id).then((url) => active && url && setArrived((n) => n + 1));
     return () => {
       active = false;
-      made.forEach((url) => URL.revokeObjectURL(url));
-      setUrls({});
     };
-  }, [api, key]);
-  return useCallback((id: string) => urls[id] ?? null, [urls]);
+  }, [cache, key]);
+  // A new arrival re-renders the caller, which reads the cache afresh.
+  return useCallback((id: string) => cache.url(id), [cache]);
+}
+
+/** A cache of its own for pictures shown apart from the questions, released when it goes. */
+export function useOwnPictures(api: Pick<AttemptApi, 'picture'>, ids: readonly string[]) {
+  const cache = useMemo(() => pictureCache((id) => api.picture(id)), [api]);
+  useEffect(() => () => cache.release(), [cache]);
+  return usePictures(cache, ids);
 }

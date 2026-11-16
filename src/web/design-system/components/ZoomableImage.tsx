@@ -3,7 +3,10 @@ import type { CSSProperties } from 'react';
 interface ZoomableImageProps {
   src: string;
   alt: string;
-  /** 1 fits the frame's width; larger values enlarge it without distortion (FR-06-005). */
+  /**
+   * 1 shows the picture at its own size, never stretched, at most the frame's width (M34 U4);
+   * larger values enlarge it without distortion (FR-06-005).
+   */
   zoom: number;
 }
 
@@ -12,7 +15,12 @@ export function ZoomableImage({ src, alt, zoom }: ZoomableImageProps) {
   const style = { '--qb-zoom': zoom } as CSSProperties;
   return (
     <div className="qb-zoom">
-      <img className="qb-zoom__image" src={src} alt={alt} style={style} />
+      <img
+        className={zoom === 1 ? 'qb-zoom__image qb-zoom__image--fit' : 'qb-zoom__image'}
+        src={src}
+        alt={alt}
+        style={style}
+      />
     </div>
   );
 }

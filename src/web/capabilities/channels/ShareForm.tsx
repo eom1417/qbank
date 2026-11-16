@@ -14,6 +14,7 @@ import { useI18n } from '../../platform/i18n/i18n.js';
 import { PolicyCard } from './PolicyCard.js';
 import type { Preset } from './presets.js';
 import { RuleNumber } from './RuleFields.js';
+import { TimeLimit } from './RulesWhen.js';
 import { SIZE_AGENT, SIZE_PEOPLE } from './rule-options.js';
 import {
   AdvancedRules,
@@ -81,6 +82,7 @@ function MainFields({
         onChange={(size) => draft.set('content', { size: size ?? 1 })}
         error={sizeError}
       />
+      {draft.kind === 'exam' && <TimeLimit draft={draft} />}
     </>
   );
 }

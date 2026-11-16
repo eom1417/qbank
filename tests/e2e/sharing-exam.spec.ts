@@ -1,4 +1,5 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
+import { msToNext, throttle } from './next-latency.js';
 import { approveFirstTwo, studyableBank, usePdfFixtures } from './support.js';
 
 const fixtures = usePdfFixtures();
@@ -13,6 +14,10 @@ async function publishExam(page: Page) {
   await page.getByRole('button', { name: /اختبار رسمي/ }).click();
   await page.getByLabel('الاسم', { exact: true }).fill('اختبار الوحدة');
   await page.getByLabel('عدد الأسئلة في المحاولة').selectOption(String(SIZE));
+  // No timer unless the owner sets one, in plain view (M34 U2).
+  await expect(page.getByLabel('وقت المحاولة كلها')).toHaveCount(0);
+  await page.getByLabel('حدّد وقتاً للمحاولة').check();
+  await page.getByLabel('وقت المحاولة كلها').selectOption('20');
   await page.getByLabel(RIGHTS).check();
   await page.getByRole('button', { name: 'انشر' }).click();
   await expect(page.getByText('الرابط: انسخه الآن')).toBeVisible();
@@ -32,7 +37,12 @@ async function answerAll(taker: Page) {
     await taker.locator('.qb-choice').first().click();
     await expect(taker.getByText('حُفظ')).toBeVisible();
     await expect(taker.locator('.qb-choice--right, .qb-choice--wrong')).toHaveCount(0);
-    if (i < SIZE) await taker.getByRole('button', { name: 'التالي' }).click();
+    if (i === 1) {
+      // The next question was read ahead: on a slow connection it shows at once (M34 U3).
+      const ms = await msToNext(taker, `السؤال 2 من ${SIZE}`);
+      console.log(`shared exam: Next shown in ${Math.round(ms)} ms (throttled)`);
+      expect(ms).toBeLessThanOrEqual(200);
+    } else if (i < SIZE) await taker.getByRole('button', { name: 'التالي' }).click();
   }
 }
 
@@ -42,12 +52,15 @@ async function takeAsStranger(browser: Browser, link: string) {
   const taker = await stranger.newPage();
   await taker.goto(link);
   await expect(taker.getByRole('heading', { level: 1, name: 'اختبار الوحدة' })).toBeVisible();
+  // The page's code is here (the dev server sends it unbundled); from now on the line is slow.
+  await throttle(taker);
   const rules = taker.getByRole('list', { name: 'قواعد هذه المشاركة' });
   await expect(rules.getByText('محاولة واحدة', { exact: false })).toBeVisible();
   await expect(rules.getByText('الدرجة فقط', { exact: false })).toBeVisible();
   await taker.getByLabel('اسمك').fill('سارة');
   await taker.getByRole('button', { name: 'ابدأ' }).click();
-  await expect(taker.getByRole('timer')).toBeVisible();
+  // The twenty minutes the owner chose, as minutes and seconds (M34 U1).
+  await expect(taker.getByRole('timer')).toHaveText(/^(20:00|19:\d{2})$/);
   await answerAll(taker);
   await taker.getByRole('button', { name: 'راجع ثم سلّم' }).click();
   await expect(taker.getByRole('heading', { name: 'قبل التسليم' })).toBeVisible();
