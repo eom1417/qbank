@@ -249,7 +249,10 @@ function step(state: ParseState, line: TextLine): Element | null {
   if (option) return option;
   const { open } = state;
   if (!open || SEPARATOR.test(line.text)) return null;
-  if (!within(state.previous, line, MAX_GAP_LINES, state.figures)) return null;
+  // A number alone on its line ("Question: 1") has its stem a paragraph below (M36).
+  const gap =
+    open.kind === 'stem' && open.question.stem === '' ? MAX_OPTION_GAP_LINES : MAX_GAP_LINES;
+  if (!within(state.previous, line, gap, state.figures)) return null;
   appendContinuation(state, open, line);
   state.lastOfQuestion = line;
   return open;

@@ -21,6 +21,8 @@ const HIGH: ReadonlySet<string> = new Set([
   'key_doubt',
   'answer_conflict',
   'mark_unclear',
+  // M36: a question may be missing after this one (Q106).
+  'unread_question_text',
 ]);
 /** A picture or a page that may be missing from the question. */
 const MEDIUM: ReadonlySet<string> = new Set([

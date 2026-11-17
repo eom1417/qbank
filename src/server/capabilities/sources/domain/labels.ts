@@ -53,8 +53,11 @@ export function optionLabel(line: string): OptionLabel | null {
 /** The answer letter of the option at `index` (A, B, C…), whatever system printed it. */
 export const answerLetter = (index: number): string => String.fromCharCode(65 + index);
 
-// "Q12)", "س12)", "سؤال 12:", "Question 12." are always questions…
-const PREFIXED = /^(?:Q|Question|س|سؤال)\s?(\d{1,4})\s?[).:\-–]?\s*(.*)$/i;
+// "Q12)", "س12)", "سؤال 12:", "Question 12.", and with a separator before the number as bank
+// books print it ("Question: 1", "Question #7", "Q.5)", "Question no. 4", "MCQ 3:"), are always
+// questions…
+const PREFIXED =
+  /^(?:Q|MCQ|Question|س|سؤال)\s?(?:[.:#\-–]\s?|no\.?\s?)?(\d{1,4})\s?[).:\-–]?\s*(.*)$/i;
 // …"12." or "12)" only when the numbering follows on (a numbered list is not a question).
 const BARE = /^(\d{1,4})\s?[.)\-–]\s+(.*)$/;
 

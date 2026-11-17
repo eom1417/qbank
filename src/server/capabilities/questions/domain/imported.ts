@@ -37,7 +37,9 @@ export type ReviewReason =
   /** M34 safety (Q85): the answer rests on one signal only; a second must confirm it. */
   | 'single_signal'
   /** M34 safety (Q85): where a picture belongs is not certain; it is hidden until the reveal. */
-  | 'picture_place_unsure';
+  | 'picture_place_unsure'
+  /** M36 (Q106): text shaped like a question was left unread after it; one may be missing. */
+  | 'unread_question_text';
 
 /** A question's text and answer, as a write sets them (restoring, the AI triage). */
 export interface QuestionContent {

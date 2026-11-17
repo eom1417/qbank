@@ -28,5 +28,8 @@ export const pipelineEn = {
   'review.reason.mark_unclear': 'The marked option could not be read',
   'review.reason.picture_unreadable': 'A picture of the question’s words could not be read',
   'review.reason.single_signal': 'The answer rests on one signal only and needs confirming',
-  'review.reason.picture_place_unsure': 'Where a picture belongs is not certain; it is hidden until the reveal',
+  'review.reason.picture_place_unsure':
+    'Where a picture belongs is not certain; it is hidden until the reveal',
+  'review.reason.unread_question_text':
+    'Text shaped like a question after this one was not read; a question may be missing',
 };

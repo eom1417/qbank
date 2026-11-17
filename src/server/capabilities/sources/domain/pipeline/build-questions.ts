@@ -3,11 +3,15 @@
 import type { AnswerEvidence } from '../answer-decision.js';
 import { isDoubtfulKey } from '../key-lines.js';
 import { unionBox, type Box } from '../page.js';
+import { optionLabel, questionLabel } from '../labels.js';
 import { isSectionLine, type ParsedQuestion } from '../questions.js';
 import { PLACE_UNSURE, type Owned, type QuestionFrame } from './placement.js';
 import type { PipelineEvidence, PipelinePicture, PipelineQuestion, Spot } from './question.js';
 import { combineTags, isTagLine, takeTags, type QuestionTags } from './tags.js';
 import type { VirtualText } from './virtual-text.js';
+
+/** Review reason: text shaped like a question was left unread after this one (M36 Q106). */
+export const UNREAD_QUESTION_TEXT = 'unread_question_text';
 
 /** A question's answer as the rules decided it. */
 interface DecidedAnswer {
@@ -81,6 +85,11 @@ const lineTags = (parts: QuestionParts, index: number): QuestionTags[] =>
  * nothing read comes as one text through placement). Rules, headings and case texts are not.
  */
 function zoneText(parts: QuestionParts, index: number): string | null {
+  const lines = zoneLines(parts, index);
+  return lines.length > 0 ? lines.join(' ') : null;
+}
+
+function zoneLines(parts: QuestionParts, index: number): string[] {
   const from = (parts.frames[index]?.endAt ?? 0) + 1;
   const to = parts.frames[index + 1]?.stemAt ?? parts.text.lines.length;
   const lines: string[] = [];
@@ -88,7 +97,16 @@ function zoneText(parts: QuestionParts, index: number): string | null {
     const line = explanationLine(parts, at);
     if (line !== null) lines.push(line);
   }
-  return lines.length > 0 ? lines.join(' ') : null;
+  return lines;
+}
+
+/**
+ * Text no question read has the shape of a question (M36 Q106): a question number, or two
+ * option lines. A question was missed there; the one before it goes to review.
+ */
+export function hidesQuestionText(lines: readonly string[]): boolean {
+  if (lines.some((line) => questionLabel(line)?.prefixed)) return true;
+  return lines.filter((line) => optionLabel(line) !== null).length >= 2;
 }
 
 /** Line `at` as explanation text, or null (read already, a rule or heading, a case's). */
@@ -134,6 +152,7 @@ function reviewReasons(parts: QuestionParts, index: number, doubt: boolean): str
   const reasons: string[] = [...(doubt ? ['key_doubt'] : []), ...pictureReasons(parts, index)];
   if (question.options.length < 2) reasons.push('incomplete_options');
   if (!decided || decided.answers.length === 0) reasons.push('no_answer');
+  if (hidesQuestionText(zoneLines(parts, index))) reasons.push(UNREAD_QUESTION_TEXT);
   if (decided && decided.conflicts.length > 0) reasons.push('answer_conflict');
   return reasons;
 }
