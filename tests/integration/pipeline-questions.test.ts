@@ -97,6 +97,13 @@ describe('pipeline questions (no AI)', () => {
     expect(`${first.stem} ${first.explanation ?? ''}`).not.toContain('2019');
   });
 
+  it('keeps the typed explanation after the key, without options or tags', () => {
+    const explanation = numbered(1).explanation ?? '';
+    expect(explanation).toContain('settles the made-up cough first');
+    expect(explanation).not.toMatch(/Throat swab|Part II|Correct answer/);
+    expect(result.leftovers).toEqual([]);
+  });
+
   it('keeps explanation pictures and the pen note for after the reveal', () => {
     expect(places(numbered(1))).toEqual(['figure:explanation', 'handwriting_ink:explanation']);
     const note = numbered(1).pictures.find((p) => p.imageClass === 'handwriting_ink');

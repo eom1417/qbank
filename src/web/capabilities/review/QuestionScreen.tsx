@@ -12,6 +12,7 @@ import { FixCard } from './FixCard.js';
 import { HistoryCard } from './HistoryCard.js';
 import { NotesCard } from './NotesCard.js';
 import { PicturesCard } from './PicturesCard.js';
+import { PageReadingCard } from './PageReadingCard.js';
 import { QuestionForm } from './QuestionForm.js';
 import { ReportsCard } from './ReportsCard.js';
 
@@ -44,6 +45,7 @@ function QuestionCards({ question, onChange, extras }: CardsProps) {
       {extras?.(question, onChange)}
       <QuestionForm key={`form-${question.version}`} question={question} onSaved={onChange} />
       <PicturesCard question={question} />
+      <PageReadingCard question={question} onChange={onChange} />
       <FixCard question={question} onApplied={onChange} />
       <ReportsCard questionId={question.id} />
       <NotesCard questionId={question.id} />

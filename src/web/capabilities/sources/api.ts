@@ -1,7 +1,9 @@
 import { z } from 'zod';
 import {
+  ApprovedModelsResponse,
   ImportResponse,
   MediaListResponse,
+  type ModelTier,
   SourceListResponse,
   type RetryImportRequest,
   type SourceLanguage,
@@ -20,6 +22,8 @@ export interface UploadOptions {
   aiMode: AiMode;
   aiApproved: boolean;
   answersFor: string;
+  /** Where the pipeline's lessons start (Q14); light unless strong is chosen. */
+  aiTier: ModelTier;
 }
 
 /** How the AI helps; `pipeline` is the server's reading (M34). */
@@ -53,6 +57,7 @@ export function uploadFile(bankId: string, file: File, options: UploadOptions) {
   if (options.pageFrom) form.append('pageFrom', options.pageFrom);
   if (options.pageTo) form.append('pageTo', options.pageTo);
   if (options.triage) appendTriage(form, options.triage, options.aiMode);
+  if (options.triage && options.aiMode === 'pipeline') form.append('aiTier', options.aiTier);
   if (options.aiApproved) form.append('aiApproved', 'true');
   if (options.sourceType === 'answer_key') form.append('answersFor', options.answersFor);
   form.append('file', file);
@@ -60,6 +65,10 @@ export function uploadFile(bankId: string, file: File, options: UploadOptions) {
 }
 
 export const fetchImport = (id: string) => apiRequest('GET', `/api/imports/${id}`, ImportResponse);
+
+/** The approved light and strong models per provider kind (Q14), for the import form. */
+export const fetchApprovedModels = () =>
+  apiRequest('GET', '/api/ai/approved-models', ApprovedModelsResponse);
 
 /** The sample bank's ten questions into this bank, read by the rules (M28.1). */
 export const importSample = (bankId: string) =>

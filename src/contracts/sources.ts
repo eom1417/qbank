@@ -34,6 +34,10 @@ const ImportStage = z.enum([
 
 const PageNumber = z.coerce.number().int().min(1).max(10_000);
 
+/** Light (faster, cheaper) or strong (most careful): where a pipeline import starts (Q14). */
+export const ModelTier = z.enum(['light', 'strong']);
+export type ModelTier = z.infer<typeof ModelTier>;
+
 /**
  * The form fields sent with each uploaded file (multipart, before the file part). The user must
  * confirm they may use the file (FR-04-007); AI is optional and uses their own connection.
@@ -65,6 +69,8 @@ export const StartImportFields = z
     answersFor: z.uuid().optional(),
     /** The user approved an AI cost estimate above their limits (DEC-18). */
     aiApproved: z.enum(['true', 'false']).default('false'),
+    /** The pipeline's starting tier (Q14): light (faster, cheaper) unless strong is chosen. */
+    aiTier: ModelTier.optional(),
   })
   .strict()
   .refine((value) => !value.pageFrom || !value.pageTo || value.pageFrom <= value.pageTo, {
@@ -170,6 +176,32 @@ const ImportPageReport = z
   })
   .strict();
 
+/** What a pipeline import learnt of its file, for the report (M34 P6, Q44, Q59). */
+export const PipelineReport = z
+  .object({
+    /** The document's family (D0.1); null when it could not be told. */
+    family: z.string().nullable(),
+    /** False: "this document type has not been measured yet" (Q59). */
+    measured: z.boolean(),
+    /** Pages whose content became part of no question. */
+    unknownPages: z.array(z.number().int()),
+    /** Questions waiting in review, by reason. */
+    reviewReasons: z.array(z.object({ reason: z.string(), count: z.number().int() }).strict()),
+  })
+  .strict();
+export type PipelineReport = z.infer<typeof PipelineReport>;
+
+/** The approved models per provider kind and tier, as the import form offers them (Q14). */
+export const ApprovedModelsResponse = z
+  .object({
+    kinds: z.record(
+      z.string(),
+      z.object({ light: z.array(z.string()), strong: z.array(z.string()) }).strict(),
+    ),
+  })
+  .strict();
+export type ApprovedModelsResponse = z.infer<typeof ApprovedModelsResponse>;
+
 /** What one AI lesson of a pipeline import cost, summed over its calls (M34). */
 export const LessonUsage = z
   .object({
@@ -214,6 +246,10 @@ export const ImportResponse = z
         usage: z.array(LessonUsage),
         /** A full subscription paused the import; it goes on by itself at this time (Q16). */
         resumesAt: z.iso.datetime().nullable(),
+        /** The tier a pipeline import started with (Q14); null for the other modes. */
+        tier: ModelTier.nullable(),
+        /** A pipeline import's family, unknown pages and review reasons; null otherwise. */
+        pipeline: PipelineReport.nullable(),
       })
       .strict()
       .nullable(),

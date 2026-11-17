@@ -5,13 +5,18 @@ import {
   withEvidence,
   type EvidenceDeps,
 } from '../../../src/server/capabilities/sources/use-cases/pipeline-evidence.js';
-import type { QuestionCrop } from '../../../src/server/capabilities/sources/adapters/question-crops.js';
+import {
+  blank,
+  maskedBoxes,
+  type QuestionCrop,
+} from '../../../src/server/capabilities/sources/adapters/question-crops.js';
 import {
   crop,
   LIGHT,
   lessonWorld,
   pipelineQuestion,
   recorded,
+  STRONG,
 } from '../../support/lesson-world.js';
 
 // M34 P4b: the evidence step on RECORDED replies: who is asked, the audit, the pause.
@@ -57,7 +62,7 @@ describe('the answer-evidence step (M34 P4b)', () => {
         { n: 3, letter: 'B', eliminated: [] },
       ],
     };
-    const world = lessonWorld({ [LIGHT]: [recorded(reply)] });
+    const world = lessonWorld({ [LIGHT]: [recorded(reply)], [STRONG]: [recorded(reply)] });
     const questions = [q(1), q(2), q(3, 'ABCD', 'D')];
     const run = await withEvidence(depsOf(world), 'synthetic.pdf', questions);
     expect(run.asked).toEqual(['1-1-0', '1-2-0', '1-3-0']);
@@ -69,7 +74,8 @@ describe('the answer-evidence step (M34 P4b)', () => {
       key: '1-1-0',
       verdict: { mark: { letter: 'C', eliminated: [] } },
     });
-    expect(run.usage).toHaveLength(1);
+    // The audit's contradiction re-asks the sheet with the strong model, which confirms it.
+    expect(run.usage).toHaveLength(2);
     expect(run.paused).toBe(false);
   });
 
@@ -95,9 +101,66 @@ describe('the answer-evidence step when the lesson does not finish (M34 P4b)', (
 
   it('marks a question for review when no model passed its check', async () => {
     const off = recorded({ items: [{ n: 1, letter: 'Q', eliminated: [] }] });
-    const world = lessonWorld({ [LIGHT]: [off, off], 'claude-opus-5-5': [off] });
+    const world = lessonWorld({ [LIGHT]: [off, off], [STRONG]: [off] });
     const run = await withEvidence(depsOf(world), 'synthetic.pdf', [q(1)]);
     expect(run.marks[0]?.verdict).toBe('review');
     expect(run.questions[0]?.reviewReasons).toEqual(['no_answer', 'mark_unclear']);
+  });
+});
+
+describe('re-asking a sheet the light model may have misread (M34 P4b)', () => {
+  it('asks the whole sheet again with the strong model when a mark contradicts the ink', async () => {
+    const inked = { ...q(2), answers: ['A'], evidence: ['pen_mark' as const] };
+    const shifted = recorded({
+      items: [
+        { n: 1, letter: 'A', eliminated: [] },
+        { n: 2, letter: 'B', eliminated: [] },
+      ],
+    });
+    const right = recorded({
+      items: [
+        { n: 1, letter: 'C', eliminated: [] },
+        { n: 2, letter: 'A', eliminated: [] },
+      ],
+    });
+    const world = lessonWorld({ [LIGHT]: [shifted], [STRONG]: [right] });
+    const run = await withEvidence(depsOf(world), 'synthetic.pdf', [q(1), inked]);
+    expect(world.calls.map((call) => call.model)).toEqual([LIGHT, STRONG]);
+    expect(run.questions.map((x) => x.answers)).toEqual([['C'], ['A']]);
+    expect(run.questions[1]?.conflicts).toEqual([]);
+    expect(run.usage).toHaveLength(2);
+  });
+});
+
+describe('blanking printed pictures in a crop (M34 P4b)', () => {
+  const spot = (x0: number, y0: number, x1: number, y1: number) => ({
+    page: 1,
+    box: { x0, y0, x1, y1 },
+  });
+  const lettered = pipelineQuestion('AB', {
+    options: [
+      { letter: 'A', label: 'A', text: 'one', spot: spot(40, 100, 50, 110) },
+      { letter: 'B', label: 'B', text: 'two', spot: spot(40, 120, 50, 130) },
+    ],
+  });
+  const beside = spot(300, 90, 500, 200);
+  const overLetters = spot(30, 95, 200, 125);
+
+  it('blanks a picture beside the options but never one over a letter', () => {
+    expect(maskedBoxes(lettered, 1, [beside, overLetters, { ...beside, page: 2 }])).toEqual([
+      beside.box,
+    ]);
+  });
+
+  it('blanks nothing when the letters are unknown or the question is a picture', () => {
+    expect(maskedBoxes(pipelineQuestion('AB'), 1, [beside])).toEqual([]);
+    expect(maskedBoxes({ ...lettered, fromPicture: true }, 1, [beside])).toEqual([]);
+  });
+
+  it('paints the box white in the rendered region', () => {
+    const image = { width: 4, height: 2, data: Buffer.alloc(24, 0) };
+    blank(image, { x0: 72, y0: 0, x1: 144, y1: 72 }, { x0: 0, y0: 0, x1: 288, y1: 144 }, 1);
+    expect([...image.data.subarray(0, 12)]).toEqual([0, 0, 0, 255, 255, 255, 0, 0, 0, 0, 0, 0]);
+    expect([...image.data.subarray(12, 24)].every((value) => value === 0)).toBe(true);
   });
 });

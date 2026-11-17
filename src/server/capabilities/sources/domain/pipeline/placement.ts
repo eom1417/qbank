@@ -153,11 +153,16 @@ export interface PlaceInput {
 const spotOf = (unit: Unit): Spot => ({ page: unit.page, box: unit.box });
 const isTextual = (unit: Unit) => unit.imageClass === 'text_picture' || unit.imageClass === 'table';
 
-const pictureText = (text: VirtualText, unit: Unit) =>
-  text.lines
-    .filter((line) => line.unitId === unit.id)
-    .map((line) => line.line.text)
-    .join(' ') || (unit.text ?? '').replace(/\s+/g, ' ').trim();
+/** A picture's words as OCR read them, column by column (verbatim, Z2). */
+const pictureText = (unit: Unit) => (unit.text ?? '').replace(/\s+/g, ' ').trim();
+
+/** An unsure picture OCR reads well and at length: its words join the explanation too. */
+const MANY_WORDS = 30;
+const GOOD_CONFIDENCE = 80;
+const wordy = (unit: Unit) =>
+  unit.imageClass === 'unsure' &&
+  (unit.ocr?.words ?? 0) >= MANY_WORDS &&
+  (unit.ocr?.confidence ?? 0) >= GOOD_CONFIDENCE;
 
 /** No other image shares its rows: a single picture, not one panel of several. */
 const alone = (text: VirtualText, unit: Unit) =>
@@ -178,10 +183,11 @@ function placeInCase(input: PlaceInput, result: Owned[], unit: Unit, at: number)
 }
 
 /** Puts a placed picture in its question: explanation text, a picture, or nothing (a mark). */
-function keep(slot: Owned, input: PlaceInput, unit: Unit, placed: Placed) {
-  if (placed.placement === 'explanation' && isTextual(unit))
-    slot.texts.push(pictureText(input.text, unit));
-  else if (unit.imageClass !== 'handwriting' || placed.placement === 'explanation')
+function keep(slot: Owned, unit: Unit, placed: Placed) {
+  const explanation = placed.placement === 'explanation';
+  // Until the vision lesson decides an unsure picture, its words and the picture both stay.
+  if (explanation && (isTextual(unit) || wordy(unit))) slot.texts.push(pictureText(unit));
+  if (explanation ? !isTextual(unit) : unit.imageClass !== 'handwriting')
     slot.pictures.push(picture(unit, placed));
 }
 
@@ -203,7 +209,7 @@ function placeOne(input: PlaceInput, result: Owned[], unit: Unit, firstAfter: Se
   const beside = besideQuestion(frame, unit);
   const first = firstFigure(firstAfter, owner, unit, at > frame.endAt || beside);
   const spot = { at, beside, firstAfter: first && alone(input.text, unit) };
-  keep(slot, input, unit, placeIn(frame, unit, spot));
+  keep(slot, unit, placeIn(frame, unit, spot));
 }
 
 const picture = (unit: Unit, placed: Placed): PipelinePicture => ({

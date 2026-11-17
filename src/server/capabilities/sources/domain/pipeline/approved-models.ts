@@ -15,6 +15,7 @@ const UNMEASURED: TierModels = { light: [], strong: [] };
 const APPROVED: Readonly<Record<string, LessonModels>> = {
   'D1.2': { claude: CLAUDE, codex: UNMEASURED },
   'D4.mark': { claude: CLAUDE, codex: UNMEASURED },
+  'D6.1': { claude: CLAUDE, codex: UNMEASURED },
 };
 
 /** The approved models of a lesson for a provider kind (empty for an unknown lesson). */

@@ -1,7 +1,7 @@
 // M34 P4b: each question's area (stem to last option) as one picture for a vision lesson. Spots
 // on several pages are stacked top to bottom; every spot is rendered alone with poppler.
 import { createHash } from 'node:crypto';
-import type { Box } from '../domain/page.js';
+import { overlaps, type Box } from '../domain/page.js';
 import type { PipelineQuestion, Spot } from '../domain/pipeline/question.js';
 import type { RgbImage } from '../domain/pipeline/rgb-image.js';
 import { renderRegion } from './region-image.js';
@@ -60,17 +60,50 @@ export function cropFingerprint(image: RgbImage): string {
   return hash.update(image.data).digest('hex');
 }
 
+type Croppable = Pick<PipelineQuestion, 'key' | 'area' | 'options' | 'fromPicture'>;
+
+/**
+ * Printed pictures beside the options (films, screenshots, pasted pages) are blanked: they carry
+ * circles and letters of their own that are not this question's marks. A picture touching an
+ * option letter stays, and so does everything when the letters' spots are unknown or the
+ * question was itself read from a picture.
+ */
+export function maskedBoxes(question: Croppable, page: number, pictures: readonly Spot[]): Box[] {
+  const letters = question.options.map((option) => option.spot);
+  if (question.fromPicture || letters.some((spot) => spot === null)) return [];
+  const near = letters.flatMap((spot) => (spot?.page === page ? [padded(spot.box)] : []));
+  return pictures
+    .filter((picture) => picture.page === page)
+    .map((picture) => picture.box)
+    .filter((box) => !near.some((letter) => overlaps(letter, box)));
+}
+
+/** Paints `box` (page points) white on a region rendered from `origin` at `dpi`. */
+export function blank(image: RgbImage, box: Box, origin: Box, dpi: number): void {
+  const px = (points: number, size: number) =>
+    Math.max(0, Math.min(size, Math.round((points * dpi) / 72)));
+  const x0 = px(box.x0 - origin.x0, image.width);
+  const x1 = px(box.x1 - origin.x0, image.width);
+  for (let y = px(box.y0 - origin.y0, image.height); y < px(box.y1 - origin.y0, image.height); y++)
+    image.data.fill(WHITE, (y * image.width + x0) * 3, (y * image.width + x1) * 3);
+}
+
 /** One question's crop, or null when it has no area. */
 export async function cropQuestion(
   file: string,
-  question: Pick<PipelineQuestion, 'key' | 'area'>,
+  question: Croppable,
+  pictures: readonly Spot[] = [],
   render = renderRegion,
 ): Promise<QuestionCrop | null> {
   if (question.area.length === 0) return null;
   const dpi = cropDpi(question.area);
   const parts: RgbImage[] = [];
-  for (const spot of question.area)
-    parts.push(await render(file, spot.page, padded(spot.box), dpi));
+  for (const spot of question.area) {
+    const origin = padded(spot.box);
+    const part = await render(file, spot.page, origin, dpi);
+    for (const box of maskedBoxes(question, spot.page, pictures)) blank(part, box, origin, dpi);
+    parts.push(part);
+  }
   const image = parts.length === 1 && parts[0] ? parts[0] : stackImages(parts);
   return { key: question.key, image, fingerprint: cropFingerprint(image) };
 }
@@ -78,12 +111,13 @@ export async function cropQuestion(
 /** The crops of these questions, in order; a question without an area is left out. */
 export async function cropQuestions(
   file: string,
-  questions: readonly Pick<PipelineQuestion, 'key' | 'area'>[],
+  questions: readonly Croppable[],
+  pictures: readonly Spot[] = [],
   render = renderRegion,
 ): Promise<QuestionCrop[]> {
   const crops: QuestionCrop[] = [];
   for (const question of questions) {
-    const crop = await cropQuestion(file, question, render);
+    const crop = await cropQuestion(file, question, pictures, render);
     if (crop) crops.push(crop);
   }
   return crops;

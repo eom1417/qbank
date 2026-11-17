@@ -1,6 +1,7 @@
 import type { ImportResponse } from '../../../contracts/sources.js';
 import { Alert, MutedText, Title } from '../../design-system/index.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
+import { PipelineFacts } from './PipelineFacts.js';
 
 /** A pipeline import paused by a full subscription: when it goes on by itself (Q16). */
 export function PausedNote({ job }: { job: ImportResponse }) {
@@ -34,6 +35,7 @@ export function PipelineUse({ job }: { job: ImportResponse }) {
       <MutedText>
         {t('import.usage.review')}: {job.questionsReview}
       </MutedText>
+      <PipelineFacts job={job} />
     </>
   );
 }

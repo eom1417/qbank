@@ -79,6 +79,9 @@ const aiColumns = (deps: SourcesDeps, aiProviderId: string | null, fields: Start
   ai_mode: aiProviderId ? aiModeOf(deps, fields) : ('verify' as const),
   ai_enhance: aiProviderId ? JSON.stringify(enhancementsOf(fields.aiEnhance)) : null,
   ai_roles: aiProviderId ? JSON.stringify(roleModels(fields)) : null,
+  // The pipeline's starting tier (Q14): light unless the owner chose strong.
+  ai_tier:
+    aiProviderId && aiModeOf(deps, fields) === 'pipeline' ? (fields.aiTier ?? 'light') : null,
 });
 
 /** Every role's model must be one the instance offers now (an unknown one fails early). */

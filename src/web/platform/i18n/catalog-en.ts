@@ -17,6 +17,7 @@ import { channelsEn } from './catalog-channels-en.js';
 import { takeEn } from './catalog-take-en.js';
 import { operatorEn } from './catalog-operator-en.js';
 import { pipelineEn } from './catalog-pipeline-en.js';
+import { pageReadingEn } from './catalog-page-reading-en.js';
 
 /** English UI strings. catalog-ar.ts must define exactly the same keys (enforced by its type). */
 export const en = {
@@ -26,6 +27,7 @@ export const en = {
   ...takeEn,
   ...operatorEn,
   ...pipelineEn,
+  ...pageReadingEn,
   ...localEn,
   ...reviewEn,
   ...duplicatesEn,

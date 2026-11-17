@@ -3,7 +3,7 @@
  *
  *   node --import tsx src/server/tools/extraction-bench/evidence-bench.ts \
  *     --files cardiology,dermatology [--variant light|strong] [--max-calls 600] [--audit 10] \
- *     [--source rules|pipeline]
+ *     [--source rules|pipeline] [--units <dir of <slug>.units.json>]
  *
  * `--source rules` (default) reads questions with the rules reader (text layer), each question's
  * area the union of its line spans per page; `--source pipeline` uses P4a's `pipelineQuestions`
@@ -31,8 +31,15 @@ import {
   withEvidence,
   type EvidenceRun,
 } from '../../capabilities/sources/use-cases/pipeline-evidence.js';
-import { pipelineQuestions } from '../../capabilities/sources/use-cases/pipeline-questions.js';
+import type { FileUnits } from '../../capabilities/sources/adapters/pipeline-units.js';
+import {
+  defaultReaders,
+  pipelineQuestions,
+  type PipelineReaders,
+} from '../../capabilities/sources/use-cases/pipeline-questions.js';
+import { withStructure } from '../../capabilities/sources/use-cases/pipeline-structure.js';
 import { extractQuestions } from '../../capabilities/sources/use-cases/read-source.js';
+import type { LessonDeps } from '../../capabilities/sources/use-cases/run-lesson.js';
 import { ClaudeCliProvider } from '../vision-cost/claude-cli-provider.js';
 import { argValue } from '../vision-cost/shell.js';
 import { TruthFile, type TruthQuestion } from './truth.js';
@@ -122,6 +129,7 @@ interface BenchContext {
   strong: boolean;
   auditEvery: number;
   source: 'rules' | 'pipeline';
+  unitsDir: string | null;
 }
 
 type Outcome = 'correct' | 'wrong' | 'undecided';
@@ -159,13 +167,17 @@ function matchTruth(truth: readonly TruthQuestion[], q: PipelineQuestion, used: 
   );
   const distance = (t: TruthQuestion) => Math.abs((t.pages[0] ?? 0) - q.page);
   const best = candidates.sort((a, b) => distance(a) - distance(b))[0];
-  if (best && distance(best) <= 1) used.add(best.ordinal);
-  return best && distance(best) <= 1 ? best : null;
+  if (!best || distance(best) > 1) return null;
+  used.add(best.ordinal);
+  return best;
 }
 
 interface FileRun {
   slug: string;
   questions: number;
+  /** Questions read (after D6.1 when it ran), and what D6.1 did with the leftover pictures. */
+  read: number;
+  structure: { leftovers: number; found: number; review: number } | null;
   seconds: number;
   calls: number;
   inputTokens: number;
@@ -212,40 +224,88 @@ function rowsOf(
   });
 }
 
+function lessonDeps(context: BenchContext): LessonDeps {
+  const { steps } = context;
+  return {
+    ownerId: 'evidence-bench',
+    providerKind: 'claude',
+    providerFor: (model) => budgeted(context.budget, context.strong ? STRONG : model),
+    cache: {
+      get: (_owner, key) => Promise.resolve<CachedStep | null>(steps[key] ?? null),
+      put: (step) => Promise.resolve(void (steps[step.key] = step)),
+    },
+    now: () => new Date(),
+  };
+}
+
+/** Units saved by an earlier run (`<dir>/<slug>.units.json`), read only; else read afresh. */
+function unitsFrom(dir: string | null, slug: string): PipelineReaders {
+  const path = dir === null ? null : join(dir, `${slug}.units.json`);
+  if (path === null || !existsSync(path)) return defaultReaders;
+  const units = JSON.parse(readFileSync(path, 'utf8')) as FileUnits;
+  return { ...defaultReaders, units: () => Promise.resolve(units) };
+}
+
+/** Image units that are printed (not handwriting): blanked in the vision crops. */
+const printedPictures = (units: FileUnits): Spot[] =>
+  units.pages.flatMap((page) =>
+    page.units
+      .filter((unit) => unit.kind === 'image' && unit.imageClass !== 'handwriting')
+      .map((unit) => ({ page: unit.page, box: unit.box })),
+  );
+
+/** The questions to score: the rules reader's, or P4a's plus D6.1 over its leftover pictures. */
+async function readQuestions(file: string, slug: string, context: BenchContext) {
+  if (context.source === 'rules')
+    return {
+      questions: asPipelineQuestions(await extractQuestions(file, 'text')),
+      structure: null,
+      pictures: [],
+    };
+  const read = await pipelineQuestions(file, unitsFrom(context.unitsDir, slug));
+  const { leftovers } = read;
+  const structure = await withStructure(lessonDeps(context), read.questions, leftovers, {
+    concurrency: 3,
+  });
+  const summary = {
+    leftovers: leftovers.length,
+    found: structure.found.length,
+    review: structure.review.length,
+  };
+  return {
+    questions: structure.questions,
+    structure: { ...summary, usage: structure.usage },
+    pictures: printedPictures(read.units),
+  };
+}
+
 async function benchFile(slug: string, context: BenchContext): Promise<FileRun> {
   const truth = TruthFile.parse(
     JSON.parse(readFileSync(join(DATA, 'truth', `${slug}.truth.json`), 'utf8')),
   );
   const file = join(DATA, 'corpus', truth.file);
   const started = Date.now();
-  const rules =
-    context.source === 'pipeline'
-      ? (await pipelineQuestions(file)).questions
-      : asPipelineQuestions(await extractQuestions(file, 'text'));
   const callsBefore = context.budget.calls;
-  const { steps } = context;
-  const run = await withEvidence(
-    {
-      ownerId: 'evidence-bench',
-      providerKind: 'claude',
-      providerFor: (model) => budgeted(context.budget, context.strong ? STRONG : model),
-      cache: {
-        get: (_owner, key) => Promise.resolve<CachedStep | null>(steps[key] ?? null),
-        put: (step) => Promise.resolve(void (steps[step.key] = step)),
-      },
-      now: () => new Date(),
-    },
-    file,
-    rules,
-    { concurrency: 3, auditEvery: context.auditEvery },
-  );
+  const { questions: rules, structure, pictures } = await readQuestions(file, slug, context);
+  const run = await withEvidence(lessonDeps(context), file, rules, {
+    concurrency: 3,
+    auditEvery: context.auditEvery,
+    printedPictures: pictures,
+  });
+  const usage = [...run.usage, ...(structure?.usage ?? [])];
   return {
     slug,
     questions: truth.questions.length,
+    read: rules.length,
+    structure: structure && {
+      leftovers: structure.leftovers,
+      found: structure.found,
+      review: structure.review,
+    },
     seconds: (Date.now() - started) / 1000,
     calls: context.budget.calls - callsBefore,
-    inputTokens: run.usage.reduce((sum, u) => sum + u.inputTokens, 0),
-    outputTokens: run.usage.reduce((sum, u) => sum + u.outputTokens, 0),
+    inputTokens: usage.reduce((sum, u) => sum + u.inputTokens, 0),
+    outputTokens: usage.reduce((sum, u) => sum + u.outputTokens, 0),
     asked: run.asked.length,
     audited: run.audited.length,
     paused: run.paused,
@@ -264,26 +324,25 @@ function visionScore(rows: readonly Row[]) {
   const shown = rows.filter((row) => row.asked && row.decided);
   const lettered = shown.filter((row) => row.vision !== null && /^[A-Z]+$/.test(row.vision));
   const right = lettered.filter((row) => row.vision === row.truthAnswer).length;
-  return {
-    shown: shown.length,
-    decided: lettered.length,
-    right,
-    accuracy: lettered.length ? right / lettered.length : null,
-  };
+  const accuracy = lettered.length ? right / lettered.length : null;
+  return { shown: shown.length, decided: lettered.length, right, accuracy };
 }
+
+const structureCell = ({ structure: s }: FileRun) =>
+  s ? `${s.leftovers}/${s.found}/${s.review}` : '-';
 
 function report(runs: readonly FileRun[], variant: string, budget: Budget): string {
   const lines = [
     `# Evidence bench (${variant})`,
     '',
-    '| file | Q | matched | correct | wrong | undecided | invented | rules: c/w/u | asked (audit) | calls | tokens in/out | s |',
-    '|---|---|---|---|---|---|---|---|---|---|---|---|',
+    '| file | Q | read | D6.1 left/found/review | matched | correct | wrong | undecided | invented | rules: c/w/u | asked (audit) | calls | tokens in/out | s |',
+    '|---|---|---|---|---|---|---|---|---|---|---|---|---|---|',
   ];
   for (const run of runs) {
     const o = tally(run.rows, (row) => row.outcome);
     const r = tally(run.rows, (row) => row.rulesOutcome);
     lines.push(
-      `| ${run.slug} | ${run.questions} | ${run.rows.length} | ${o['correct'] ?? 0} | ${o['wrong'] ?? 0} | ${o['undecided'] ?? 0} | ${o['invented'] ?? 0} | ${r['correct'] ?? 0}/${r['wrong'] ?? 0}/${r['undecided'] ?? 0} | ${run.asked} (${run.audited}) | ${run.calls} | ${run.inputTokens}/${run.outputTokens} | ${run.seconds.toFixed(0)} |`,
+      `| ${run.slug} | ${run.questions} | ${run.read} | ${structureCell(run)} | ${run.rows.length} | ${o['correct'] ?? 0} | ${o['wrong'] ?? 0} | ${o['undecided'] ?? 0} | ${o['invented'] ?? 0} | ${r['correct'] ?? 0}/${r['wrong'] ?? 0}/${r['undecided'] ?? 0} | ${run.asked} (${run.audited}) | ${run.calls} | ${run.inputTokens}/${run.outputTokens} | ${run.seconds.toFixed(0)} |`,
     );
   }
   const all = runs.flatMap((run) => run.rows);
@@ -322,6 +381,7 @@ async function main(argv: readonly string[]): Promise<void> {
     steps: readJson<Record<string, NewStep>>(stepsPath, {}),
     strong: variant === 'strong',
     source: argValue(argv, 'source', 'rules') === 'pipeline' ? 'pipeline' : 'rules',
+    unitsDir: argValue(argv, 'units', '') || null,
     auditEvery: Number(argValue(argv, 'audit', '10')),
   };
   const runs: FileRun[] = [];

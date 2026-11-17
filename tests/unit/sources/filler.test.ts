@@ -52,13 +52,15 @@ describe('decor and page-sized filler (M34 D1.3)', () => {
       columns: [],
       ...over,
     });
-    const typed = { scanned: false, wordsOver: false };
-    expect(pageSizedFiller(stats({}), { scanned: true, wordsOver: false })).toBe('scan_page');
+    const typed = { scanned: false, wordsOver: false, wholePage: true };
+    expect(pageSizedFiller(stats({}), { ...typed, scanned: true })).toBe('scan_page');
     expect(pageSizedFiller(stats({ rows: [0.02, 0.98], columns: [0.03, 0.97] }), typed)).toBe(
       'frame',
     );
     expect(pageSizedFiller(stats({ darkShare: 0.001 }), typed)).toBe('watermark');
-    expect(pageSizedFiller(stats({}), { scanned: false, wordsOver: true })).toBe('scan_page');
+    expect(pageSizedFiller(stats({}), { ...typed, wordsOver: true })).toBe('scan_page');
+    const framedShot = stats({ rows: [0.02, 0.98], columns: [0.03, 0.97] });
+    expect(pageSizedFiller(framedShot, { ...typed, wholePage: false })).toBeNull();
     expect(pageSizedFiller(stats({}), typed)).toBeNull();
   });
 });

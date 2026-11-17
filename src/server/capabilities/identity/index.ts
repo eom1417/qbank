@@ -16,6 +16,7 @@ import {
   type RequireActor,
 } from './http/require-actor.js';
 import { registerIdentityRoutes } from './http/routes.js';
+import { isOperator } from './domain/operator.js';
 import { createPairingCode, savePairingToken } from './adapters/pairing-token.js';
 import {
   listResetRequests,
@@ -47,6 +48,8 @@ export interface IdentityModule extends OperatorDirectory {
   deleteAccount(accountId: string): Promise<boolean>;
   /** When the account agreed to send files to its AI provider (M34, Q8); null until then. */
   aiConsentOf(accountId: string): Promise<Date | null>;
+  /** The declared, proven operator's account id (DEC-40); null when there is none (M34 P6). */
+  operatorId(): Promise<string | null>;
   register(app: FastifyInstance): void;
 }
 
@@ -94,6 +97,11 @@ export function createIdentity(settings: IdentitySettings): IdentityModule {
     aiConsentOf: async (accountId) =>
       (await deps.accounts.findById(accountId))?.aiConsentAt ?? null,
     contactsOf: (ids) => deps.accounts.contactsOf(ids),
+    operatorId: async () => {
+      if (!deps.operator.email) return null;
+      const account = await deps.accounts.findByEmail(deps.operator.email);
+      return account && isOperator(account, deps.operator) ? account.id : null;
+    },
     // A Google server has no passwords, so nobody waits for a reset link (M32, DEC-42).
     resetRequests: async () => (settings.google ? [] : listResetRequests(deps)),
     resetLink: async (accountId) => {

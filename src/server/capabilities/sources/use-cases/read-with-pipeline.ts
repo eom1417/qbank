@@ -5,6 +5,10 @@ import { z } from 'zod';
 import { LessonUsage as UsageRow } from '../../../../contracts/sources.js';
 import type { AiFailure, AiProvider, ImportAi } from '../../providers/index.js';
 import type { ImportExtras, ImportedQuestion } from '../../questions/index.js';
+import type { FileUnits } from '../adapters/pipeline-units.js';
+import type { StoredBlock } from '../adapters/import-blocks.js';
+import type { DocumentFamily } from '../domain/pipeline/family.js';
+import { assignRoles } from '../domain/pipeline/roles.js';
 import { approvedModels, type ProviderKind } from '../domain/pipeline/approved-models.js';
 import { markLesson } from '../domain/pipeline/lessons/mark.js';
 import { PROMPT_VERSION } from '../domain/pipeline/prompt-standard.js';
@@ -16,11 +20,16 @@ import type { ExtractedQuestion } from './extract-questions.js';
 import type { KeptLink, MediaPlace } from './keep-media.js';
 import { withEvidence, type EvidenceDeps, type EvidenceOptions } from './pipeline-evidence.js';
 import { pipelineQuestions } from './pipeline-questions.js';
+import { withStructure } from './pipeline-structure.js';
+import type { Leftover } from '../domain/pipeline/leftover.js';
+import type { Spot } from '../domain/pipeline/question.js';
 import type { LessonDeps, LessonUsage } from './run-lesson.js';
 
 export interface PipelineDeps extends EvidenceDeps {
   /** The file's questions with their pictures placed; the real reader unless a test passes one. */
-  readQuestions?: (file: string) => Promise<{ questions: PipelineQuestion[] }>;
+  readQuestions?: (
+    file: string,
+  ) => Promise<{ questions: PipelineQuestion[]; units?: FileUnits; leftovers?: Leftover[] }>;
 }
 
 export interface PipelineInput {
@@ -44,6 +53,10 @@ export interface PipelineReading {
   extras: ImportExtras;
   usage: LessonUsage[];
   stopped: PipelineStop | null;
+  /** Every unit of the range with what it became, kept for the review editor (Q26). */
+  blocks: StoredBlock[];
+  /** The document's family (D0.1), or null when the reader gave no units. */
+  family: DocumentFamily | null;
 }
 
 /** What a pipeline job ran with: the prompt standard and its lesson's version. */
@@ -86,7 +99,7 @@ const unavailable: AiProvider = {
 export async function openLessons(
   ai: ImportAi,
   owner: { ownerId: string; instanceId: string; model: string | null },
-  rest: Pick<LessonDeps, 'cache' | 'now'>,
+  rest: Pick<LessonDeps, 'cache' | 'now' | 'startTier' | 'approved'>,
 ): Promise<LessonDeps | null> {
   const { ownerId, instanceId, model } = owner;
   if (!(await ai.openOwned(ownerId, { instanceId, ...(model ? { model } : {}) }))) return null;
@@ -178,8 +191,94 @@ function extrasOf(questions: readonly PipelineQuestion[]): ImportExtras {
   return { cases: [...cases].map(([text, members]) => ({ text, questions: members })), tags };
 }
 
-const inRange = (input: PipelineInput) => (question: PipelineQuestion) =>
-  question.page >= input.pages.from && question.page <= input.pages.to;
+const inRange =
+  (input: PipelineInput) =>
+  (item: { page: number }): boolean =>
+    item.page >= input.pages.from && item.page <= input.pages.to;
+
+/** The range's units with the role each took in the final questions (their list's order). */
+function blocksOf(
+  units: FileUnits | undefined,
+  kept: readonly PipelineQuestion[],
+  input: PipelineInput,
+): StoredBlock[] {
+  const ranged = (units?.pages ?? []).flatMap((page) => page.units).filter(inRange(input));
+  return assignRoles(ranged, kept).map(({ unit, role, question }) => ({
+    unitId: unit.id,
+    page: unit.page,
+    order: unit.order,
+    box: unit.box,
+    kind: unit.kind,
+    imageClass: unit.imageClass,
+    role,
+    text: unit.text,
+    question,
+  }));
+}
+
+/** The file's printed pictures (image units that are not handwriting): blanked in the crops. */
+const printedPictures = (units: FileUnits | undefined): Spot[] =>
+  (units?.pages ?? []).flatMap((page) =>
+    page.units.flatMap((unit) =>
+      unit.kind === 'image' && unit.imageClass !== 'handwriting'
+        ? [{ page: unit.page, box: unit.box }]
+        : [],
+    ),
+  );
+
+/** Hand-corrected notes: every keyed question is audited against the hand mark (a 10% sample else). */
+const auditFor = (family: string | null, options: EvidenceOptions): EvidenceOptions =>
+  family === 'annotated_notes' ? { ...options, auditEvery: 1 } : options;
+
+/**
+ * A leftover picture the structure lesson could not settle sends the question before it to review
+ * as `picture_unreadable` (a picture of words that could not be read as a question).
+ */
+const UNCLEAR = 'picture_unreadable';
+
+function flagUnclear(
+  questions: readonly PipelineQuestion[],
+  leftovers: readonly Leftover[],
+  unclear: readonly string[],
+): PipelineQuestion[] {
+  const before = new Set(
+    leftovers.filter((picture) => unclear.includes(picture.unitId)).map((p) => p.before),
+  );
+  return questions.map((question) =>
+    before.has(question.key) && !question.reviewReasons.includes(UNCLEAR)
+      ? { ...question, reviewReasons: [...question.reviewReasons, UNCLEAR] }
+      : question,
+  );
+}
+
+type FileRead = Awaited<ReturnType<NonNullable<PipelineDeps['readQuestions']>>>;
+
+/**
+ * The lessons over the range's questions: D6.1 builds questions from leftover pictures, then
+ * the answer evidence (D4.mark) with its audit. The first that stops ends the run.
+ */
+async function runLessons(
+  deps: PipelineDeps,
+  input: PipelineInput,
+  read: FileRead,
+  options: EvidenceOptions,
+) {
+  const leftovers = (read.leftovers ?? []).filter(inRange(input));
+  const structure = await withStructure(
+    deps,
+    read.questions.filter(inRange(input)),
+    leftovers,
+    options,
+  );
+  if (structure.failure) return { ...structure, questions: [] };
+  const questions = flagUnclear(structure.questions, leftovers, structure.review);
+  const family = read.units?.family.family ?? null;
+  const run = await withEvidence(deps, input.file, questions, {
+    ...auditFor(family, options),
+    printedPictures: printedPictures(read.units),
+  });
+  return { ...run, usage: [...structure.usage, ...run.usage] };
+}
 
 /**
  * Reads the file with the pipeline. When the AI stops (a full subscription, a refused key),
@@ -192,12 +291,17 @@ export async function readWithPipeline(
   options: EvidenceOptions = {},
 ): Promise<PipelineReading> {
   const read = await (deps.readQuestions ?? pipelineQuestions)(input.file);
-  const run = await withEvidence(deps, input.file, read.questions.filter(inRange(input)), options);
+  const run = await runLessons(deps, input, read, options);
   const stopped = run.failure ? { failure: run.failure, resumeAfter: run.resumeAfter } : null;
-  if (stopped)
-    return { questions: [], media: [], extras: { cases: [], tags: [] }, usage: run.usage, stopped };
+  const family = read.units?.family.family ?? null;
+  if (stopped) {
+    const extras = { cases: [], tags: [] };
+    return { questions: [], media: [], extras, usage: run.usage, stopped, blocks: [], family };
+  }
   const kept = run.questions.map(filterValue);
   return {
+    blocks: blocksOf(read.units, kept, input),
+    family,
     questions: importedQuestions(kept, input.readings),
     media: mediaOf(kept),
     extras: extrasOf(kept),

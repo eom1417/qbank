@@ -32,13 +32,52 @@ const RULE_SIGNALS = new Set<PipelineEvidence>([
   'explanation_text',
 ]);
 
+/** An option text shorter than this ("Yes", "IV") is too common to count as named. */
+const MIN_NAMED_LENGTH = 4;
+/**
+ * The option must open the explanation ("Ans: Option text …"): measured on the truth files,
+ * options named deeper in it were distractors being discussed as often as the answer.
+ */
+const MAX_LEAD_WORDS = 3;
+
+const normalized = (text: string) =>
+  ` ${text
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()} `;
+
+const wordsBefore = (text: string, at: number) =>
+  text.slice(0, at).split(' ').filter(Boolean).length;
+
+/**
+ * The option whose full text opens the file's own explanation, when exactly one does (D4.6);
+ * null when none or several do, or the options are too short to tell.
+ */
+export function optionNamedByExplanation(question: PipelineQuestion): string | null {
+  if (!question.explanation || question.options.length < 2) return null;
+  const explanation = normalized(question.explanation);
+  const matches = question.options.filter((option) => {
+    const text = normalized(option.text);
+    const at = explanation.indexOf(text);
+    return (
+      text.trim().length >= MIN_NAMED_LENGTH &&
+      at >= 0 &&
+      wordsBefore(explanation, at) <= MAX_LEAD_WORDS
+    );
+  });
+  return matches.length === 1 ? (matches[0]?.letter ?? null) : null;
+}
+
 function positivesOf(question: PipelineQuestion, vision: VisionVerdict): Positive[] {
   const positives: Positive[] = question.evidence
     .filter((kind) => RULE_SIGNALS.has(kind) && kind !== 'single_option')
     .map((kind) => ({ kind, letters: question.answers }))
     .filter((positive) => positive.letters.length > 0);
+  const byText = optionNamedByExplanation(question);
+  if (byText) positives.push({ kind: 'explanation_text', letters: [byText] });
+  // Only where the reader trusts it: OCR or a picture may have lost the other options.
   const [only] = question.options;
-  if (question.options.length === 1 && only)
+  if (question.options.length === 1 && only && question.evidence.includes('single_option'))
     positives.push({ kind: 'single_option', letters: [only.letter] });
   if (vision !== null && vision !== 'review' && vision.mark.letter !== null)
     positives.push({ kind: 'vision_mark', letters: [vision.mark.letter] });
@@ -70,12 +109,17 @@ function disagreements(positives: readonly Positive[], vision: VisionVerdict): s
 
 const unique = <T>(items: readonly T[]) => [...new Set(items)];
 
+/** The reasons this step decides are recomputed every time, never inherited. */
+const OWN_REASONS = new Set([NO_ANSWER, ANSWER_CONFLICT, MARK_UNCLEAR]);
+const othersOf = (question: PipelineQuestion) =>
+  question.reviewReasons.filter((reason) => !OWN_REASONS.has(reason));
+
 function undecided(question: PipelineQuestion, conflicts: string[], reasons: string[]) {
   return {
     ...question,
     answers: [],
     conflicts: unique(conflicts),
-    reviewReasons: unique([...question.reviewReasons, ...reasons]),
+    reviewReasons: unique([...othersOf(question), ...reasons]),
   };
 }
 
@@ -99,5 +143,6 @@ export function combineEvidence(
   if (positives.length === 0)
     return { ...undecided(question, [], [NO_ANSWER, ...unclear]), evidence: ['none'] };
   const widest = positives.reduce((a, b) => (b.letters.length > a.letters.length ? b : a));
-  return { ...question, answers: [...widest.letters], evidence: kinds };
+  const reviewReasons = othersOf(question);
+  return { ...question, answers: [...widest.letters], evidence: kinds, reviewReasons };
 }

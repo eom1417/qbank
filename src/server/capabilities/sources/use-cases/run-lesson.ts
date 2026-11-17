@@ -54,6 +54,10 @@ export interface LessonDeps {
   providerFor(model: string): AiProvider;
   cache: Pick<StepCache, 'get' | 'put'>;
   now(): Date;
+  /** The tier the lessons start with (Q14): `strong` skips the light model; light by default. */
+  startTier?: ModelTier;
+  /** False when the weekly measurement unapproved the model for the lesson (Q15). */
+  approved?(lesson: string, model: string): boolean;
 }
 
 export interface LessonOptions {
@@ -218,6 +222,19 @@ async function runStage<I, O>(
   return true;
 }
 
+/**
+ * The stages a run asks: from its starting tier (Q14), without a model the weekly measurement
+ * unapproved (Q15); an unapproved light model escalates straight to the strong one.
+ */
+function stagesOf<I, O>(run: Run<I, O>): readonly Stage[] {
+  const { deps, card } = run;
+  return STAGES.filter((stage) => {
+    if (deps.startTier === 'strong' && stage.tier === 'light') return false;
+    const model = modelFor(card.id, deps.providerKind, stage.tier);
+    return model === null || deps.approved?.(card.id, model) !== false;
+  });
+}
+
 async function runSheet<I, O>(
   run: Run<I, O>,
   items: readonly LessonItem<I>[],
@@ -227,7 +244,7 @@ async function runSheet<I, O>(
     pending: items.map((_, index) => index),
     errors: [],
   };
-  for (const stage of STAGES) {
+  for (const stage of stagesOf(run)) {
     if (state.pending.length === 0 || run.halt) break;
     if (!(await runStage(run, items, state, stage))) break;
   }

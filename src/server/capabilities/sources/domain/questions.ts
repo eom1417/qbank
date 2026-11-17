@@ -43,6 +43,9 @@ export interface ParsedQuestion {
 const CIRCLED = /^(?:[@©®]\)?|G\))\s*(.*)$/;
 // "~*~*~*" rules and "Heart Murmurs (4 Questions)" headings close the current question.
 const SEPARATOR = /^(?:[~*\s]{6,}|.*\(\d+\s+Questions?\))$/i;
+
+/** A rule or a section heading with its count: never a question's or explanation's text. */
+export const isSectionLine = (text: string) => SEPARATOR.test(text);
 // About 6% of a page width: options may be indented a little relative to their question.
 const INDENT_TOLERANCE = 36;
 const MAX_GAP_LINES = 1.9;

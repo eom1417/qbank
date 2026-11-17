@@ -16,6 +16,7 @@ import type { Actor } from '../../identity/index.js';
 import type { JobRow } from '../adapters/import-repository.js';
 import type { SourcesDeps } from './deps.js';
 import { aiTargetOf } from './verify-with-ai.js';
+import { pipelineReport, tierOf } from './pipeline-report.js';
 
 /** What a job improves (DEC-34); an old job without the column improves nothing. */
 export function enhanceOf(job: Pick<JobRow, 'ai_enhance'>): Enhancements {
@@ -35,7 +36,7 @@ function resumesAt(job: JobRow, now: Date): string | null {
 }
 
 /** The AI a job ran on, as its report says it (DEC-33), and what its lessons cost (M34). */
-function aiOf(job: JobRow, now: Date): ImportResponse['ai'] {
+async function aiOf(deps: SourcesDeps, job: JobRow): Promise<ImportResponse['ai']> {
   if (!job.ai_provider_id) return null;
   const models = TriageModels.safeParse(job.ai_roles);
   const usage = z.array(LessonUsage).safeParse(job.ai_usage);
@@ -46,7 +47,9 @@ function aiOf(job: JobRow, now: Date): ImportResponse['ai'] {
     models: models.success ? models.data : {},
     mode: job.ai_mode,
     usage: usage.success ? usage.data : [],
-    resumesAt: resumesAt(job, now),
+    resumesAt: resumesAt(job, deps.clock.now()),
+    tier: tierOf(job),
+    pipeline: await pipelineReport(deps, job),
   };
 }
 
@@ -79,7 +82,7 @@ export async function getImport(
     questionsReview: job.questions_review,
     aiOutcome: job.ai_outcome,
     errorCode: job.error_code,
-    ai: aiOf(job, deps.clock.now()),
+    ai: await aiOf(deps, job),
     createdAt: job.created_at.toISOString(),
     finishedAt: job.finished_at?.toISOString() ?? null,
     pages: pages.map((page) => ({

@@ -11,7 +11,7 @@ import { ImportProgressRow } from './ImportProgress.js';
 function StartCard({ form }: { form: ImportForm }) {
   const { t } = useI18n();
   const [rights, setRights] = useState(false);
-  const { ai, setAi, triage, setReadPages, upload, files, destination, consent } = form;
+  const { ai, setAi, triage, setReadPages, upload, files, destination, consent, tier } = form;
   const missingName = destination.bankId === NEW_BANK && destination.newName.trim() === '';
   const waitsForConsent = consent.needed && !consent.given;
   return (
@@ -22,6 +22,7 @@ function StartCard({ form }: { form: ImportForm }) {
         onReadPages={setReadPages}
         pipeline={ai.pipeline}
         consent={consent}
+        tier={tier}
         approval={ai.approval}
         approved={ai.approved}
         onApprove={(approved) => setAi((previous) => ({ ...previous, approved }))}

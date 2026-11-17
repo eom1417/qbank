@@ -5,8 +5,11 @@ import { LEASE_MS, runImport } from './use-cases/run-import.js';
 async function purgeExpired(deps: SourcesDeps) {
   for (const source of await deps.imports.expiredOriginals(deps.clock.now())) {
     await deps.imports.forgetOriginal(source.owner_id, source.id);
+    // The units kept for review go with their original (Q23).
+    await deps.blocks.forgetSource(source.id);
     if (source.blob_key) await deps.blobs.remove(source.blob_key);
   }
+  await deps.blocks.purgeExpired(deps.clock.now());
 }
 
 /** One worker slot: runs jobs until none is runnable for it; returns how many it ran. */

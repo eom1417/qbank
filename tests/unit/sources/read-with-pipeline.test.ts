@@ -165,3 +165,29 @@ describe('a stopped pipeline reading', () => {
     expect(read.questions).toEqual([]);
   });
 });
+
+describe('the hand-mark audit by family (M34 P6)', () => {
+  /** How many cells the first lesson sheet showed. */
+  const cellsAsked = (world: ReturnType<typeof lessonWorld>) =>
+    Number(/The image has (\d+) cells/.exec(JSON.stringify(world.calls[0]?.request))?.[1] ?? 0);
+  const withFamily = (world: ReturnType<typeof lessonWorld>, family: string): PipelineDeps => ({
+    ...deps(world, [keyed(1, 'A'), keyed(2, 'B'), keyed(3, 'C')]),
+    readQuestions: () =>
+      Promise.resolve({
+        questions: [keyed(1, 'A'), keyed(2, 'B'), keyed(3, 'C')],
+        units: { pages: [], family: { family, lessons: [], signals: {} } } as never,
+      }),
+  });
+
+  it('audits every keyed question of hand-corrected notes', async () => {
+    const world = lessonWorld({ [LIGHT]: [recorded(unmarked(3))] });
+    await readWithPipeline(withFamily(world, 'annotated_notes'), input);
+    expect(cellsAsked(world)).toBe(3);
+  });
+
+  it('keeps the 10% sample for any other family', async () => {
+    const world = lessonWorld({ [LIGHT]: [recorded(unmarked(1))] });
+    await readWithPipeline(withFamily(world, 'printed_key'), input);
+    expect(cellsAsked(world)).toBe(1);
+  });
+});

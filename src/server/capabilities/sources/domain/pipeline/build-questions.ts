@@ -3,7 +3,7 @@
 import type { AnswerEvidence } from '../answer-decision.js';
 import { isDoubtfulKey } from '../key-lines.js';
 import { unionBox, type Box } from '../page.js';
-import type { ParsedQuestion } from '../questions.js';
+import { isSectionLine, type ParsedQuestion } from '../questions.js';
 import type { Owned, QuestionFrame } from './placement.js';
 import type { PipelineEvidence, PipelinePicture, PipelineQuestion, Spot } from './question.js';
 import { combineTags, isTagLine, takeTags, type QuestionTags } from './tags.js';
@@ -23,12 +23,15 @@ export interface QuestionParts {
   frames: readonly QuestionFrame[];
   owned: readonly Owned[];
   notes: readonly { question: number; page: number; box: Box }[];
-  cases: readonly { questions: number[]; text: string }[];
+  cases: readonly { questions: number[]; text: string; from: number; to: number }[];
   /** Questions whose stem was read in a picture. */
   picture: ReadonlySet<number>;
   text: VirtualText;
   /** Orders of the virtual lines no question, key or explanation read. */
   free: ReadonlySet<number>;
+  /** Orders of every line nothing read (pictures' too), and the pictures something read. */
+  unread: ReadonlySet<number>;
+  consumed: ReadonlySet<string>;
 }
 
 const EVIDENCE: Record<AnswerEvidence, PipelineEvidence> = {
@@ -65,6 +68,31 @@ const lineTags = (parts: QuestionParts, index: number): QuestionTags[] =>
     .filter(isTagLine)
     .map((line) => takeTags(line).tags);
 
+/**
+ * The file's own words after the question's last line and before the next question (Z5):
+ * typed lines, and the unread lines of pictures a question or key read in part (a picture
+ * nothing read comes as one text through placement). Rules, headings and case texts are not.
+ */
+function zoneText(parts: QuestionParts, index: number): string | null {
+  const from = (parts.frames[index]?.endAt ?? 0) + 1;
+  const to = parts.frames[index + 1]?.stemAt ?? parts.text.lines.length;
+  const lines: string[] = [];
+  for (let at = from; at < to; at++) {
+    const line = explanationLine(parts, at);
+    if (line !== null) lines.push(line);
+  }
+  return lines.length > 0 ? lines.join(' ') : null;
+}
+
+/** Line `at` as explanation text, or null (read already, a rule or heading, a case's). */
+function explanationLine(parts: QuestionParts, at: number): string | null {
+  const virtual = parts.text.lines[at];
+  if (!virtual || !parts.unread.has(at) || isSectionLine(virtual.line.text)) return null;
+  if (parts.cases.some((group) => at >= group.from && at < group.to)) return null;
+  const read = !virtual.fromPicture || parts.consumed.has(virtual.unitId);
+  return read ? virtual.line.text : null;
+}
+
 /** Handwritten notes found as ink, numbered per page in file order. */
 function notePictures(parts: QuestionParts): PipelinePicture[][] {
   const result: PipelinePicture[][] = parts.parsed.map(() => []);
@@ -100,7 +128,11 @@ function reviewReasons(parts: QuestionParts, index: number, doubt: boolean): str
 function textOf(parts: QuestionParts, index: number) {
   const question = parts.parsed[index] as ParsedQuestion;
   const stem = takeTags(question.stem);
-  const pieces = [parts.decided[index]?.explanation, ...(parts.owned[index]?.texts ?? [])];
+  const pieces = [
+    zoneText(parts, index),
+    parts.decided[index]?.explanation,
+    ...(parts.owned[index]?.texts ?? []),
+  ];
   const explanation = takeTags(pieces.filter(Boolean).join('\n'));
   const options = question.options.map((option) => takeTags(option.text).tags);
   const tags = combineTags([stem.tags, ...options, explanation.tags, ...lineTags(parts, index)]);

@@ -8,6 +8,7 @@ import { bodyFontFamilies, pageLines } from '../domain/lines.js';
 import { fontFamily, type Box, type PageText, type PageWord } from '../domain/page.js';
 import type { ParsedQuestion } from '../domain/questions.js';
 import { buildQuestions, type QuestionParts } from '../domain/pipeline/build-questions.js';
+import { findLeftovers, type Leftover } from '../domain/pipeline/leftover.js';
 import { caseGroups, optionDonor, type CaseGroup } from '../domain/pipeline/case.js';
 import type { FamilyVerdict } from '../domain/pipeline/family.js';
 import {
@@ -243,6 +244,10 @@ async function readFile(context: FileContext): Promise<QuestionParts> {
   const frames = reading.questions.map((question) => frameOf(question, order));
   const numbers = new Set(frames.map((frame) => frame.number));
   const picked = withPictureKeys(reading, frames, pictureKeys(text, numbers), text.order);
+  // A key picture's text went to its question's explanation already.
+  text.lines.forEach((line, at) => {
+    if (picked.owners.has(line.unitId)) reading.unread.delete(at);
+  });
   const cases = caseGroups(frames, text, reading.free);
   const shared = shareOptions(reading.questions, cases);
   const picture = new Set(
@@ -267,11 +272,15 @@ async function readFile(context: FileContext): Promise<QuestionParts> {
     picture,
     text,
     free: reading.free,
+    unread: reading.unread,
+    consumed: reading.consumed,
   };
 }
 
 export interface PipelineQuestions {
   questions: PipelineQuestion[];
+  /** Pictures that look like a question but gave none: for the vision structure lesson. */
+  leftovers: Leftover[];
   units: FileUnits;
   family: FamilyVerdict;
 }
@@ -286,6 +295,14 @@ export async function pipelineQuestions(
 ): Promise<PipelineQuestions> {
   const units = await readers.units(file);
   const context = await readText(file, units, readers);
-  const questions = buildQuestions(await readFile(context));
-  return { questions, units, family: units.family };
+  const parts = await readFile(context);
+  const questions = buildQuestions(parts);
+  const leftovers = findLeftovers({
+    text: parts.text,
+    frames: parts.frames,
+    keys: questions.map((question) => question.key),
+    fromPicture: parts.picture,
+    consumed: parts.consumed,
+  });
+  return { questions, units, family: units.family, leftovers };
 }

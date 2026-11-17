@@ -146,6 +146,10 @@ interface ImportJobTable {
   curriculum_version: Generated<string | null>;
   /** Tokens of a `pipeline` job's lessons (`LessonUsage[]` summed per lesson and model, M34). */
   ai_usage: ColumnType<unknown, string | null | undefined, string | null>;
+  /** The tier a `pipeline` job's lessons start with (`light` | `strong`, Q14, M34 P6). */
+  ai_tier: ColumnType<string | null, string | null | undefined, string | null>;
+  /** What the pipeline learnt of the file for its report: family, unknown pages (M34 P6). */
+  pipeline_facts: ColumnType<unknown, string | null | undefined, string | null>;
   /** What the AI improves (`Enhancements`, DEC-34); null without AI. */
   ai_enhance: ColumnType<unknown, string | null | undefined, string>;
   /** The model of each triage role (`TriageModels`), or null for the instance default. */

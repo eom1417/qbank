@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { SavedStudyNote } from '../../../contracts/questions.js';
 import type { Clock } from '../../platform/clock.js';
 import type { Db } from '../../platform/db/index.js';
-import type { RequireActor } from '../identity/index.js';
+import type { Actor, RequireActor } from '../identity/index.js';
 import { registerQuestionRoutes } from './http/routes.js';
 import { registerEditRoutes } from './http/edit-routes.js';
 import { registerNoteRoutes } from './http/note-routes.js';
@@ -29,6 +29,9 @@ import { inferredDifficulty } from './domain/difficulty.js';
 import { aiAdditions } from './use-cases/ai-additions.js';
 import { setInferredDifficulty } from './adapters/insights.js';
 import { saveImportExtras, type EnsureTags, type ImportExtras } from './adapters/import-extras.js';
+import { placeMedia, type PicturePlace } from './adapters/media-placement.js';
+import { editQuestion } from './use-cases/edit.js';
+import type { EditQuestionRequest } from '../../../contracts/questions.js';
 
 export type { PoolQuestion } from './adapters/study-pool.js';
 export type { RestoredQuestion } from './adapters/portability.js';
@@ -151,6 +154,12 @@ export function createQuestions(settings: QuestionsSettings) {
       ),
     ...sharedInterface(settings, deps),
     ...deps.media,
+    /** The owner's edit as a new version (the review editor's re-assembly, Q26). */
+    editQuestion: (actor: Actor, id: string, edit: EditQuestionRequest) =>
+      editQuestion(deps, actor, id, edit),
+    /** Moves the question's pictures found at these places (the review editor, Q26). */
+    placeMedia: (ownerId: string, questionId: string, places: readonly PicturePlace[]) =>
+      placeMedia(settings.db, ownerId, questionId, places),
     register: (app: FastifyInstance) => {
       registerQuestionRoutes(app, deps, settings.requireActor);
       registerReviewRoutes(app, deps, settings.requireActor);

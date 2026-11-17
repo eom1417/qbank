@@ -22,6 +22,8 @@ import {
   sumUsage,
   type PipelineReading,
 } from './read-with-pipeline.js';
+import { keepBlocks, tierOf } from './pipeline-report.js';
+import { revokedKey } from '../adapters/measurements.js';
 
 /** A page with fewer words than this has no usable text layer: it is read as a scan. */
 const MIN_TEXT_WORDS = 6;
@@ -261,9 +263,14 @@ async function pipelineOutcome(deps: SourcesDeps, job: JobRow, source: SourceRow
     instanceId: job.ai_provider_id ?? '',
     model: job.ai_model,
   };
-  const lessons = job.ai_provider_id
-    ? await openLessons(deps.ai, owner, { cache: deps.steps, now: () => deps.clock.now() })
-    : null;
+  const revoked = await deps.measurements.revoked();
+  const rest = {
+    cache: deps.steps,
+    now: () => deps.clock.now(),
+    startTier: tierOf(job) ?? 'light',
+    approved: (lesson: string, model: string) => !revoked.has(revokedKey(lesson, model)),
+  };
+  const lessons = job.ai_provider_id ? await openLessons(deps.ai, owner, rest) : null;
   if (!lessons) return aiFailed('ai_not_ready', 'not_ready');
   const rows = await deps.imports.pages(job.id);
   const readings = new Map(
@@ -278,6 +285,7 @@ async function pipelineOutcome(deps: SourcesDeps, job: JobRow, source: SourceRow
   const stopped = await stoppedOutcome(deps, job, read, usage);
   if (stopped !== undefined) return stopped;
   const saved = await savePipeline(deps, job, source, { file, rows, read });
+  const facts = await keepBlocks(deps, job, read);
   const counts = await countsOf(deps, job, rows, saved.questions.length);
   const stage = counts.stage(saved.aiOutcome);
   return {
@@ -288,6 +296,7 @@ async function pipelineOutcome(deps: SourcesDeps, job: JobRow, source: SourceRow
     error_code: errorOf(stage, counts.found),
     ai_usage: usage,
     curriculum_version: CURRICULUM_VERSION,
+    pipeline_facts: facts,
   };
 }
 

@@ -29,6 +29,8 @@ const PRINT_DPI = 48;
 const PARALLEL = 4;
 /** A page-sized image with this many text-layer words over it is an OCR'd scan's page. */
 const SCAN_LAYER_WORDS = 4;
+/** A frame covers at least this share of its page. */
+const WHOLE_PAGE_SHARE = 0.85;
 /** Page-sized images are judged (frame, watermark) from a coarse rendering. */
 const PAGE_DPI = 72;
 
@@ -182,13 +184,21 @@ function coverMask(rgb: RgbImage, region: Box, cover: readonly Box[], dpi: numbe
 async function pageSizedDraft(file: string, image: PageImage): Promise<UnitDraft> {
   const { source } = image;
   if (source.scanned) return fillerDraft(image, 'scan_page');
-  const rgb = await renderRegion(file, image.page, image.box, PAGE_DPI);
-  const smaller = source.images.map((other) => other.box).filter((b) => area(b) < area(image.box));
+  const rgb = await renderRegion(file, image.page, image.box, PAGE_DPI).catch(() => null);
+  if (!rgb) return contentDraft(file, image);
+  // Smaller content pictures are skipped, not the overlay's tiles (they would hide everything).
+  const placed = placeImages(source.text, source.images);
+  const smaller = source.images
+    .filter((other) => placed.get(other) === 'content')
+    .map((other) => other.box)
+    .filter((b) => area(b) < area(image.box));
   const cover = [...source.text.words.map((word) => word.box), ...smaller];
   const stats = measureImage(rgb, coverMask(rgb, image.box, cover, PAGE_DPI));
   const printed = { ...image, print: fingerprint(rgb) };
   const wordsOver = wordsInside(source.text, image.box) > SCAN_LAYER_WORDS;
-  const filler = pageSizedFiller(stats, { scanned: false, wordsOver });
+  const page = { x0: 0, y0: 0, x1: source.text.width, y1: source.text.height };
+  const wholePage = area(image.box) >= area(page) * WHOLE_PAGE_SHARE;
+  const filler = pageSizedFiller(stats, { scanned: false, wordsOver, wholePage });
   return filler ? fillerDraft(printed, filler) : contentDraft(file, printed);
 }
 

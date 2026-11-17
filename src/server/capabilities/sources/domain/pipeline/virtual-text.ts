@@ -89,11 +89,19 @@ export function pageFlow(units: readonly Unit[]): Unit[] {
   return flow;
 }
 
-/** Images over the page's printed lines (the centre of one of them lies inside). */
+/** A line along an image's edge (this share of its height) touches it; it is not under it. */
+const EDGE_SHARE = 0.1;
+
+const inner = (box: Box): Box => {
+  const edge = (box.y1 - box.y0) * EDGE_SHARE;
+  return { ...box, y0: box.y0 + edge, y1: box.y1 - edge };
+};
+
+/** Images over the page's printed lines (the centre of one lies well inside, off its edges). */
 const coversOf = (units: readonly Unit[]) =>
   units
     .filter((unit) => unit.kind === 'image')
-    .filter((image) => units.some((u) => printedLine(u) && centreInside(u.box, image.box)))
+    .filter((image) => units.some((u) => printedLine(u) && centreInside(u.box, inner(image.box))))
     .map((image) => image.id);
 
 /** A question, option or key line: what makes an unsure picture worth reading as text. */
@@ -213,6 +221,8 @@ export interface VirtualReading {
   free: Set<number>;
   /** Units at least one of whose lines a question, key or explanation read. */
   consumed: Set<string>;
+  /** Orders of every line nothing read, in pictures too (no tags or doubtful keys). */
+  unread: Set<number>;
 }
 
 const lastPage = (question: ParsedQuestion | null) =>
@@ -285,10 +295,12 @@ export function readVirtual(
   const free = new Set<number>();
   const consumed = new Set<string>();
   const stays = new Set(kept);
+  const unread = new Set<number>();
   text.lines.forEach(({ line, unitId, fromPicture }, at) => {
     if (!stays.has(line)) return;
     if (spans.has(line.box) || !left.has(line)) consumed.add(unitId);
     else if (!fromPicture || !consumed.has(unitId)) free.add(at);
+    if (left.has(line) && !spans.has(line.box) && !isAside(line.text)) unread.add(at);
   });
-  return { questions, keys, free, consumed };
+  return { questions, keys, free, consumed, unread };
 }

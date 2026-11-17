@@ -107,18 +107,22 @@ const nearBothEdges = (centres: readonly number[]) =>
   centres.some((at) => at <= FRAME_EDGE) && centres.some((at) => at >= 1 - FRAME_EDGE);
 
 /**
- * A page-sized image is filler when it is a scanned page's own picture, a frame, a faint
+ * A page-sized image is filler when it is a scanned page's own picture, a frame round the
+ * whole page (`wholePage`), a faint
  * watermark, or the picture under an OCR'd scan's text layer (`wordsOver`); null when it is
  * real content (a full-page screenshot).
  */
 export function pageSizedFiller(
   stats: ImageStats,
-  page: { scanned: boolean; wordsOver: boolean },
+  page: { scanned: boolean; wordsOver: boolean; wholePage: boolean },
 ): 'scan_page' | 'frame' | 'watermark' | null {
   if (page.scanned) return 'scan_page';
-  if (nearBothEdges(stats.rows) && nearBothEdges(stats.columns)) return 'frame';
+  // A frame goes round the whole page; a large screenshot has its own border.
+  const framed = nearBothEdges(stats.rows) && nearBothEdges(stats.columns);
+  if (framed && page.wholePage) return 'frame';
   if (stats.darkShare <= WATERMARK_MAX_DARK) return 'watermark';
-  return page.wordsOver ? 'scan_page' : null;
+  // An OCR'd scan's picture fills the page; typed lines along a screenshot's edge do not make one.
+  return page.wordsOver && page.wholePage ? 'scan_page' : null;
 }
 
 /** An image covering this share of its page is the page's background, frame or screenshot. */

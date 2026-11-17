@@ -145,6 +145,16 @@ describe('page flow and covers', () => {
     expect(pageFlow(units).map((u) => u.id)).toEqual(['stem', 'optA', 'optB', 'side']);
   });
 
+  it('takes an image over printed lines for a cover, but not one a line only touches', () => {
+    const inside = unit('inside', 'text_line', box(40, 150, 200, 160));
+    const edge = unit('edge', 'text_line', box(40, 292, 200, 302));
+    const over = picture('over', box(30, 100, 400, 200), 9, 'text_picture');
+    const above = picture('above', box(30, 0, 400, 300), 9, 'text_picture');
+    const covers = (units: Unit[]) => virtualText([{ size: SIZE, units }], [], []).covers;
+    expect([...covers([over, inside])]).toEqual(['over']);
+    expect([...covers([{ ...above, box: box(30, 100, 400, 300) }, edge])]).toEqual([]);
+  });
+
   it('reads only pictures with words worth reading', () => {
     expect(readsAsText(picture('a', box(0, 0, 9, 9), 9, 'text_picture'))).toBe(true);
     expect(readsAsText(picture('b', box(0, 0, 9, 9), 9, 'figure'))).toBe(false);

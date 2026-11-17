@@ -61,14 +61,14 @@ describe('picture placement and shared cases (M34 P1)', () => {
     await expect(storeFigure(db(), question, wrong)).rejects.toThrow();
   });
 
-  it('rolls back and applies again', async () => {
-    const usage = await migrator().migrateDown();
-    expect(usage.results?.[0]?.migrationName).toBe('202611271000_import_usage');
-    const down = await migrator().migrateDown();
+  it('rolls back every M34 migration and applies them again', async () => {
+    const down = await migrator().migrateTo('202611251000_google_sign_in');
     expect(down.error).toBeUndefined();
-    expect(down.results?.[0]?.migrationName).toBe('202611261000_m34_placement');
+    const undone = down.results?.map((result) => result.migrationName) ?? [];
+    expect(undone).toContain('202611261000_m34_placement');
     const up = await migrator().migrateToLatest();
     expect(up.error).toBeUndefined();
-    expect(up.results?.map((result) => result.status)).toEqual(['Success', 'Success']);
+    expect(up.results?.map((result) => result.migrationName).sort()).toEqual([...undone].sort());
+    expect(up.results?.every((result) => result.status === 'Success')).toBe(true);
   });
 });

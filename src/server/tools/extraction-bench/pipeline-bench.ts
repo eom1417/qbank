@@ -67,12 +67,14 @@ function line(row: Row): string {
     String(s.leaks),
     `${s.answersCorrect}/${s.answersWrong}/${s.answersUndecided} of ${s.answersDecidable}`,
     String(s.answersUnfounded),
+    `${s.explanationFound}/${s.explanationPieces}`,
+    String(s.leftovers),
     row.seconds.toFixed(1),
   ].join(' | ');
 }
 
 const HEADER =
-  'file | found | P0 rules | extra | stem sim | options exact | expl. placed | text pics as text | leaks | answers ok/wrong/undecided | unfounded | s';
+  'file | found | P0 rules | extra | stem sim | options exact | expl. placed | text pics as text | leaks | answers ok/wrong/undecided | unfounded | expl. text | leftovers | s';
 
 /** Questions the P0 rules (text mode) find, matched the same way. */
 async function baselineFound(file: string, truth: TruthFile): Promise<number> {
@@ -92,7 +94,7 @@ async function benchOne(name: string): Promise<Row> {
   const result = await pipelineQuestions(file, readers);
   const seconds = (performance.now() - started) / 1000;
   const units = result.units.pages.flatMap((page) => page.units);
-  const score = scorePipeline(truth, result.questions, units);
+  const score = scorePipeline(truth, result.questions, units, result.leftovers.length);
   const baseline = flags.includes('--baseline') ? await baselineFound(file, truth) : null;
   return { name, seconds, score, baselineFound: baseline };
 }

@@ -4,6 +4,8 @@ import type { ImportAi } from '../../providers/index.js';
 import type { Questions } from '../../questions/index.js';
 import type { ImportRepository } from '../adapters/import-repository.js';
 import type { StepCache } from '../adapters/step-cache.js';
+import type { BlockRepository } from '../adapters/import-blocks.js';
+import type { MeasurementRepository } from '../adapters/measurements.js';
 
 export interface SourcesDeps {
   /** Why a job failed, for the owner's log (M17.3): codes and the error, never page text. */
@@ -33,4 +35,8 @@ export interface SourcesDeps {
   aiConsentOf(ownerId: string): Promise<Date | null>;
   /** Judged AI lesson steps kept 7 days: a resumed import never pays twice (M34). */
   steps: Pick<StepCache, 'get' | 'put'>;
+  /** A pipeline import's units with their roles, kept 7 days for the review editor (Q26). */
+  blocks: BlockRepository;
+  /** The weekly measurement's results: which approved models it unapproved (Q15). */
+  measurements: MeasurementRepository;
 }

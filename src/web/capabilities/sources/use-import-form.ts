@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ImportResponse } from '../../../contracts/sources.js';
+import type { ImportResponse, ModelTier } from '../../../contracts/sources.js';
 import { ApiError } from '../../platform/api/client.js';
 import { errorMessageKey } from '../../platform/api/messages.js';
 import { useAction } from '../../platform/forms/use-submit.js';
@@ -52,6 +52,7 @@ function useAiOptions() {
   const [ai, setAi] = useState({ approved: false, approval: null as string[] | null });
   const [readPages, setReadPages] = useState(false);
   const [consent, setConsent] = useState(false);
+  const [tier, setTier] = useState<ModelTier>('light');
   const pipeline = session.mode === 'accounts';
   const account = session.state.status === 'signed-in' ? session.state.account : null;
   // Once per account (Q8): asked only while the account has not agreed yet.
@@ -60,7 +61,25 @@ function useAiOptions() {
   const consentFirst = async () => {
     if (consentNeeded && consent) await session.consentToAi();
   };
-  return { triage, ai, setAi, readPages, setReadPages, pipeline, pipelineConsent, consentFirst };
+  const tierChoice = { tier, onTier: setTier };
+  /** What each upload sends of the AI choice. */
+  const uploadFields = () => ({
+    ...aiFields(triage.request, readPages, pipeline),
+    aiApproved: ai.approved,
+    aiTier: tier,
+  });
+  return {
+    uploadFields,
+    triage,
+    ai,
+    setAi,
+    readPages,
+    setReadPages,
+    pipeline,
+    pipelineConsent,
+    consentFirst,
+    tierChoice,
+  };
 }
 
 export function useImportForm(bankId: string) {
@@ -74,11 +93,7 @@ export function useImportForm(bankId: string) {
     const target = await resolveBank();
     for (const chosen of files) {
       try {
-        const options = {
-          ...chosen,
-          ...aiFields(triage.request, readPages, pipeline.pipeline),
-          aiApproved: ai.approved,
-        };
+        const options = { ...chosen, ...pipeline.uploadFields() };
         const job = await uploadFile(target, chosen.file, options);
         setJobs((previous) => [...previous, job]);
         setFiles((previous) => previous.filter((other) => other.key !== chosen.key));
@@ -106,6 +121,7 @@ export function useImportForm(bankId: string) {
     jobs,
     ai: { ...ai, readPages, pipeline: pipeline.pipeline },
     consent: pipeline.pipelineConsent,
+    tier: pipeline.tierChoice,
     triage,
     setReadPages,
     setAi,

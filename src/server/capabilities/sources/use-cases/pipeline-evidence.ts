@@ -10,7 +10,7 @@ import {
   type MarkInput,
   type MarkOutput,
 } from '../domain/pipeline/lessons/mark.js';
-import type { PipelineQuestion } from '../domain/pipeline/question.js';
+import type { PipelineQuestion, Spot } from '../domain/pipeline/question.js';
 import { cropQuestions, type QuestionCrop } from '../adapters/question-crops.js';
 import {
   runLesson,
@@ -18,17 +18,25 @@ import {
   type LessonDeps,
   type LessonItem,
   type LessonOptions,
+  type LessonRun,
   type LessonUsage,
 } from './run-lesson.js';
+import { SHEET_LIMIT } from '../domain/pipeline/sheet-layout.js';
 
 export interface EvidenceDeps extends LessonDeps {
   /** Renders the questions' areas; the real one renders with poppler. */
-  cropQuestions?: (file: string, questions: readonly PipelineQuestion[]) => Promise<QuestionCrop[]>;
+  cropQuestions?: (
+    file: string,
+    questions: readonly PipelineQuestion[],
+    pictures: readonly Spot[],
+  ) => Promise<QuestionCrop[]>;
 }
 
 export interface EvidenceOptions extends LessonOptions {
   /** Every n-th keyed question is also asked, as an audit (10 = a fixed 10%); 0 = none. */
   auditEvery?: number;
+  /** The file's printed pictures (image units that are not handwriting): blanked in the crops. */
+  printedPictures?: readonly Spot[];
 }
 
 export interface EvidenceRun {
@@ -80,6 +88,68 @@ function verdictOf(input: MarkInput, result: ItemResult<MarkOutput>): VisionVerd
   return result.status === 'answered' ? { mark: markedLetters(input, result.output) } : 'review';
 }
 
+/** A sheet's items and the questions they show, in cell order. */
+interface Shown {
+  questions: PipelineQuestion[];
+  items: LessonItem<MarkInput>[];
+}
+
+async function showable(
+  deps: EvidenceDeps,
+  file: string,
+  asked: readonly PipelineQuestion[],
+  options: EvidenceOptions,
+): Promise<Shown> {
+  const crop = deps.cropQuestions ?? cropQuestions;
+  const crops = await crop(file, asked, options.printedPictures ?? []);
+  const cropByKey = new Map(crops.map((one) => [one.key, one]));
+  const pairs = asked.flatMap((question) => {
+    const one = cropByKey.get(question.key);
+    return one ? [{ question, item: itemOf(question, one) }] : [];
+  });
+  return { questions: pairs.map((pair) => pair.question), items: pairs.map((pair) => pair.item) };
+}
+
+/** A mark that contradicts the reader's own signal: the light model may have read the wrong cell. */
+function contradicts(question: PipelineQuestion, result: ItemResult<MarkOutput> | null): boolean {
+  if (!result) return false;
+  const combined = combineEvidence(question, verdictOf(inputOf(question), result));
+  return combined.conflicts.length > question.conflicts.length;
+}
+
+/**
+ * Every sheet where a mark contradicts the reader is asked again, whole, starting with the strong
+ * model: a light model that shifts its answers by one cell gets the whole sheet wrong at once.
+ */
+async function recheckSheets(
+  deps: EvidenceDeps,
+  shown: Shown,
+  run: LessonRun<MarkOutput>,
+  options: EvidenceOptions,
+): Promise<LessonRun<MarkOutput>> {
+  const sheets = new Set(
+    shown.questions.flatMap((question, i) =>
+      contradicts(question, run.results[i] ?? null) ? [Math.floor(i / SHEET_LIMIT)] : [],
+    ),
+  );
+  if (sheets.size === 0 || run.paused || deps.startTier === 'strong') return run;
+  const again = shown.items.flatMap((item, i) =>
+    sheets.has(Math.floor(i / SHEET_LIMIT)) ? [i] : [],
+  );
+  const items = again.map((i) => shown.items[i] as LessonItem<MarkInput>);
+  const strong = await runLesson({ ...deps, startTier: 'strong' }, markLesson, items, options);
+  const results = [...run.results];
+  again.forEach((i, k) => (results[i] = strong.results[k] ?? null));
+  return { ...strong, results, usage: [...run.usage, ...strong.usage] };
+}
+
+function markList(shown: Shown, run: LessonRun<MarkOutput>) {
+  return shown.questions.flatMap((question, index) => {
+    const result = run.results[index];
+    return result ? [{ key: question.key, verdict: verdictOf(inputOf(question), result) }] : [];
+  });
+}
+
 /**
  * Asks D4.mark where needed and combines each question's evidence. A full subscription pauses
  * the run: the unfinished questions come back unchanged and resume later from the step cache.
@@ -91,31 +161,24 @@ export async function withEvidence(
   options: EvidenceOptions = {},
 ): Promise<EvidenceRun> {
   const chosen = questionsToAsk(questions, options.auditEvery);
-  const crops = await (deps.cropQuestions ?? cropQuestions)(file, chosen.asked);
-  const cropByKey = new Map(crops.map((crop) => [crop.key, crop]));
-  const shown = chosen.asked.filter((question) => cropByKey.has(question.key));
-  const items = shown.flatMap((question) => {
-    const crop = cropByKey.get(question.key);
-    return crop ? [itemOf(question, crop)] : [];
-  });
-  const run = await runLesson(deps, markLesson, items, options);
-  const marks = shown.flatMap((question, index) => {
-    const result = run.results[index];
-    return result ? [{ key: question.key, verdict: verdictOf(inputOf(question), result) }] : [];
-  });
+  const shown = await showable(deps, file, chosen.asked, options);
+  const first = await runLesson(deps, markLesson, shown.items, options);
+  const run = await recheckSheets(deps, shown, first, options);
+  const marks = markList(shown, run);
   const markByKey = new Map(marks.map((mark) => [mark.key, mark.verdict]));
-  const unfinished = new Set(
-    shown.map((question) => question.key).filter((key) => !markByKey.has(key)),
+  const asked = shown.questions.map((question) => question.key);
+  const unfinished = new Set(asked.filter((key) => !markByKey.has(key)));
+  const updated = questions.map((question) =>
+    unfinished.has(question.key)
+      ? question
+      : combineEvidence(question, markByKey.get(question.key) ?? null),
   );
-  const updated = questions.map((question) => {
-    if (unfinished.has(question.key)) return question;
-    return combineEvidence(question, markByKey.get(question.key) ?? null);
-  });
+  const audited = new Set(chosen.audited.map((question) => question.key));
   return {
     questions: updated,
     usage: run.usage,
-    asked: shown.map((question) => question.key),
-    audited: chosen.audited.map((question) => question.key).filter((key) => cropByKey.has(key)),
+    asked,
+    audited: asked.filter((key) => audited.has(key)),
     marks,
     paused: run.paused,
     resumeAfter: run.resumeAfter,
