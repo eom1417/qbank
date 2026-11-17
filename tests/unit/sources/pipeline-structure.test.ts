@@ -58,7 +58,6 @@ describe('reading leftover pictures as questions (M34 P4b, D6.1)', () => {
       explanation: 'Answer: B',
     });
   });
-
 });
 
 describe('leftover pictures that do not become questions (M34 P4b, D6.1)', () => {

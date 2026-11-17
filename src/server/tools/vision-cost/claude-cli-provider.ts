@@ -33,7 +33,8 @@ interface CliUsage {
   cacheRead: number;
 }
 
-export type CliResult<T> = { ok: true; value: T; usage: CliUsage } | { ok: false; failure: AiFailure };
+export type CliResult<T> =
+  { ok: true; value: T; usage: CliUsage } | { ok: false; failure: AiFailure };
 
 interface ResultEvent {
   type: 'result';
@@ -50,9 +51,25 @@ interface ResultEvent {
 
 export function cliArgs(model: string, system: string, effort: string): string[] {
   return [
-    '-p', '--input-format', 'stream-json', '--output-format', 'stream-json', '--verbose',
-    '--model', model, '--system-prompt', system, '--tools', '', '--no-session-persistence',
-    '--strict-mcp-config', '--setting-sources', '', '--disable-slash-commands', '--effort', effort,
+    '-p',
+    '--input-format',
+    'stream-json',
+    '--output-format',
+    'stream-json',
+    '--verbose',
+    '--model',
+    model,
+    '--system-prompt',
+    system,
+    '--tools',
+    '',
+    '--no-session-persistence',
+    '--strict-mcp-config',
+    '--setting-sources',
+    '',
+    '--disable-slash-commands',
+    '--effort',
+    effort,
   ];
 }
 
@@ -67,7 +84,10 @@ export function cliInput<T>(request: StructuredRequest<T>): string {
   const content = request.parts.map((part) =>
     part.type === 'text'
       ? { type: 'text', text: part.text }
-      : { type: 'image', source: { type: 'base64', media_type: part.mediaType, data: part.base64 } },
+      : {
+          type: 'image',
+          source: { type: 'base64', media_type: part.mediaType, data: part.base64 },
+        },
   );
   return `${JSON.stringify({ type: 'user', message: { role: 'user', content } })}\n`;
 }
@@ -102,7 +122,10 @@ function cliUsage(event: ResultEvent): CliUsage {
 }
 
 /** A transcript to a result: no result event, an error turn or off-schema text all fail. */
-export function interpretCli<T>(stdout: string, schema: StructuredRequest<T>['schema']): CliResult<T> {
+export function interpretCli<T>(
+  stdout: string,
+  schema: StructuredRequest<T>['schema'],
+): CliResult<T> {
   const event = resultEvent(stdout);
   if (!event) return { ok: false, failure: 'unreachable' };
   if (event.is_error || event.subtype !== 'success') return { ok: false, failure: 'unexpected' };
@@ -111,10 +134,19 @@ export function interpretCli<T>(stdout: string, schema: StructuredRequest<T>['sc
   return { ok: true, value, usage: cliUsage(event) };
 }
 
-function runCli(command: string, args: string[], input: string, timeoutMs: number): Promise<string | null> {
+function runCli(
+  command: string,
+  args: string[],
+  input: string,
+  timeoutMs: number,
+): Promise<string | null> {
   return new Promise((resolve) => {
     const cwd = mkdtempSync(join(tmpdir(), 'vision-cost-cli-'));
-    const child = spawn(command, args, { cwd, stdio: ['pipe', 'pipe', 'ignore'], timeout: timeoutMs });
+    const child = spawn(command, args, {
+      cwd,
+      stdio: ['pipe', 'pipe', 'ignore'],
+      timeout: timeoutMs,
+    });
     let stdout = '';
     child.stdout.setEncoding('utf8');
     child.stdout.on('data', (chunk: string) => {
@@ -141,7 +173,12 @@ export class ClaudeCliProvider implements AiProvider {
   async generateDetailed<T>(request: StructuredRequest<T>): Promise<CliResult<T>> {
     const args = cliArgs(this.#options.model, cliSystem(request), this.#options.effort ?? 'low');
     const command = this.#options.command ?? 'claude';
-    const stdout = await runCli(command, args, cliInput(request), this.#options.timeoutMs ?? 300_000);
+    const stdout = await runCli(
+      command,
+      args,
+      cliInput(request),
+      this.#options.timeoutMs ?? 300_000,
+    );
     if (stdout === null) return { ok: false, failure: 'unreachable' };
     return interpretCli(stdout, request.schema);
   }

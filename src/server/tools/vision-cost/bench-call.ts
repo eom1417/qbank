@@ -32,7 +32,9 @@ export function makeSender(via: Via, model: string, credentials: AnthropicCreden
     const cli = new ClaudeCliProvider({ model, effort: 'low' });
     return async (request) => {
       const r = await cli.generateDetailed(request);
-      return r.ok ? { reply: r.value, failure: null, ...r.usage } : { reply: null, failure: r.failure, ...EMPTY };
+      return r.ok
+        ? { reply: r.value, failure: null, ...r.usage }
+        : { reply: null, failure: r.failure, ...EMPTY };
     };
   }
   const api = new AnthropicProvider({ model, credentials, effort: 'low' });
@@ -48,8 +50,18 @@ function jobRequest(job: Job): StructuredRequest<MarkReply> {
     name: 'marked_answers',
     system: MARK_SYSTEM,
     parts: [
-      { type: 'image', mediaType: 'image/png', base64: readFileSync(job.image.path).toString('base64') },
-      { type: 'text', text: markPrompt(job.format, job.expected.map((e) => e.item)) },
+      {
+        type: 'image',
+        mediaType: 'image/png',
+        base64: readFileSync(job.image.path).toString('base64'),
+      },
+      {
+        type: 'text',
+        text: markPrompt(
+          job.format,
+          job.expected.map((e) => e.item),
+        ),
+      },
     ],
     schema: MarkReply,
   };
@@ -75,14 +87,20 @@ export async function callJob(send: Sender, job: Job, model: string): Promise<Ca
 }
 
 /** Fixed input of one turn: same system prompt, no image, a one-line instruction. */
-export async function measureOverhead(send: Sender): Promise<{ inputTokens: number; cacheCreation: number; cacheRead: number }> {
+export async function measureOverhead(
+  send: Sender,
+): Promise<{ inputTokens: number; cacheCreation: number; cacheRead: number }> {
   const outcome = await send({
     name: 'marked_answers',
     system: MARK_SYSTEM,
     parts: [{ type: 'text', text: 'No image this time: reply {"answers":[]}.' }],
     schema: MarkReply,
   });
-  return { inputTokens: outcome.inputTokens, cacheCreation: outcome.cacheCreation, cacheRead: outcome.cacheRead };
+  return {
+    inputTokens: outcome.inputTokens,
+    cacheCreation: outcome.cacheCreation,
+    cacheRead: outcome.cacheRead,
+  };
 }
 
 export function estimateJob(job: Job, model: string): CallRecord {

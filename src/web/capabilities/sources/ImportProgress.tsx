@@ -26,6 +26,15 @@ export function QueueNote({ job }: { job: ImportResponse }) {
   return place && <MutedText>{fill(t(place.key), { n: place.n })}</MutedText>;
 }
 
+/** Why an import ended with nothing, said wherever the import is shown (M36 Q109). */
+export function ImportErrorNote({ job }: { job: ImportResponse }) {
+  const { t } = useI18n();
+  if (!job.errorCode) return null;
+  return (
+    <Alert tone="error">{t(`import.error.${job.errorCode}` as 'import.error.internal')}</Alert>
+  );
+}
+
 /** Live progress of one file: its stage, pages read of the range, questions found so far. */
 interface RowProps {
   initial: ImportResponse;
@@ -51,6 +60,7 @@ export function ImportProgressRow({ initial, onCancel }: RowProps) {
           ` · ${t('source.questions')}: ${job.questionsFound} · ${t('source.review')}: ${job.questionsReview}`}
       </MutedText>
       <QueueNote job={job} />
+      <ImportErrorNote job={job} />
       {job.stage === 'completed' && <Alert tone="success">{t('import.completedNotice')}</Alert>}
       {job.stage === 'queued' && onCancel && (
         <Button

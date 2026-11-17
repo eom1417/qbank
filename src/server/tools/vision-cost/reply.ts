@@ -24,7 +24,8 @@ export const MARK_SYSTEM =
 export function markPrompt(format: 'FULL' | 'CROP' | 'SHEET', items: readonly number[]): string {
   const list = items.join(', ');
   if (format === 'FULL') return `Questions on this page, by their printed number Q<n>: ${list}.`;
-  if (format === 'SHEET') return `The image holds numbered panels; answer for panel numbers: ${list}.`;
+  if (format === 'SHEET')
+    return `The image holds numbered panels; answer for panel numbers: ${list}.`;
   return `The image is one question; answer it as item ${list}.`;
 }
 

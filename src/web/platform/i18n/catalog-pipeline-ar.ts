@@ -29,4 +29,6 @@ export const pipelineAr: Record<keyof typeof pipelineEn, string> = {
   'review.reason.picture_unreadable': 'تعذّرت قراءة صورة فيها كلام السؤال',
   'review.reason.single_signal': 'الإجابة على دليل واحد فقط، وتحتاج تأكيدًا',
   'review.reason.picture_place_unsure': 'مكان صورة غير مؤكد؛ أُخفيت حتى الكشف',
+  'review.reason.unread_question_text':
+    'بعد هذا السؤال نص يشبه سؤالًا لم يُقرأ؛ فقد يكون هناك سؤال ناقص',
 };

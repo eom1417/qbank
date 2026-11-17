@@ -67,7 +67,9 @@ function describe(dir: string, name: string) {
 
 if (process.argv[1]?.endsWith('manifest.ts')) {
   const dir = process.argv[2] ?? '.data/corpus';
-  const files = readdirSync(dir).filter((name) => name.endsWith('.pdf')).sort();
+  const files = readdirSync(dir)
+    .filter((name) => name.endsWith('.pdf'))
+    .sort();
   const entries = files.map((name) => describe(dir, name));
   writeFileSync(join(dir, 'MANIFEST.json'), JSON.stringify(entries, null, 2));
   console.log(`${entries.length} files, ${entries.reduce((n, e) => n + e.pages, 0)} pages`);

@@ -26,10 +26,22 @@ const SCRIPTS: readonly RegExp[] = [/[\u0600-\u06FF\uFB50-\uFDFF\uFE70-\uFEFF]/u
 /** A script with less than this share of the letters is not body text (a stray note). */
 const MIN_SCRIPT_SHARE = 0.1;
 
-/** The fonts typed body text is set in: the leading family of each script the document uses. */
+/**
+ * Fonts a device writes notes in: Apple's system fonts (".SFUI"), whose names start with a dot.
+ * A document maker never embeds them.
+ */
+const isDeviceFont = (font: string) => fontFamily(font).startsWith('.');
+
+/**
+ * The fonts typed body text is set in: the leading family of each script the document uses.
+ * Null (every word kept) for a document nobody wrote on (M36): with no device note font, a
+ * bank book's questions, tables and explanations in their several fonts are all its text.
+ */
 export function bodyFontFamilies(pages: readonly PageText[]): ReadonlySet<string> | null {
+  const words = pages.flatMap((page) => page.words);
+  if (!words.some((word) => word.font && isDeviceFont(word.font))) return null;
   const counts = SCRIPTS.map(() => new Map<string, number>());
-  for (const word of pages.flatMap((page) => page.words)) {
+  for (const word of words) {
     if (!word.font) continue;
     const family = fontFamily(word.font);
     SCRIPTS.forEach((script, index) => {

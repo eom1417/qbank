@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { TruthFile, toReference, type TruthQuestion } from '../../../src/server/tools/extraction-bench/truth.js';
+import {
+  TruthFile,
+  toReference,
+  type TruthQuestion,
+} from '../../../src/server/tools/extraction-bench/truth.js';
 import { checkTruth } from '../../../src/server/tools/extraction-bench/truth-check.js';
 
 function question(ordinal: number, overrides: Partial<TruthQuestion> = {}): TruthQuestion {
@@ -47,7 +51,6 @@ describe('ground-truth check (M34 P0)', () => {
     expect(checkTruth(truth)).toEqual([]);
     expect(toReference(truth)[1]).toMatchObject({ number: 2, answer: 'B', evidence: 'circle' });
   });
-
 });
 
 describe('ground-truth check rejects (M34 P0)', () => {
@@ -60,10 +63,7 @@ describe('ground-truth check rejects (M34 P0)', () => {
 
   it('rejects broken order, answers outside the options and valid questions without proof', () => {
     const problems = checkTruth(
-      file([
-        question(2, { answer: ['C'] }),
-        question(3, { answer: [], evidence: ['none'] }),
-      ]),
+      file([question(2, { answer: ['C'] }), question(3, { answer: [], evidence: ['none'] })]),
     );
     expect(problems).toContain('ordinal 2 at position 1');
     expect(problems).toContain('Q2: answer C is not an option');
