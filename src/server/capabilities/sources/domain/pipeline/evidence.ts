@@ -8,6 +8,8 @@ import type { PipelineEvidence, PipelineQuestion } from './question.js';
 export interface VisionMark {
   letter: string | null;
   eliminated: readonly string[];
+  /** A second, independent reading by the other model named the same letter (R1, Q85). */
+  confirmed?: boolean;
 }
 
 /** The lesson's reply, `review` when no approved model passed its check, or null when not asked. */
@@ -16,6 +18,8 @@ export type VisionVerdict = { mark: VisionMark } | 'review' | null;
 /** Set by the reader when the printed key itself shows doubt ("D?"): never taken as the answer. */
 export const KEY_DOUBT = 'key_doubt';
 export const NO_ANSWER = 'no_answer';
+/** Q85: an answer must rest on two agreeing signals before it may enter an exam. */
+export const SINGLE_SIGNAL = 'single_signal';
 export const ANSWER_CONFLICT = 'answer_conflict';
 export const MARK_UNCLEAR = markLesson.reviewReason;
 
@@ -110,7 +114,7 @@ function disagreements(positives: readonly Positive[], vision: VisionVerdict): s
 const unique = <T>(items: readonly T[]) => [...new Set(items)];
 
 /** The reasons this step decides are recomputed every time, never inherited. */
-const OWN_REASONS = new Set([NO_ANSWER, ANSWER_CONFLICT, MARK_UNCLEAR]);
+const OWN_REASONS = new Set([NO_ANSWER, ANSWER_CONFLICT, MARK_UNCLEAR, SINGLE_SIGNAL]);
 const othersOf = (question: PipelineQuestion) =>
   question.reviewReasons.filter((reason) => !OWN_REASONS.has(reason));
 
@@ -143,6 +147,18 @@ export function combineEvidence(
   if (positives.length === 0)
     return { ...undecided(question, [], [NO_ANSWER, ...unclear]), evidence: ['none'] };
   const widest = positives.reduce((a, b) => (b.letters.length > a.letters.length ? b : a));
-  const reviewReasons = othersOf(question);
+  const single = confirmed(kinds, vision) ? [] : [SINGLE_SIGNAL];
+  const reviewReasons = unique([...othersOf(question), ...single]);
   return { ...question, answers: [...widest.letters], evidence: kinds, reviewReasons };
+}
+
+/**
+ * Q85: two different signals agree, or a printed key the vision lesson looked at without
+ * seeing another mark. One signal alone keeps its answer as a suggestion, held for review.
+ */
+function confirmed(kinds: readonly string[], vision: VisionVerdict): boolean {
+  if (kinds.length >= 2) return true;
+  const read = vision !== null && vision !== 'review' ? vision.mark : null;
+  if (kinds[0] === 'vision_mark') return read?.confirmed === true;
+  return kinds[0] === 'printed_key' && read !== null;
 }

@@ -83,8 +83,12 @@ describe('a stem that says a picture goes with it (D3.2)', () => {
     expect(stemPointsToPicture('Which treatment comes first?')).toBe(false);
   });
 
-  it('keeps the first figure right after the options with the question', () => {
-    expect(placeIn(cued, below, spot(2.5)).placement).toBe('question');
+  it('hides the first figure right after the options and flags it (Q85: a guess is unsure)', () => {
+    expect(placeIn(cued, below, spot(2.5))).toEqual({
+      placement: 'explanation',
+      optionLetter: null,
+      unsure: true,
+    });
   });
 
   it('sends a second figure, a far one, or a labelled one to the explanation', () => {

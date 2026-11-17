@@ -110,8 +110,9 @@ describe('pipeline questions (no AI)', () => {
     expect(note?.unitId).toMatch(/^ink:1:\d+$/);
   });
 
-  it('shows the film the stem points to with the question (D3.2)', () => {
-    expect(places(numbered(2))).toEqual(['figure:question']);
+  it('hides the film the stem points to until the reveal and asks for review (D3.2, Q85)', () => {
+    expect(places(numbered(2))).toEqual(['figure:explanation']);
+    expect(numbered(2).reviewReasons).toContain('picture_place_unsure');
   });
 
   it('gives no answer the file does not decide', () => {

@@ -62,9 +62,10 @@ describe('a pipeline import (M34 P5)', () => {
     const questions = await questionsOf(job.sourceId);
     expect(questions.map((q) => q.source_number)).toEqual([1, 2, 3]);
     const places = await placementsOf(job.sourceId);
+    // Q85: the film the stem points to is a guess of place, so it stays hidden until the reveal.
     expect(places.map((p) => [p.number, p.placement])).toEqual([
       [1, 'explanation'],
-      [2, 'question'],
+      [2, 'explanation'],
     ]);
     const [first, second, third] = questions;
     expect(first?.case_id).toBeTruthy();

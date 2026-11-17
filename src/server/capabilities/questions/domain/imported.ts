@@ -33,7 +33,11 @@ export type ReviewReason =
   /** M34 pipeline: the vision lesson could not read the marked option. */
   | 'mark_unclear'
   /** M34 pipeline: a picture of the question's words could not be read. */
-  | 'picture_unreadable';
+  | 'picture_unreadable'
+  /** M34 safety (Q85): the answer rests on one signal only; a second must confirm it. */
+  | 'single_signal'
+  /** M34 safety (Q85): where a picture belongs is not certain; it is hidden until the reveal. */
+  | 'picture_place_unsure';
 
 /** A question's text and answer, as a write sets them (restoring, the AI triage). */
 export interface QuestionContent {

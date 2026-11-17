@@ -3,7 +3,8 @@
 // (`no_answer`, from the screening), exactly as a rules import is.
 import type { ReviewReason } from '../../../questions/index.js';
 import type { AnswerEvidence } from '../answer-decision.js';
-import { KEY_DOUBT, MARK_UNCLEAR } from './evidence.js';
+import { KEY_DOUBT, MARK_UNCLEAR, SINGLE_SIGNAL } from './evidence.js';
+import { PLACE_UNSURE } from './placement.js';
 import type { PipelineEvidence, PipelineQuestion } from './question.js';
 
 /** Upstream steps may name this themselves (D4.1 trap: «none of them», Q54). */
@@ -49,6 +50,8 @@ export function pipelineReasons(question: PipelineQuestion): ReviewReason[] {
   if (named(KEY_DOUBT)) reasons.push('key_doubt');
   if (named(MARK_UNCLEAR)) reasons.push('mark_unclear');
   if (named('picture_unreadable')) reasons.push('picture_unreadable');
+  if (named(SINGLE_SIGNAL)) reasons.push('single_signal');
+  if (named(PLACE_UNSURE)) reasons.push('picture_place_unsure');
   if (noneOfOptions(question)) reasons.push('none_of_options');
   return reasons;
 }

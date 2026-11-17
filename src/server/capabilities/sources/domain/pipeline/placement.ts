@@ -79,7 +79,11 @@ function optionOf(frame: QuestionFrame, unit: Unit, at: number): string | null {
 export interface Placed {
   placement: PicturePlacement;
   optionLetter: string | null;
+  /** Q85: not certain where it belongs: hidden as explanation, the question held for review. */
+  unsure?: boolean;
 }
+
+export const PLACE_UNSURE = 'picture_place_unsure';
 
 /** Lines' heights of blank space allowed between a question and the picture right after it. */
 const ADJACENT_LINES = 4;
@@ -117,13 +121,22 @@ export function placeIn(frame: QuestionFrame, unit: Unit, spot: PictureSpot): Pl
   // Without options, the question's own area ends with its last line.
   const firstOption = frame.options[0]?.at ?? frame.endAt;
   if (!beside && at < firstOption) return { placement: 'question', optionLetter: null };
-  if (!beside && at <= frame.endAt)
-    return { placement: 'option', optionLetter: optionOf(frame, unit, at) };
-  return {
-    placement: attachedToStem(frame, unit, spot) ? 'question' : 'explanation',
-    optionLetter: null,
-  };
+  const amongOptions = !beside && at <= frame.endAt;
+  const letter = amongOptions ? optionOf(frame, unit, at) : null;
+  if (letter) return { placement: 'option', optionLetter: letter };
+  return hidden(amongOptions || attachedToStem(frame, unit, spot));
 }
+
+/**
+ * The explanation's place, shown only after the reveal. Between options without a letter, or a
+ * figure the stem points to after the options, the place is a guess: it stays hidden and the
+ * question goes to review (Q85).
+ */
+const hidden = (unsure: boolean): Placed => ({
+  placement: 'explanation',
+  optionLetter: null,
+  ...(unsure ? { unsure } : {}),
+});
 
 /** D3.2: the first lone figure right after (or beside) a stem that says a picture goes with it. */
 function attachedToStem(frame: QuestionFrame, unit: Unit, spot: PictureSpot): boolean {
@@ -134,6 +147,8 @@ function attachedToStem(frame: QuestionFrame, unit: Unit, spot: PictureSpot): bo
 }
 
 export interface Owned {
+  /** Q85: a picture here was placed without certainty. */
+  unsure: boolean;
   pictures: PipelinePicture[];
   /** Pictures of printed words in the explanation zone, as the explanation's text (Z5). */
   texts: string[];
@@ -185,6 +200,7 @@ function placeInCase(input: PlaceInput, result: Owned[], unit: Unit, at: number)
 /** Puts a placed picture in its question: explanation text, a picture, or nothing (a mark). */
 function keep(slot: Owned, unit: Unit, placed: Placed) {
   const explanation = placed.placement === 'explanation';
+  if (placed.unsure) slot.unsure = true;
   // Until the vision lesson decides an unsure picture, its words and the picture both stay.
   if (explanation && (isTextual(unit) || wordy(unit))) slot.texts.push(pictureText(unit));
   if (explanation ? !isTextual(unit) : unit.imageClass !== 'handwriting')
@@ -222,7 +238,7 @@ const picture = (unit: Unit, placed: Placed): PipelinePicture => ({
 
 /** Every picture not read into a question, placed with the question that owns it. */
 export function placePictures(input: PlaceInput): Owned[] {
-  const result: Owned[] = input.frames.map(() => ({ pictures: [], texts: [] }));
+  const result: Owned[] = input.frames.map(() => ({ unsure: false, pictures: [], texts: [] }));
   const firstAfter = new Set<number>();
   const pictures = [...input.text.units.values()]
     .filter((unit) => unit.kind === 'image' && !input.consumed.has(unit.id))

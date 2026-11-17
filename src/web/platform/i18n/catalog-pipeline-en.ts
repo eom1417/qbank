@@ -27,4 +27,6 @@ export const pipelineEn = {
   'review.reason.answer_conflict': 'The file’s answer signs disagree',
   'review.reason.mark_unclear': 'The marked option could not be read',
   'review.reason.picture_unreadable': 'A picture of the question’s words could not be read',
+  'review.reason.single_signal': 'The answer rests on one signal only and needs confirming',
+  'review.reason.picture_place_unsure': 'Where a picture belongs is not certain; it is hidden until the reveal',
 };

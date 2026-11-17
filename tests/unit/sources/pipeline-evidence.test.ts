@@ -123,12 +123,15 @@ describe('re-asking a sheet the light model may have misread (M34 P4b)', () => {
         { n: 2, letter: 'A', eliminated: [] },
       ],
     });
-    const world = lessonWorld({ [LIGHT]: [shifted], [STRONG]: [right] });
+    // Q1 rests on the strong model's mark alone, so the light model reads it again (R1).
+    const confirm = recorded({ items: [{ n: 1, letter: 'C', eliminated: [] }] });
+    const world = lessonWorld({ [LIGHT]: [shifted, confirm], [STRONG]: [right] });
     const run = await withEvidence(depsOf(world), 'synthetic.pdf', [q(1), inked]);
-    expect(world.calls.map((call) => call.model)).toEqual([LIGHT, STRONG]);
+    expect(world.calls.map((call) => call.model)).toEqual([LIGHT, STRONG, LIGHT]);
     expect(run.questions.map((x) => x.answers)).toEqual([['C'], ['A']]);
+    expect(run.questions.map((x) => x.reviewReasons)).toEqual([[], []]);
     expect(run.questions[1]?.conflicts).toEqual([]);
-    expect(run.usage).toHaveLength(2);
+    expect(run.usage).toHaveLength(3);
   });
 });
 
