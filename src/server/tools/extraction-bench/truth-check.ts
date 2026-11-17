@@ -14,7 +14,9 @@ function checkOrder(truth: TruthFile): string[] {
 function checkCounts(truth: TruthFile): string[] {
   const problems: string[] = [];
   if (truth.printedTotal !== null && truth.printedTotal !== truth.questions.length) {
-    problems.push(`file prints ${truth.printedTotal} questions, truth has ${truth.questions.length}`);
+    problems.push(
+      `file prints ${truth.printedTotal} questions, truth has ${truth.questions.length}`,
+    );
   }
   for (const heading of truth.headings) {
     const found = truth.questions.filter((q) => q.section === heading.section).length;
@@ -50,7 +52,8 @@ function checkLetters(q: TruthQuestion): string[] {
   }
   for (const image of q.images) {
     const wantsLetter = image.placement === 'option';
-    if (wantsLetter !== (image.optionLetter !== null)) problems.push('option image letter mismatch');
+    if (wantsLetter !== (image.optionLetter !== null))
+      problems.push('option image letter mismatch');
     if (image.optionLetter !== null && !letters.has(image.optionLetter)) {
       problems.push(`image for missing option ${image.optionLetter}`);
     }

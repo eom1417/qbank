@@ -34,7 +34,14 @@ function cropJobs(manifest: Manifest, key: readonly KeyEntry[], sizes: readonly 
       const crop = manifest.crops.find((c) => c.page === k.page && c.question === k.question);
       const image = crop?.sizes[String(size)];
       if (!image) return [];
-      return [{ format: 'CROP' as const, size, image, expected: [{ item: 1, letter: asLetter(k.letter) }] }];
+      return [
+        {
+          format: 'CROP' as const,
+          size,
+          image,
+          expected: [{ item: 1, letter: asLetter(k.letter) }],
+        },
+      ];
     }),
   );
 }
@@ -56,5 +63,9 @@ export function buildJobs(
   sheets: readonly Sheet[],
   sizes: readonly number[] = SIZES,
 ): Job[] {
-  return [...fullJobs(manifest, key), ...cropJobs(manifest, key, sizes), ...sheetJobs(sheets, sizes)];
+  return [
+    ...fullJobs(manifest, key),
+    ...cropJobs(manifest, key, sizes),
+    ...sheetJobs(sheets, sizes),
+  ];
 }

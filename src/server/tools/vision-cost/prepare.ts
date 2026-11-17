@@ -13,7 +13,18 @@ import { argValue, imaging, run, writeJson } from './shell.js';
 
 function renderPage(pdf: string, out: string, page: number, dpi: number): string {
   const prefix = join(out, 'pages', `p${page}`);
-  run('pdftoppm', ['-r', String(dpi), '-f', String(page), '-l', String(page), '-singlefile', '-png', pdf, prefix]);
+  run('pdftoppm', [
+    '-r',
+    String(dpi),
+    '-f',
+    String(page),
+    '-l',
+    String(page),
+    '-singlefile',
+    '-png',
+    pdf,
+    prefix,
+  ]);
   return `${prefix}.png`;
 }
 
@@ -29,7 +40,12 @@ function variants(src: string, stem: string): Record<string, ImageRef> {
 function cropPage(page: BboxPage, png: string, out: string, dpi: number): CropItem[] {
   return findRegions(page).map((region) => {
     const stem = join(out, 'crops', `p${page.page}-q${region.question}`);
-    const box = [0, toPixels(region.top, dpi), toPixels(page.width, dpi), toPixels(region.bottom, dpi)];
+    const box = [
+      0,
+      toPixels(region.top, dpi),
+      toPixels(page.width, dpi),
+      toPixels(region.bottom, dpi),
+    ];
     imaging({ kind: 'crop', src: png, box, out: `${stem}.png` });
     return { page: page.page, question: region.question, sizes: variants(`${stem}.png`, stem) };
   });

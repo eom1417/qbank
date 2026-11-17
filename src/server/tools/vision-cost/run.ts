@@ -40,7 +40,12 @@ interface ModelRun {
   overhead: { inputTokens: number; cacheCreation: number; cacheRead: number };
 }
 
-async function runModel(via: Via, model: string, jobs: readonly Job[], credentials: AnthropicCredentials): Promise<ModelRun> {
+async function runModel(
+  via: Via,
+  model: string,
+  jobs: readonly Job[],
+  credentials: AnthropicCredentials,
+): Promise<ModelRun> {
   const send = makeSender(via, model, credentials);
   const overhead = await measureOverhead(send);
   const records: CallRecord[] = [];
@@ -61,8 +66,13 @@ async function main(argv: readonly string[]): Promise<void> {
   const maxCalls = Number(argValue(argv, 'max-calls', '380'));
   const dry = argv.includes('--dry');
   const key = readJson<{ entries: KeyEntry[] }>(join(out, 'key.json')).entries;
-  const jobs = buildJobs(readJson<Manifest>(join(out, 'manifest.json')), key, readJson<Sheet[]>(join(out, 'sheets.json')));
-  if ((jobs.length + 1) * models.length > maxCalls) throw new Error('planned calls exceed --max-calls');
+  const jobs = buildJobs(
+    readJson<Manifest>(join(out, 'manifest.json')),
+    key,
+    readJson<Sheet[]>(join(out, 'sheets.json')),
+  );
+  if ((jobs.length + 1) * models.length > maxCalls)
+    throw new Error('planned calls exceed --max-calls');
   const credentials = dry || via === 'cli' ? {} : parseCredentials(readFileSync(0, 'utf8'));
   const records: CallRecord[] = [];
   const overheads: Record<string, ModelRun['overhead']> = {};
@@ -73,9 +83,22 @@ async function main(argv: readonly string[]): Promise<void> {
   }
   const perCall = Object.fromEntries(Object.entries(overheads).map(([m, o]) => [m, o.inputTokens]));
   const table = summarize(records, perCall);
-  writeJson(join(out, 'results.json'), { generatedAt: new Date().toISOString(), via, dry, effort: 'low', overheads, table, records });
-  const overheadLine = Object.entries(perCall).map(([m, t]) => `${m}: ${t} input tokens per call`).join('; ');
-  writeFileSync(join(out, 'results.md'), `${renderTable(table)}\n\nFixed overhead (text-only turn): ${overheadLine}\n`);
+  writeJson(join(out, 'results.json'), {
+    generatedAt: new Date().toISOString(),
+    via,
+    dry,
+    effort: 'low',
+    overheads,
+    table,
+    records,
+  });
+  const overheadLine = Object.entries(perCall)
+    .map(([m, t]) => `${m}: ${t} input tokens per call`)
+    .join('; ');
+  writeFileSync(
+    join(out, 'results.md'),
+    `${renderTable(table)}\n\nFixed overhead (text-only turn): ${overheadLine}\n`,
+  );
   console.log(renderTable(table));
   console.log(`overhead: ${overheadLine}`);
 }

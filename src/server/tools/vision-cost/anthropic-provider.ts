@@ -116,7 +116,10 @@ export class AnthropicProvider implements AiProvider {
     const content = request.parts.map((part) =>
       part.type === 'text'
         ? { type: 'text', text: part.text }
-        : { type: 'image', source: { type: 'base64', media_type: part.mediaType, data: part.base64 } },
+        : {
+            type: 'image',
+            source: { type: 'base64', media_type: part.mediaType, data: part.base64 },
+          },
     );
     const outputConfig: Record<string, unknown> = { effort: this.#options.effort ?? 'low' };
     if (this.#options.structuredOutput !== false) {

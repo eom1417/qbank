@@ -28,7 +28,8 @@ export interface QuestionRegion {
 }
 
 const PAGE_RE = /<page width="([\d.]+)" height="([\d.]+)">([\s\S]*?)<\/page>/g;
-const LINE_RE = /<line xMin="[\d.]+" yMin="([\d.]+)" xMax="[\d.]+" yMax="([\d.]+)">([\s\S]*?)<\/line>/g;
+const LINE_RE =
+  /<line xMin="[\d.]+" yMin="([\d.]+)" xMax="[\d.]+" yMax="([\d.]+)">([\s\S]*?)<\/line>/g;
 const WORD_RE = /<word[^>]*>([^<]*)<\/word>/g;
 const QUESTION_RE = /^Q(\d+)\)/;
 

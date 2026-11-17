@@ -46,6 +46,9 @@ if (process.argv[1]?.endsWith('review-sample.ts')) {
     const from = pageFile(pagesDir, page);
     if (from) copyFileSync(from, join(outDir, `page-${page}.png`));
   }
-  writeFileSync(join(outDir, 'packet.json'), JSON.stringify({ file: truth.file, questions }, null, 2));
+  writeFileSync(
+    join(outDir, 'packet.json'),
+    JSON.stringify({ file: truth.file, questions }, null, 2),
+  );
   console.log(`${questions.length} questions on ${pages.size} pages → ${outDir}`);
 }

@@ -31,12 +31,7 @@ export interface PipelinePicture {
 }
 
 export type PipelineEvidence =
-  | 'printed_key'
-  | 'pen_mark'
-  | 'vision_mark'
-  | 'single_option'
-  | 'explanation_text'
-  | 'none';
+  'printed_key' | 'pen_mark' | 'vision_mark' | 'single_option' | 'explanation_text' | 'none';
 
 export interface PipelineQuestion {
   /** Stable within a file: `${page}-${number}-${occurrence}`. */
