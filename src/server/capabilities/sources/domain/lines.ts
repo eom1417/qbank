@@ -83,6 +83,13 @@ function toLine(page: PageText, words: PageWord[]): TextLine {
   };
 }
 
+/**
+ * A picture's own words as reading lines, row by row and without looking for columns: a
+ * screenshot's labels and their text sit in separate OCR blocks but on one row (M34 D6.1).
+ */
+export const rowLines = (page: PageText): TextLine[] =>
+  groupLines(page.words).map((line) => toLine(page, line));
+
 /** Short labels and numbers a PDF maker set in a fallback font ("(1س", "(أ", "12"). */
 const FALLBACK_MAX_CHARS = 4;
 

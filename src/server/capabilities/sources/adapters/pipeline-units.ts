@@ -52,7 +52,11 @@ interface PageSource {
   images: PlacedImage[];
 }
 
-async function inParallel<T, R>(items: readonly T[], work: (item: T) => Promise<R>): Promise<R[]> {
+/** Runs `work` on every item, a few at a time (each one renders and runs Tesseract). */
+export async function inParallel<T, R>(
+  items: readonly T[],
+  work: (item: T) => Promise<R>,
+): Promise<R[]> {
   const results = new Array<R>(items.length);
   let next = 0;
   const worker = async () => {

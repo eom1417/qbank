@@ -173,6 +173,9 @@ function inkGroups(grid: Grid) {
   return groups;
 }
 
+/** Groups of touching ink cells (`ink`: 1 = ink, one byte per pixel), as boxes in points with their fill. */
+export const inkBlobs = (ink: Uint8Array, raster: Raster) => inkGroups(inkCells(ink, raster));
+
 /** Pictures on a scanned page: dense ink that is not words and not a table (FR-06-001). */
 export function scanFigures(
   ink: Uint8Array,
