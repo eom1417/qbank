@@ -4,7 +4,7 @@ import type { AnswerEvidence } from '../answer-decision.js';
 import { isDoubtfulKey } from '../key-lines.js';
 import { unionBox, type Box } from '../page.js';
 import { isSectionLine, type ParsedQuestion } from '../questions.js';
-import type { Owned, QuestionFrame } from './placement.js';
+import { PLACE_UNSURE, type Owned, type QuestionFrame } from './placement.js';
 import type { PipelineEvidence, PipelinePicture, PipelineQuestion, Spot } from './question.js';
 import { combineTags, isTagLine, takeTags, type QuestionTags } from './tags.js';
 import type { VirtualText } from './virtual-text.js';
@@ -118,13 +118,20 @@ function notePictures(parts: QuestionParts): PipelinePicture[][] {
   return result;
 }
 
+/** A picture whose words could not be read, or one placed without certainty (Q85). */
+function pictureReasons(parts: QuestionParts, index: number): string[] {
+  const reasons: string[] = [];
+  if (unreadablePicture(parts, index)) reasons.push('picture_unreadable');
+  if (parts.owned[index]?.unsure) reasons.push(PLACE_UNSURE);
+  return reasons;
+}
+
 /** Why the question goes to review: missing options, no answer, a conflict, a doubtful key, a
  * picture whose text could not be read. */
 function reviewReasons(parts: QuestionParts, index: number, doubt: boolean): string[] {
   const question = parts.parsed[index] as ParsedQuestion;
   const decided = doubt ? undefined : parts.decided[index];
-  const reasons: string[] = doubt ? ['key_doubt'] : [];
-  if (unreadablePicture(parts, index)) reasons.push('picture_unreadable');
+  const reasons: string[] = [...(doubt ? ['key_doubt'] : []), ...pictureReasons(parts, index)];
   if (question.options.length < 2) reasons.push('incomplete_options');
   if (!decided || decided.answers.length === 0) reasons.push('no_answer');
   if (decided && decided.conflicts.length > 0) reasons.push('answer_conflict');

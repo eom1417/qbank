@@ -27,4 +27,6 @@ export const pipelineAr: Record<keyof typeof pipelineEn, string> = {
   'review.reason.answer_conflict': 'علامات الإجابة في الملف متعارضة',
   'review.reason.mark_unclear': 'تعذّرت قراءة الخيار المعلَّم',
   'review.reason.picture_unreadable': 'تعذّرت قراءة صورة فيها كلام السؤال',
+  'review.reason.single_signal': 'الإجابة على دليل واحد فقط، وتحتاج تأكيدًا',
+  'review.reason.picture_place_unsure': 'مكان صورة غير مؤكد؛ أُخفيت حتى الكشف',
 };

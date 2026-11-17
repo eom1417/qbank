@@ -7,6 +7,7 @@ import {
   MARK_UNCLEAR,
   NO_ANSWER,
   type VisionVerdict,
+  SINGLE_SIGNAL,
 } from '../../../src/server/capabilities/sources/domain/pipeline/evidence.js';
 import type {
   PipelineEvidence,
@@ -29,13 +30,15 @@ const vision = (letter: string | null, eliminated: string[] = []): VisionVerdict
 });
 
 describe('combining answer evidence (M34 P4b, D4.6)', () => {
-  it('takes one positive signal as the answer', () => {
+  it('keeps one signal as a suggestion held for review (Q85: two must agree)', () => {
     const keyed = combineEvidence(question('ABCD', ['C'], ['printed_key']), null);
-    expect(keyed).toMatchObject({ answers: ['C'], evidence: ['printed_key'], conflicts: [] });
+    expect(keyed).toMatchObject({ answers: ['C'], reviewReasons: [SINGLE_SIGNAL] });
     const seen = combineEvidence(question('ABCD'), vision('B'));
-    expect(seen).toMatchObject({ answers: ['B'], evidence: ['vision_mark'], reviewReasons: [] });
+    expect(seen).toMatchObject({ answers: ['B'], evidence: ['vision_mark'] });
+    expect(seen.reviewReasons).toEqual([SINGLE_SIGNAL]);
     const told = combineEvidence(question('ABC', ['A'], ['explanation_text']), vision(null));
     expect(told).toMatchObject({ answers: ['A'], evidence: ['explanation_text'] });
+    expect(told.reviewReasons).toEqual([SINGLE_SIGNAL]);
   });
 
   it('agrees when the ink and the vision lesson name the same option', () => {
@@ -84,7 +87,7 @@ describe('the explanation naming an option (M34 P4b, D4.6)', () => {
     expect(combineEvidence(told('Beta agonist, because it relaxes.'), null)).toMatchObject({
       answers: ['B'],
       evidence: ['explanation_text'],
-      reviewReasons: [],
+      reviewReasons: [SINGLE_SIGNAL],
     });
   });
 
@@ -144,7 +147,7 @@ describe('undecided answer evidence (M34 P4b, D4.6)', () => {
     const unread = combineEvidence(question('ABC'), 'review');
     expect(unread.reviewReasons).toEqual([NO_ANSWER, MARK_UNCLEAR]);
     const inked = combineEvidence(question('ABC', ['B'], ['pen_mark']), 'review');
-    expect(inked).toMatchObject({ answers: ['B'], reviewReasons: [] });
+    expect(inked).toMatchObject({ answers: ['B'], reviewReasons: [SINGLE_SIGNAL] });
   });
 
   it('never takes a doubtful printed key ("D?"), even with a matching mark', () => {
@@ -166,11 +169,29 @@ describe('undecided answer evidence (M34 P4b, D4.6)', () => {
     const stale = question('ABCD', ['B'], ['pen_mark'], {
       reviewReasons: [NO_ANSWER, 'picture_unreadable'],
     });
-    expect(combineEvidence(stale, null).reviewReasons).toEqual(['picture_unreadable']);
+    expect(combineEvidence(stale, null).reviewReasons).toEqual([
+      'picture_unreadable',
+      SINGLE_SIGNAL,
+    ]);
   });
 
   it('gives the same result when combined twice', () => {
     const once = combineEvidence(question('ABCD', ['B'], ['pen_mark']), vision('B'));
     expect(combineEvidence(once, vision('B'))).toEqual(once);
+  });
+});
+
+describe('two agreeing signals before an exam (M34 Q85)', () => {
+  it('takes a vision mark that a second, independent reading confirmed (R1)', () => {
+    const twice = { mark: { letter: 'B', eliminated: [], confirmed: true } };
+    expect(combineEvidence(question('ABCD'), twice)).toMatchObject({
+      answers: ['B'],
+      reviewReasons: [],
+    });
+  });
+
+  it('confirms a printed key the vision lesson looked at without seeing another mark', () => {
+    const keyed = combineEvidence(question('ABCD', ['C'], ['printed_key']), vision(null));
+    expect(keyed).toMatchObject({ answers: ['C'], reviewReasons: [] });
   });
 });

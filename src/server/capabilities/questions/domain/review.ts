@@ -31,6 +31,8 @@ const MEDIUM: ReadonlySet<string> = new Set([
   'duplicate',
   'ai_read',
   'picture_unreadable',
+  'single_signal',
+  'picture_place_unsure',
 ]);
 const RANK: Record<Severity, number> = { high: 3, medium: 2, low: 1 };
 

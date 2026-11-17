@@ -216,7 +216,7 @@ function rowsOf(
         decided: decidedTruth(t),
         answer: done.answers.join(''),
         evidence: done.evidence.join('+'),
-        outcome: outcomeOf(t, done.answers),
+        outcome: outcomeOf(t, done.reviewReasons.length > 0 ? [] : done.answers), // in an exam
         rulesOutcome: outcomeOf(t, combineEvidence(rule, null).answers),
         asked: run.asked.includes(rule.key),
         vision: visionText(marks.get(rule.key)),

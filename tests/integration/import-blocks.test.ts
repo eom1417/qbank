@@ -47,7 +47,6 @@ describe('the units a pipeline import keeps (Q26)', () => {
     expect(roles).toContain('stem');
     expect(roles).toContain('option:A');
     expect(roles).toContain('picture:explanation');
-    expect(roles).toContain('picture:question');
     for (const block of blocks) {
       const ofQuestion = !['filler', 'dropped'].includes(block.role ?? '');
       expect(block.question_seq !== null).toBe(ofQuestion);

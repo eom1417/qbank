@@ -3,6 +3,7 @@
 // that disagree with the key); then every question's signals are combined (D4.6).
 import { createHash } from 'node:crypto';
 import type { AiFailure } from '../../providers/index.js';
+import { modelFor } from '../domain/pipeline/approved-models.js';
 import { combineEvidence, type VisionVerdict } from '../domain/pipeline/evidence.js';
 import {
   markedLetters,
@@ -143,10 +144,65 @@ async function recheckSheets(
   return { ...strong, results, usage: [...run.usage, ...strong.usage] };
 }
 
-function markList(shown: Shown, run: LessonRun<MarkOutput>) {
+/** The vision mark alone would decide it: a second reading must confirm it (R1, Q85). */
+function visionOnly(question: PipelineQuestion, result: ItemResult<MarkOutput> | null): boolean {
+  if (!result) return false;
+  const combined = combineEvidence(question, verdictOf(inputOf(question), result));
+  return combined.evidence.length === 1 && combined.evidence[0] === 'vision_mark';
+}
+
+/** The letter one reading gave, or undefined when it gave none. */
+const letterOf = (result: ItemResult<MarkOutput> | null | undefined) =>
+  result && 'output' in result ? result.output.letter : undefined;
+
+/**
+ * Asks the other model, independently, about every question only the vision mark decides; the
+ * same letter twice confirms it. A different letter or no reply leaves it held for review.
+ */
+async function secondReading(
+  deps: EvidenceDeps,
+  shown: Shown,
+  run: LessonRun<MarkOutput>,
+  options: EvidenceOptions,
+): Promise<{ run: LessonRun<MarkOutput>; confirmed: Set<number> }> {
+  const asked = shown.questions.flatMap((q, i) =>
+    visionOnly(q, run.results[i] ?? null) ? [i] : [],
+  );
+  const confirmed = new Set<number>();
+  let usage = run.usage;
+  let paused = run.paused;
+  const strong = modelFor(markLesson.id, deps.providerKind, 'strong');
+  for (const tier of ['strong', 'light'] as const) {
+    // The other model than the one that gave the first reading.
+    const group = asked.filter((i) => (modelOf(run.results[i]) === strong) === (tier === 'light'));
+    if (group.length === 0 || paused) continue;
+    const items = group.map((i) => shown.items[i] as LessonItem<MarkInput>);
+    const again = await runLesson({ ...deps, startTier: tier }, markLesson, items, options);
+    group.forEach((i, k) => {
+      const first = letterOf(run.results[i]);
+      if (first !== undefined && first === letterOf(again.results[k])) confirmed.add(i);
+    });
+    usage = [...usage, ...again.usage];
+    paused = again.paused;
+  }
+  return { run: { ...run, usage, paused }, confirmed };
+}
+
+const modelOf = (result: ItemResult<MarkOutput> | null | undefined) =>
+  result && 'model' in result ? result.model : null;
+
+function markList(shown: Shown, run: LessonRun<MarkOutput>, confirmed: ReadonlySet<number>) {
   return shown.questions.flatMap((question, index) => {
     const result = run.results[index];
-    return result ? [{ key: question.key, verdict: verdictOf(inputOf(question), result) }] : [];
+    if (!result) return [];
+    const verdict = verdictOf(inputOf(question), result);
+    const sure = confirmed.has(index) && verdict !== null && verdict !== 'review';
+    return [
+      {
+        key: question.key,
+        verdict: sure ? { mark: { ...verdict.mark, confirmed: true } } : verdict,
+      },
+    ];
   });
 }
 
@@ -163,8 +219,9 @@ export async function withEvidence(
   const chosen = questionsToAsk(questions, options.auditEvery);
   const shown = await showable(deps, file, chosen.asked, options);
   const first = await runLesson(deps, markLesson, shown.items, options);
-  const run = await recheckSheets(deps, shown, first, options);
-  const marks = markList(shown, run);
+  const checked = await recheckSheets(deps, shown, first, options);
+  const { run, confirmed } = await secondReading(deps, shown, checked, options);
+  const marks = markList(shown, run, confirmed);
   const markByKey = new Map(marks.map((mark) => [mark.key, mark.verdict]));
   const asked = shown.questions.map((question) => question.key);
   const unfinished = new Set(asked.filter((key) => !markByKey.has(key)));
