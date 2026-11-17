@@ -25,6 +25,8 @@ import {
 export interface TriageSettings {
   team: TriageRoles & { improver: AiProvider };
   enhance: Enhancements;
+  /** Only the answer check (S7): no organizing, no text change (a pipeline import, Z2). */
+  answersOnly?: boolean;
 }
 
 /**
@@ -97,7 +99,7 @@ export async function triageRows(
   settings: TriageSettings,
 ): Promise<TriageReport> {
   const works = worksOf(rows);
-  const improveFailure = await improveAll(works, settings);
+  const improveFailure = settings.answersOnly ? null : await improveAll(works, settings);
   const result = await settleAnswers(works, settings);
   const report: TriageReport = {
     changed: 0,

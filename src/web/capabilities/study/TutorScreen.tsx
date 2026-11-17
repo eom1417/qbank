@@ -6,7 +6,7 @@ import { useI18n } from '../../platform/i18n/i18n.js';
 import { markedChoices } from '../exam-ui/choices.js';
 import { QuestionCard } from '../exam-ui/QuestionCard.js';
 import { AiExplainCard } from './AiExplainCard.js';
-import { finishStudy } from './api.js';
+import { finishStudy, mediaUrl } from './api.js';
 import { MarksBar } from './MarksBar.js';
 import { SolutionView } from './SolutionView.js';
 import { useTutor } from './use-tutor.js';
@@ -18,7 +18,7 @@ function QuestionView({ tutor }: { tutor: ReturnType<typeof useTutor> }) {
   return (
     <QuestionCard
       question={item}
-      pictureUrl={(id) => `/api/media/${id}`}
+      pictureUrl={mediaUrl}
       choices={markedChoices(item.options, item.solution, t)}
       selected={tutor.selected}
       disabled={item.solution !== null}

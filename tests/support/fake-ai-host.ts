@@ -19,7 +19,27 @@ export const FAKE_INSTANCES = {
   reader: 'fake-reader',
   /** Answers the model test's connection check. */
   pinger: 'fake-pinger',
+  /** Offers the approved lesson models (M34): no option marked in any cell of a sheet. */
+  lesson: 'fake-lesson',
 } as const;
+
+/** The approved models of the M34 lessons, as the lesson instance offers them. */
+const LESSON_MODELS = [
+  { slug: 'claude-haiku-5-5', name: 'Light', isDefault: true },
+  { slug: 'claude-opus-5-5', name: 'Strong' },
+];
+
+/** A lesson sheet's reply: every cell answered, no option marked (M34). */
+function lessonReply(prompt: string): string | null {
+  const cells = /The image has (\d+) cells/.exec(prompt);
+  if (!cells) return null;
+  const items = Array.from({ length: Number(cells[1]) }, (_, i) => ({
+    n: i + 1,
+    letter: null,
+    eliminated: [],
+  }));
+  return JSON.stringify({ items });
+}
 
 /** The reader's reply for every page: what a model returns for a page it can read. */
 const PAGE_ANSWER = JSON.stringify({
@@ -96,16 +116,36 @@ const instance = (instanceId: string, enabled: boolean) => ({
   enabled,
   supportsTextGeneration: true,
   auth: { status: 'authenticated' },
-  models: [
-    { slug: 'fake-large', name: 'Fake Large', isDefault: true },
-    { slug: 'fake-small', name: 'Fake Small' },
-  ],
+  models:
+    instanceId === FAKE_INSTANCES.lesson
+      ? LESSON_MODELS
+      : [
+          { slug: 'fake-large', name: 'Fake Large', isDefault: true },
+          { slug: 'fake-small', name: 'Fake Small' },
+        ],
 });
 
-/** The fake's reply to one question: refused when signed out, else per prompt and instance. */
-function answerOf(body: Ask['body'], refusing: ReadonlySet<string>): [number, object] {
-  if (refusing.has(body.instanceId ?? ''))
+/** Instances whose subscription is used up (a test fills and renews it). */
+interface Limits {
+  refusing: ReadonlySet<string>;
+  exhausted: ReadonlySet<string>;
+}
+
+/** The kit's failure for a signed-out instance or a used-up subscription; null otherwise. */
+function refusal(instanceId: string, limits: Limits): [number, object] | null {
+  if (limits.refusing.has(instanceId))
     return [422, { error: { _tag: 'AskFailed', reason: 'provider_error', detail: 'signed out' } }];
+  if (limits.exhausted.has(instanceId))
+    return [422, { error: { _tag: 'AskFailed', reason: 'usage_limit', detail: 'limit' } }];
+  return null;
+}
+
+/** The fake's reply to one question: refused when signed out, else per prompt and instance. */
+function answerOf(body: Ask['body'], limits: Limits): [number, object] {
+  const refused = refusal(body.instanceId ?? '', limits);
+  if (refused) return refused;
+  const lesson = lessonReply(body.prompt ?? '');
+  if (lesson) return [200, { text: lesson }];
   const triage = triageReply(body.prompt ?? '');
   if (triage) return [200, { text: triage }];
   const replies: Record<string, string> = {
@@ -125,7 +165,8 @@ function answerOf(body: Ask['body'], refusing: ReadonlySet<string>): [number, ob
 export async function startFakeAiHost() {
   const asks: Ask[] = [];
   const refusing = new Set<string>([FAKE_INSTANCES.refusing]);
-  const answer = (body: Ask['body']) => answerOf(body, refusing);
+  const exhausted = new Set<string>();
+  const answer = (body: Ask['body']) => answerOf(body, { refusing, exhausted });
   const server = createServer((request, response) => {
     void readJson(request).then((body) => {
       if (request.headers.authorization !== `Bearer ${FAKE_HOST_TOKEN}`)
@@ -139,6 +180,7 @@ export async function startFakeAiHost() {
           instance(FAKE_INSTANCES.explainer, true),
           instance(FAKE_INSTANCES.reader, true),
           instance(FAKE_INSTANCES.pinger, true),
+          instance(FAKE_INSTANCES.lesson, true),
         ];
         return respond(response, 200, { providers, settings: { providerInstances: {} } });
       }
@@ -154,6 +196,7 @@ export async function startFakeAiHost() {
     settings: { url: `http://127.0.0.1:${port}`, token: FAKE_HOST_TOKEN },
     asks,
     refusing,
+    exhausted,
     close: () => new Promise<void>((resolve) => server.close(() => resolve())),
   };
 }

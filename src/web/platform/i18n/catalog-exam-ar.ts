@@ -21,7 +21,7 @@ export const examAr: Record<keyof typeof examEn, string> = {
     'لكل سؤال وقته. التنقل للأمام فقط: إذا غادرت سؤالاً أو انتهى وقته فلا تتغير إجابته.',
   'exam.rules.score': 'درجتك هي الصحيح من كل الأسئلة؛ والمتروك يظهر منفصلاً.',
   'exam.start': 'ابدأ الامتحان',
-  'exam.timeLeft': 'الوقت المتبقي (بالثواني):',
+  'exam.timeLeft': 'الوقت المتبقي:',
   'exam.question': 'السؤال',
   'exam.of': 'من',
   'exam.saving': 'يُحفظ…',

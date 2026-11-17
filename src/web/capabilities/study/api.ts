@@ -48,8 +48,12 @@ export const fetchActiveSessions = () =>
 
 export const fetchSession = (id: string) => apiRequest('GET', session(id), SessionResponse);
 
+/** Reading a question has no side effect, so it also serves to fetch one ahead (M34 U3). */
 export const fetchItem = (id: string, position: number) =>
   apiRequest('GET', `${session(id)}/items/${position}`, ItemResponse);
+
+/** Where a question's picture is shown from (the owner's own media). */
+export const mediaUrl = (id: string) => `/api/media/${id}`;
 
 export const sendAnswer = (id: string, position: number, chosen: string[], seconds: number) =>
   apiRequest('POST', `${session(id)}/items/${position}/answer`, ItemResponse, { chosen, seconds });

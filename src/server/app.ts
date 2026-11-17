@@ -10,7 +10,7 @@ import { createChannels } from './capabilities/channels/index.js';
 import { registerHealth } from './capabilities/health/index.js';
 import { createPortability } from './capabilities/portability/index.js';
 import { createLibrary } from './capabilities/library/index.js';
-import { createOperator } from './capabilities/operator/index.js';
+import { createOperator, createOperatorAlert } from './capabilities/operator/index.js';
 import { createProviders } from './capabilities/providers/index.js';
 import { createQuestions } from './capabilities/questions/index.js';
 import { createSources } from './capabilities/sources/index.js';
@@ -57,6 +57,7 @@ function registerLibrary(
     requireActor,
     chaptersOf: library.chaptersOf,
     tagsOf: library.tagsOf,
+    ensureTags: library.ensureTags,
     ownsBank: library.ownsBank,
     deleteBlob: (key) => blobs.remove(key),
   });
@@ -64,13 +65,26 @@ function registerLibrary(
   return { library, blobs, questions };
 }
 
+/** The weekly model measurement (Q15): with the operator's AI, alerting the operator's inbox. */
+function measureSettings({ config, db, clock }: ContentDeps, identity: IdentityModule) {
+  const alert = createOperatorAlert({ db, clock, newId, version: config.version });
+  return {
+    operatorId: identity.operatorId,
+    alert: async (message: string) => {
+      const operatorId = await identity.operatorId();
+      if (operatorId) await alert(operatorId, message);
+    },
+  };
+}
+
 /** Imports through the user's AI (the providers kit), and the worker that runs them. */
 function registerImports(
   app: FastifyInstance,
   deps: ContentDeps,
-  requireActor: RequireActor,
+  identity: IdentityModule,
   parts: ReturnType<typeof registerLibrary>,
 ) {
+  const { requireActor } = identity;
   const { config, db, clock } = deps;
   const aiHosts = createAiHosts(config.aiHost, config.aiHosts);
   app.addHook('onClose', aiHosts.close);
@@ -90,9 +104,14 @@ function registerImports(
     maxPages: config.imports.maxPages,
     samplePdf: config.samplePdf,
     originalRetentionDays: config.imports.originalRetentionDays,
+    requiresAi: config.imports.requiresAi,
     ...(deps.checkLink ? { checkLink: deps.checkLink } : {}),
+    mode: config.mode,
+    aiConsentOf: identity.aiConsentOf,
+    ...(config.mode === 'accounts' ? { measure: measureSettings(deps, identity) } : {}),
   });
   sources.register(app);
+  app.decorate('measurement', { runDue: sources.measureDue });
   if (config.imports.worker) {
     sources.worker.start();
     app.addHook('onClose', async () => sources.worker.stop());
@@ -104,7 +123,7 @@ function registerImports(
 /** Study, then export, restore and deletion across everything (M9–M13). */
 function registerContent(app: FastifyInstance, deps: ContentDeps, identity: IdentityModule) {
   const parts = registerLibrary(app, deps, identity.requireActor);
-  const imports = registerImports(app, deps, identity.requireActor, parts);
+  const imports = registerImports(app, deps, identity, parts);
   const { providers, sources } = imports;
   const { library, questions, blobs } = parts;
   const study = createStudy({
@@ -228,6 +247,8 @@ declare module 'fastify' {
     backups: Backups;
     /** Governed sharing's retention purge (DEC-39): main.ts runs it hourly. */
     sharing: { purge(now: Date): Promise<number> };
+    /** The weekly model measurement (Q15): main.ts checks hourly, it runs once a week. */
+    measurement: { runDue(): Promise<string> };
   }
 }
 

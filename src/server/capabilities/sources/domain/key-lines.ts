@@ -23,10 +23,14 @@ const LETTER = '[A-Fa-f]|هـ|[أابجدهو]';
 const LETTER_LIST = `(?:${LETTER})(?:\\s*(?:,|،|and|&|و)\\s*(?:${LETTER}))*`;
 
 // "Answer: B", "Correct answer: D", "Ans. C", "Key: B, D", "الإجابة: ب", "الجواب الصحيح: ج".
-const INLINE = new RegExp(
-  `^(?:(?:the\\s+)?(?:correct\\s+)?(?:answer|ans\\.?|key)|الإجابة(?:\\s+الصحيحة)?|الجواب(?:\\s+الصحيح)?)\\s*(?:is|هي|هو)?\\s*[:：\\-–]?\\s*\\(?(${LETTER_LIST})\\)?\\s*\\.?$`,
-  'i',
-);
+const KEY_WORD =
+  '^(?:(?:the\\s+)?(?:correct\\s+)?(?:answer|ans\\.?|key)|الإجابة(?:\\s+الصحيحة)?|الجواب(?:\\s+الصحيح)?)\\s*(?:is|هي|هو)?\\s*[:：\\-–]?\\s*';
+const INLINE = new RegExp(`${KEY_WORD}\\(?(${LETTER_LIST})\\)?\\s*\\.?$`, 'i');
+// "Answer: D?", "Correct answer: B??", "Correct answer: X": a key its writer leaves in doubt.
+const DOUBTFUL = new RegExp(`${KEY_WORD}(?:\\(?(?:${LETTER_LIST})\\)?\\s*\\?+|[Xx?]+)\\s*$`, 'i');
+
+/** A printed key with doubt ("D?", "X"): it gives no answer, and the question goes to review. */
+export const isDoubtfulKey = (line: string) => DOUBTFUL.test(line.trim());
 
 const lettersIn = (list: string) =>
   list

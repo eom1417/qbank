@@ -165,6 +165,7 @@ export const sharingAr: Record<keyof typeof sharingEn, string> = {
   'sharing.form.startsAt': 'تفتح في (فارغ: الآن)',
   'sharing.form.endsAt': 'تُغلق في (فارغ: بلا نهاية)',
   'sharing.form.attempts': 'المحاولات لكل شخص',
+  'sharing.form.timer': 'حدّد وقتاً للمحاولة',
   'sharing.form.duration': 'وقت المحاولة كلها',
   'sharing.form.minutes': '{n} دقيقة',
   'sharing.form.navigation': 'التنقل بين الأسئلة',

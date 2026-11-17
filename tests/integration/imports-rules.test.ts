@@ -95,6 +95,7 @@ const VERIFY = JSON.stringify({ ...NO_ENHANCEMENTS, verifyAnswers: true });
 async function importWithAi(owner: Browser, bankId: string, providerId: string) {
   const started = await uploadFile(app(), owner.cookie(), bankId, fixtures().arabic, {
     aiProviderId: providerId,
+    aiMode: 'verify',
     aiEnhance: VERIFY,
   });
   await runImports(app());
@@ -153,6 +154,7 @@ describe('choosing the AI for an import', () => {
     for (const instance of [FAKE_INSTANCES.disabled, 'no-such-instance']) {
       const refused = await uploadFile(app(), owner.cookie(), bankId, fixtures().arabic, {
         aiProviderId: instance,
+        aiMode: 'verify',
       });
       expect([refused.statusCode, refused.json().error.fields]).toEqual([
         400,
@@ -168,6 +170,7 @@ describe('choosing the model for an import', () => {
     const upload = (aiModel: string) =>
       uploadFile(app(), owner.cookie(), bankId, fixtures().arabic, {
         aiProviderId: FAKE_INSTANCES.vision,
+        aiMode: 'verify',
         aiModel,
       });
     const refused = await upload('not-offered');
@@ -190,6 +193,7 @@ describe('the models and improvements of an import (DEC-33, DEC-34)', () => {
     const asked = fakeHost().asks.length;
     await uploadFile(app(), owner.cookie(), bankId, fixtures().arabic, {
       aiProviderId: FAKE_INSTANCES.vision,
+      aiMode: 'verify',
       aiEnhance: VERIFY,
       aiFirstModel: 'fake-large',
       aiSecondModel: 'fake-small',
@@ -201,12 +205,14 @@ describe('the models and improvements of an import (DEC-33, DEC-34)', () => {
     expect(solvers.map((ask) => ask.body.model).sort()).toEqual(['fake-large', 'fake-small']);
     const refused = await uploadFile(app(), owner.cookie(), bankId, fixtures().arabic, {
       aiProviderId: FAKE_INSTANCES.vision,
+      aiMode: 'verify',
       aiJudgeModel: 'not-offered',
     });
     expect(refused.json().error.fields).toEqual({ aiJudgeModel: 'invalid_value' });
     for (const aiEnhance of ['not json', JSON.stringify({ verifyAnswers: true })]) {
       const bad = await uploadFile(app(), owner.cookie(), bankId, fixtures().arabic, {
         aiProviderId: FAKE_INSTANCES.vision,
+        aiMode: 'verify',
         aiEnhance,
       });
       expect([bad.statusCode, bad.json().error.fields]).toEqual([

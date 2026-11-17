@@ -37,3 +37,14 @@ describe('operator and import-worker settings', () => {
     expect(config.operator).toEqual({ email: null, name: null });
   });
 });
+
+describe('imports only with the AI (Q7)', () => {
+  it('requires it on a server and not on a local install, unless set', () => {
+    expect(loadConfig(ACCOUNTS).imports.requiresAi).toBe(true);
+    expect(loadConfig({}).imports.requiresAi).toBe(false);
+    const off = { ...ACCOUNTS, QBANK_IMPORT_REQUIRES_AI: 'false' };
+    expect(loadConfig(off).imports.requiresAi).toBe(false);
+    expect(loadConfig({ QBANK_IMPORT_REQUIRES_AI: 'true' }).imports.requiresAi).toBe(true);
+    expect(loadConfig({ ...ACCOUNTS, QBANK_IMPORT_REQUIRES_AI: '' }).imports.requiresAi).toBe(true);
+  });
+});

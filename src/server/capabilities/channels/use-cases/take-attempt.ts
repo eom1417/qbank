@@ -77,6 +77,23 @@ export async function openItem(
   return itemView(moved, { ...item, opened_at: item.opened_at ?? now }, now);
 }
 
+/**
+ * The next question, read without opening it (M34 U3: preloading). Nothing moves: no position,
+ * no per-question clock. Only the question right after the current one, while the attempt runs;
+ * it shows exactly what opening it would (never an answer or explanation before its reveal).
+ */
+export async function peekItem(
+  deps: ChannelsDeps,
+  taking: Taking,
+  position: string,
+): Promise<TakeItemResponse> {
+  const { items, item } = await itemsWith(deps, taking, position);
+  const { attempt } = taking;
+  const current = items.findIndex((each) => each.position === attempt.position);
+  if (attempt.status !== 'active' || items.indexOf(item) !== current + 1) throw notFound();
+  return itemView(taking, item, deps.clock.now());
+}
+
 /** An item that may still change now, under the share's gate; otherwise the reason. */
 async function changeableItem(deps: ChannelsDeps, taking: Taking, position: string) {
   enforce(deps, taking.row, 'continue');

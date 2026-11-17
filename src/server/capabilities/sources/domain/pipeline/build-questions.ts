@@ -1,0 +1,191 @@
+// M34 P4a: the pipeline's questions put together from what the steps found: the parsed
+// question, its decided answer, its placed pictures and notes, its case and its tags.
+import type { AnswerEvidence } from '../answer-decision.js';
+import { isDoubtfulKey } from '../key-lines.js';
+import { unionBox, type Box } from '../page.js';
+import { isSectionLine, type ParsedQuestion } from '../questions.js';
+import type { Owned, QuestionFrame } from './placement.js';
+import type { PipelineEvidence, PipelinePicture, PipelineQuestion, Spot } from './question.js';
+import { combineTags, isTagLine, takeTags, type QuestionTags } from './tags.js';
+import type { VirtualText } from './virtual-text.js';
+
+/** A question's answer as the rules decided it. */
+interface DecidedAnswer {
+  answers: string[];
+  evidence: AnswerEvidence | null;
+  conflicts: string[];
+  explanation: string | null;
+}
+
+export interface QuestionParts {
+  parsed: readonly ParsedQuestion[];
+  decided: readonly DecidedAnswer[];
+  frames: readonly QuestionFrame[];
+  owned: readonly Owned[];
+  notes: readonly { question: number; page: number; box: Box }[];
+  cases: readonly { questions: number[]; text: string; from: number; to: number }[];
+  /** Questions whose stem was read in a picture. */
+  picture: ReadonlySet<number>;
+  text: VirtualText;
+  /** Orders of the virtual lines no question, key or explanation read. */
+  free: ReadonlySet<number>;
+  /** Orders of every line nothing read (pictures' too), and the pictures something read. */
+  unread: ReadonlySet<number>;
+  consumed: ReadonlySet<string>;
+}
+
+const EVIDENCE: Record<AnswerEvidence, PipelineEvidence> = {
+  answer_key: 'printed_key',
+  answer_file: 'printed_key',
+  explanation: 'explanation_text',
+  pen_mark: 'pen_mark',
+  single_option: 'single_option',
+  ai_read: 'vision_mark',
+  ai_mark: 'vision_mark',
+};
+
+/** One box per page around the question's lines (what a vision lesson looks at). */
+function areaOf(question: ParsedQuestion): Spot[] {
+  const pages = [...new Set(question.spans.map((span) => span.page))];
+  return pages.map((page) => ({
+    page,
+    box: unionBox(question.spans.filter((span) => span.page === page).map((span) => span.box)),
+  }));
+}
+
+/** The free lines from this question's anchor to the next one's (tags, doubtful keys). */
+function freeLines(parts: QuestionParts, index: number): string[] {
+  const from = parts.frames[index]?.stemAt ?? 0;
+  const to = parts.frames[index + 1]?.stemAt ?? parts.text.lines.length;
+  const lines: string[] = [];
+  for (let at = from; at < to; at++)
+    if (parts.free.has(at)) lines.push(parts.text.lines[at]?.line.text ?? '');
+  return lines;
+}
+
+/** Every line from this question's anchor to the next one's (its picture's own key lines too). */
+function ownLines(parts: QuestionParts, index: number): string[] {
+  const from = parts.frames[index]?.stemAt ?? 0;
+  const to = parts.frames[index + 1]?.stemAt ?? parts.text.lines.length;
+  return parts.text.lines.slice(Math.max(0, from), to).map((virtual) => virtual.line.text);
+}
+
+const lineTags = (parts: QuestionParts, index: number): QuestionTags[] =>
+  freeLines(parts, index)
+    .filter(isTagLine)
+    .map((line) => takeTags(line).tags);
+
+/**
+ * The file's own words after the question's last line and before the next question (Z5):
+ * typed lines, and the unread lines of pictures a question or key read in part (a picture
+ * nothing read comes as one text through placement). Rules, headings and case texts are not.
+ */
+function zoneText(parts: QuestionParts, index: number): string | null {
+  const from = (parts.frames[index]?.endAt ?? 0) + 1;
+  const to = parts.frames[index + 1]?.stemAt ?? parts.text.lines.length;
+  const lines: string[] = [];
+  for (let at = from; at < to; at++) {
+    const line = explanationLine(parts, at);
+    if (line !== null) lines.push(line);
+  }
+  return lines.length > 0 ? lines.join(' ') : null;
+}
+
+/** Line `at` as explanation text, or null (read already, a rule or heading, a case's). */
+function explanationLine(parts: QuestionParts, at: number): string | null {
+  const virtual = parts.text.lines[at];
+  if (!virtual || !parts.unread.has(at) || isSectionLine(virtual.line.text)) return null;
+  if (parts.cases.some((group) => at >= group.from && at < group.to)) return null;
+  const read = !virtual.fromPicture || parts.consumed.has(virtual.unitId);
+  return read ? virtual.line.text : null;
+}
+
+/** Handwritten notes found as ink, numbered per page in file order. */
+function notePictures(parts: QuestionParts): PipelinePicture[][] {
+  const result: PipelinePicture[][] = parts.parsed.map(() => []);
+  const counts = new Map<number, number>();
+  for (const note of parts.notes) {
+    const n = counts.get(note.page) ?? 0;
+    counts.set(note.page, n + 1);
+    result[note.question]?.push({
+      unitId: `ink:${note.page}:${n}`,
+      spot: { page: note.page, box: note.box },
+      placement: 'explanation',
+      optionLetter: null,
+      imageClass: 'handwriting_ink',
+    });
+  }
+  return result;
+}
+
+/** Why the question goes to review: missing options, no answer, a conflict, a doubtful key, a
+ * picture whose text could not be read. */
+function reviewReasons(parts: QuestionParts, index: number, doubt: boolean): string[] {
+  const question = parts.parsed[index] as ParsedQuestion;
+  const decided = doubt ? undefined : parts.decided[index];
+  const reasons: string[] = doubt ? ['key_doubt'] : [];
+  if (unreadablePicture(parts, index)) reasons.push('picture_unreadable');
+  if (question.options.length < 2) reasons.push('incomplete_options');
+  if (!decided || decided.answers.length === 0) reasons.push('no_answer');
+  if (decided && decided.conflicts.length > 0) reasons.push('answer_conflict');
+  return reasons;
+}
+
+/** The question's stem and explanation without tags, and every tag it carries. */
+function textOf(parts: QuestionParts, index: number) {
+  const question = parts.parsed[index] as ParsedQuestion;
+  const stem = takeTags(question.stem);
+  const pieces = [
+    zoneText(parts, index),
+    parts.decided[index]?.explanation,
+    ...(parts.owned[index]?.texts ?? []),
+  ];
+  const explanation = takeTags(pieces.filter(Boolean).join('\n'));
+  const options = question.options.map((option) => takeTags(option.text).tags);
+  const tags = combineTags([stem.tags, ...options, explanation.tags, ...lineTags(parts, index)]);
+  return { stem: stem.rest, explanation: explanation.rest || null, tags };
+}
+
+const answerOf = (decided: DecidedAnswer | undefined) => ({
+  answers: decided?.answers ?? [],
+  evidence: decided?.evidence ? [EVIDENCE[decided.evidence]] : (['none'] as PipelineEvidence[]),
+  conflicts: decided?.conflicts ?? [],
+});
+
+const unreadablePicture = (parts: QuestionParts, index: number) =>
+  (parts.owned[index]?.pictures ?? []).some(
+    (picture) => parts.text.units.get(picture.unitId)?.ocr?.unreadable === true,
+  );
+
+/** Every question of the file as the pipeline carries it (P4 → P5). */
+export function buildQuestions(parts: QuestionParts): PipelineQuestion[] {
+  const notes = notePictures(parts);
+  const seen = new Map<string, number>();
+  return parts.parsed.map((question, index) => {
+    // A key printed with doubt decides nothing, whatever else the rules found.
+    const doubt = ownLines(parts, index).some(isDoubtfulKey);
+    const decided = doubt ? undefined : parts.decided[index];
+    const base = `${question.page}-${question.number}`;
+    const occurrence = seen.get(base) ?? 0;
+    seen.set(base, occurrence + 1);
+    return {
+      key: `${base}-${occurrence}`,
+      number: question.number,
+      page: question.page,
+      pages: [...new Set(question.spans.map((span) => span.page))],
+      options: question.options.map(({ letter, label, text, page, letterBox }) => ({
+        letter,
+        label,
+        text: takeTags(text).rest,
+        spot: { page, box: letterBox },
+      })),
+      area: areaOf(question),
+      ...textOf(parts, index),
+      pictures: [...(parts.owned[index]?.pictures ?? []), ...(notes[index] ?? [])],
+      ...answerOf(decided),
+      fromPicture: parts.picture.has(index),
+      caseText: parts.cases.find((c) => c.questions.includes(index))?.text ?? null,
+      reviewReasons: reviewReasons(parts, index, doubt),
+    };
+  });
+}

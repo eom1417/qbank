@@ -14,7 +14,8 @@ import { TakeBanner } from './TakeBanner.js';
 import { TakeCheck } from './TakeCheck.js';
 import type { useAttempt } from './use-attempt.js';
 import { ExplanationPictures } from './ExplanationPictures.js';
-import { cardPictureIds, usePictures } from './use-pictures.js';
+import { cardPictureIds } from '../exam-ui/card-pictures.js';
+import { usePictures } from './use-pictures.js';
 
 type Attempt = ReturnType<typeof useAttempt>;
 
@@ -39,7 +40,7 @@ function Feedback({ attempt, item }: { attempt: Attempt; item: TakeItemResponse 
 /** The question as the share shows it, marked only once the server reveals the answer. */
 function TakeQuestion({ attempt, item }: { attempt: Attempt; item: TakeItemResponse }) {
   const { t } = useI18n();
-  const pictureUrl = usePictures(attempt.api, cardPictureIds(item));
+  const pictureUrl = usePictures(attempt.pictures, cardPictureIds(item));
   const { feedback } = item;
   const reveal = feedback && { answers: feedback.answers, chosen: item.saved };
   return (

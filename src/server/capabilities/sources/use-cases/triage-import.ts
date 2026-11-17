@@ -46,7 +46,9 @@ export async function triageImport(deps: SourcesDeps, job: JobRow, sourceId: str
     : null;
   if (!team) return { aiOutcome: 'not_ready' };
   const owner = { ownerId: job.owner_id, now: deps.clock.now() };
-  const settings = { team, enhance: enhanceOf(job) };
+  // A pipeline job's questions are already organized from the file: only their answers are
+  // checked (S7), never rewritten (Z2).
+  const settings = { team, enhance: enhanceOf(job), answersOnly: job.ai_mode === 'pipeline' };
   const rows = await deps.questions.questionsOfSource(job.owner_id, sourceId);
   const report = await triageRows(deps, owner, rows, settings);
   const settled = await deps.questions.questionsOfSource(job.owner_id, sourceId);

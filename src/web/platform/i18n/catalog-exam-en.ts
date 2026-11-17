@@ -20,7 +20,7 @@ export const examEn = {
   'exam.rules.score':
     'Your score is right answers out of all questions; unanswered ones are shown apart.',
   'exam.start': 'Start the exam',
-  'exam.timeLeft': 'Time left (seconds):',
+  'exam.timeLeft': 'Time left:',
   'exam.question': 'Question',
   'exam.of': 'of',
   'exam.saving': 'Saving…',

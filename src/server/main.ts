@@ -36,6 +36,9 @@ const purgeShares = () =>
   void app.sharing.purge(systemClock.now()).catch((error: unknown) => app.log.error(error));
 purgeShares();
 setInterval(purgeShares, 60 * 60_000).unref();
+// The approved models are measured weekly on the built-in reference set (Q15): checked hourly.
+const measure = () => void app.measurement.runDue().catch((error: unknown) => app.log.error(error));
+setInterval(measure, 60 * 60_000).unref();
 if (pairingToken) {
   app.log.info(
     `QBank is running for you only. To pair another browser (a phone), open #pair=<code> with the code in ${config.imports.dataDir}/pairing-token`,

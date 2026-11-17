@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Pipeline import (synthetic test fixture only)</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 0;
+      }
+      body {
+        margin: 0;
+        font: 12pt 'Liberation Serif', serif;
+      }
+      section {
+        height: 296mm;
+        padding: 70px 60px 0;
+        box-sizing: border-box;
+        break-after: page;
+      }
+      section:last-child {
+        break-after: auto;
+      }
+      p {
+        margin: 0 0 6pt;
+      }
+      .q {
+        margin-top: 24pt;
+      }
+    </style>
+  </head>
+  <body>
+    <section>
+      <p>Questions 1-2 refer to the following case.</p>
+      <p>A made-up boy aged six has a fever and a cough for three days.</p>
+      <p class="q">1) Which test comes first for this boy?</p>
+      <p>A. Chest film</p>
+      <p>B. Blood count</p>
+      <p>C. Throat swab</p>
+      <p class="q">Part II 2019</p>
+      <p class="q">Correct answer: B</p>
+      <p>A blood count is quick and guides the next step in this example.</p>
+      <img src="{{ecg}}" style="display: block; width: 220px; margin-top: 18pt" />
+      <p class="q" style="margin-top: 40pt">
+        2) The X-ray shown below is of this boy. What does it show?
+      </p>
+      <p>A. Nothing unusual</p>
+      <p>B. A patch in the right lung</p>
+      <img src="{{xray}}" style="display: block; width: 200px; margin-top: 4pt" />
+    </section>
+    <section>
+      <p class="q">3) Which colour is the made-up flag in this example?</p>
+      <p>A. Red</p>
+      <p>B. Blue</p>
+      <p>C. Green</p>
+    </section>
+  </body>
+</html>

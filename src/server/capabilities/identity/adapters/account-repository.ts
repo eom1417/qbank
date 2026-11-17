@@ -29,6 +29,8 @@ export interface AccountRepository {
   /** Links an account to a Google subject; false when it is already linked (or the sub is taken). */
   linkGoogle(id: string, sub: string): Promise<boolean>;
   update(id: string, changes: UpdateAccountRequest): Promise<void>;
+  /** Records the AI consent (Q8) the first time; a later call keeps the first time. */
+  consentToAi(id: string, at: Date): Promise<void>;
   setPasswordHash(id: string, passwordHash: string): Promise<void>;
   /** E-mail and name of each account found, by id (the operator's console, DEC-40). */
   contactsOf(ids: readonly string[]): Promise<Map<string, AccountContact>>;
@@ -52,6 +54,7 @@ const fromRow = (row: AccountRow): Account => ({
   },
   operatorConfirmed: row.operator_confirmed_at !== null,
   googleLinked: row.google_sub !== null,
+  aiConsentAt: row.ai_consent_at,
 });
 
 /** Column names for a partial update; undefined fields are left untouched. */
@@ -122,6 +125,16 @@ async function findContacts(db: Db, ids: readonly string[]) {
   return new Map(rows.map((r) => [r.id, { email: r.email, displayName: r.display_name }]));
 }
 
+/** The first consent stays: a second one changes nothing (Q8). */
+async function consentToAi(db: Db, id: string, at: Date) {
+  await db
+    .updateTable('account')
+    .set({ ai_consent_at: at })
+    .where('id', '=', id)
+    .where('ai_consent_at', 'is', null)
+    .execute();
+}
+
 export function createAccountRepository(db: Db): AccountRepository {
   const byId = (id: string) => db.selectFrom('account').where('id', '=', id);
   return {
@@ -152,6 +165,7 @@ export function createAccountRepository(db: Db): AccountRepository {
     async update(id, changes) {
       await db.updateTable('account').set(toChanges(changes)).where('id', '=', id).execute();
     },
+    consentToAi: (id, at) => consentToAi(db, id, at),
     async setPasswordHash(id, passwordHash) {
       await db
         .updateTable('account')

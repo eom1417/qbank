@@ -1,5 +1,7 @@
+import { z } from 'zod';
 import {
   Enhancements,
+  LessonUsage,
   NO_ENHANCEMENTS,
   TriageModels,
   type ImportResponse,
@@ -14,22 +16,44 @@ import type { Actor } from '../../identity/index.js';
 import type { JobRow } from '../adapters/import-repository.js';
 import type { SourcesDeps } from './deps.js';
 import { aiTargetOf } from './verify-with-ai.js';
+import { pipelineReport, tierOf } from './pipeline-report.js';
 
-/** What a job improves (DEC-34); an old job without the column improves nothing. */
-export function enhanceOf(job: Pick<JobRow, 'ai_enhance'>): Enhancements {
+/**
+ * What a job improves (DEC-34); an old job without the column improves nothing. A pipeline job
+ * never polishes nor adds options, whatever the client sent (Z2: no word not in the file).
+ */
+export function enhanceOf(job: Pick<JobRow, 'ai_enhance' | 'ai_mode'>): Enhancements {
   const parsed = Enhancements.safeParse(job.ai_enhance);
-  return parsed.success ? parsed.data : NO_ENHANCEMENTS;
+  const chosen = parsed.success ? parsed.data : NO_ENHANCEMENTS;
+  return job.ai_mode === 'pipeline' ? { ...chosen, polishText: false, completeOptions: 0 } : chosen;
 }
 
-/** The AI a job ran on, as its report says it (DEC-33). */
-function aiOf(job: JobRow): ImportResponse['ai'] {
+/** Failures that pause a pipeline import until the subscription renews (Q16). */
+export const PAUSING = new Set(['no_quota', 'rate_limited']);
+
+/** When a paused import goes on by itself; null unless it waits for its subscription. */
+function resumesAt(job: JobRow, now: Date): string | null {
+  const waiting = !job.finished_at && PAUSING.has(job.ai_outcome ?? '');
+  return waiting && job.locked_until && job.locked_until > now
+    ? job.locked_until.toISOString()
+    : null;
+}
+
+/** The AI a job ran on, as its report says it (DEC-33), and what its lessons cost (M34). */
+async function aiOf(deps: SourcesDeps, job: JobRow): Promise<ImportResponse['ai']> {
   if (!job.ai_provider_id) return null;
   const models = TriageModels.safeParse(job.ai_roles);
+  const usage = z.array(LessonUsage).safeParse(job.ai_usage);
   return {
     instanceId: job.ai_provider_id,
     model: job.ai_model,
     enhance: enhanceOf(job),
     models: models.success ? models.data : {},
+    mode: job.ai_mode,
+    usage: usage.success ? usage.data : [],
+    resumesAt: resumesAt(job, deps.clock.now()),
+    tier: tierOf(job),
+    pipeline: await pipelineReport(deps, job),
   };
 }
 
@@ -62,7 +86,7 @@ export async function getImport(
     questionsReview: job.questions_review,
     aiOutcome: job.ai_outcome,
     errorCode: job.error_code,
-    ai: aiOf(job),
+    ai: await aiOf(deps, job),
     createdAt: job.created_at.toISOString(),
     finishedAt: job.finished_at?.toISOString() ?? null,
     pages: pages.map((page) => ({
@@ -74,10 +98,14 @@ export async function getImport(
   };
 }
 
-/** Removes a file whose import has not started (FR-04-008): its source and original go. */
+/**
+ * Removes a file whose import has not started (FR-04-008), or one paused for its subscription
+ * (Q16): its source and original go.
+ */
 export async function cancelImport(deps: SourcesDeps, actor: Actor, jobId: string) {
   const { job, source } = await ownedJob(deps, actor, jobId);
-  if (job.stage !== 'queued' || job.locked_until) throw new AppError('not_retryable');
+  const waiting = job.stage === 'queued' && !job.locked_until;
+  if (!waiting && !resumesAt(job, deps.clock.now())) throw new AppError('not_retryable');
   await deps.imports.removeSource(actor.accountId, source.id);
   if (source.blob_key) await deps.blobs.remove(source.blob_key);
 }
@@ -125,6 +153,7 @@ export async function retryImport(
     error_code: null,
     finished_at: null,
     locked_until: null,
+    paused_ms: 0,
     pages_done: await deps.imports.countPages(job.id),
     updated_at: deps.clock.now(),
   });
@@ -166,13 +195,15 @@ export async function listSources(
 
 /**
  * Deletes a source's uploaded original at the user's request (FR-19-001, DEC-13: erased on
- * request). The source, its page attribution and its questions stay; it cannot be read again.
+ * request), with the units its imports kept for review (Q23). The source, its page attribution
+ * and its questions stay; it cannot be read again.
  */
 export async function deleteOriginal(deps: SourcesDeps, actor: Actor, sourceId: string) {
   const source = isId(sourceId) ? await deps.imports.findSource(actor.accountId, sourceId) : null;
   if (!source) throw notFound();
   const running = await deps.imports.runningJobOf(source.id);
   if (running) throw new AppError('not_retryable');
+  await deps.blocks.forgetSource(source.id);
   if (!source.blob_key) return;
   await deps.imports.forgetOriginal(actor.accountId, source.id);
   await deps.blobs.remove(source.blob_key);

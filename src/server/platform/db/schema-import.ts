@@ -22,6 +22,10 @@ interface ImportBlockTable {
   role: string | null;
   text: string | null;
   box: ColumnType<unknown, string, string>;
+  /** An image unit's class (`figure`, `table`, …); null for text and filler (M34 P6). */
+  image_class: ColumnType<string | null, string | null | undefined, string | null>;
+  /** The question (its `source_seq`) the unit is part of; null for filler and dropped. */
+  question_seq: ColumnType<number | null, number | null | undefined, number | null>;
   expires_at: Generated<Date>;
 }
 
@@ -37,8 +41,21 @@ interface AiStepCacheTable {
   expires_at: Generated<Date>;
 }
 
+/** One weekly measurement of an approved model on the built-in reference set (Q15). */
+interface ModelMeasurementTable {
+  id: string;
+  lesson: string;
+  provider_kind: string;
+  model: string;
+  correct: number;
+  total: number;
+  passed: boolean;
+  ran_at: Date;
+}
+
 export interface ImportTables {
   question_case: QuestionCaseTable;
   import_block: ImportBlockTable;
   ai_step_cache: AiStepCacheTable;
+  model_measurement: ModelMeasurementTable;
 }

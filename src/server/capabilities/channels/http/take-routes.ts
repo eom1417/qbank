@@ -17,6 +17,7 @@ import {
   chooseItem,
   flagItem,
   openItem,
+  peekItem,
   submitAttempt,
   takingOf,
 } from '../use-cases/take-attempt.js';
@@ -89,6 +90,10 @@ function registerItemRoutes(app: FastifyInstance, deps: ChannelsDeps, takingIn: 
 
   app.get<PositionParams>(ITEM, async (request) =>
     openItem(deps, await takingIn(request), request.params.position),
+  );
+
+  app.get<PositionParams>(`${ITEM}/peek`, async (request) =>
+    peekItem(deps, await takingIn(request), request.params.position),
   );
 
   app.put<PositionParams>(ITEM, async (request) => {

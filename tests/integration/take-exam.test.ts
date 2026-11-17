@@ -40,6 +40,8 @@ describe('a person takes an exam by its link (M30)', () => {
   it('lands, starts, answers, comes back with the token, submits and sees the score', async () => {
     const { taker, share } = await examWith(4, {
       content: { size: 3, passPercent: 60 },
+      // The exam preset has no timer (M34 U2): this one is given thirty minutes.
+      limits: { durationSeconds: 1800 },
       reveal: { level: 'score' },
     });
     const landing = TakeLandingResponse.parse((await taker.landing()).json());

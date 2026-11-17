@@ -7,6 +7,7 @@ import { ExamMoves } from '../exam-ui/ExamMoves.js';
 import { ExamProgress } from '../exam-ui/ExamProgress.js';
 import { QuestionCard } from '../exam-ui/QuestionCard.js';
 import { SaveState } from '../exam-ui/SaveState.js';
+import { mediaUrl } from './api.js';
 import { useExam } from './use-exam.js';
 
 /** The question with no hint of its answer: no marks, no explanation (FR-13-006, UAT-051). */
@@ -22,7 +23,7 @@ function ExamQuestion({
   return (
     <QuestionCard
       question={item}
-      pictureUrl={(id) => `/api/media/${id}`}
+      pictureUrl={mediaUrl}
       choices={choices}
       selected={item.saved}
       disabled={!item.changeable}

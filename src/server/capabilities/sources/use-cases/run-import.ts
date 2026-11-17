@@ -14,6 +14,16 @@ import { recheckOutcome, triageImport } from './triage-import.js';
 import { aiTargetOf, verifyWithAi } from './verify-with-ai.js';
 import { readWithAi } from './read-with-ai.js';
 import { linkKeys } from './link-keys.js';
+import { PAUSING } from './manage-imports.js';
+import {
+  CURRICULUM_VERSION,
+  openLessons,
+  readWithPipeline,
+  sumUsage,
+  type PipelineReading,
+} from './read-with-pipeline.js';
+import { keepBlocks, tierOf } from './pipeline-report.js';
+import { revokedKey } from '../adapters/measurements.js';
 
 /** A page with fewer words than this has no usable text layer: it is read as a scan. */
 const MIN_TEXT_WORDS = 6;
@@ -171,18 +181,129 @@ function errorOf(stage: ImportStage, questions: number) {
   return questions === 0 ? 'no_questions' : null;
 }
 
+/** The job's final counts and stage from its saved questions (FR-04-011). */
+async function countsOf(deps: SourcesDeps, job: JobRow, pages: PageRow[], found: number) {
+  const saved = await deps.questions.questionsOfSource(job.owner_id, job.source_id);
+  const review = saved.filter((row) => row.status === 'needs_review').length;
+  return { review, stage: (aiOutcome: string) => finalStage(pages, review, aiOutcome), found };
+}
+
 /** Stages 2–4 for a question source: the job's final counts and stage. */
 async function questionsOutcome(deps: SourcesDeps, job: JobRow, source: SourceRow, file: string) {
+  if (job.ai_mode === 'pipeline') return pipelineOutcome(deps, job, source, file);
   const { pages, questions, aiOutcome } = await extractAndSave(deps, job, source, file);
-  const saved = await deps.questions.questionsOfSource(job.owner_id, source.id);
-  const review = saved.filter((row) => row.status === 'needs_review').length;
-  const stage = finalStage(pages, review, aiOutcome);
+  const counts = await countsOf(deps, job, pages, questions.length);
+  const stage = counts.stage(aiOutcome);
   return {
     stage,
     questions_found: questions.length,
-    questions_review: review,
+    questions_review: counts.review,
     ai_outcome: aiOutcome,
     error_code: errorOf(stage, questions.length),
+  };
+}
+
+/** No silent fallback (Z4): without its AI a pipeline job fails, and no rule reads the file. */
+const aiFailed = (code: 'ai_not_ready' | 'ai_failed' | 'no_quota', outcome: string) => ({
+  stage: 'failed' as const,
+  questions_found: 0,
+  questions_review: 0,
+  ai_outcome: outcome,
+  error_code: code,
+});
+
+/** A job that would wait longer than this for its subscription in all ends instead (Q16). */
+const MAX_PAUSE_MS = 7 * 24 * 60 * 60_000;
+
+/**
+ * A full subscription pauses the job where it is: it is taken again after `resumeAfter` and
+ * goes on from the step cache, unless its pauses would pass 7 days in all: then it fails with
+ * `no_quota`. Any other stop fails the job. Null when it paused.
+ */
+async function stoppedOutcome(
+  deps: SourcesDeps,
+  job: JobRow,
+  read: PipelineReading,
+  usage: string,
+) {
+  const stop = read.stopped;
+  if (!stop) return undefined;
+  if (PAUSING.has(stop.failure) && stop.resumeAfter) {
+    const now = deps.clock.now();
+    const paused = job.paused_ms + (stop.resumeAfter.getTime() - now.getTime());
+    if (paused > MAX_PAUSE_MS) return { ...aiFailed('no_quota', stop.failure), ai_usage: usage };
+    const at = { locked_until: stop.resumeAfter, paused_ms: paused, updated_at: now };
+    await deps.imports.update(job.id, { ai_outcome: stop.failure, ai_usage: usage, ...at });
+    return null;
+  }
+  return { ...aiFailed('ai_failed', stop.failure), ai_usage: usage };
+}
+
+/** The pipeline's questions saved with their placed pictures, cases and tags; then M19 triage. */
+async function savePipeline(
+  deps: SourcesDeps,
+  job: JobRow,
+  source: SourceRow,
+  context: { file: string; rows: PageRow[]; read: PipelineReading },
+) {
+  const pages = contentOf(context.rows, ['done', 'unreadable']);
+  const { cropped, reasons } = await cropMedia(context.file, pages, context.read.media);
+  const questions = context.read.questions.map((question, index) => ({
+    ...question,
+    reasons: [...question.reasons, ...(reasons.get(index) ?? [])],
+  }));
+  await setStage(deps, job, 'verifying');
+  const place = { ownerId: job.owner_id, bankId: source.bank_id, sourceId: source.id };
+  await deps.questions.saveImported(place, questions, deps.clock.now());
+  await deps.questions.saveImportExtras(place, questions, context.read.extras);
+  const triaged = await triageImport(deps, job, source.id);
+  await setStage(deps, job, 'matching');
+  await storeMedia(deps, place, cropped, questions);
+  return { questions, aiOutcome: triaged.aiOutcome };
+}
+
+/** M34: a question source read by the pipeline with the user's AI (Z4, Q16). */
+async function pipelineOutcome(deps: SourcesDeps, job: JobRow, source: SourceRow, file: string) {
+  await setStage(deps, job, 'extracting');
+  const owner = {
+    ownerId: job.owner_id,
+    instanceId: job.ai_provider_id ?? '',
+    model: job.ai_model,
+  };
+  const revoked = await deps.measurements.revoked();
+  const rest = {
+    cache: deps.steps,
+    now: () => deps.clock.now(),
+    startTier: tierOf(job) ?? 'light',
+    approved: (lesson: string, model: string) => !revoked.has(revokedKey(lesson, model)),
+  };
+  const lessons = job.ai_provider_id ? await openLessons(deps.ai, owner, rest) : null;
+  if (!lessons) return aiFailed('ai_not_ready', 'not_ready');
+  const rows = await deps.imports.pages(job.id);
+  const readings = new Map(
+    rows.map((row) => [
+      row.page_no,
+      { reading: row.reading, unreadable: row.status === 'unreadable' },
+    ]),
+  );
+  const pages = { from: source.page_from, to: source.page_to };
+  const read = await readWithPipeline(lessons, { file, pages, readings });
+  const usage = JSON.stringify(sumUsage(job.ai_usage, read.usage));
+  const stopped = await stoppedOutcome(deps, job, read, usage);
+  if (stopped !== undefined) return stopped;
+  const saved = await savePipeline(deps, job, source, { file, rows, read });
+  const facts = await keepBlocks(deps, job, read);
+  const counts = await countsOf(deps, job, rows, saved.questions.length);
+  const stage = counts.stage(saved.aiOutcome);
+  return {
+    stage,
+    questions_found: counts.found,
+    questions_review: counts.review,
+    ai_outcome: saved.aiOutcome,
+    error_code: errorOf(stage, counts.found),
+    ai_usage: usage,
+    curriculum_version: CURRICULUM_VERSION,
+    pipeline_facts: facts,
   };
 }
 
@@ -245,6 +366,8 @@ export async function runImport(deps: SourcesDeps, job: JobRow): Promise<void> {
     const outcome = source.answers_for_source_id
       ? await answerFileOutcome(deps, job, source)
       : await questionsOutcome(deps, job, source, file);
+    // A paused pipeline job keeps its stage and lease until its subscription renews (Q16).
+    if (outcome === null) return;
     await finish(outcome);
     await deps.imports.setOriginalExpiry(source.id, expiryOf(deps, outcome.stage));
   } catch (error) {

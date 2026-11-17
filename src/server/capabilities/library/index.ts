@@ -9,7 +9,7 @@ import { createTaxonomyRepository } from './adapters/taxonomy-repository.js';
 import { registerBankRoutes } from './http/routes.js';
 import { registerTagRoutes } from './http/tag-routes.js';
 import { registerTaxonomyRoutes } from './http/taxonomy-routes.js';
-import { restoreLibrary, type RestoredLibrary } from './use-cases/portability.js';
+import { restoreLibrary, restoreTags, type RestoredLibrary } from './use-cases/portability.js';
 
 export { toBankResponse } from './http/presenters.js';
 
@@ -46,6 +46,8 @@ export function createLibrary(settings: LibrarySettings) {
     deleteBank: (ownerId: string, bankId: string) => deps.banks.delete(ownerId, bankId),
     /** The account's tags, for questions' tag suggestions (FR-11-004). */
     tagsOf: (ownerId: string) => deps.tags.list(ownerId),
+    /** Tags by name for an import (Q67): an existing tag is reused, a missing one created. */
+    ensureTags: (ownerId: string, names: readonly string[]) => restoreTags(deps, ownerId, names),
     register: (app: FastifyInstance) => {
       registerBankRoutes(app, deps, requireActor);
       registerTaxonomyRoutes(app, deps, requireActor);

@@ -44,7 +44,7 @@ export async function uploadFile(
 export const runImports = (app: FastifyInstance) => app.importWorker.drain();
 
 /** Builds the PDFs once for the current suite file; call the getter inside tests. */
-function usePdfFixtures(): () => PdfFixtures {
+export function usePdfFixtures(): () => PdfFixtures {
   let built: PdfFixtures | undefined;
   beforeAll(async () => {
     built = await buildPdfFixtures();

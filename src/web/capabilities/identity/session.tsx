@@ -42,6 +42,8 @@ interface Session {
   signOut(): Promise<void>;
   /** Saves profile/preferences on the server and applies the returned account. */
   updateAccount(changes: UpdateAccountRequest): Promise<void>;
+  /** The owner agrees, once, to send imported files to their own AI provider (M34, Q8). */
+  consentToAi(): Promise<void>;
 }
 
 const SessionContext = createContext<Session | null>(null);
@@ -143,6 +145,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     },
     updateAccount: async (changes) =>
       signedIn(await apiRequest('PATCH', '/api/account', AccountResponse, changes)),
+    consentToAi: async () => signedIn(await post('/api/account/ai-consent', {})),
   };
   return <SessionContext.Provider value={session}>{children}</SessionContext.Provider>;
 }

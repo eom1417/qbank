@@ -36,6 +36,9 @@ export function attemptApi(token: string) {
     state: () => apiRequest('GET', ATTEMPT, TakeStateResponse, undefined, auth),
     open: (position: number) =>
       apiRequest('GET', item(position), TakeItemResponse, undefined, auth),
+    /** The next question read ahead, without opening it (M34 U3); the server allows only it. */
+    peek: (position: number) =>
+      apiRequest('GET', `${item(position)}/peek`, TakeItemResponse, undefined, auth),
     choose: (position: number, chosen: string[]) =>
       apiRequest('PUT', item(position), TakeItemResponse, { chosen }, auth),
     flag: (position: number, flagged: boolean) =>

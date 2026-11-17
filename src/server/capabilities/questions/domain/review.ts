@@ -15,6 +15,12 @@ const HIGH: ReadonlySet<string> = new Set([
   'garbled_text',
   'reported',
   'reimport_differs',
+  // M34 pipeline: the answer is unknown or disputed.
+  'single_option',
+  'none_of_options',
+  'key_doubt',
+  'answer_conflict',
+  'mark_unclear',
 ]);
 /** A picture or a page that may be missing from the question. */
 const MEDIUM: ReadonlySet<string> = new Set([
@@ -24,6 +30,7 @@ const MEDIUM: ReadonlySet<string> = new Set([
   'numbering_gap',
   'duplicate',
   'ai_read',
+  'picture_unreadable',
 ]);
 const RANK: Record<Severity, number> = { high: 3, medium: 2, low: 1 };
 

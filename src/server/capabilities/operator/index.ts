@@ -5,6 +5,7 @@ import { createBackupStatusReader } from './adapters/backup-status-file.js';
 import { createFeedbackRepository } from './adapters/feedback-repository.js';
 import { registerFeedbackRoute, registerOperatorRoutes } from './http/routes.js';
 import type { OperatorDeps } from './use-cases/deps.js';
+import type { Clock } from '../../platform/clock.js';
 
 interface OperatorSettings extends Omit<OperatorDeps, 'feedback' | 'backupStatus'> {
   db: Db;
@@ -33,4 +34,26 @@ export function createOperator(settings: OperatorSettings) {
       registerOperatorRoutes(app, deps, requireOperator);
     },
   };
+}
+
+/**
+ * A note from the server itself in the operator's feedback inbox (M34 P6): the weekly model
+ * measurement's alert (Q15). Saved as the operator's own note, on the `measurement` screen.
+ */
+export function createOperatorAlert(settings: {
+  db: Db;
+  clock: Clock;
+  newId: () => string;
+  version: string;
+}) {
+  const feedback = createFeedbackRepository(settings.db);
+  return async (operatorId: string, message: string) =>
+    feedback.insert({
+      id: settings.newId(),
+      ownerId: operatorId,
+      message,
+      screen: 'measurement',
+      version: settings.version,
+      createdAt: settings.clock.now(),
+    });
 }

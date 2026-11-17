@@ -3,6 +3,9 @@ import type { BlobStore } from '../../../platform/storage/blob-store.js';
 import type { ImportAi } from '../../providers/index.js';
 import type { Questions } from '../../questions/index.js';
 import type { ImportRepository } from '../adapters/import-repository.js';
+import type { StepCache } from '../adapters/step-cache.js';
+import type { BlockRepository } from '../adapters/import-blocks.js';
+import type { MeasurementRepository } from '../adapters/measurements.js';
 
 export interface SourcesDeps {
   /** Why a job failed, for the owner's log (M17.3): codes and the error, never page text. */
@@ -26,4 +29,16 @@ export interface SourcesDeps {
   originalRetentionMs: number;
   /** Imports running at once across accounts, never two for one account (M31, B2). */
   workers: number;
+  /** A server (`accounts`) reads with the pipeline by default; a local install as before. */
+  mode: 'local' | 'accounts';
+  /** Uploads are imported only with the user's AI, by the pipeline (Q7, Z4; config). */
+  requiresAi: boolean;
+  /** When the account agreed to send files to its AI provider (identity, Q8); null until then. */
+  aiConsentOf(ownerId: string): Promise<Date | null>;
+  /** Judged AI lesson steps kept 7 days: a resumed import never pays twice (M34, Q23). */
+  steps: StepCache;
+  /** A pipeline import's units with their roles, kept 7 days for the review editor (Q26). */
+  blocks: BlockRepository;
+  /** The weekly measurement's results: which approved models it unapproved (Q15). */
+  measurements: MeasurementRepository;
 }

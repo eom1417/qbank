@@ -22,6 +22,11 @@ describe('new-share presets (DEC-39)', () => {
     expect(daily?.reveal).toEqual({ level: 'explained', when: 'after_hours', hours: 6 });
     expect(PRESETS.find((p) => p.id === 'api')?.policy).toBe(DEFAULT_POLICIES.agent);
   });
+
+  it('starts an exam with no timer: the owner turns it on and picks the minutes (M34 U2)', () => {
+    expect(DEFAULT_POLICIES.exam.limits.durationSeconds).toBeNull();
+    expect(PRESETS.find((p) => p.id === 'exam')?.policy.limits.durationSeconds).toBeNull();
+  });
 });
 
 describe('issueFields', () => {

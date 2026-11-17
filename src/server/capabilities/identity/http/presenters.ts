@@ -15,6 +15,7 @@ export const toAccountResponse = (account: Account, isOperator: boolean): Accoun
     reviewReminders: account.preferences.reviewReminders,
   },
   isOperator,
+  aiConsentAt: account.aiConsentAt?.toISOString() ?? null,
 });
 
 /** The account as its owner sees it, flagged when it is the server's operator (DEC-40). */

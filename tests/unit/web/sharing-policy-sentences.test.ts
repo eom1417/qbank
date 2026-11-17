@@ -33,7 +33,7 @@ describe('policy sentences (DEC-39)', () => {
     expect(texts('exam', DEFAULT_POLICIES.exam)).toEqual({
       what: 'Questions: 20 per attempt, at random from the whole bank · kept out of daily questions while this exam lasts',
       who: 'Anyone with the link · asks for a name',
-      when: 'Open now, no end date · one attempt · time: 30 min, starting at "Start"',
+      when: 'Open now, no end date · one attempt · no time limit',
       reveal: 'After submitting: the score only',
       records: 'Results kept by name · deleted after a year',
     });
@@ -134,5 +134,17 @@ describe('policy sentences: privacy and language', () => {
     expect(all).not.toMatch(/MISSING|\{\w+\}/);
     expect(lines[3]?.text).toBe('بعد التسليم: الدرجة فقط');
     expect(lines[4]?.text).toBe('النتائج بالاسم · تُحذف بعد سنة');
+  });
+});
+
+describe("policy sentences: an exam's timer (M34 U2)", () => {
+  it("says a timed exam's minutes once the owner sets them", () => {
+    const timed = {
+      ...DEFAULT_POLICIES.exam,
+      limits: { ...DEFAULT_POLICIES.exam.limits, durationSeconds: 1800 },
+    };
+    expect(texts('exam', timed).when).toBe(
+      'Open now, no end date · one attempt · time: 30 min, starting at "Start"',
+    );
   });
 });

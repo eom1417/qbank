@@ -278,6 +278,11 @@
   max-inline-size: none;
   block-size: auto;
 }
+/* At its own size a small picture is not stretched, and a large one still fits (M34 U4). */
+.qb-zoom__image--fit {
+  inline-size: auto;
+  max-inline-size: 100%;
+}
 .qb-thumb {
   display: block;
   inline-size: 100%;

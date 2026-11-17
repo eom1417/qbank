@@ -11,14 +11,18 @@ import { ImportProgressRow } from './ImportProgress.js';
 function StartCard({ form }: { form: ImportForm }) {
   const { t } = useI18n();
   const [rights, setRights] = useState(false);
-  const { ai, setAi, triage, setReadPages, upload, files, destination } = form;
+  const { ai, setAi, triage, setReadPages, upload, files, destination, consent, tier } = form;
   const missingName = destination.bankId === NEW_BANK && destination.newName.trim() === '';
+  const waitsForConsent = consent.needed && !consent.given;
   return (
     <Card>
       <AiChoice
         triage={triage}
         readPages={ai.readPages}
         onReadPages={setReadPages}
+        pipeline={ai.pipeline}
+        consent={consent}
+        tier={tier}
         approval={ai.approval}
         approved={ai.approved}
         onApprove={(approved) => setAi((previous) => ({ ...previous, approved }))}
@@ -31,7 +35,7 @@ function StartCard({ form }: { form: ImportForm }) {
       />
       {upload.error && <Alert tone="error">{t(upload.error)}</Alert>}
       <Button
-        disabled={!rights || files.length === 0 || missingName}
+        disabled={!rights || files.length === 0 || missingName || waitsForConsent}
         busy={upload.busy}
         onClick={() => void upload.run()}
       >

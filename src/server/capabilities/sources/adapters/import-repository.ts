@@ -22,11 +22,23 @@ type NewJob = Pick<
   | 'ai_mode'
   | 'created_at'
   | 'updated_at'
-> & { ai_roles?: string | null; ai_enhance?: string | null };
+> & { ai_roles?: string | null; ai_enhance?: string | null; ai_tier?: string | null };
 type JobChanges = Partial<
-  Omit<JobRow, 'id' | 'owner_id' | 'source_id' | 'created_at' | 'ai_roles' | 'ai_enhance'> & {
+  Omit<
+    JobRow,
+    | 'id'
+    | 'owner_id'
+    | 'source_id'
+    | 'created_at'
+    | 'ai_roles'
+    | 'ai_enhance'
+    | 'ai_usage'
+    | 'pipeline_facts'
+  > & {
     ai_roles: string;
     ai_enhance: string;
+    ai_usage: string;
+    pipeline_facts: string;
   }
 >;
 type NewPage = Omit<PageRow, 'content'> & { content: string };

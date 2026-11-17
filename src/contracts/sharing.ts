@@ -167,7 +167,7 @@ export const DEFAULT_POLICIES: Readonly<Record<ShareKind, SharePolicy>> = {
     ...AGENT_POLICY,
     content: { ...AGENT_POLICY.content, size: 20, reserve: true },
     audience: { access: 'open', askId: false },
-    limits: { ...AGENT_POLICY.limits, attemptsPerPerson: 1, durationSeconds: 1800 },
+    limits: { ...AGENT_POLICY.limits, attemptsPerPerson: 1 },
     reveal: { level: 'score', when: 'immediately', hours: null },
     records: { identify: 'named', retentionDays: 365 },
   },

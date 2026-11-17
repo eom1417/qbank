@@ -16,7 +16,8 @@ export interface RestoreMaps {
   tags: Map<string, string>;
 }
 
-async function restoreTags(deps: LibraryDeps, ownerId: string, names: readonly string[]) {
+/** The account's tags of these names (any case), created when missing: lower-case name → id. */
+export async function restoreTags(deps: LibraryDeps, ownerId: string, names: readonly string[]) {
   const tags = new Map(
     (await deps.tags.list(ownerId)).map((t) => [t.name.toLocaleLowerCase(), t.id]),
   );

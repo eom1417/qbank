@@ -143,3 +143,61 @@ export const FixSuggestionResponse = z.discriminatedUnion('outcome', [
   z.object({ outcome: z.literal('failed'), failure: z.string() }).strict(),
 ]);
 export type FixSuggestionResponse = z.infer<typeof FixSuggestionResponse>;
+
+/** A unit's role in the review editor (Q26); the server checks it against the unit's kind. */
+const UnitRole = z
+  .string()
+  .regex(
+    /^(stem|explanation|case|filler|dropped|picture:question|picture:explanation|(picture:)?option:[A-J])$/,
+  );
+
+/** One unit of a page as the import read it: where it is, what it says and what it became. */
+const PageUnit = z
+  .object({
+    unitId: z.string(),
+    kind: z.enum(['text_line', 'image', 'filler']),
+    box: z.object({ x0: z.number(), y0: z.number(), x1: z.number(), y1: z.number() }).strict(),
+    text: z.string().nullable(),
+    imageClass: z.string().nullable(),
+    role: UnitRole,
+    /** Part of this question, or dropped: the owner may change its role (filler stays). */
+    editable: z.boolean(),
+  })
+  .strict();
+
+/** `GET /api/questions/:id/page-reading`: the pages of a question as the import read them. */
+export const PageReadingResponse = z
+  .object({
+    questionId: z.uuid(),
+    version: z.number().int(),
+    /** False when the import kept no units (not a pipeline import, or its 7 days are over). */
+    available: z.boolean(),
+    pages: z.array(
+      z
+        .object({
+          page: z.number().int(),
+          width: z.number(),
+          height: z.number(),
+          /** The page picture while the original is kept; null after it is erased. */
+          imageUrl: z.string().nullable(),
+          units: z.array(PageUnit),
+        })
+        .strict(),
+    ),
+    /** The roles a text line and a picture may be given (the question's letters, and one more). */
+    choices: z.object({ text: z.array(UnitRole), picture: z.array(UnitRole) }).strict(),
+  })
+  .strict();
+export type PageReadingResponse = z.infer<typeof PageReadingResponse>;
+
+/** `POST /api/questions/:id/reassemble`: new roles for some units, then the question rebuilt. */
+export const ReassembleRequest = z
+  .object({
+    expectedVersion: z.number().int().min(0),
+    roles: z
+      .array(z.object({ unitId: z.string().max(40), role: UnitRole }).strict())
+      .min(1)
+      .max(500),
+  })
+  .strict();
+export type ReassembleRequest = z.infer<typeof ReassembleRequest>;

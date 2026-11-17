@@ -60,7 +60,14 @@ function CustomRoles({ state }: { state: TriageChoiceState }) {
  * The AI of an import or a re-check (DEC-33): which provider, how strong (each role's model),
  * and whether to improve the questions first (DEC-04).
  */
-export function TriageFields({ state }: { state: TriageChoiceState }) {
+export function TriageFields({
+  state,
+  sourceOnly = false,
+}: {
+  state: TriageChoiceState;
+  /** A pipeline import: only improvements that add no word to the file are offered (Z2). */
+  sourceOnly?: boolean;
+}) {
   const { t } = useI18n();
   const providers = [
     { value: '', label: t('import.ai.none') },
@@ -96,6 +103,7 @@ export function TriageFields({ state }: { state: TriageChoiceState }) {
         <EnhanceFields
           value={state.choice.enhance}
           onChange={(enhance) => state.change({ enhance })}
+          sourceOnly={sourceOnly}
         />
       )}
     </Stack>

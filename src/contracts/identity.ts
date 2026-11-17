@@ -92,6 +92,8 @@ export const AccountResponse = z
     preferences: AccountPreferences,
     /** The server's declared operator (DEC-40): set by QBANK_OPERATOR_EMAIL, never from the UI. */
     isOperator: z.boolean(),
+    /** When the owner agreed that imports send the file to their own AI provider (M34, Q8). */
+    aiConsentAt: z.iso.datetime().nullable(),
   })
   .strict();
 export type AccountResponse = z.infer<typeof AccountResponse>;

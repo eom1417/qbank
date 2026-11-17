@@ -2,7 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import { SavedStudyNote } from '../../../contracts/questions.js';
 import type { Clock } from '../../platform/clock.js';
 import type { Db } from '../../platform/db/index.js';
-import type { RequireActor } from '../identity/index.js';
+import type { Actor, RequireActor } from '../identity/index.js';
 import { registerQuestionRoutes } from './http/routes.js';
 import { registerEditRoutes } from './http/edit-routes.js';
 import { registerNoteRoutes } from './http/note-routes.js';
@@ -28,17 +28,33 @@ import type { ChapterNames } from './domain/classify.js';
 import { inferredDifficulty } from './domain/difficulty.js';
 import { aiAdditions } from './use-cases/ai-additions.js';
 import { setInferredDifficulty } from './adapters/insights.js';
+import { saveImportExtras, type EnsureTags, type ImportExtras } from './adapters/import-extras.js';
+import { placeMedia, type PicturePlace } from './adapters/media-placement.js';
+import { editQuestion } from './use-cases/edit.js';
+import type { EditQuestionRequest } from '../../../contracts/questions.js';
 
 export type { PoolQuestion } from './adapters/study-pool.js';
 export type { RestoredQuestion } from './adapters/portability.js';
 export type { TriageChange } from './domain/triaged.js';
 export type { QuestionRow } from './adapters/question-repository.js';
+export type { ImportExtras } from './adapters/import-extras.js';
 export {
   occurrencesOf,
   type ImportedMedia,
   type ImportedQuestion,
+  type MediaPlacement,
   type ReviewReason,
 } from './domain/imported.js';
+
+/** A re-assembled question (Q26): the edit, the caller's writes and the pictures' new places. */
+interface Reassembly {
+  actor: Actor;
+  id: string;
+  edit: EditQuestionRequest;
+  places: readonly PicturePlace[];
+  /** The caller's writes (the units' roles) on the same transaction. */
+  alongside(within: Db): Promise<void>;
+}
 
 /** Questions with their answer keys, provenance and pictures (M4, M5; review and study follow). */
 interface QuestionsSettings {
@@ -53,6 +69,8 @@ interface QuestionsSettings {
   ownsBank(ownerId: string, bankId: string): Promise<boolean>;
   /** Removes a stored picture's file when its question is deleted for good. */
   deleteBlob(key: string): Promise<void>;
+  /** The account's tags by name, created when missing (library; import tags, Q67). */
+  ensureTags: EnsureTags;
 }
 
 /** The repositories and lookups every questions use case receives. */
@@ -132,8 +150,33 @@ export function createQuestions(settings: QuestionsSettings) {
     ...deps.questions,
     ...aiAdditions(deps),
     saveImported,
+    /** A pipeline import's shared cases and exam/year tags on its saved questions (M34). */
+    saveImportExtras: (
+      place: Place,
+      questions: readonly ImportedQuestion[],
+      extras: ImportExtras,
+    ) =>
+      saveImportExtras(
+        { db: settings.db, newId, ensureTags: settings.ensureTags },
+        place,
+        questions,
+        extras,
+      ),
     ...sharedInterface(settings, deps),
     ...deps.media,
+    /**
+     * The review editor's re-assembly (Q26) as one change: the owner's edit as a new version, the
+     * caller's own writes in the same transaction, then the question's pictures moved to these
+     * places. When any step fails, nothing of it is kept.
+     */
+    reassembleQuestion: (change: Reassembly) =>
+      settings.db.transaction().execute(async (trx) => {
+        const within = questionDeps({ ...settings, db: trx });
+        const saved = await editQuestion(within, change.actor, change.id, change.edit);
+        await change.alongside(trx);
+        await placeMedia(trx, change.actor.accountId, change.id, change.places);
+        return saved;
+      }),
     register: (app: FastifyInstance) => {
       registerQuestionRoutes(app, deps, settings.requireActor);
       registerReviewRoutes(app, deps, settings.requireActor);

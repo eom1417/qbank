@@ -131,14 +131,23 @@ export async function questionsFromPages(
     );
   };
   const extracted: ExtractedQuestion[] = [];
-  for (const [index, question] of questions.entries()) {
-    const essay = question.options.length === 0;
-    const marked = essay
-      ? UNDECIDED
-      : await answerOf(question, modeOf(byNumber.get(question.page)), inkOf);
-    extracted.push(assemble(question, marked, keys[index]));
-  }
+  for (const [index, question] of questions.entries())
+    extracted.push(
+      await decideQuestion(question, keys[index], modeOf(byNumber.get(question.page)), inkOf),
+    );
   return extracted;
+}
+
+/** One parsed question with its answer decided from its key, the ink at its letters and its explanation. */
+export async function decideQuestion(
+  question: ParsedQuestion,
+  keys: QuestionKeys | undefined,
+  mode: ReadingMode,
+  inkOf: (option: ParsedQuestion['options'][number]) => Promise<number>,
+): Promise<ExtractedQuestion> {
+  const essay = question.options.length === 0;
+  const marked = essay ? UNDECIDED : await answerOf(question, mode, inkOf);
+  return assemble(question, marked, keys);
 }
 
 /** One question with its answer decided from its key, marks and explanation. */
