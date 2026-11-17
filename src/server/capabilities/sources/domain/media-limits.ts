@@ -10,14 +10,14 @@ const MAX_PER_QUESTION = 6;
  * page: the saved crops cannot be put back together into the book (FR-06-008). What does not
  * fit is dropped, and its question says so in review.
  */
-export function withinBookLimits(
-  links: readonly MediaLink[],
+export function withinBookLimits<L extends MediaLink>(
+  links: readonly L[],
   pageArea: (page: number) => number,
-): { kept: MediaLink[]; dropped: MediaLink[] } {
+): { kept: L[]; dropped: L[] } {
   const used = new Map<number, number>();
   const perQuestion = new Map<number, number>();
-  const kept: MediaLink[] = [];
-  const dropped: MediaLink[] = [];
+  const kept: L[] = [];
+  const dropped: L[] = [];
   for (const link of links) {
     const page = link.region.page;
     const share = (used.get(page) ?? 0) + area(link.region.box);

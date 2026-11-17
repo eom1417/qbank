@@ -45,6 +45,8 @@ export interface IdentityModule extends OperatorDirectory {
   requireOperator: RequireActor;
   /** Deletes the account and all it owns (FR-19-006); the caller erases stored files first. */
   deleteAccount(accountId: string): Promise<boolean>;
+  /** When the account agreed to send files to its AI provider (M34, Q8); null until then. */
+  aiConsentOf(accountId: string): Promise<Date | null>;
   register(app: FastifyInstance): void;
 }
 
@@ -89,6 +91,8 @@ export function createIdentity(settings: IdentitySettings): IdentityModule {
     requireActor,
     requireOperator: createRequireOperator(deps, requireActor),
     deleteAccount: (accountId) => deps.accounts.delete(accountId),
+    aiConsentOf: async (accountId) =>
+      (await deps.accounts.findById(accountId))?.aiConsentAt ?? null,
     contactsOf: (ids) => deps.accounts.contactsOf(ids),
     // A Google server has no passwords, so nobody waits for a reset link (M32, DEC-42).
     resetRequests: async () => (settings.google ? [] : listResetRequests(deps)),

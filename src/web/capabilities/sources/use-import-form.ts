@@ -8,6 +8,7 @@ import { createBank } from '../library/api.js';
 import { uploadFile } from './api.js';
 import type { ChosenFile } from './FileOptions.js';
 import { useTriageChoice, type TriageRequest } from '../providers/use-triage-choice.js';
+import { useSession } from '../identity/session.js';
 
 /** The destination value that means "create a new bank with this name" (FR-04-003). */
 export const NEW_BANK = 'new';
@@ -35,18 +36,31 @@ function useDestination(bankId: string) {
  * The upload screen's state: destination, chosen files, created imports, the AI choice.
  * Files are uploaded one by one; a file that fails keeps its row with the reason.
  */
-/** The upload's AI fields: instance, models per role, mode and improvement, or none. */
-function aiFields(request: TriageRequest | null, readPages: boolean) {
-  const aiMode = request && readPages ? ('read' as const) : ('verify' as const);
-  return { triage: request, aiMode };
+/**
+ * The upload's AI fields: instance, models per role, mode and improvement, or none. A server
+ * reads with the pipeline (M34); a local install checks open answers or reads whole pages.
+ */
+function aiFields(request: TriageRequest | null, readPages: boolean, pipeline: boolean) {
+  const local = request && readPages ? ('read' as const) : ('verify' as const);
+  return { triage: request, aiMode: request && pipeline ? ('pipeline' as const) : local };
 }
 
 /** The import's AI: the remembered triage choice, whole-page reading, and any cost approval. */
 function useAiOptions() {
   const triage = useTriageChoice();
+  const session = useSession();
   const [ai, setAi] = useState({ approved: false, approval: null as string[] | null });
   const [readPages, setReadPages] = useState(false);
-  return { triage, ai, setAi, readPages, setReadPages };
+  const [consent, setConsent] = useState(false);
+  const pipeline = session.mode === 'accounts';
+  const account = session.state.status === 'signed-in' ? session.state.account : null;
+  // Once per account (Q8): asked only while the account has not agreed yet.
+  const consentNeeded = pipeline && triage.request !== null && !account?.aiConsentAt;
+  const pipelineConsent = { needed: consentNeeded, given: consent, onChange: setConsent };
+  const consentFirst = async () => {
+    if (consentNeeded && consent) await session.consentToAi();
+  };
+  return { triage, ai, setAi, readPages, setReadPages, pipeline, pipelineConsent, consentFirst };
 }
 
 export function useImportForm(bankId: string) {
@@ -54,14 +68,15 @@ export function useImportForm(bankId: string) {
   const { destination, setDestination, banksVersion, resolveBank } = useDestination(bankId);
   const [files, setFiles] = useState<ChosenFile[]>([]);
   const [jobs, setJobs] = useState<ImportResponse[]>([]);
-  const { triage, ai, setAi, readPages, setReadPages } = useAiOptions();
+  const { triage, ai, setAi, readPages, setReadPages, ...pipeline } = useAiOptions();
   const upload = useAction(async () => {
+    await pipeline.consentFirst();
     const target = await resolveBank();
     for (const chosen of files) {
       try {
         const options = {
           ...chosen,
-          ...aiFields(triage.request, readPages),
+          ...aiFields(triage.request, readPages, pipeline.pipeline),
           aiApproved: ai.approved,
         };
         const job = await uploadFile(target, chosen.file, options);
@@ -89,7 +104,8 @@ export function useImportForm(bankId: string) {
     files,
     setFiles,
     jobs,
-    ai: { ...ai, readPages },
+    ai: { ...ai, readPages, pipeline: pipeline.pipeline },
+    consent: pipeline.pipelineConsent,
     triage,
     setReadPages,
     setAi,

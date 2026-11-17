@@ -51,6 +51,13 @@ describe('image class by code (M34 D1.2)', () => {
     expect(classifyImage(noWords, measureImage(film))).toBe('figure');
   });
 
+  it('reads a labelled diagram or photo as no text picture: many tones outside the words', () => {
+    const outsideWords = measureImage(film);
+    expect(classifyImage(typed, measureImage(printedText), outsideWords)).not.toBe('text_picture');
+    const plainOutside = measureImage(paint(50, 50, () => WHITE));
+    expect(classifyImage(typed, measureImage(printedText), plainOutside)).toBe('text_picture');
+  });
+
   it('leaves a plain picture with a few words unsure', () => {
     const fewWords = { words: 2, confidence: 85, textAreaRatio: 0.05 };
     expect(classifyImage(fewWords, measureImage(printedText))).toBe('unsure');

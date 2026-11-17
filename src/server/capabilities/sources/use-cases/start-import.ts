@@ -59,11 +59,24 @@ const roleModels = (fields: StartImportFields) => ({
   ...(fields.aiImproverModel ? { improver: fields.aiImproverModel } : {}),
 });
 
+/** How the AI helps: the pipeline on a server unless the upload chose (M34, Z4); else `verify`. */
+const aiModeOf = (deps: Pick<SourcesDeps, 'mode'>, fields: StartImportFields) =>
+  fields.aiMode ?? (deps.mode === 'accounts' ? 'pipeline' : 'verify');
+
+/**
+ * The pipeline sends the file's text and page pictures to the user's own provider: only after
+ * the account agreed to it once (Q8). Checked before the file is even stored.
+ */
+async function checkConsent(deps: SourcesDeps, actor: Actor, fields: StartImportFields) {
+  if (!fields.aiProviderId || aiModeOf(deps, fields) !== 'pipeline') return;
+  if (!(await deps.aiConsentOf(actor.accountId))) throw new AppError('ai_consent_required');
+}
+
 /** The job's AI: instance, models, mode and improvement, or none at all. */
-const aiColumns = (aiProviderId: string | null, fields: StartImportFields) => ({
+const aiColumns = (deps: SourcesDeps, aiProviderId: string | null, fields: StartImportFields) => ({
   ai_provider_id: aiProviderId,
   ai_model: aiProviderId ? (fields.aiModel ?? null) : null,
-  ai_mode: aiProviderId ? fields.aiMode : ('verify' as const),
+  ai_mode: aiProviderId ? aiModeOf(deps, fields) : ('verify' as const),
   ai_enhance: aiProviderId ? JSON.stringify(enhancementsOf(fields.aiEnhance)) : null,
   ai_roles: aiProviderId ? JSON.stringify(roleModels(fields)) : null,
 });
@@ -134,6 +147,7 @@ export async function startImport(
 ) {
   if (!isId(bankId)) throw notFound();
   const target = await answersFor(deps, actor, bankId, fields);
+  await checkConsent(deps, actor, fields);
   const stored = await storeReadablePdf(deps, upload);
   try {
     const range = rangeOf(fields, stored.pages);
@@ -163,7 +177,7 @@ export async function startImport(
       source_id: source.id,
       stage: 'queued' as const,
       pages_total: range.to - range.from + 1,
-      ...aiColumns(aiProviderId, fields),
+      ...aiColumns(deps, aiProviderId, fields),
       created_at: now,
       updated_at: now,
     };

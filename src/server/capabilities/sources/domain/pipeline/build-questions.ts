@@ -1,6 +1,7 @@
 // M34 P4a: the pipeline's questions put together from what the steps found: the parsed
 // question, its decided answer, its placed pictures and notes, its case and its tags.
 import type { AnswerEvidence } from '../answer-decision.js';
+import { isDoubtfulKey } from '../key-lines.js';
 import { unionBox, type Box } from '../page.js';
 import type { ParsedQuestion } from '../questions.js';
 import type { Owned, QuestionFrame } from './placement.js';
@@ -49,17 +50,20 @@ function areaOf(question: ParsedQuestion): Spot[] {
   }));
 }
 
-/** Tag lines among the free lines from this question's anchor to the next one's. */
-function lineTags(parts: QuestionParts, index: number): QuestionTags[] {
+/** The free lines from this question's anchor to the next one's (tags, doubtful keys). */
+function freeLines(parts: QuestionParts, index: number): string[] {
   const from = parts.frames[index]?.stemAt ?? 0;
   const to = parts.frames[index + 1]?.stemAt ?? parts.text.lines.length;
-  const tags: QuestionTags[] = [];
-  for (let at = from; at < to; at++) {
-    const line = parts.text.lines[at]?.line.text ?? '';
-    if (parts.free.has(at) && isTagLine(line)) tags.push(takeTags(line).tags);
-  }
-  return tags;
+  const lines: string[] = [];
+  for (let at = from; at < to; at++)
+    if (parts.free.has(at)) lines.push(parts.text.lines[at]?.line.text ?? '');
+  return lines;
 }
+
+const lineTags = (parts: QuestionParts, index: number): QuestionTags[] =>
+  freeLines(parts, index)
+    .filter(isTagLine)
+    .map((line) => takeTags(line).tags);
 
 /** Handwritten notes found as ink, numbered per page in file order. */
 function notePictures(parts: QuestionParts): PipelinePicture[][] {
@@ -79,8 +83,13 @@ function notePictures(parts: QuestionParts): PipelinePicture[][] {
   return result;
 }
 
-function reviewReasons(question: ParsedQuestion, decided: DecidedAnswer | undefined): string[] {
-  const reasons: string[] = [];
+/** Why the question goes to review: missing options, no answer, a conflict, a doubtful key, a
+ * picture whose text could not be read. */
+function reviewReasons(parts: QuestionParts, index: number, doubt: boolean): string[] {
+  const question = parts.parsed[index] as ParsedQuestion;
+  const decided = doubt ? undefined : parts.decided[index];
+  const reasons: string[] = doubt ? ['key_doubt'] : [];
+  if (unreadablePicture(parts, index)) reasons.push('picture_unreadable');
   if (question.options.length < 2) reasons.push('incomplete_options');
   if (!decided || decided.answers.length === 0) reasons.push('no_answer');
   if (decided && decided.conflicts.length > 0) reasons.push('answer_conflict');
@@ -104,12 +113,19 @@ const answerOf = (decided: DecidedAnswer | undefined) => ({
   conflicts: decided?.conflicts ?? [],
 });
 
+const unreadablePicture = (parts: QuestionParts, index: number) =>
+  (parts.owned[index]?.pictures ?? []).some(
+    (picture) => parts.text.units.get(picture.unitId)?.ocr?.unreadable === true,
+  );
+
 /** Every question of the file as the pipeline carries it (P4 → P5). */
 export function buildQuestions(parts: QuestionParts): PipelineQuestion[] {
   const notes = notePictures(parts);
   const seen = new Map<string, number>();
   return parts.parsed.map((question, index) => {
-    const decided = parts.decided[index];
+    // A key printed with doubt decides nothing, whatever else the rules found.
+    const doubt = freeLines(parts, index).some(isDoubtfulKey);
+    const decided = doubt ? undefined : parts.decided[index];
     const base = `${question.page}-${question.number}`;
     const occurrence = seen.get(base) ?? 0;
     seen.set(base, occurrence + 1);
@@ -130,7 +146,7 @@ export function buildQuestions(parts: QuestionParts): PipelineQuestion[] {
       ...answerOf(decided),
       fromPicture: parts.picture.has(index),
       caseText: parts.cases.find((c) => c.questions.includes(index))?.text ?? null,
-      reviewReasons: reviewReasons(question, decided),
+      reviewReasons: reviewReasons(parts, index, doubt),
     };
   });
 }

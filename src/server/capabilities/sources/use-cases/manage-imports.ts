@@ -1,5 +1,7 @@
+import { z } from 'zod';
 import {
   Enhancements,
+  LessonUsage,
   NO_ENHANCEMENTS,
   TriageModels,
   type ImportResponse,
@@ -21,15 +23,30 @@ export function enhanceOf(job: Pick<JobRow, 'ai_enhance'>): Enhancements {
   return parsed.success ? parsed.data : NO_ENHANCEMENTS;
 }
 
-/** The AI a job ran on, as its report says it (DEC-33). */
-function aiOf(job: JobRow): ImportResponse['ai'] {
+/** Failures that pause a pipeline import until the subscription renews (Q16). */
+export const PAUSING = new Set(['no_quota', 'rate_limited']);
+
+/** When a paused import goes on by itself; null unless it waits for its subscription. */
+function resumesAt(job: JobRow, now: Date): string | null {
+  const waiting = !job.finished_at && PAUSING.has(job.ai_outcome ?? '');
+  return waiting && job.locked_until && job.locked_until > now
+    ? job.locked_until.toISOString()
+    : null;
+}
+
+/** The AI a job ran on, as its report says it (DEC-33), and what its lessons cost (M34). */
+function aiOf(job: JobRow, now: Date): ImportResponse['ai'] {
   if (!job.ai_provider_id) return null;
   const models = TriageModels.safeParse(job.ai_roles);
+  const usage = z.array(LessonUsage).safeParse(job.ai_usage);
   return {
     instanceId: job.ai_provider_id,
     model: job.ai_model,
     enhance: enhanceOf(job),
     models: models.success ? models.data : {},
+    mode: job.ai_mode,
+    usage: usage.success ? usage.data : [],
+    resumesAt: resumesAt(job, now),
   };
 }
 
@@ -62,7 +79,7 @@ export async function getImport(
     questionsReview: job.questions_review,
     aiOutcome: job.ai_outcome,
     errorCode: job.error_code,
-    ai: aiOf(job),
+    ai: aiOf(job, deps.clock.now()),
     createdAt: job.created_at.toISOString(),
     finishedAt: job.finished_at?.toISOString() ?? null,
     pages: pages.map((page) => ({

@@ -1,7 +1,6 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { FileUnits } from '../../capabilities/sources/adapters/pipeline-units.js';
-import type { PageWord } from '../../capabilities/sources/domain/page.js';
 import {
   defaultReaders,
   pipelineQuestions,
@@ -14,7 +13,7 @@ import { TruthFile } from './truth.js';
 // M34 P4a bench: `node --import tsx src/server/tools/extraction-bench/pipeline-bench.ts
 // [truthDir] [corpusDir] [outDir] [--baseline] [--cache dir]`. Runs the pipeline (no AI) on
 // every truth file and prints numbers only. `--baseline` also counts what the P0 rules
-// (text mode) find; `--cache` keeps units and picture words between runs while iterating.
+// (text mode) find; `--cache` keeps units (with their OCR words) between runs while iterating.
 // Run with OMP_THREAD_LIMIT=1 (see units-report).
 const flags = process.argv.slice(2);
 const flagValue = (name: string) => {
@@ -29,14 +28,10 @@ const positional = flags.filter(
 const [truthDir = '.data/truth', corpusDir = '.data/corpus', outDir = '.data/p0/bench'] =
   positional;
 
-/** Readers that keep units and picture words on disk, keyed by the truth file's name. */
+/** Readers that keep a file's units (with their OCR words) on disk, keyed by the truth name. */
 function cachedReaders(name: string, dir: string): PipelineReaders {
   mkdirSync(dir, { recursive: true });
   const unitsPath = join(dir, `${name}.units.json`);
-  const wordsPath = join(dir, `${name}.words.json`);
-  const words: Record<string, PageWord[]> = existsSync(wordsPath)
-    ? (JSON.parse(readFileSync(wordsPath, 'utf8')) as Record<string, PageWord[]>)
-    : {};
   return {
     ...defaultReaders,
     units: async (file) => {
@@ -44,11 +39,6 @@ function cachedReaders(name: string, dir: string): PipelineReaders {
       const units = await defaultReaders.units(file);
       writeFileSync(unitsPath, JSON.stringify(units));
       return units;
-    },
-    pictureWords: async (file, unit) => {
-      words[unit.id] ??= await defaultReaders.pictureWords(file, unit);
-      writeFileSync(wordsPath, JSON.stringify(words));
-      return words[unit.id] ?? [];
     },
   };
 }

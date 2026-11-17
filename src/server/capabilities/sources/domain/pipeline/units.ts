@@ -22,7 +22,10 @@ export interface Unit {
   kind: UnitKind;
   /** The line's text, or the OCR text of an image. Untrusted file content. */
   text: string | null;
-  ocr: { words: number; confidence: number } | null;
+  /** OCR of an image; `unreadable` when rendering or OCR failed twice (its text is unknown). */
+  ocr: { words: number; confidence: number; unreadable?: boolean } | null;
+  /** An image's OCR words in page points, read once and reused (the virtual text, P4). */
+  words?: PageWord[];
   imageClass: ImageClass | null;
   /** For images: the content fingerprint (K5). */
   fingerprint: string | null;

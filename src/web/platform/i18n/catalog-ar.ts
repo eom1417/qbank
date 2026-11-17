@@ -17,6 +17,7 @@ import { triageAr } from './catalog-triage-ar.js';
 import { channelsAr } from './catalog-channels-ar.js';
 import { takeAr } from './catalog-take-ar.js';
 import { operatorAr } from './catalog-operator-ar.js';
+import { pipelineAr } from './catalog-pipeline-ar.js';
 
 export const ar: Record<MessageKey, string> = {
   ...providersAr,
@@ -24,6 +25,7 @@ export const ar: Record<MessageKey, string> = {
   ...channelsAr,
   ...takeAr,
   ...operatorAr,
+  ...pipelineAr,
   ...localAr,
   ...reviewAr,
   ...duplicatesAr,

@@ -21,8 +21,13 @@ describe('public response contracts', () => {
     const account = { id: ID, email: 'a@b.test', displayName: 'A', preferences };
     const withHash = { ...account, passwordHash: 'secret' } as typeof account;
     const response = toAccountResponse(withHash, false);
-    expect(AccountResponse.parse(response)).toEqual({ ...account, isOperator: false });
+    expect(AccountResponse.parse(response)).toEqual({
+      ...account,
+      isOperator: false,
+      aiConsentAt: null,
+    });
     expect(Object.keys(response).sort()).toEqual([
+      'aiConsentAt',
       'displayName',
       'email',
       'id',

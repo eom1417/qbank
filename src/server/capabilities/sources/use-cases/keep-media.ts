@@ -1,5 +1,10 @@
 import { Readable } from 'node:stream';
-import { occurrencesOf, type ImportedMedia, type ReviewReason } from '../../questions/index.js';
+import {
+  occurrencesOf,
+  type ImportedMedia,
+  type MediaPlacement,
+  type ReviewReason,
+} from '../../questions/index.js';
 import { cropRegion } from '../adapters/crops.js';
 import { modalityOf } from '../domain/media-description.js';
 import { withinBookLimits } from '../domain/media-limits.js';
@@ -9,9 +14,18 @@ import type { PageText } from '../domain/page.js';
 import type { SourcesDeps } from './deps.js';
 import type { ExtractedQuestion } from './extract-questions.js';
 
+/** Where a pipeline picture is shown (M34); the rules' pictures have no placement (Q65). */
+export interface MediaPlace {
+  placement: MediaPlacement;
+  optionLetter: string | null;
+}
+
+/** A picture to keep: its region and question, and its placement when the pipeline knows it. */
+export type KeptLink = MediaLink & { place?: MediaPlace };
+
 /** A picture cropped and measured, waiting to be stored with its question. */
 export interface CroppedMedia {
-  link: MediaLink;
+  link: KeptLink;
   png: Buffer;
   width: number;
   height: number;
@@ -34,7 +48,7 @@ const add = (reasons: Map<number, ReviewReason[]>, question: number, reason: Rev
 export async function cropMedia(
   file: string,
   pages: readonly PageText[],
-  links: readonly MediaLink[],
+  links: readonly KeptLink[],
 ) {
   const sizes = new Map(pages.map((page) => [page.page, page.width * page.height]));
   const { kept, dropped } = withinBookLimits(links, (page) => sizes.get(page) ?? 0);
@@ -57,12 +71,40 @@ const readingOrder = (a: CroppedMedia, b: CroppedMedia) =>
   a.link.region.box.y0 - b.link.region.box.y0 ||
   a.link.region.box.x0 - b.link.region.box.x0;
 
+type QuestionPlace = Pick<ExtractedQuestion, 'page' | 'number' | 'stem'>;
+
+/** A stored crop as its question keeps it: where it was read, and where it is shown (M34). */
+function importedMedia(
+  media: CroppedMedia,
+  question: QuestionPlace,
+  stored: { occurrence: number; position: number; blobKey: string },
+): ImportedMedia {
+  const { region, certain, place } = media.link;
+  return {
+    questionPage: question.page,
+    questionNumber: question.number,
+    questionOccurrence: stored.occurrence,
+    position: stored.position,
+    page: region.page,
+    box: region.box,
+    kind: region.kind,
+    modality: modalityOf(region.kind, question.stem),
+    certain,
+    blobKey: stored.blobKey,
+    width: media.width,
+    height: media.height,
+    quality: media.quality,
+    placement: place?.placement ?? null,
+    optionLetter: place?.optionLetter ?? null,
+  };
+}
+
 /** Stores the crops and ties them to their saved questions; the previous import's go. */
 export async function storeMedia(
   deps: SourcesDeps,
   place: { ownerId: string; sourceId: string },
   cropped: readonly CroppedMedia[],
-  questions: readonly ExtractedQuestion[],
+  questions: readonly QuestionPlace[],
 ) {
   const positions = new Map<number, number>();
   const occurrences = occurrencesOf(questions);
@@ -73,22 +115,8 @@ export async function storeMedia(
     if (!question || stored === 'too_large') continue;
     const position = (positions.get(media.link.question) ?? 0) + 1;
     positions.set(media.link.question, position);
-    const { region, certain } = media.link;
-    items.push({
-      questionPage: question.page,
-      questionNumber: question.number,
-      questionOccurrence: occurrences[media.link.question] ?? 1,
-      position,
-      page: region.page,
-      box: region.box,
-      kind: region.kind,
-      modality: modalityOf(region.kind, question.stem),
-      certain,
-      blobKey: stored.key,
-      width: media.width,
-      height: media.height,
-      quality: media.quality,
-    });
+    const occurrence = occurrences[media.link.question] ?? 1;
+    items.push(importedMedia(media, question, { occurrence, position, blobKey: stored.key }));
   }
   const unused = await deps.questions.replaceMedia(place, items, deps.clock.now());
   for (const key of unused) await deps.blobs.remove(key);

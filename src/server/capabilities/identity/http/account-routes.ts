@@ -8,7 +8,7 @@ import {
 import { AppError } from '../../../platform/errors/index.js';
 import { createAttemptLimiter } from '../../../platform/http/attempts.js';
 import { parseInput } from '../../../platform/http/validate.js';
-import { updateAccount } from '../use-cases/accounts.js';
+import { consentToAi, updateAccount } from '../use-cases/accounts.js';
 import {
   changePassword,
   confirmPasswordReset,
@@ -25,6 +25,12 @@ export function registerAccountRoutes(app: FastifyInstance, options: IdentityRou
     const actor = await requireActor(request);
     const changes = parseInput(UpdateAccountRequest, request.body);
     return accountView(deps, await updateAccount(deps, actor, changes));
+  });
+
+  // Owner-only and behind the origin guard like every account write (CSRF, M34 Q8).
+  app.post('/api/account/ai-consent', async (request) => {
+    const actor = await requireActor(request);
+    return accountView(deps, await consentToAi(deps, actor));
   });
 }
 

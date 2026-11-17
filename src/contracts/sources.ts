@@ -49,8 +49,11 @@ export const StartImportFields = z
     aiProviderId: KitInstanceId.optional(),
     /** That instance's model for this import; its default when omitted. */
     aiModel: KitModel.optional(),
-    /** How the AI helps: checks the answers the rules left open, or reads whole pages. */
-    aiMode: z.enum(['verify', 'read']).default('verify'),
+    /**
+     * How the AI helps: checks the answers the rules left open, reads whole pages, or reads the
+     * file with the import pipeline (M34). Omitted: the pipeline on a server, `verify` locally.
+     */
+    aiMode: z.enum(['verify', 'read', 'pipeline']).optional(),
     /** What the AI improves beyond organizing the file (DEC-34); nothing when omitted. */
     aiEnhance: z.string().max(1000).optional(),
     /** The model of each triage role (DEC-33); the instance's model or default when omitted. */
@@ -167,6 +170,20 @@ const ImportPageReport = z
   })
   .strict();
 
+/** What one AI lesson of a pipeline import cost, summed over its calls (M34). */
+export const LessonUsage = z
+  .object({
+    lesson: z.string(),
+    model: z.string(),
+    calls: z.number().int(),
+    inputTokens: z.number().int(),
+    outputTokens: z.number().int(),
+    /** The provider reported no usage for some calls: their tokens are estimated. */
+    estimated: z.boolean(),
+  })
+  .strict();
+export type LessonUsage = z.infer<typeof LessonUsage>;
+
 /** One file's import and its report (FR-04-011, UI-08, UI-09). Counts are real, never estimated. */
 export const ImportResponse = z
   .object({
@@ -191,6 +208,12 @@ export const ImportResponse = z
         model: z.string().nullable(),
         enhance: Enhancements,
         models: TriageModels,
+        /** `pipeline` reads with the M34 lessons; the older modes as before. */
+        mode: z.enum(['verify', 'read', 'recheck', 'pipeline']),
+        /** Tokens per lesson and model of a pipeline import; empty otherwise. */
+        usage: z.array(LessonUsage),
+        /** A full subscription paused the import; it goes on by itself at this time (Q16). */
+        resumesAt: z.iso.datetime().nullable(),
       })
       .strict()
       .nullable(),

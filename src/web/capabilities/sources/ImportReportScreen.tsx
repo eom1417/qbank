@@ -19,6 +19,7 @@ import { fetchImport, FINISHED_STAGES, retryImport } from './api.js';
 import { QueueNote, usePolledImport } from './ImportProgress.js';
 import { MediaCard } from './MediaCard.js';
 import { AiUsed } from './AiUsed.js';
+import { PausedNote, PipelineUse } from './PipelineUse.js';
 
 const RETRYABLE = new Set(['failed', 'partial_failure', 'needs_review']);
 
@@ -101,8 +102,11 @@ function Report({ initial }: { initial: ImportResponse }) {
             {job.questionsReview}
           </MutedText>
         )}
-        <AiOutcome outcome={job.aiOutcome} />
+        {/* A pipeline job never falls back to the rules: its stops are said by its error or pause. */}
+        {job.ai?.mode !== 'pipeline' && <AiOutcome outcome={job.aiOutcome} />}
+        <PausedNote job={job} />
         <AiUsed ai={job.ai} />
+        <PipelineUse job={job} />
         {job.errorCode && (
           <Alert tone="error">
             {t(`import.error.${job.errorCode}` as 'import.error.internal')}

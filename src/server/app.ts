@@ -57,6 +57,7 @@ function registerLibrary(
     requireActor,
     chaptersOf: library.chaptersOf,
     tagsOf: library.tagsOf,
+    ensureTags: library.ensureTags,
     ownsBank: library.ownsBank,
     deleteBlob: (key) => blobs.remove(key),
   });
@@ -68,9 +69,10 @@ function registerLibrary(
 function registerImports(
   app: FastifyInstance,
   deps: ContentDeps,
-  requireActor: RequireActor,
+  identity: IdentityModule,
   parts: ReturnType<typeof registerLibrary>,
 ) {
+  const { requireActor } = identity;
   const { config, db, clock } = deps;
   const aiHosts = createAiHosts(config.aiHost, config.aiHosts);
   app.addHook('onClose', aiHosts.close);
@@ -91,6 +93,8 @@ function registerImports(
     samplePdf: config.samplePdf,
     originalRetentionDays: config.imports.originalRetentionDays,
     ...(deps.checkLink ? { checkLink: deps.checkLink } : {}),
+    mode: config.mode,
+    aiConsentOf: identity.aiConsentOf,
   });
   sources.register(app);
   if (config.imports.worker) {
@@ -104,7 +108,7 @@ function registerImports(
 /** Study, then export, restore and deletion across everything (M9–M13). */
 function registerContent(app: FastifyInstance, deps: ContentDeps, identity: IdentityModule) {
   const parts = registerLibrary(app, deps, identity.requireActor);
-  const imports = registerImports(app, deps, identity.requireActor, parts);
+  const imports = registerImports(app, deps, identity, parts);
   const { providers, sources } = imports;
   const { library, questions, blobs } = parts;
   const study = createStudy({

@@ -5,7 +5,10 @@ import {
   anchorPictureLines,
   boxOptions,
   joinLoneLabels,
+  markedLetters,
   pictureKey,
+  readingScore,
+  wantsSecondReading,
 } from '../../../src/server/capabilities/sources/domain/pipeline/picture-lines.js';
 import type { Unit } from '../../../src/server/capabilities/sources/domain/pipeline/units.js';
 import {
@@ -103,6 +106,31 @@ describe('picture lines (D6.1)', () => {
       text: 'because of this',
     });
     expect(pictureKey('Q12) b) not a key')).toBeNull();
+  });
+});
+
+describe('second readings and tolerant letters (D2.2)', () => {
+  it('reads boxed and dashed letters as option labels', () => {
+    const lines = [
+      line('○ A Alpha', 60, 100),
+      line('□ b) Beta', 60, 112),
+      line('C- Gamma', 60, 124),
+    ];
+    expect(markedLetters(lines).map((l) => l.text)).toEqual(['A. Alpha', 'b. Beta', 'C. Gamma']);
+    expect(markedLetters([line('0 Asthma attack', 60, 100)])[0]?.text).toBe('0 Asthma attack');
+  });
+
+  it('asks for a second reading when a numbered stem shows fewer than two options', () => {
+    const stemOnly = rowWords('12. Which one is right?', 60, 100);
+    const withOptions = [
+      ...stemOnly,
+      ...rowWords('a) Yes', 60, 114),
+      ...rowWords('b) No', 60, 128),
+    ];
+    expect(wantsSecondReading(stemOnly)).toBe(true);
+    expect(wantsSecondReading(withOptions)).toBe(false);
+    expect(wantsSecondReading(rowWords('Plain caption of a figure', 60, 100))).toBe(false);
+    expect(readingScore(withOptions)).toBeGreaterThan(readingScore(stemOnly));
   });
 });
 
@@ -208,6 +236,24 @@ describe('pictures that are not the file’s questions', () => {
     const reading = readVirtual(text, new Map([[1, 800]]), []);
     expect(reading.questions.map((q) => q.number)).toEqual([1]);
     expect(reading.consumed.has('pic')).toBe(false);
+  });
+
+  it('attaches a printed key after an exam tag line, and reads a doubtful key apart', () => {
+    const layer = [
+      line('Q1) First?', 40, 100),
+      line('A. One', 40, 115),
+      line('Part II 2019', 40, 160),
+      line('Correct answer: A', 40, 185),
+      line('Q2) Second?', 40, 230),
+      line('A. One', 40, 245),
+      line('B. Two', 40, 260),
+      line('Correct answer: B?', 40, 300),
+    ];
+    const units = layer.map((l, i) => unit(`t${i}`, 'text_line', l.box));
+    const text = virtualText([{ size: SIZE, units }], layer, []);
+    const reading = readVirtual(text, new Map([[1, 800]]), []);
+    expect(reading.keys.map((k) => k.key)).toEqual([['A'], null]);
+    expect([...reading.free].sort()).toEqual([2, 7]);
   });
 
   it('finds keys printed in pictures for numbers the file has', () => {

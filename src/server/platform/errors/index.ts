@@ -40,6 +40,7 @@ const STATUS: Record<ErrorCode, number> = {
   links_unavailable: 409,
   not_revealed_yet: 409,
   operator_only: 403,
+  ai_consent_required: 409,
   internal: 500,
 };
 

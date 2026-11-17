@@ -21,7 +21,19 @@ export type ReviewReason =
   | 'too_few_options'
   | 'garbled_text'
   /** Read from the page image by the user's AI: its text is checked by the owner. */
-  | 'ai_read';
+  | 'ai_read'
+  /** M34 pipeline: only one option was printed (Q32); it never enters an exam unchecked. */
+  | 'single_option'
+  /** M34 pipeline: the file says the answer is none of the options (Q54). */
+  | 'none_of_options'
+  /** M34 pipeline: the printed key itself shows doubt ("D?"). */
+  | 'key_doubt'
+  /** M34 pipeline: two answer signals disagree, or a positive one is struck out (Q31). */
+  | 'answer_conflict'
+  /** M34 pipeline: the vision lesson could not read the marked option. */
+  | 'mark_unclear'
+  /** M34 pipeline: a picture of the question's words could not be read. */
+  | 'picture_unreadable';
 
 /** A question's text and answer, as a write sets them (restoring, the AI triage). */
 export interface QuestionContent {
@@ -66,6 +78,9 @@ export function occurrencesOf(questions: readonly { page: number; number: number
   });
 }
 
+/** Where a picture is shown (M34): with the question, an option, its case, or after the reveal. */
+export type MediaPlacement = 'question' | 'option' | 'explanation' | 'case';
+
 /** A figure or table kept for a question, already stored as a blob (M5). */
 export interface ImportedMedia {
   /** The question it belongs to, by its place in the source. */
@@ -83,6 +98,10 @@ export interface ImportedMedia {
   width: number;
   height: number;
   quality: { sharpness: number; contrast: number; ppi: number | null; low: boolean };
+  /** Null for the rules' pictures (shown as before, Q65); set by the M34 pipeline. */
+  placement: MediaPlacement | null;
+  /** The option's letter when `placement` is `option`, else null. */
+  optionLetter: string | null;
 }
 
 /**

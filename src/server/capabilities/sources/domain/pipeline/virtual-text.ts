@@ -2,11 +2,13 @@
 // lines and the OCR lines of every picture of printed words, in reading order, each picture
 // read as a page inside the page (D6.1). No AI.
 import { attachKeys, type QuestionKeys } from '../answer-keys.js';
+import { isDoubtfulKey } from '../key-lines.js';
 import { separateKeys } from '../key-pass.js';
 import { optionLabel, questionLabel } from '../labels.js';
-import { rowLines, type TextLine } from '../lines.js';
+import type { TextLine } from '../lines.js';
 import type { Box, PageWord } from '../page.js';
-import { anchorPictureLines, boxOptions, joinLoneLabels, pictureKey } from './picture-lines.js';
+import { pictureKey, pictureLines } from './picture-lines.js';
+import { isTagLine } from './tags.js';
 import { parseQuestions, type ParsedQuestion, type PlacedFigure } from '../questions.js';
 import { dropRunningLines } from '../running-lines.js';
 import type { PageSize, Unit } from './units.js';
@@ -51,12 +53,6 @@ export const readsAsText = (unit: Unit): boolean =>
   (unit.ocr?.words ?? 0) >= MIN_PICTURE_WORDS;
 
 const boxKey = (page: number, box: Box) => `${page}:${box.x0}:${box.y0}:${box.x1}:${box.y1}`;
-
-/** A picture's words as lines; OCR's own line ids are dropped so labels join their row. */
-function pictureLines(size: PageSize, words: readonly PageWord[]): TextLine[] {
-  const plain = words.map(({ text, box, font }) => ({ text, box, font }));
-  return rowLines({ page: size.page, width: size.width, height: size.height, words: plain });
-}
 
 /** A box beside another may still overlap its end by this share of its own width. */
 const SIDE_OVERLAP = 0.1;
@@ -147,8 +143,7 @@ export function virtualText(
   const pictures = new Map(
     words.flatMap(({ unitId, words: own }) => {
       const size = sizes.get(unitPage.get(unitId) ?? -1);
-      const read = size ? joinLoneLabels(pictureLines(size, own)) : [];
-      const lines = anchorPictureLines(boxOptions(read));
+      const lines = size ? pictureLines(size.page, own) : [];
       const keep = !unsure.has(unitId) || lines.some((line) => questionShaped(line.text));
       return keep && lines.length > 0 ? [[unitId, lines] as const] : [];
     }),
@@ -241,6 +236,30 @@ function dropExcerpts(questions: readonly ParsedQuestion[], origin: ReadonlyMap<
 }
 
 /**
+ * A question read in a picture keeps only options read in that picture or the next one (a
+ * screenshot cut in two): letters found pictures later belong to something else (D6.1).
+ */
+function trimStrayOptions(questions: readonly ParsedQuestion[], text: VirtualText) {
+  const byWord = new Map<Box, VirtualLine>();
+  for (const virtual of text.lines)
+    for (const box of [virtual.line.box, ...virtual.line.words.map((w) => w.box)])
+      byWord.set(box, virtual);
+  const pictures = [...new Set(text.lines.filter((l) => l.fromPicture).map((l) => l.unitId))];
+  for (const question of questions) {
+    const stem = byWord.get(question.spans[0]?.box as Box);
+    if (!stem?.fromPicture) continue;
+    const next = pictures[pictures.indexOf(stem.unitId) + 1];
+    const own = (box: Box) => [stem.unitId, next].includes(byWord.get(box)?.unitId);
+    const stray = question.options.findIndex((option) => !own(option.letterBox));
+    if (stray < 0) continue;
+    question.options = question.options.slice(0, stray);
+    question.spans = question.spans.filter((span) => own(span.box));
+  }
+}
+
+const isAside = (text: string) => isTagLine(text) || isDoubtfulKey(text);
+
+/**
  * The existing rule path over the virtual text: running lines out, keys and explanations
  * apart, questions parsed (pictures' edges close open text), keys attached.
  */
@@ -251,15 +270,18 @@ export function readVirtual(
 ): VirtualReading {
   const all = text.lines.map((virtual) => virtual.line);
   const kept = dropRunningLines(all, heights);
-  const separated = separateKeys(kept);
+  // Exam tags and doubtful keys stand between a question and its key: read apart (Q53, D4.1).
+  const asides = kept.filter((line) => isAside(line.text));
+  const separated = separateKeys(kept.filter((line) => !isAside(line.text)));
   const origin = new Map(text.lines.map((virtual) => [virtual.line.box, virtual]));
   const questions = dropExcerpts(
     parseQuestions(parserLines(text, separated.lines), figures),
     origin,
   );
+  trimStrayOptions(questions, text);
   const keys = attachKeys(questions, separated);
   const spans = new Set(questions.flatMap((question) => question.spans.map((span) => span.box)));
-  const left = new Set(separated.lines);
+  const left = new Set([...separated.lines, ...asides]);
   const free = new Set<number>();
   const consumed = new Set<string>();
   const stays = new Set(kept);

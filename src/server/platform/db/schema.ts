@@ -144,6 +144,8 @@ interface ImportJobTable {
   ai_mode: Generated<'verify' | 'read' | 'recheck' | 'pipeline'>;
   /** The reading curriculum's version a `pipeline` job ran with (M34). */
   curriculum_version: Generated<string | null>;
+  /** Tokens of a `pipeline` job's lessons (`LessonUsage[]` summed per lesson and model, M34). */
+  ai_usage: ColumnType<unknown, string | null | undefined, string | null>;
   /** What the AI improves (`Enhancements`, DEC-34); null without AI. */
   ai_enhance: ColumnType<unknown, string | null | undefined, string>;
   /** The model of each triage role (`TriageModels`), or null for the instance default. */

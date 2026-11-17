@@ -9,12 +9,13 @@ import {
   repeatedImages,
 } from '../domain/pipeline/filler.js';
 import { classifyImage, measureImage } from '../domain/pipeline/image-class.js';
+import { readingScore, wantsSecondReading } from '../domain/pipeline/picture-lines.js';
 import type { RgbImage } from '../domain/pipeline/rgb-image.js';
 import { orderPage, type PageSize, type Unit, type UnitDraft } from '../domain/pipeline/units.js';
 import { dropRunningLines } from '../domain/running-lines.js';
 import { placedImages, type PlacedImage } from './placed-images.js';
 import { readScan, readTextLayer } from './readers.js';
-import { ocrImage, regionDpi, renderRegion, type RegionOcr } from './region-image.js';
+import { readRegion, renderRegion } from './region-image.js';
 
 /**
  * Fewer text-layer words than this, and a picture as large as the page (or none at all): the
@@ -30,9 +31,6 @@ const PARALLEL = 4;
 const SCAN_LAYER_WORDS = 4;
 /** Page-sized images are judged (frame, watermark) from a coarse rendering. */
 const PAGE_DPI = 72;
-/** Tesseract refuses images smaller than this (pixels); such a mark has no words anyway. */
-const MIN_OCR_PIXELS = 12;
-const NO_WORDS: RegionOcr = { words: [], confidence: 0, text: '' };
 
 export interface PageUnits {
   size: PageSize;
@@ -131,24 +129,38 @@ const fillerDraft = (image: PageImage, filler: UnitDraft['filler']): UnitDraft =
   source: 'image',
 });
 
-/** A pasted image as a unit: rendered sharp, read by OCR, measured and classified. */
+/** A screenshot whose first reading shows a numbered stem without options is read again. */
+const SECOND_READING = { wanted: wantsSecondReading, score: readingScore };
+
+/**
+ * A pasted image as a unit: rendered sharp, read by OCR once (its words kept), measured and
+ * classified. An image OCR cannot read stays a picture, marked unreadable.
+ */
 async function contentDraft(file: string, image: PageImage): Promise<UnitDraft> {
-  const dpi = regionDpi(image.box);
-  const rgb = await renderRegion(file, image.page, image.box, dpi);
-  const readable = rgb.width >= MIN_OCR_PIXELS && rgb.height >= MIN_OCR_PIXELS;
-  const ocr = readable ? await ocrImage(rgb, image.page, image.box, dpi) : NO_WORDS;
+  const read = await readRegion(file, image.page, image.box, SECOND_READING);
+  const { ocr } = read;
   const textArea = ocr.words.reduce((sum, word) => sum + area(word.box), 0);
   const stats = {
     words: ocr.words.length,
     confidence: ocr.confidence,
     textAreaRatio: textArea / Math.max(1, area(image.box)),
   };
+  const words = ocr.words.map((word) => word.box);
+  const measured = read.image ? measureImage(read.image) : null;
+  const outside = read.image
+    ? measureImage(read.image, coverMask(read.image, image.box, words, read.dpi))
+    : null;
   return {
     ...fillerDraft(image, null),
     kind: 'image',
     text: ocr.text,
-    ocr: { words: stats.words, confidence: Math.round(stats.confidence) },
-    imageClass: classifyImage(stats, measureImage(rgb)),
+    ocr: {
+      words: stats.words,
+      confidence: Math.round(stats.confidence),
+      unreadable: read.unreadable,
+    },
+    words: ocr.words,
+    imageClass: measured && outside ? classifyImage(stats, measured, outside) : 'unsure',
   };
 }
 
@@ -194,7 +206,9 @@ async function pageImages(file: string, sources: readonly PageSource[]): Promise
   await inParallel(
     listed.filter((image) => image.placement === 'content'),
     async (image) => {
-      image.print = fingerprint(await renderRegion(file, image.page, image.box, PRINT_DPI));
+      // A region that will not render keeps no print: it is never taken for a repeat.
+      const small = await renderRegion(file, image.page, image.box, PRINT_DPI).catch(() => null);
+      image.print = small ? fingerprint(small) : '';
     },
   );
   return listed;

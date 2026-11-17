@@ -2,8 +2,8 @@
 // the rule parser reads a page: labels printed apart from their text, boxes instead of letters,
 // and another bank's numbering, put in the forms the existing parser already reads.
 import { answerLetter, optionLabel, questionLabel } from '../labels.js';
-import type { TextLine } from '../lines.js';
-import { unionBox } from '../page.js';
+import { rowLines, type TextLine } from '../lines.js';
+import { unionBox, type PageWord } from '../page.js';
 
 /** A label alone on its line ("A", "Cc" as OCR doubles it, "b)"), its text on the next line. */
 const LONE_LABEL = /^\(?([A-Ja-j])\1?\s?[.)]?$/i;
@@ -117,4 +117,38 @@ export function pictureKey(line: string): { number: number; letter: string; text
   const option = label && !label.prefixed ? optionLabel(label.text) : null;
   if (!label || !option || option.system === 'digits') return null;
   return { number: label.number, letter: answerLetter(option.index), text: option.text.trim() };
+}
+
+/** "○ A text", "□ b) text": a box drawn before a printed letter. */
+const BOXED_LETTER = /^[○◯●□■☐O0o]\s*\(?([A-Ja-j])\s?[.)\-–]?\s+(.*)$/;
+/** "A- text", "(b) – text": a letter with a dash. */
+const DASHED_LETTER = /^\(?([A-Ja-j])\)?\s?[-–]\s+(.*)$/;
+
+/** D2.2: option letters printed with a box before them or a dash after them, as "A. text". */
+export function markedLetters(lines: readonly TextLine[]): TextLine[] {
+  return lines.map((line) => {
+    const match = BOXED_LETTER.exec(line.text) ?? DASHED_LETTER.exec(line.text);
+    return match ? { ...line, text: `${match[1] ?? ''}. ${match[2] ?? ''}` } : line;
+  });
+}
+
+/**
+ * A picture's OCR words as the parser reads them: rows (OCR's own line ids dropped so labels
+ * join their row), then labels, boxes and anchors put in the parser's forms.
+ */
+export function pictureLines(page: number, words: readonly PageWord[]): TextLine[] {
+  const plain = words.map(({ text, box, font }) => ({ text, box, font }));
+  const rows = rowLines({ page, width: 0, height: 0, words: plain });
+  return anchorPictureLines(boxOptions(markedLetters(joinLoneLabels(rows))));
+}
+
+const optionLines = (lines: readonly TextLine[]) => lines.filter(isOption).length;
+
+/** How well a reading of a picture shows a question: its option lines. */
+export const readingScore = (words: readonly PageWord[]) => optionLines(pictureLines(0, words));
+
+/** A numbered stem with fewer than two options: OCR may have lost them; read it again. */
+export function wantsSecondReading(words: readonly PageWord[]): boolean {
+  const lines = pictureLines(0, words);
+  return lines.some((line) => questionLabel(line.text) !== null) && optionLines(lines) < 2;
 }

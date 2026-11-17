@@ -61,3 +61,9 @@ export async function updateAccount(
   await deps.accounts.update(actor.accountId, changes);
   return loadAccount(deps, actor.accountId);
 }
+
+/** The owner agrees, once, that imports send the file to their own AI provider (M34, Q8). */
+export async function consentToAi(deps: IdentityDeps, actor: Actor): Promise<Account> {
+  await deps.accounts.consentToAi(actor.accountId, deps.clock.now());
+  return loadAccount(deps, actor.accountId);
+}

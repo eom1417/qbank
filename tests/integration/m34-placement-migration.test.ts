@@ -62,11 +62,13 @@ describe('picture placement and shared cases (M34 P1)', () => {
   });
 
   it('rolls back and applies again', async () => {
+    const usage = await migrator().migrateDown();
+    expect(usage.results?.[0]?.migrationName).toBe('202611271000_import_usage');
     const down = await migrator().migrateDown();
     expect(down.error).toBeUndefined();
     expect(down.results?.[0]?.migrationName).toBe('202611261000_m34_placement');
     const up = await migrator().migrateToLatest();
     expect(up.error).toBeUndefined();
-    expect(up.results?.map((result) => result.status)).toEqual(['Success']);
+    expect(up.results?.map((result) => result.status)).toEqual(['Success', 'Success']);
   });
 });

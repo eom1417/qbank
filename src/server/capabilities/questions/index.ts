@@ -28,15 +28,18 @@ import type { ChapterNames } from './domain/classify.js';
 import { inferredDifficulty } from './domain/difficulty.js';
 import { aiAdditions } from './use-cases/ai-additions.js';
 import { setInferredDifficulty } from './adapters/insights.js';
+import { saveImportExtras, type EnsureTags, type ImportExtras } from './adapters/import-extras.js';
 
 export type { PoolQuestion } from './adapters/study-pool.js';
 export type { RestoredQuestion } from './adapters/portability.js';
 export type { TriageChange } from './domain/triaged.js';
 export type { QuestionRow } from './adapters/question-repository.js';
+export type { ImportExtras } from './adapters/import-extras.js';
 export {
   occurrencesOf,
   type ImportedMedia,
   type ImportedQuestion,
+  type MediaPlacement,
   type ReviewReason,
 } from './domain/imported.js';
 
@@ -53,6 +56,8 @@ interface QuestionsSettings {
   ownsBank(ownerId: string, bankId: string): Promise<boolean>;
   /** Removes a stored picture's file when its question is deleted for good. */
   deleteBlob(key: string): Promise<void>;
+  /** The account's tags by name, created when missing (library; import tags, Q67). */
+  ensureTags: EnsureTags;
 }
 
 /** The repositories and lookups every questions use case receives. */
@@ -132,6 +137,18 @@ export function createQuestions(settings: QuestionsSettings) {
     ...deps.questions,
     ...aiAdditions(deps),
     saveImported,
+    /** A pipeline import's shared cases and exam/year tags on its saved questions (M34). */
+    saveImportExtras: (
+      place: Place,
+      questions: readonly ImportedQuestion[],
+      extras: ImportExtras,
+    ) =>
+      saveImportExtras(
+        { db: settings.db, newId, ensureTags: settings.ensureTags },
+        place,
+        questions,
+        extras,
+      ),
     ...sharedInterface(settings, deps),
     ...deps.media,
     register: (app: FastifyInstance) => {

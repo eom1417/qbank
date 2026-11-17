@@ -52,6 +52,8 @@ async function replaceMedia(
         height: item.height,
         quality: JSON.stringify(item.quality),
         low_quality: item.quality.low,
+        placement: item.placement,
+        option_letter: item.placement === 'option' ? item.optionLetter : null,
         created_at: now,
       })
       .execute();

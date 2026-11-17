@@ -19,6 +19,7 @@ import type { SourcesDeps } from './use-cases/deps.js';
 import { listQueue } from './use-cases/import-queue.js';
 import { createImportWorker } from './worker.js';
 import { linkOpens } from './adapters/link-check.js';
+import { createStepCache } from './adapters/step-cache.js';
 
 export { extractQuestions } from './use-cases/read-source.js';
 export type { ExtractedQuestion, ReadingMode } from './use-cases/extract-questions.js';
@@ -44,6 +45,8 @@ interface SourcesSettings {
   log: SourcesDeps['log'];
   /** Whether a source link opens; the real web unless a test replaces it. */
   checkLink?: (url: string) => Promise<boolean>;
+  mode: SourcesDeps['mode'];
+  aiConsentOf: SourcesDeps['aiConsentOf'];
 }
 
 /** Uploaded sources and their imports: upload, durable job queue, reading, report (M4). */
@@ -63,6 +66,9 @@ export function createSources(settings: SourcesSettings) {
     samplePdf: settings.samplePdf,
     originalRetentionMs: settings.originalRetentionDays * 24 * 60 * 60_000,
     workers: settings.workers ?? 1,
+    mode: settings.mode,
+    aiConsentOf: settings.aiConsentOf,
+    steps: createStepCache(settings.db),
   };
   return {
     worker: createImportWorker(deps),

@@ -13,6 +13,10 @@ interface AiChoiceProps {
   /** The AI reads whole pages instead of only checking open answers. */
   readPages: boolean;
   onReadPages(readPages: boolean): void;
+  /** A server reads with the pipeline (M34): no page-reading choice. */
+  pipeline: boolean;
+  /** The one-time consent to send the file to the provider (Q8), while the account has none. */
+  consent: { needed: boolean; given: boolean; onChange(given: boolean): void };
 }
 
 export function AiChoice(props: AiChoiceProps) {
@@ -22,14 +26,21 @@ export function AiChoice(props: AiChoiceProps) {
   return (
     <Stack>
       <TriageFields state={triage} />
-      {value && (
+      {value && !props.pipeline && (
         <Checkbox
           checked={props.readPages}
           onChange={(event) => props.onReadPages(event.target.checked)}
           label={t('import.ai.read')}
         />
       )}
-      {value && <MutedText>{t('import.ai.read.hint')}</MutedText>}
+      {value && !props.pipeline && <MutedText>{t('import.ai.read.hint')}</MutedText>}
+      {value && props.consent.needed && (
+        <Checkbox
+          checked={props.consent.given}
+          onChange={(event) => props.consent.onChange(event.target.checked)}
+          label={t('import.consent.label')}
+        />
+      )}
       {value && <DisclosureNote />}
       {approval && (
         <Alert tone="info">

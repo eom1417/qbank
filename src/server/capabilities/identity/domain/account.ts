@@ -9,6 +9,8 @@ export interface Account {
   operatorConfirmed?: boolean;
   /** Linked to a Google account, whose verified e-mail it carries (M32, DEC-42). */
   googleLinked?: boolean;
+  /** When the owner agreed to send files to their own AI provider (M34, Q8); once per account. */
+  aiConsentAt?: Date | null;
 }
 
 /** Defaults for a new account; the locale comes from the sign-up screen. */

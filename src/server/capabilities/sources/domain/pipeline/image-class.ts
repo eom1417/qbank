@@ -164,6 +164,12 @@ const TABLE_MIN_ROWS_ALONE = 5;
 const TEXT_MIN_WORDS = 5;
 const TEXT_MIN_CONFIDENCE = 60;
 const TEXT_MIN_AREA = 0.08;
+/**
+ * Grey levels allowed outside the word boxes: paper and print (a coloured or dark background
+ * is one more level); a photo, drawing or infographic spreads wider. Calibrated on the bench
+ * corpus, where it best matched the truth's pictures of words (6 of 16).
+ */
+const TEXT_MAX_OUTSIDE_TONES = 6;
 /** A picture: almost no readable text, and photographic tones or no paper background. */
 const FIGURE_MAX_WORDS = 3;
 const FIGURE_MAX_CONFIDENCE = 40;
@@ -192,11 +198,19 @@ const isPicture = (ocr: OcrStats, stats: ImageStats) =>
   (ocr.words <= FIGURE_MAX_WORDS || ocr.confidence < FIGURE_MAX_CONFIDENCE) &&
   (stats.toneLevels >= FIGURE_MIN_TONES || stats.paperShare < FIGURE_MAX_PAPER);
 
+/**
+ * Outside the words OCR read, a picture of printed words holds only its background: a
+ * diagram, photo or infographic with a few labels holds many tones. Unknown (no `outside`
+ * stats) counts as little.
+ */
+const littleOtherInk = (outside: ImageStats | undefined) =>
+  !outside || outside.toneLevels <= TEXT_MAX_OUTSIDE_TONES;
+
 /** The image's class by code, in this order of precedence; `unsure` goes to the vision lesson. */
-export function classifyImage(ocr: OcrStats, stats: ImageStats): ImageClass {
+export function classifyImage(ocr: OcrStats, stats: ImageStats, outside?: ImageStats): ImageClass {
   if (isMarker(ocr, stats) || isPenWriting(ocr, stats)) return 'handwriting';
   if (isTable(stats)) return 'table';
-  if (isPrintedText(ocr)) return 'text_picture';
+  if (isPrintedText(ocr) && littleOtherInk(outside)) return 'text_picture';
   if (isPicture(ocr, stats)) return 'figure';
   return 'unsure';
 }

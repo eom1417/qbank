@@ -3,6 +3,7 @@ import type { BlobStore } from '../../../platform/storage/blob-store.js';
 import type { ImportAi } from '../../providers/index.js';
 import type { Questions } from '../../questions/index.js';
 import type { ImportRepository } from '../adapters/import-repository.js';
+import type { StepCache } from '../adapters/step-cache.js';
 
 export interface SourcesDeps {
   /** Why a job failed, for the owner's log (M17.3): codes and the error, never page text. */
@@ -26,4 +27,10 @@ export interface SourcesDeps {
   originalRetentionMs: number;
   /** Imports running at once across accounts, never two for one account (M31, B2). */
   workers: number;
+  /** A server (`accounts`) reads with the pipeline by default; a local install as before. */
+  mode: 'local' | 'accounts';
+  /** When the account agreed to send files to its AI provider (identity, Q8); null until then. */
+  aiConsentOf(ownerId: string): Promise<Date | null>;
+  /** Judged AI lesson steps kept 7 days: a resumed import never pays twice (M34). */
+  steps: Pick<StepCache, 'get' | 'put'>;
 }

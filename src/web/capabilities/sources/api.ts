@@ -17,10 +17,13 @@ export interface UploadOptions {
   sourceType: SourceType;
   /** The AI triage (DEC-33): instance, models per role, improvement; none without AI. */
   triage: TriageRequest | null;
-  aiMode: 'verify' | 'read';
+  aiMode: AiMode;
   aiApproved: boolean;
   answersFor: string;
 }
+
+/** How the AI helps; `pipeline` is the server's reading (M34). */
+export type AiMode = 'verify' | 'read' | 'pipeline';
 
 const ROLE_FIELDS = {
   first: 'aiFirstModel',
@@ -30,7 +33,7 @@ const ROLE_FIELDS = {
 } as const;
 
 /** The AI fields of an upload; pages are read (or marks checked) by the first solver's model. */
-function appendTriage(form: FormData, triage: TriageRequest, mode: 'verify' | 'read') {
+function appendTriage(form: FormData, triage: TriageRequest, mode: AiMode) {
   form.append('aiProviderId', triage.instanceId);
   form.append('aiMode', mode);
   form.append('aiEnhance', JSON.stringify(triage.enhance));

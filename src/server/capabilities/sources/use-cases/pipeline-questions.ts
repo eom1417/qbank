@@ -1,7 +1,7 @@
 import { buildUnits, inParallel, type FileUnits } from '../adapters/pipeline-units.js';
 import { renderPage } from '../adapters/raster.js';
 import { readScan, readTextLayer } from '../adapters/readers.js';
-import { ocrImage, regionDpi, renderRegion } from '../adapters/region-image.js';
+import { renderRegion } from '../adapters/region-image.js';
 import type { QuestionKeys } from '../domain/answer-keys.js';
 import { inkAround, type Raster } from '../domain/answer-marks.js';
 import { bodyFontFamilies, pageLines } from '../domain/lines.js';
@@ -20,7 +20,6 @@ import {
 } from '../domain/pipeline/placement.js';
 import type { PipelineQuestion } from '../domain/pipeline/question.js';
 import type { RgbImage } from '../domain/pipeline/rgb-image.js';
-import type { Unit } from '../domain/pipeline/units.js';
 import {
   pictureKeys,
   readsAsText,
@@ -40,8 +39,6 @@ export interface PipelineReaders {
   units(file: string): Promise<FileUnits>;
   /** The page's own words: its text layer, or OCR for a scanned page. */
   pages(file: string, units: FileUnits): Promise<PageText[]>;
-  /** OCR words of one picture, in page points. */
-  pictureWords(file: string, unit: Unit): Promise<PageWord[]>;
   /** The page in grey, for pen marks at option letters. */
   raster(file: string): (page: number) => Promise<Raster>;
   /** The page in colour at `dpi`, for handwritten notes. */
@@ -71,16 +68,9 @@ async function readPages(file: string, units: FileUnits): Promise<PageText[]> {
   );
 }
 
-async function readPicture(file: string, unit: Unit): Promise<PageWord[]> {
-  const dpi = regionDpi(unit.box);
-  const image = await renderRegion(file, unit.page, unit.box, dpi);
-  return (await ocrImage(image, unit.page, unit.box, dpi)).words;
-}
-
 export const defaultReaders: PipelineReaders = {
   units: buildUnits,
   pages: readPages,
-  pictureWords: readPicture,
   raster: (file) => rasterCache(file, renderPage),
   colour: (file, page, dpi) =>
     renderRegion(file, page.page, { x0: 0, y0: 0, x1: page.width, y1: page.height }, dpi),
@@ -217,10 +207,8 @@ async function readText(file: string, units: FileUnits, readers: PipelineReaders
   const pages = await readers.pages(file, units);
   const layer = layerOf(pages, units);
   const textual = units.pages.flatMap((page) => page.units).filter(readsAsText);
-  const words = await inParallel(textual, async (unit) => ({
-    unitId: unit.id,
-    words: await readers.pictureWords(file, unit),
-  }));
+  // P2 read each picture once and kept its words: no second OCR here.
+  const words = textual.map((unit) => ({ unitId: unit.id, words: unit.words ?? [] }));
   const text = virtualText(units.pages, layer.lines, words);
   // Print and figures: dark pixels there are no answer mark.
   const printed = new Map<number, Box[]>();

@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { chromium, type Page } from '@playwright/test';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { readRegion } from '../../src/server/capabilities/sources/adapters/region-image.js';
 import type { PipelineQuestion } from '../../src/server/capabilities/sources/domain/pipeline/question.js';
 import {
   pipelineQuestions,
@@ -110,5 +111,13 @@ describe('pipeline questions (no AI)', () => {
     expect(numbered(2).answers).toEqual([]);
     expect(numbered(2).reviewReasons).toContain('no_answer');
     expect(numbered(7).answers).toEqual([]);
+  });
+});
+
+describe('a picture OCR cannot read', () => {
+  it('is marked unreadable after a retry, never failing the file', async () => {
+    const box = { x0: 10, y0: 10, x1: 200, y1: 120 };
+    const read = await readRegion(join(dir, 'missing.pdf'), 1, box);
+    expect(read).toMatchObject({ image: null, unreadable: true, ocr: { words: [] } });
   });
 });

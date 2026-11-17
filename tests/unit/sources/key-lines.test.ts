@@ -33,3 +33,14 @@ describe('answer keys as printed (FR-07-001, FR-07-005, FR-07-008)', () => {
     expect(k.asksForSeveral('Select two correct statements')).toBe(true);
   });
 });
+
+describe('keys printed with doubt (M34 D4.1)', () => {
+  it('reads "D?", "B??" and "X" as a doubtful key that gives no answer', () => {
+    for (const line of ['Correct answer: D?', 'Answer: B??', 'Correct answer: X']) {
+      expect(k.isDoubtfulKey(line)).toBe(true);
+      expect(k.inlineAnswer(line)).toBeNull();
+    }
+    expect(k.isDoubtfulKey('Correct answer: A')).toBe(false);
+    expect(k.isDoubtfulKey('Answer: X-ray of the chest')).toBe(false);
+  });
+});

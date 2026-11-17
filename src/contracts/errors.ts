@@ -41,6 +41,8 @@ export const ErrorCode = z.enum([
   'links_unavailable',
   'not_revealed_yet',
   'operator_only',
+  /** An import by the pipeline sends the file to the user's AI: consent first (M34, Q8). */
+  'ai_consent_required',
   'internal',
 ]);
 export type ErrorCode = z.infer<typeof ErrorCode>;
