@@ -181,17 +181,17 @@ describe('undecided answer evidence (M34 P4b, D4.6)', () => {
   });
 });
 
-describe('two agreeing signals before an exam (M34 Q85)', () => {
-  it('takes a vision mark that a second, independent reading confirmed (R1)', () => {
-    const twice = { mark: { letter: 'B', eliminated: [], confirmed: true } };
+describe('two agreeing signals before an exam (M34 Q85, M35)', () => {
+  it('holds a vision mark alone for review, even when read twice (both may read a wrong crop)', () => {
+    const twice = { mark: { letter: 'B', eliminated: [] } };
     expect(combineEvidence(question('ABCD'), twice)).toMatchObject({
       answers: ['B'],
-      reviewReasons: [],
+      reviewReasons: ['single_signal'],
     });
   });
 
-  it('confirms a printed key the vision lesson looked at without seeing another mark', () => {
+  it('holds a printed key alone for review when the vision lesson saw no mark (no second signal)', () => {
     const keyed = combineEvidence(question('ABCD', ['C'], ['printed_key']), vision(null));
-    expect(keyed).toMatchObject({ answers: ['C'], reviewReasons: [] });
+    expect(keyed).toMatchObject({ answers: ['C'], reviewReasons: ['single_signal'] });
   });
 });

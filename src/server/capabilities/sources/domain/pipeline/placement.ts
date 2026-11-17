@@ -70,10 +70,14 @@ export const ownerAt = (frames: readonly QuestionFrame[], at: number) =>
 
 const sameRow = (a: Box, b: Box) => Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0) > 0;
 
-/** The option an image between options goes with: the one on its row, else the one above. */
+/**
+ * The option an image between options goes with: the one on its row, else the one above.
+ * None when it lies over the rows of two or more options: a note pasted over them (M35).
+ */
 function optionOf(frame: QuestionFrame, unit: Unit, at: number): string | null {
-  const row = frame.options.find((o) => o.page === unit.page && sameRow(o.box, unit.box));
-  return row?.letter ?? frame.options.findLast((option) => option.at <= at)?.letter ?? null;
+  const rows = frame.options.filter((o) => o.page === unit.page && sameRow(o.box, unit.box));
+  if (rows.length > 1) return null;
+  return rows[0]?.letter ?? frame.options.findLast((option) => option.at <= at)?.letter ?? null;
 }
 
 export interface Placed {
