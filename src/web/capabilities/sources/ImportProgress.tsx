@@ -4,7 +4,8 @@ import type { ImportResponse } from '../../../contracts/sources.js';
 import { Alert, Badge, Button, MutedText, Row } from '../../design-system/index.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { fill } from '../../platform/i18n/fill.js';
-import { cancelImport, fetchImport, FINISHED_STAGES, queueMessage } from './api.js';
+import { useAction } from '../../platform/forms/use-submit.js';
+import { cancelImport, fetchImport, FINISHED_STAGES, queueMessage, retryImport } from './api.js';
 
 const POLL_MS = 2000;
 
@@ -26,12 +27,50 @@ export function QueueNote({ job }: { job: ImportResponse }) {
   return place && <MutedText>{fill(t(place.key), { n: place.n })}</MutedText>;
 }
 
-/** Why an import ended with nothing, said wherever the import is shown (M36 Q109). */
+/** Errors whose cause is the AI's own status, said after them (M36 Q114). */
+const AI_STOPS = new Set(['ai_failed', 'ai_stopped']);
+
+/** Why an import ended, said wherever the import is shown (M36 Q109): the AI's own reason too. */
 export function ImportErrorNote({ job }: { job: ImportResponse }) {
   const { t } = useI18n();
   if (!job.errorCode) return null;
+  const why = AI_STOPS.has(job.errorCode) && job.aiOutcome;
   return (
-    <Alert tone="error">{t(`import.error.${job.errorCode}` as 'import.error.internal')}</Alert>
+    <Alert tone="error">
+      {t(`import.error.${job.errorCode}` as 'import.error.internal')}
+      {why && ` ${t(`ai.status.${job.aiOutcome}` as 'ai.status.invalid_key')} `}
+      {why && job.aiDetail && (
+        <>
+          {' '}
+          {t('import.ai.providerSaid')} <bdi>«{job.aiDetail}»</bdi>{' '}
+        </>
+      )}
+      {why && <Link to="/settings/providers">{t('import.ai.openProviders')}</Link>}
+    </Alert>
+  );
+}
+
+/** Stages a finished import can be run again from, without uploading the file again. */
+const RETRYABLE = new Set(['failed', 'partial_failure', 'needs_review']);
+
+/** Runs the import again from where it stopped (the step cache keeps what the AI answered). */
+export function RetryImport({
+  job,
+  onRetried,
+}: {
+  job: ImportResponse;
+  onRetried(next: ImportResponse): void;
+}) {
+  const { t } = useI18n();
+  const retry = useAction(async () => onRetried(await retryImport(job.id, {})));
+  if (!RETRYABLE.has(job.stage)) return null;
+  return (
+    <>
+      {retry.error && <Alert tone="error">{t(retry.error)}</Alert>}
+      <Button variant="secondary" busy={retry.busy} onClick={() => void retry.run()}>
+        {t('import.retry')}
+      </Button>
+    </>
   );
 }
 
@@ -44,7 +83,7 @@ interface RowProps {
 
 export function ImportProgressRow({ initial, onCancel }: RowProps) {
   const { t } = useI18n();
-  const [job] = usePolledImport(initial);
+  const [job, setJob] = usePolledImport(initial);
   const done = FINISHED_STAGES.has(job.stage);
   return (
     <li className="qb-list__item">
@@ -61,6 +100,7 @@ export function ImportProgressRow({ initial, onCancel }: RowProps) {
       </MutedText>
       <QueueNote job={job} />
       <ImportErrorNote job={job} />
+      {job.errorCode && <RetryImport job={job} onRetried={setJob} />}
       {job.stage === 'completed' && <Alert tone="success">{t('import.completedNotice')}</Alert>}
       {job.stage === 'queued' && onCancel && (
         <Button

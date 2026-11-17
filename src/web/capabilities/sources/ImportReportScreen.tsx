@@ -4,7 +4,6 @@ import type { ImportResponse } from '../../../contracts/sources.js';
 import {
   Alert,
   Badge,
-  Button,
   Card,
   Heading,
   MutedText,
@@ -13,15 +12,12 @@ import {
   Title,
 } from '../../design-system/index.js';
 import { useQuery } from '../../platform/api/use-query.js';
-import { useAction } from '../../platform/forms/use-submit.js';
 import { useI18n, type MessageKey } from '../../platform/i18n/i18n.js';
-import { fetchImport, FINISHED_STAGES, retryImport } from './api.js';
-import { ImportErrorNote, QueueNote, usePolledImport } from './ImportProgress.js';
+import { fetchImport, FINISHED_STAGES } from './api.js';
+import { ImportErrorNote, QueueNote, RetryImport, usePolledImport } from './ImportProgress.js';
 import { MediaCard } from './MediaCard.js';
 import { AiUsed } from './AiUsed.js';
 import { PausedNote, PipelineUse } from './PipelineUse.js';
-
-const RETRYABLE = new Set(['failed', 'partial_failure', 'needs_review']);
 
 /** What the AI step did, in words the user can act on. */
 function aiOutcomeKey(outcome: string | null): MessageKey | null {
@@ -80,7 +76,6 @@ function PageIssues({ job }: { job: ImportResponse }) {
 function Report({ initial }: { initial: ImportResponse }) {
   const { t } = useI18n();
   const [job, setJob] = usePolledImport(initial);
-  const retry = useAction(async () => setJob(await retryImport(job.id, {})));
   return (
     <Stack>
       <Link to={`/banks/${job.bankId}`}>{t('import.back')}</Link>
@@ -110,12 +105,7 @@ function Report({ initial }: { initial: ImportResponse }) {
         <ImportErrorNote job={job} />
         <Title>{t('import.report.pages')}</Title>
         <PageIssues job={job} />
-        {retry.error && <Alert tone="error">{t(retry.error)}</Alert>}
-        {RETRYABLE.has(job.stage) && (
-          <Button variant="secondary" busy={retry.busy} onClick={() => void retry.run()}>
-            {t('import.retry')}
-          </Button>
-        )}
+        <RetryImport job={job} onRetried={setJob} />
       </Card>
       {FINISHED_STAGES.has(job.stage) && <MediaCard importId={job.id} />}
     </Stack>

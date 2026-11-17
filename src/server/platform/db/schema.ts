@@ -157,6 +157,8 @@ interface ImportJobTable {
   /** The model of each triage role (`TriageModels`), or null for the instance default. */
   ai_roles: ColumnType<unknown, string | null | undefined, string>;
   ai_outcome: string | null;
+  /** The provider's own words when it stopped the import (M36). */
+  ai_detail: string | null;
   error_code: string | null;
   attempts: Generated<number>;
   locked_until: Date | null;

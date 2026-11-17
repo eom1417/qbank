@@ -85,6 +85,7 @@ export async function getImport(
     questionsFound: job.questions_found,
     questionsReview: job.questions_review,
     aiOutcome: job.ai_outcome,
+    aiDetail: job.ai_detail,
     errorCode: job.error_code,
     ai: await aiOf(deps, job),
     createdAt: job.created_at.toISOString(),

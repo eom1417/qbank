@@ -10,6 +10,9 @@ export const pipelineEn = {
     'Your AI connection is not available, so nothing was imported. Check it in AI providers, then retry.',
   'import.error.ai_failed':
     'Your AI stopped before the file was read, so nothing was imported. Check it in AI providers, then retry.',
+  'import.ai.providerSaid': 'Your provider said:',
+  'import.error.ai_stopped':
+    'Your AI stopped partway. The file’s questions are kept, and what needed it waits in review. Retry to finish it.',
   'import.error.no_quota':
     'Your AI subscription stayed at its limit for more than 7 days, so the import stopped. Retry it once the subscription renews.',
   'import.cancelPaused': 'Cancel this import',

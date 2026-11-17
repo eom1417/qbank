@@ -14,14 +14,8 @@ import { recheckOutcome, triageImport } from './triage-import.js';
 import { aiTargetOf, verifyWithAi } from './verify-with-ai.js';
 import { readWithAi } from './read-with-ai.js';
 import { linkKeys } from './link-keys.js';
-import { PAUSING } from './manage-imports.js';
-import {
-  CURRICULUM_VERSION,
-  openLessons,
-  readWithPipeline,
-  sumUsage,
-  type PipelineReading,
-} from './read-with-pipeline.js';
+import { CURRICULUM_VERSION, openLessons, type PipelineReading } from './read-with-pipeline.js';
+import { aiFailed, readKeeping } from './pipeline-stops.js';
 import { keepBlocks, tierOf } from './pipeline-report.js';
 import { revokedKey } from '../adapters/measurements.js';
 
@@ -203,42 +197,6 @@ async function questionsOutcome(deps: SourcesDeps, job: JobRow, source: SourceRo
   };
 }
 
-/** No silent fallback (Z4): without its AI a pipeline job fails, and no rule reads the file. */
-const aiFailed = (code: 'ai_not_ready' | 'ai_failed' | 'no_quota', outcome: string) => ({
-  stage: 'failed' as const,
-  questions_found: 0,
-  questions_review: 0,
-  ai_outcome: outcome,
-  error_code: code,
-});
-
-/** A job that would wait longer than this for its subscription in all ends instead (Q16). */
-const MAX_PAUSE_MS = 7 * 24 * 60 * 60_000;
-
-/**
- * A full subscription pauses the job where it is: it is taken again after `resumeAfter` and
- * goes on from the step cache, unless its pauses would pass 7 days in all: then it fails with
- * `no_quota`. Any other stop fails the job. Null when it paused.
- */
-async function stoppedOutcome(
-  deps: SourcesDeps,
-  job: JobRow,
-  read: PipelineReading,
-  usage: string,
-) {
-  const stop = read.stopped;
-  if (!stop) return undefined;
-  if (PAUSING.has(stop.failure) && stop.resumeAfter) {
-    const now = deps.clock.now();
-    const paused = job.paused_ms + (stop.resumeAfter.getTime() - now.getTime());
-    if (paused > MAX_PAUSE_MS) return { ...aiFailed('no_quota', stop.failure), ai_usage: usage };
-    const at = { locked_until: stop.resumeAfter, paused_ms: paused, updated_at: now };
-    await deps.imports.update(job.id, { ai_outcome: stop.failure, ai_usage: usage, ...at });
-    return null;
-  }
-  return { ...aiFailed('ai_failed', stop.failure), ai_usage: usage };
-}
-
 /** The pipeline's questions saved with their placed pictures, cases and tags; then M19 triage. */
 async function savePipeline(
   deps: SourcesDeps,
@@ -287,20 +245,22 @@ async function pipelineOutcome(deps: SourcesDeps, job: JobRow, source: SourceRow
     ]),
   );
   const pages = { from: source.page_from, to: source.page_to };
-  const read = await readWithPipeline(lessons, { file, pages, readings });
-  const usage = JSON.stringify(sumUsage(job.ai_usage, read.usage));
-  const stopped = await stoppedOutcome(deps, job, read, usage);
-  if (stopped !== undefined) return stopped;
+  const reading = await readKeeping(deps, job, lessons, { file, pages, readings });
+  if (reading === null) return null;
+  if ('failed' in reading) return reading.failed;
+  const { read, usage, stoppedBy, detail } = reading;
   const saved = await savePipeline(deps, job, source, { file, rows, read });
   const facts = await keepBlocks(deps, job, read);
   const counts = await countsOf(deps, job, rows, saved.questions.length);
-  const stage = counts.stage(saved.aiOutcome);
+  const aiOutcome = stoppedBy ?? saved.aiOutcome;
+  const stage = counts.stage(aiOutcome);
   return {
     stage,
     questions_found: counts.found,
     questions_review: counts.review,
-    ai_outcome: saved.aiOutcome,
-    error_code: errorOf(stage, counts.found),
+    ai_outcome: aiOutcome,
+    error_code: stoppedBy ? 'ai_stopped' : errorOf(stage, counts.found),
+    ai_detail: detail,
     ai_usage: usage,
     curriculum_version: CURRICULUM_VERSION,
     pipeline_facts: facts,

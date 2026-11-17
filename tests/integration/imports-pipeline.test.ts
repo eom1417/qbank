@@ -134,7 +134,9 @@ describe('no silent fallback (Z4)', () => {
     expect(await questionsOf(job.sourceId)).toEqual([]);
   });
 
-  it('fails a job whose provider refuses, with no question read by the rules', async () => {
+  // M36 Q115: a refusal no longer throws the file away: what the file prints is kept, and what
+  // needed the AI waits in review; the report says the AI stopped and a retry finishes it.
+  it('keeps the file when its provider refuses, sending what needed the AI to review', async () => {
     const { job, report } = await startPipeline();
     fake().refusing.add(FAKE_INSTANCES.lesson);
     try {
@@ -142,10 +144,14 @@ describe('no silent fallback (Z4)', () => {
     } finally {
       fake().refusing.delete(FAKE_INSTANCES.lesson);
     }
-    const failed = await report();
-    expect(failed).toMatchObject({ stage: 'failed', errorCode: 'ai_failed' });
-    expect(failed.aiOutcome).toBe('invalid_key');
-    expect(await questionsOf(job.sourceId)).toEqual([]);
+    const stopped = await report();
+    expect(stopped).toMatchObject({ stage: 'needs_review', errorCode: 'ai_stopped' });
+    expect(stopped.aiOutcome).toBe('invalid_key');
+    // The provider's own words, not only its class: what to fix is in them (M36 Q119).
+    expect(stopped.aiDetail).toBe('signed out');
+    const saved = await questionsOf(job.sourceId);
+    expect(saved.length).toBeGreaterThan(0);
+    expect(saved.some((question) => question.status === 'needs_review')).toBe(true);
   });
 });
 
