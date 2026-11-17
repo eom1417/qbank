@@ -31,10 +31,12 @@ export interface SourcesDeps {
   workers: number;
   /** A server (`accounts`) reads with the pipeline by default; a local install as before. */
   mode: 'local' | 'accounts';
+  /** Uploads are imported only with the user's AI, by the pipeline (Q7, Z4; config). */
+  requiresAi: boolean;
   /** When the account agreed to send files to its AI provider (identity, Q8); null until then. */
   aiConsentOf(ownerId: string): Promise<Date | null>;
-  /** Judged AI lesson steps kept 7 days: a resumed import never pays twice (M34). */
-  steps: Pick<StepCache, 'get' | 'put'>;
+  /** Judged AI lesson steps kept 7 days: a resumed import never pays twice (M34, Q23). */
+  steps: StepCache;
   /** A pipeline import's units with their roles, kept 7 days for the review editor (Q26). */
   blocks: BlockRepository;
   /** The weekly measurement's results: which approved models it unapproved (Q15). */

@@ -2,12 +2,17 @@
 export const pipelineEn = {
   'error.ai_consent_required':
     'Importing with your AI sends the file to your AI provider: agree to it first.',
+  'error.ai_required':
+    'On this server a file is imported only with your AI. Choose one of your AI providers, then import again.',
   'import.consent.label':
     'The file’s text and page pictures will be sent to the AI provider you connected.',
   'import.error.ai_not_ready':
     'Your AI connection is not available, so nothing was imported. Check it in AI providers, then retry.',
   'import.error.ai_failed':
     'Your AI stopped before the file was read, so nothing was imported. Check it in AI providers, then retry.',
+  'import.error.no_quota':
+    'Your AI subscription stayed at its limit for more than 7 days, so the import stopped. Retry it once the subscription renews.',
+  'import.cancelPaused': 'Cancel this import',
   'import.paused':
     'Your AI subscription reached its limit. The import goes on by itself from where it stopped at',
   'import.usage.title': 'AI use',

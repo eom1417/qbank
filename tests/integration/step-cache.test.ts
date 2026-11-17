@@ -80,3 +80,26 @@ describe('the AI step cache (M34 P3)', () => {
     expect(await cache().get(owner, fresh, new Date())).not.toBeNull();
   });
 });
+
+describe('the AI step cache and the import worker (Q23)', () => {
+  it('is purged by the import worker once expired, with nothing else of the owner (Q23)', async () => {
+    const owner = await newOwner();
+    const [old, fresh] = [keyFor(owner, ['worker-old']), keyFor(owner, ['worker-fresh'])];
+    await cache().put(step(owner, old));
+    await cache().put(step(owner, fresh));
+    await app
+      .db()
+      .updateTable('ai_step_cache')
+      .set({ expires_at: sql<Date>`now() - interval '1 minute'` })
+      .where('key', '=', old)
+      .execute();
+    await app().importWorker.drain();
+    const kept = await app
+      .db()
+      .selectFrom('ai_step_cache')
+      .select('key')
+      .where('owner_id', '=', owner)
+      .execute();
+    expect(kept.map((row) => row.key)).toEqual([fresh]);
+  });
+});

@@ -46,6 +46,8 @@ import { TruthFile, type TruthQuestion } from './truth.js';
 
 const DATA = '/workspace/.data';
 const OUT = join(DATA, 'evidence-bench');
+const TRUTH = argValue(process.argv, 'truth-dir', join(DATA, 'truth'));
+const CORPUS = argValue(process.argv, 'corpus-dir', join(DATA, 'corpus'));
 const STRONG = 'claude-opus-5-5';
 
 const EVIDENCE: Record<string, PipelineEvidence> = {
@@ -281,9 +283,9 @@ async function readQuestions(file: string, slug: string, context: BenchContext) 
 
 async function benchFile(slug: string, context: BenchContext): Promise<FileRun> {
   const truth = TruthFile.parse(
-    JSON.parse(readFileSync(join(DATA, 'truth', `${slug}.truth.json`), 'utf8')),
+    JSON.parse(readFileSync(join(TRUTH, `${slug}.truth.json`), 'utf8')),
   );
-  const file = join(DATA, 'corpus', truth.file);
+  const file = join(CORPUS, truth.file);
   const started = Date.now();
   const callsBefore = context.budget.calls;
   const { questions: rules, structure, pictures } = await readQuestions(file, slug, context);

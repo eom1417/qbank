@@ -242,21 +242,26 @@ function isScanPage(page: PageText, images: readonly PlacedImage[]): boolean {
   return placements.includes('page_sized') || !placements.includes('content');
 }
 
+/**
+ * A scanned page's OCR words; a page OCR cannot read (crash or time limit) gives no words, so the
+ * page is reported unreadable instead of failing the whole file.
+ */
+export async function scanText(file: string, page: PageText): Promise<PageText> {
+  const read = await readScan(file, page.page, 'auto').catch(() => ({ ...page, words: [] }));
+  return { ...read, width: page.width, height: page.height };
+}
+
 async function readSources(file: string): Promise<PageSource[]> {
   const layer = await readTextLayer(file);
   const placed = await placedImages(
     file,
     layer.map((page) => page.page),
   );
-  return Promise.all(
-    layer.map(async (page) => {
-      const images = placed.get(page.page) ?? [];
-      const scanned = page.words.length < MIN_LAYER_WORDS && isScanPage(page, images);
-      const scan = scanned ? await readScan(file, page.page, 'auto') : null;
-      const text = scan ? { ...scan, width: page.width, height: page.height } : page;
-      return { text, scanned, images };
-    }),
-  );
+  return inParallel(layer, async (page) => {
+    const images = placed.get(page.page) ?? [];
+    const scanned = page.words.length < MIN_LAYER_WORDS && isScanPage(page, images);
+    return { text: scanned ? await scanText(file, page) : page, scanned, images };
+  });
 }
 
 /**

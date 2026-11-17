@@ -1,17 +1,34 @@
+import { useNavigate } from 'react-router';
 import type { ImportResponse } from '../../../contracts/sources.js';
-import { Alert, MutedText, Title } from '../../design-system/index.js';
+import { Alert, Button, MutedText, Title } from '../../design-system/index.js';
+import { useAction } from '../../platform/forms/use-submit.js';
 import { useI18n } from '../../platform/i18n/i18n.js';
+import { cancelImport } from './api.js';
 import { PipelineFacts } from './PipelineFacts.js';
 
-/** A pipeline import paused by a full subscription: when it goes on by itself (Q16). */
+/**
+ * A pipeline import paused by a full subscription: when it goes on by itself, and the owner's
+ * way to stop waiting (Q16): cancelling removes the file, as for a file still queued.
+ */
 export function PausedNote({ job }: { job: ImportResponse }) {
   const { t, locale } = useI18n();
+  const navigate = useNavigate();
+  const cancel = useAction(async () => {
+    await cancelImport(job.id);
+    await navigate(`/banks/${job.bankId}`);
+  });
   const at = job.ai?.resumesAt;
   if (!at) return null;
   return (
-    <Alert tone="info">
-      {t('import.paused')} <bdi>{new Date(at).toLocaleTimeString(locale)}</bdi>
-    </Alert>
+    <>
+      <Alert tone="info">
+        {t('import.paused')} <bdi>{new Date(at).toLocaleTimeString(locale)}</bdi>
+      </Alert>
+      {cancel.error && <Alert tone="error">{t(cancel.error)}</Alert>}
+      <Button variant="ghost" busy={cancel.busy} onClick={() => void cancel.run()}>
+        {t('import.cancelPaused')}
+      </Button>
+    </>
   );
 }
 

@@ -32,8 +32,9 @@ function fakeQueue(jobs: number, workers: number, pollMs = 2000) {
     workers,
     clock: { now: () => new Date() },
     log: { error: () => undefined },
-    // The units kept for review are swept with the originals (M34 P6).
+    // The units kept for review are swept with the originals, and expired AI steps (Q23).
     blocks: { forgetSource: async () => undefined, purgeExpired: async () => 0 },
+    steps: { purgeExpired: async () => 0 },
   } as unknown as SourcesDeps;
   return { worker: createImportWorker(deps, pollMs), seen };
 }

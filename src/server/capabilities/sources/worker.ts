@@ -1,7 +1,12 @@
 import type { SourcesDeps } from './use-cases/deps.js';
 import { LEASE_MS, runImport } from './use-cases/run-import.js';
 
-/** Erases originals whose stated period is over (DEC-13); their questions stay. */
+/**
+ * Erases originals whose stated period is over (DEC-13); their questions stay. The pipeline's
+ * temporary data goes too (Q23): the units kept for review, and the cached AI steps once their
+ * 7 days are over. A step is keyed by its owner and content, not by the job, so it is shared by
+ * resumed and repeated imports; its 7-day expiry is the bound, also after the original is gone.
+ */
 async function purgeExpired(deps: SourcesDeps) {
   for (const source of await deps.imports.expiredOriginals(deps.clock.now())) {
     await deps.imports.forgetOriginal(source.owner_id, source.id);
@@ -10,6 +15,7 @@ async function purgeExpired(deps: SourcesDeps) {
     if (source.blob_key) await deps.blobs.remove(source.blob_key);
   }
   await deps.blocks.purgeExpired(deps.clock.now());
+  await deps.steps.purgeExpired(deps.clock.now());
 }
 
 /** One worker slot: runs jobs until none is runnable for it; returns how many it ran. */

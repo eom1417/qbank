@@ -104,6 +104,7 @@ function registerImports(
     maxPages: config.imports.maxPages,
     samplePdf: config.samplePdf,
     originalRetentionDays: config.imports.originalRetentionDays,
+    requiresAi: config.imports.requiresAi,
     ...(deps.checkLink ? { checkLink: deps.checkLink } : {}),
     mode: config.mode,
     aiConsentOf: identity.aiConsentOf,

@@ -1,6 +1,6 @@
-import { buildUnits, inParallel, type FileUnits } from '../adapters/pipeline-units.js';
+import { buildUnits, inParallel, scanText, type FileUnits } from '../adapters/pipeline-units.js';
 import { renderPage } from '../adapters/raster.js';
-import { readScan, readTextLayer } from '../adapters/readers.js';
+import { readTextLayer } from '../adapters/readers.js';
 import { renderRegion } from '../adapters/region-image.js';
 import type { QuestionKeys } from '../domain/answer-keys.js';
 import { inkAround, type Raster } from '../domain/answer-marks.js';
@@ -60,12 +60,8 @@ const scannedPages = (units: FileUnits) =>
 
 async function readPages(file: string, units: FileUnits): Promise<PageText[]> {
   const scanned = scannedPages(units);
-  return Promise.all(
-    (await readTextLayer(file)).map(async (page) =>
-      scanned.has(page.page)
-        ? { ...(await readScan(file, page.page, 'auto')), width: page.width, height: page.height }
-        : page,
-    ),
+  return inParallel(await readTextLayer(file), async (page) =>
+    scanned.has(page.page) ? scanText(file, page) : page,
   );
 }
 

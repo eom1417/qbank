@@ -64,6 +64,24 @@ const aiModeOf = (deps: Pick<SourcesDeps, 'mode'>, fields: StartImportFields) =>
   fields.aiMode ?? (deps.mode === 'accounts' ? 'pipeline' : 'verify');
 
 /**
+ * Where the server requires it (`imports.requiresAi`, Q7, Z4) an upload names the user's AI and
+ * reads by the pipeline, or it is refused with a clear reason: never a silent rule-only import.
+ * Checked once the file itself passed its checks, so a bad file still says what is wrong with it.
+ */
+function checkRequiredAi(deps: SourcesDeps, fields: StartImportFields) {
+  if (!fields.aiProviderId || aiModeOf(deps, fields) !== 'pipeline')
+    throw new AppError('ai_required');
+}
+
+/** The pages to read of a stored file, once the import may go on (range, then required AI). */
+function pagesToRead(deps: SourcesDeps, fields: StartImportFields, pages: number, ai: boolean) {
+  const range = rangeOf(fields, pages);
+  if (!range) throw new AppError('validation_failed', { pageTo: 'too_big' });
+  if (ai) checkRequiredAi(deps, fields);
+  return range;
+}
+
+/**
  * The pipeline sends the file's text and page pictures to the user's own provider: only after
  * the account agreed to it once (Q8). Checked before the file is even stored.
  */
@@ -140,21 +158,24 @@ async function answersFor(
   return target.id;
 }
 
-/** Uploads one file into a bank and queues its import (UI-07, FR-04-001…008). */
-export async function startImport(
+/**
+ * Stores one file into a bank and queues its import (FR-04-001…008), as the upload or the sample
+ * chose it. `requireAi`: the upload must name the user's AI, by the pipeline (Q7).
+ */
+export async function queueImport(
   deps: SourcesDeps,
   actor: Actor,
   bankId: string,
   fields: StartImportFields,
   upload: Upload,
+  requireAi = false,
 ) {
   if (!isId(bankId)) throw notFound();
   const target = await answersFor(deps, actor, bankId, fields);
   await checkConsent(deps, actor, fields);
   const stored = await storeReadablePdf(deps, upload);
   try {
-    const range = rangeOf(fields, stored.pages);
-    if (!range) throw new AppError('validation_failed', { pageTo: 'too_big' });
+    const range = pagesToRead(deps, fields, stored.pages, requireAi);
     const aiProviderId = await checkAi(deps, actor, fields);
     const now = deps.clock.now();
     const source = {
@@ -190,4 +211,15 @@ export async function startImport(
     await stored.discard();
     throw error;
   }
+}
+
+/** Uploads one file into a bank and queues its import (UI-07): with AI where required (Q7). */
+export async function startImport(
+  deps: SourcesDeps,
+  actor: Actor,
+  bankId: string,
+  fields: StartImportFields,
+  upload: Upload,
+) {
+  return queueImport(deps, actor, bankId, fields, upload, deps.requiresAi);
 }

@@ -47,6 +47,11 @@ interface TestAppOptions {
   clock?: Clock;
   /** Local mode (DEC-31) instead of accounts mode. */
   local?: boolean;
+  /**
+   * Uploads imported only with the user's AI (`imports.requiresAi`, Q7). Off in tests unless a
+   * suite asserts the refusal, so the rule-reader suites keep their accounts-mode checks.
+   */
+  importRequiresAi?: boolean;
   /** Local mode that pairs this computer only with the code too. */
   requirePairingCode?: boolean;
   /** Extra socket addresses that count as this computer (Docker, M25). */
@@ -118,6 +123,7 @@ function testConfig(options: TestAppOptions) {
       worker: false,
       originalRetentionDays: 7,
       workers: 2,
+      requiresAi: options.importRequiresAi ?? false,
     },
     ...serverParts(options),
     aiHost: options.aiHost?.() ?? NO_AI_HOST,

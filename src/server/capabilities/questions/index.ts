@@ -46,6 +46,16 @@ export {
   type ReviewReason,
 } from './domain/imported.js';
 
+/** A re-assembled question (Q26): the edit, the caller's writes and the pictures' new places. */
+interface Reassembly {
+  actor: Actor;
+  id: string;
+  edit: EditQuestionRequest;
+  places: readonly PicturePlace[];
+  /** The caller's writes (the units' roles) on the same transaction. */
+  alongside(within: Db): Promise<void>;
+}
+
 /** Questions with their answer keys, provenance and pictures (M4, M5; review and study follow). */
 interface QuestionsSettings {
   db: Db;
@@ -154,12 +164,19 @@ export function createQuestions(settings: QuestionsSettings) {
       ),
     ...sharedInterface(settings, deps),
     ...deps.media,
-    /** The owner's edit as a new version (the review editor's re-assembly, Q26). */
-    editQuestion: (actor: Actor, id: string, edit: EditQuestionRequest) =>
-      editQuestion(deps, actor, id, edit),
-    /** Moves the question's pictures found at these places (the review editor, Q26). */
-    placeMedia: (ownerId: string, questionId: string, places: readonly PicturePlace[]) =>
-      placeMedia(settings.db, ownerId, questionId, places),
+    /**
+     * The review editor's re-assembly (Q26) as one change: the owner's edit as a new version, the
+     * caller's own writes in the same transaction, then the question's pictures moved to these
+     * places. When any step fails, nothing of it is kept.
+     */
+    reassembleQuestion: (change: Reassembly) =>
+      settings.db.transaction().execute(async (trx) => {
+        const within = questionDeps({ ...settings, db: trx });
+        const saved = await editQuestion(within, change.actor, change.id, change.edit);
+        await change.alongside(trx);
+        await placeMedia(trx, change.actor.accountId, change.id, change.places);
+        return saved;
+      }),
     register: (app: FastifyInstance) => {
       registerQuestionRoutes(app, deps, settings.requireActor);
       registerReviewRoutes(app, deps, settings.requireActor);

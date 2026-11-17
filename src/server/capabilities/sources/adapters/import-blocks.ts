@@ -142,8 +142,9 @@ export function createBlockRepository(db: Db, newId: () => string) {
     latestJob: (ownerId: string, sourceId: string, now: Date) =>
       latestJob(db, ownerId, sourceId, now),
     onPages: (owner: Owner, pages: readonly number[], now: Date) => onPages(db, owner, pages, now),
-    setRoles: (owner: Owner, changes: Parameters<typeof setRoles>[2]) =>
-      setRoles(db, owner, changes),
+    /** `within`: the caller's transaction, so the roles change with the question (Q26). */
+    setRoles: (owner: Owner, changes: Parameters<typeof setRoles>[2], within: Db = db) =>
+      setRoles(within, owner, changes),
     /** Every unit of a source's imports: they go with its original (Q23). */
     async forgetSource(sourceId: string) {
       await db

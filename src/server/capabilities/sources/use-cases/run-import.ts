@@ -204,7 +204,7 @@ async function questionsOutcome(deps: SourcesDeps, job: JobRow, source: SourceRo
 }
 
 /** No silent fallback (Z4): without its AI a pipeline job fails, and no rule reads the file. */
-const aiFailed = (code: 'ai_not_ready' | 'ai_failed', outcome: string) => ({
+const aiFailed = (code: 'ai_not_ready' | 'ai_failed' | 'no_quota', outcome: string) => ({
   stage: 'failed' as const,
   questions_found: 0,
   questions_review: 0,
@@ -212,9 +212,13 @@ const aiFailed = (code: 'ai_not_ready' | 'ai_failed', outcome: string) => ({
   error_code: code,
 });
 
+/** A job that would wait longer than this for its subscription in all ends instead (Q16). */
+const MAX_PAUSE_MS = 7 * 24 * 60 * 60_000;
+
 /**
  * A full subscription pauses the job where it is: it is taken again after `resumeAfter` and
- * goes on from the step cache. Any other stop fails the job. Null when it paused.
+ * goes on from the step cache, unless its pauses would pass 7 days in all: then it fails with
+ * `no_quota`. Any other stop fails the job. Null when it paused.
  */
 async function stoppedOutcome(
   deps: SourcesDeps,
@@ -225,7 +229,10 @@ async function stoppedOutcome(
   const stop = read.stopped;
   if (!stop) return undefined;
   if (PAUSING.has(stop.failure) && stop.resumeAfter) {
-    const at = { locked_until: stop.resumeAfter, updated_at: deps.clock.now() };
+    const now = deps.clock.now();
+    const paused = job.paused_ms + (stop.resumeAfter.getTime() - now.getTime());
+    if (paused > MAX_PAUSE_MS) return { ...aiFailed('no_quota', stop.failure), ai_usage: usage };
+    const at = { locked_until: stop.resumeAfter, paused_ms: paused, updated_at: now };
     await deps.imports.update(job.id, { ai_outcome: stop.failure, ai_usage: usage, ...at });
     return null;
   }

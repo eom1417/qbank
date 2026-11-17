@@ -21,11 +21,12 @@ const pipelineFile = usePipelineFile();
 const lessonAsks = () =>
   fake().asks.filter((ask) => /The image has \d+ cells/.test(ask.body.prompt ?? '')).length;
 
-async function startPipeline(instance: string = FAKE_INSTANCES.lesson) {
+async function startPipeline(fields: Record<string, string> = {}) {
   const { owner, bankId } = await ownerWithBank(app());
   await owner.post('/api/account/ai-consent', {});
   const started = await uploadFile(app(), owner.cookie(), bankId, pipelineFile(), {
-    aiProviderId: instance,
+    aiProviderId: FAKE_INSTANCES.lesson,
+    ...fields,
   });
   expect(started.statusCode).toBe(201);
   const job = started.json() as { id: string; sourceId: string };
@@ -174,5 +175,83 @@ describe('a full subscription (Q16)', () => {
     await runImports(app());
     expect((await report()).stage).toBe('needs_review');
     expect(lessonAsks() - asked).toBe(2);
+  });
+});
+
+/** Runs the queue once with the subscription used up. */
+async function runExhausted() {
+  fake().exhausted.add(FAKE_INSTANCES.lesson);
+  try {
+    await runImports(app());
+  } finally {
+    fake().exhausted.delete(FAKE_INSTANCES.lesson);
+  }
+}
+
+describe('a long pause (Q16)', () => {
+  it('fails with no_quota once the job has waited more than 7 days in all', async () => {
+    const { job, report } = await startPipeline();
+    await runExhausted();
+    const first = await db()
+      .selectFrom('import_job')
+      .select('paused_ms')
+      .where('id', '=', job.id)
+      .executeTakeFirstOrThrow();
+    expect(first.paused_ms).toBe(60 * 60_000);
+    await db()
+      .updateTable('import_job')
+      .set({ paused_ms: 7 * 24 * 60 * 60_000 - 30 * 60_000 })
+      .where('id', '=', job.id)
+      .execute();
+    now = new Date(now.getTime() + 61 * 60_000);
+    await runExhausted();
+    const failed = await report();
+    expect(failed).toMatchObject({ stage: 'failed', errorCode: 'no_quota', aiOutcome: 'no_quota' });
+    expect(failed.finishedAt).not.toBeNull();
+    expect(failed.ai.resumesAt).toBeNull();
+    expect(await questionsOf(job.sourceId)).toEqual([]);
+  });
+
+  it('lets the owner cancel a paused import, and nobody else', async () => {
+    const { owner, bankId, job, report } = await startPipeline();
+    await runExhausted();
+    expect((await report()).ai.resumesAt).not.toBeNull();
+    const stranger = (await ownerWithBank(app())).owner;
+    expect((await stranger.delete(`/api/imports/${job.id}`)).statusCode).toBe(404);
+    expect((await owner.delete(`/api/imports/${job.id}`)).statusCode).toBe(204);
+    expect((await owner.get(`/api/imports/${job.id}`)).statusCode).toBe(404);
+    expect((await owner.get(`/api/banks/${bankId}/sources`)).json().sources).toEqual([]);
+  });
+
+  it('still refuses to cancel an import that ended', async () => {
+    const { owner, job } = await startPipeline();
+    await runImports(app());
+    expect((await owner.delete(`/api/imports/${job.id}`)).statusCode).toBe(409);
+  });
+});
+
+describe('no word that is not in the file (Z2)', () => {
+  it('never polishes a pipeline question nor completes its options, whatever was asked', async () => {
+    const asked = {
+      verifyAnswers: false,
+      completeOptions: 5,
+      polishText: true,
+      topicReview: false,
+      explainOptions: false,
+      updateNotes: false,
+      classify: false,
+      duplicates: false,
+    };
+    const before = fake().asks.length;
+    const { report } = await startPipeline({ aiEnhance: JSON.stringify(asked) });
+    await runImports(app());
+    const done = await report();
+    expect(done.stage).toBe('needs_review');
+    expect(done.ai.enhance).toMatchObject({ polishText: false, completeOptions: 0 });
+    const prompts = fake()
+      .asks.slice(before)
+      .map((ask) => ask.body.prompt ?? '');
+    expect(prompts.length).toBeGreaterThan(0);
+    expect(prompts.filter((prompt) => prompt.includes('You organize exam questions'))).toEqual([]);
   });
 });

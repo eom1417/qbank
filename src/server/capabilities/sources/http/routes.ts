@@ -129,8 +129,6 @@ export function registerSourceRoutes(
 
   app.delete<IdParams>('/api/sources/:id/original', async (request, reply) => {
     await deleteOriginal(deps, await requireActor(request), request.params.id);
-    // The units kept for review go with the original (Q23); the call above checked ownership.
-    await deps.blocks.forgetSource(request.params.id);
     return reply.status(204).send();
   });
 }

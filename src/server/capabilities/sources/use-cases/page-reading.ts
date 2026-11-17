@@ -135,7 +135,10 @@ function editOf(question: QuestionRow, rebuilt: Assembled, expectedVersion: numb
   };
 }
 
-/** Saves the new roles, rebuilds the question from its units and moves its pictures (Q26). */
+/**
+ * Saves the new roles, rebuilds the question from its units and moves its pictures (Q26): one
+ * transaction, so a failed step leaves the question, its units and its pictures as they were.
+ */
 export async function reassemble(
   deps: SourcesDeps,
   actor: Actor,
@@ -147,19 +150,20 @@ export async function reassemble(
   if (!reading) throw notFound();
   const { changed, all } = withRoles(reading.blocks, reading.seq, input);
   const rebuilt = assemble(all.filter((block) => block.question === reading.seq));
-  const saved = await deps.questions.editQuestion(
-    actor,
-    question.id,
-    editOf(question, rebuilt, input.expectedVersion),
-  );
-  await deps.blocks.setRoles({ ownerId: actor.accountId, jobId: reading.jobId }, changed);
+  const edit = editOf(question, rebuilt, input.expectedVersion);
   const boxes = new Map(all.map((block) => [block.unitId, block]));
   const places = rebuilt.pictures.flatMap((picture) => {
     const block = boxes.get(picture.unitId);
     return block ? [{ ...picture, page: block.page, box: block.box }] : [];
   });
-  await deps.questions.placeMedia(actor.accountId, question.id, places);
-  return saved;
+  const target = { ownerId: actor.accountId, jobId: reading.jobId };
+  return deps.questions.reassembleQuestion({
+    actor,
+    id: question.id,
+    edit,
+    places,
+    alongside: (within) => deps.blocks.setRoles(target, changed, within),
+  });
 }
 
 /** One page of the owner's kept original as PNG; not found once the original is erased. */

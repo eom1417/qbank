@@ -55,6 +55,8 @@ const Env = z.object({
   ),
   /** The name every user sees as running this server ("Run by …"). */
   QBANK_OPERATOR_NAME: z.preprocess(unsetIfBlank, z.string().trim().min(1).max(80).optional()),
+  /** 'true': an upload is imported only with the user's AI, by the pipeline (Q7, Z4). */
+  QBANK_IMPORT_REQUIRES_AI: z.preprocess(unsetIfBlank, z.enum(['true', 'false']).optional()),
   /** Imports run at once, at most one per account (M31, B2). */
   QBANK_IMPORT_WORKERS: z.preprocess(
     unsetIfBlank,
@@ -109,6 +111,8 @@ export interface AppConfig {
     originalRetentionDays: number;
     /** Imports running at once across accounts, never two for one account (M31, B2). */
     workers: number;
+    /** An upload names the user's AI and reads by the pipeline, or is refused (Q7, Z4). */
+    requiresAi: boolean;
   };
   /** Accounts mode only (DEC-40): who runs the server; both null on a local install. */
   operator: { email: string | null; name: string | null };
@@ -200,8 +204,8 @@ function googleOf(parsed: z.infer<typeof Env>): GoogleConfig | null {
 }
 
 /** Local defaults: plain http on this computer or its network, and a paired browser stays paired. */
-const LOCAL_DEFAULTS = { cookieSecure: 'false', sessionTtlDays: 400 } as const;
-const ACCOUNTS_DEFAULTS = { cookieSecure: 'true', sessionTtlDays: 30 } as const;
+const LOCAL_DEFAULTS = { cookieSecure: 'false', sessionTtlDays: 400, requiresAi: 'false' } as const;
+const ACCOUNTS_DEFAULTS = { cookieSecure: 'true', sessionTtlDays: 30, requiresAi: 'true' } as const;
 
 /** A comma-separated setting as its non-empty, trimmed entries. */
 const listOf = (value: string) =>
@@ -209,6 +213,20 @@ const listOf = (value: string) =>
     .split(',')
     .map((entry) => entry.trim())
     .filter(Boolean);
+
+/** Where uploads go and how imports run; a server imports only with the user's AI (Q7). */
+function importsOf(parsed: z.infer<typeof Env>): AppConfig['imports'] {
+  const defaults = parsed.QBANK_MODE === 'local' ? LOCAL_DEFAULTS : ACCOUNTS_DEFAULTS;
+  return {
+    dataDir: parsed.QBANK_DATA_DIR,
+    maxUploadBytes: parsed.QBANK_MAX_UPLOAD_MB * 1024 * 1024,
+    maxPages: parsed.QBANK_MAX_PAGES,
+    worker: parsed.QBANK_WORKER === 'true',
+    originalRetentionDays: parsed.QBANK_ORIGINAL_RETENTION_DAYS,
+    workers: parsed.QBANK_IMPORT_WORKERS,
+    requiresAi: (parsed.QBANK_IMPORT_REQUIRES_AI ?? defaults.requiresAi) === 'true',
+  };
+}
 
 /** The only place that reads the process environment; fails fast on invalid values. */
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
@@ -228,14 +246,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     allowedOrigins: listOf(parsed.QBANK_ALLOWED_ORIGINS),
     sessionTtlDays: parsed.QBANK_SESSION_TTL_DAYS ?? defaults.sessionTtlDays,
     logLevel: parsed.QBANK_LOG_LEVEL,
-    imports: {
-      dataDir: parsed.QBANK_DATA_DIR,
-      maxUploadBytes: parsed.QBANK_MAX_UPLOAD_MB * 1024 * 1024,
-      maxPages: parsed.QBANK_MAX_PAGES,
-      worker: parsed.QBANK_WORKER === 'true',
-      originalRetentionDays: parsed.QBANK_ORIGINAL_RETENTION_DAYS,
-      workers: parsed.QBANK_IMPORT_WORKERS,
-    },
+    imports: importsOf(parsed),
     operator: operatorOf(parsed),
     google: googleOf(parsed),
     backupStatusFile: parsed.QBANK_BACKUP_STATUS_FILE ?? null,

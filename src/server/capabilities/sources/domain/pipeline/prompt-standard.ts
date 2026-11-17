@@ -3,7 +3,7 @@
 import { z } from 'zod';
 import type { LessonCard } from './lesson.js';
 
-export const PROMPT_VERSION = 1;
+export const PROMPT_VERSION = 2;
 
 export interface LessonPrompt {
   system: string;
@@ -43,12 +43,23 @@ function cueLines(title: string, cues: readonly string[]): string[] {
   return cues.length === 0 ? [] : [title, ...cues.map((cue) => `- ${cue}`)];
 }
 
+/**
+ * An item's own text can never close its block or open another (Z6): a run of three or more
+ * angle brackets in it becomes the same run of single guillemets (v2).
+ */
+const neutralized = (text: string) =>
+  text
+    .replace(/<{3,}/g, (run) => '‹'.repeat(run.length))
+    .replace(/>{3,}/g, (run) => '›'.repeat(run.length));
+
 function cellLines(cells: PromptCells): string[] {
   const range = `1…${cells.count}`;
   if (cells.texts === null) {
     return [`The image has ${cells.count} cells, numbered ${range} in the band above each cell.`];
   }
-  const items = cells.texts.map((text, index) => `<<<item ${index + 1}>>>\n${text}\n<<<end>>>`);
+  const items = cells.texts.map(
+    (text, index) => `<<<item ${index + 1}>>>\n${neutralized(text)}\n<<<end>>>`,
+  );
   return [`There are ${cells.count} items, numbered ${range}:`, ...items];
 }
 

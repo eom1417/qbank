@@ -1,3 +1,4 @@
+import { sql } from 'kysely';
 import { describe, expect, it } from 'vitest';
 import type { PageReadingResponse } from '../../src/contracts/review.js';
 import { ownerWithBank } from '../support/client.js';
@@ -64,6 +65,18 @@ describe('the page as read (Q26)', () => {
     expect((await stranger.get(`/api/questions/${question.id}/page-reading`)).statusCode).toBe(404);
     expect((await stranger.get(`/api/sources/${job.sourceId}/pages/1`)).statusCode).toBe(404);
   });
+
+  it('renders at most 60 pages a minute for one owner, and not for the next owner', async () => {
+    const { owner, job } = await firstQuestion();
+    for (let i = 0; i < 60; i++)
+      expect((await owner.get(`/api/sources/${job.sourceId}/pages/999`)).statusCode).toBe(404);
+    const limited = await owner.get(`/api/sources/${job.sourceId}/pages/1`);
+    expect(limited.statusCode).toBe(429);
+    expect(limited.json().error.code).toBe('too_many_attempts');
+    const next = await firstQuestion();
+    const page = await next.owner.get(`/api/sources/${next.job.sourceId}/pages/1`);
+    expect(page.statusCode).toBe(200);
+  }, 30_000);
 
   it('has no page picture once the original is deleted', async () => {
     const { owner, job, question } = await firstQuestion();
@@ -136,5 +149,45 @@ describe('re-assembly refused (Q26)', () => {
     expect(forged.statusCode).toBe(403);
     const stranger = (await ownerWithBank(app())).owner;
     expect((await stranger.post(url, payload)).statusCode).toBe(404);
+  });
+});
+
+describe('re-assembly is one change (Q26)', () => {
+  /** Makes moving any picture fail, as a lost connection in the last step would. */
+  async function withFailingPictures(run: () => Promise<void>) {
+    await sql`create or replace function qb_test_fail_media() returns trigger as $$
+      begin raise exception 'picture move failed'; end $$ language plpgsql`.execute(db());
+    await sql`create trigger qb_test_fail_media before update on media
+      for each row execute function qb_test_fail_media()`.execute(db());
+    try {
+      await run();
+    } finally {
+      await sql`drop trigger if exists qb_test_fail_media on media`.execute(db());
+      await sql`drop function if exists qb_test_fail_media()`.execute(db());
+    }
+  }
+
+  it('leaves the question, the roles and the pictures as they were when a step fails', async () => {
+    const { owner, question, reading } = await firstQuestion();
+    const units = unitsOf(reading);
+    const explanation = units.find((unit) => unit.role === 'explanation' && unit.editable);
+    const picture = units.find((unit) => unit.role === 'picture:explanation');
+    if (!explanation || !picture) throw new Error('the fixture lost its explanation');
+    const placed = await placementOf(question.id);
+    await withFailingPictures(async () => {
+      const failed = await owner.post(`/api/questions/${question.id}/reassemble`, {
+        expectedVersion: reading.version,
+        roles: [
+          { unitId: explanation.unitId, role: 'stem' },
+          { unitId: picture.unitId, role: 'picture:option:B' },
+        ],
+      });
+      expect(failed.statusCode).toBe(500);
+    });
+    const now = (await owner.get(`/api/questions/${question.id}`)).json();
+    expect(now.version).toBe(reading.version);
+    expect(await placementOf(question.id)).toEqual(placed);
+    const after = (await owner.get(`/api/questions/${question.id}/page-reading`)).json();
+    expect(unitsOf(after).map((unit) => unit.role)).toEqual(units.map((unit) => unit.role));
   });
 });

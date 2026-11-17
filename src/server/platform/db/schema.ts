@@ -148,6 +148,8 @@ interface ImportJobTable {
   ai_usage: ColumnType<unknown, string | null | undefined, string | null>;
   /** The tier a `pipeline` job's lessons start with (`light` | `strong`, Q14, M34 P6). */
   ai_tier: ColumnType<string | null, string | null | undefined, string | null>;
+  /** How long a `pipeline` job has waited for its subscription in all (Q16, M34 P9). */
+  paused_ms: Generated<number>;
   /** What the pipeline learnt of the file for its report: family, unknown pages (M34 P6). */
   pipeline_facts: ColumnType<unknown, string | null | undefined, string | null>;
   /** What the AI improves (`Enhancements`, DEC-34); null without AI. */

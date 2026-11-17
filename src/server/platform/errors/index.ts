@@ -41,6 +41,7 @@ const STATUS: Record<ErrorCode, number> = {
   not_revealed_yet: 409,
   operator_only: 403,
   ai_consent_required: 409,
+  ai_required: 409,
   internal: 500,
 };
 

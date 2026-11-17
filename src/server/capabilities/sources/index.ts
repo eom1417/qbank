@@ -44,6 +44,7 @@ interface SourcesSettings {
   /** The sample bank's PDF (M28.1). */
   samplePdf: string;
   originalRetentionDays: number;
+  requiresAi: SourcesDeps['requiresAi'];
   /** Imports running at once across accounts (`imports.workers`, M31); one when absent. */
   workers?: number;
   log: SourcesDeps['log'];
@@ -83,6 +84,7 @@ function sourcesDeps(settings: SourcesSettings): SourcesDeps {
     originalRetentionMs: settings.originalRetentionDays * 24 * 60 * 60_000,
     workers: settings.workers ?? 1,
     mode: settings.mode,
+    requiresAi: settings.requiresAi,
     aiConsentOf: settings.aiConsentOf,
     steps: createStepCache(settings.db),
     blocks: createBlockRepository(settings.db, newId),

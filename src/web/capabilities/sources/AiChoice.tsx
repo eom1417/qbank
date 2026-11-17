@@ -46,7 +46,7 @@ export function AiChoice(props: AiChoiceProps) {
   const value = triage.request !== null;
   return (
     <Stack>
-      <TriageFields state={triage} />
+      <TriageFields state={triage} sourceOnly={props.pipeline} />
       {value && <PipelineFields {...props} />}
       {value && !props.pipeline && (
         <Checkbox

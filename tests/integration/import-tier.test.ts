@@ -12,7 +12,7 @@ import { useTestApp } from '../support/test-app.js';
 const LIGHT = 'claude-haiku-5-5';
 const STRONG = 'claude-opus-5-5';
 const fake = useFakeAiHost();
-const app = useTestApp({ aiHost: () => fake().settings });
+const app = useTestApp({ aiHost: () => fake().settings, importRequiresAi: true });
 const pipelineFile = usePipelineFile();
 
 /** The models the lesson sheets were asked of, from this point on. */
@@ -63,12 +63,11 @@ describe('the light / strong choice (Q14)', () => {
     expect(asked()).toEqual([STRONG]);
   });
 
-  it('refuses an unknown tier, and keeps none for the older modes', async () => {
+  it('refuses an unknown tier, and an older mode on a server (Q7)', async () => {
     const { started } = await importWith({ aiTier: 'medium' });
     expect(started.statusCode).toBe(400);
     const verify = await importWith({ aiMode: 'verify' });
-    expect(verify.report.ai.tier).toBeNull();
-    expect(verify.report.ai.pipeline).toBeNull();
+    expect(verify.started.json().error.code).toBe('ai_required');
   });
 
   it('never asks a model the weekly measurement unapproved', async () => {
