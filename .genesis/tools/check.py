@@ -13,6 +13,7 @@ current command and fixture, otherwise it is reported as unproven.
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -99,10 +100,17 @@ def _extra_wanted(manifest: dict, name: str, level: str) -> bool:
     return level == 'release' or (level == 'full' and name in ('integration', 'e2e'))
 
 
+# Set by git for hooks; inherited, they point every git call (also in kit tests' temporary
+# repos) at the hook's repository, which those tests would then rewrite.
+HOOK_GIT_VARS = ('GIT_DIR', 'GIT_WORK_TREE', 'GIT_INDEX_FILE', 'GIT_PREFIX', 'GIT_COMMON_DIR',
+                 'GIT_OBJECT_DIRECTORY', 'GIT_ALTERNATE_OBJECT_DIRECTORIES')
+
+
 def run(name: str, cmd: list[str], root: Path) -> bool:
     print(f'GATE {name}: {" ".join(cmd)}', flush=True)
+    env = {k: v for k, v in os.environ.items() if k not in HOOK_GIT_VARS}
     try:
-        code = subprocess.run(cmd, cwd=root, check=False).returncode
+        code = subprocess.run(cmd, cwd=root, check=False, env=env).returncode
     except OSError as exc:
         print(f'FAIL {name}: BLOCKED, cannot run command: {exc}', flush=True)
         return False

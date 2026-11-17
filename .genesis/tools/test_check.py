@@ -218,3 +218,19 @@ class BootstrapEnvTests(RepoCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class HookEnvironmentTests(unittest.TestCase):
+    def test_gates_do_not_inherit_the_hooks_repository(self) -> None:
+        """A pre-push hook sets GIT_DIR; gates and kit tests must not write to that repo."""
+        import os
+        import tempfile
+        from pathlib import Path
+        from unittest import mock
+
+        from check import run
+        with tempfile.TemporaryDirectory() as tmp, \
+                mock.patch.dict(os.environ, {'GIT_DIR': '/nonexistent/.git', 'GIT_INDEX_FILE': 'x'}):
+            probe = [sys.executable, '-c',
+                     'import os,sys; sys.exit(1 if "GIT_DIR" in os.environ or "GIT_INDEX_FILE" in os.environ else 0)']
+            self.assertTrue(run('env-probe', probe, Path(tmp)))
