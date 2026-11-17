@@ -24,7 +24,9 @@ interface TokenUsage {
 }
 
 export type StructuredResult<T> =
-  { ok: true; value: T; usage: TokenUsage | null } | { ok: false; failure: AiFailure };
+  | { ok: true; value: T; usage: TokenUsage | null }
+  /** `detail`: the provider's own words when it gave any (M36), for the user to act on. */
+  | { ok: false; failure: AiFailure; detail?: string };
 
 /**
  * The only way the product talks to a model (FR-08-010): no vendor is hard-wired. Today the one

@@ -14,6 +14,9 @@ const ASK_TIMEOUT_MS = 180_000;
 /** A research turn searches and reads pages first. */
 const RESEARCH_TIMEOUT_MS = 420_000;
 
+/** The provider's own words are kept this long at most (a stack trace says nothing more). */
+const DETAIL_MAX = 300;
+
 /** The kit's failure classes as QBank's readiness statuses (what the user sees and retries on). */
 const FAILURES: Record<string, Exclude<AiFailure, 'invalid_output'>> = {
   usage_limit: 'no_quota',
@@ -53,6 +56,14 @@ function askOf<T>(target: AiTarget, request: StructuredRequest<T>) {
   };
 }
 
+/** The kit's refusal as QBank's failure, with the provider's own words when it gave any. */
+function failureOf(body: unknown): { ok: false; failure: AiFailure; detail?: string } {
+  const error = (body as { error?: { reason?: string; detail?: unknown } } | null)?.error;
+  const failure = FAILURES[error?.reason ?? ''] ?? 'unexpected';
+  const detail = typeof error?.detail === 'string' ? error.detail.slice(0, DETAIL_MAX) : '';
+  return { ok: false, failure, ...(detail ? { detail } : {}) };
+}
+
 /**
  * QBank's AI port on a provider instance of the kit (DEC-30): the user's own subscription or
  * key, one read-only turn per question. The reply is still checked by `parseModelOutput`.
@@ -66,8 +77,7 @@ export function kitProvider(
     async generate<T>(request: StructuredRequest<T>): Promise<StructuredResult<T>> {
       const reply = await client.ask(askOf(target, request), ownerSession);
       if (reply.status !== 200) {
-        const reason = (reply.body as { error?: { reason?: string } } | null)?.error?.reason ?? '';
-        return { ok: false, failure: FAILURES[reason] ?? 'unexpected' };
+        return failureOf(reply.body);
       }
       const text = String((reply.body as { text?: unknown }).text ?? '');
       const value = parseModelOutput(jsonObjectIn(text), request.schema);

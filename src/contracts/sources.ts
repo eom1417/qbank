@@ -232,6 +232,8 @@ export const ImportResponse = z
     questionsReview: z.number().int(),
     /** What the AI step did: `not_used`, `done`, or why it stopped (`invalid_key`, …). */
     aiOutcome: z.string().nullable(),
+    /** The provider's own words when it stopped the import (M36). */
+    aiDetail: z.string().nullable(),
     errorCode: z.string().nullable(),
     /** The AI the job ran on (DEC-33): instance, its model, improvement and each role's model. */
     ai: z
