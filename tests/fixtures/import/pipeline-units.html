@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Pipeline units (synthetic test fixture only)</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 0;
+      }
+      body {
+        margin: 0;
+        font-family: 'Liberation Serif', serif;
+        font-size: 11pt;
+      }
+      .page {
+        position: relative;
+        width: 210mm;
+        height: 296mm;
+        overflow: hidden;
+        break-after: page;
+      }
+      .page:last-child {
+        break-after: auto;
+      }
+      .body {
+        position: absolute;
+        left: 60px;
+        right: 60px;
+        top: 110px;
+      }
+      p {
+        margin: 0 0 5pt;
+      }
+      .q {
+        margin-top: 14pt;
+      }
+      .abs {
+        position: absolute;
+      }
+      .footer {
+        position: absolute;
+        bottom: 40px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 9pt;
+      }
+      .ar {
+        direction: rtl;
+        font-family: 'Noto Naskh Arabic', serif;
+        font-size: 13pt;
+      }
+      .cols {
+        position: absolute;
+        left: 60px;
+        right: 60px;
+        top: 110px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        column-gap: 40px;
+      }
+    </style>
+  </head>
+  <body>
+    <section class="page">
+      <img class="abs" src="{{frame}}" style="left: 0; top: 0; width: 794px; height: 1122px" />
+      <img class="abs" src="{{logo}}" style="left: 40px; top: 30px; width: 60px" />
+      <img class="abs" src="{{bar}}" style="left: 150px; top: 92px; width: 500px; height: 4px" />
+      <div class="body">
+        <div class="q">
+          <p>Q1) A synthetic patient has a fever and a cough. Which test comes first?</p>
+          <p>A. Chest radiograph</p>
+          <p>B. Blood culture</p>
+          <p>C. Throat swab</p>
+          <p>D. No test</p>
+        </div>
+        <div class="q">
+          <p>Q2) Which drug is a made-up example of a first line choice?</p>
+          <p>A. Examplomycin</p>
+          <p>B. Testocillin</p>
+          <p>C. Fixturazole</p>
+          <p>D. Placebonide</p>
+        </div>
+        <div class="q">
+          <p>Q3) What is the usual dose in this invented scenario?</p>
+          <p>A. Ten units daily</p>
+          <p>B. Twenty units daily</p>
+          <p>C. Thirty units daily</p>
+        </div>
+      </div>
+      <img class="abs" src="{{circle}}" style="left: 52px; top: 186px; width: 40px" />
+      <img class="abs" src="{{cross}}" style="left: 190px; top: 323px; width: 26px" />
+      <img
+        class="abs"
+        src="{{highlight}}"
+        style="left: 58px; top: 425px; width: 150px; height: 22px"
+      />
+      <p class="footer">Synthetic practice set, page 1</p>
+    </section>
+    <section class="page">
+      <img class="abs" src="{{frame}}" style="left: 0; top: 0; width: 794px; height: 1122px" />
+      <img class="abs" src="{{logo}}" style="left: 40px; top: 30px; width: 60px" />
+      <div class="body">
+        <p>Q4) The next question was pasted as a picture:</p>
+        <img src="{{typed}}" style="width: 480px" />
+        <p>A note was added beside it:</p>
+        <img src="{{note}}" style="width: 260px" />
+        <p>The dosing table for the made-up drugs:</p>
+        <img src="{{table}}" style="width: 420px" />
+        <p>The film for the next question:</p>
+        <img src="{{xray}}" style="width: 200px" />
+      </div>
+      <p class="footer">Synthetic practice set, page 2</p>
+    </section>
+    <section class="page">
+      <img class="abs" src="{{watermark}}" style="left: 0; top: 0; width: 794px; height: 1122px" />
+      <img class="abs" src="{{logo}}" style="left: 40px; top: 30px; width: 60px" />
+      <div class="body ar">
+        <p>س5) طفل في مثال مصطنع لديه طفح جلدي بعد الدواء. ما الخطوة الأولى؟</p>
+        <p>أ. إيقاف الدواء</p>
+        <p>ب. زيادة الجرعة</p>
+        <p>ج. لا شيء</p>
+        <div style="margin-top: 14pt">
+          <img
+            src="{{rash}}"
+            style="width: 220px; height: 120px; display: inline-block; vertical-align: top"
+          />
+          <img
+            src="{{ecg}}"
+            style="
+              width: 300px;
+              height: 120px;
+              display: inline-block;
+              vertical-align: top;
+              margin-right: 30px;
+            "
+          />
+        </div>
+        <p style="margin-top: 14pt">س6) هذا السؤال ملصق صورة:</p>
+        <img src="{{arabicTyped}}" style="width: 460px" />
+        <img src="{{blueNote}}" style="width: 240px; margin-top: 10pt" />
+      </div>
+      <p class="footer">Synthetic practice set, page 3</p>
+    </section>
+    <section class="page">
+      <img class="abs" src="{{logo}}" style="left: 40px; top: 30px; width: 60px" />
+      <div class="cols">
+        <div>
+          <p>Q7) In a made-up ward, which step is first?</p>
+          <p>A. Wash hands</p>
+          <p>B. Read chart</p>
+          <p>C. Call doctor</p>
+          <p>Q8) Which sample is labelled first?</p>
+          <p>A. The blood tube</p>
+          <p>B. The urine cup</p>
+          <p>C. The swab</p>
+          <p>Q9) Which form is signed first?</p>
+          <p>A. Consent form</p>
+          <p>B. Discharge form</p>
+          <p>Q12) Which room is cleaned first?</p>
+          <p>A. The ward</p>
+          <p>B. The theatre</p>
+          <p>C. The clinic</p>
+          <p>Q13) Which list is read first?</p>
+          <p>A. The drug list</p>
+          <p>B. The diet list</p>
+          <p>C. The visit list</p>
+          <p>D. The staff list</p>
+          <p>E. The bed list</p>
+        </div>
+        <div>
+          <p>Q10) This tracing is from a made-up case.</p>
+          <p>A. Normal</p>
+          <p>B. Fast</p>
+          <img src="{{strip}}" style="width: 300px; margin: 6pt 0" />
+          <p>Q11) Which tool reads the tracing?</p>
+          <p>A. Ruler</p>
+          <p>B. Caliper</p>
+          <p>C. Pencil</p>
+          <p>D. Eraser</p>
+        </div>
+      </div>
+      <p class="footer" style="text-align: right; right: 60px">Synthetic practice set, page 4</p>
+    </section>
+  </body>
+</html>

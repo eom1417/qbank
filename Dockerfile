@@ -24,7 +24,9 @@ RUN node scripts/vendor-lock.mjs --check \
   && mkdir -p /data && chown -R node:node /data
 
 USER node
+# One OpenMP thread per Tesseract: parallel OCR otherwise spins and runs ~40x slower (M34 P2).
 ENV NODE_ENV=production \
+    OMP_THREAD_LIMIT=1 \
     QBANK_DATA_DIR=/data/app \
     HOME=/data/home \
     QBANK_API_HOST=0.0.0.0 \
