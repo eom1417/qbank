@@ -7,6 +7,7 @@ import { separateKeys } from '../key-pass.js';
 import { optionLabel, questionLabel } from '../labels.js';
 import type { TextLine } from '../lines.js';
 import type { Box, PageWord } from '../page.js';
+import { keysByPlace } from './key-places.js';
 import { pictureKey, pictureLines } from './picture-lines.js';
 import { isTagLine } from './tags.js';
 import { parseQuestions, type ParsedQuestion, type PlacedFigure } from '../questions.js';
@@ -289,8 +290,8 @@ export function readVirtual(
     origin,
   );
   trimStrayOptions(questions, text);
-  const keys = attachKeys(questions, separated);
   const spans = new Set(questions.flatMap((question) => question.spans.map((span) => span.box)));
+  const keys = keysByPlace(questions, attachKeys(questions, separated), text, separated.inline);
   const left = new Set([...separated.lines, ...asides]);
   const free = new Set<number>();
   const consumed = new Set<string>();

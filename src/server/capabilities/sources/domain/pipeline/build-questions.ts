@@ -63,6 +63,13 @@ function freeLines(parts: QuestionParts, index: number): string[] {
   return lines;
 }
 
+/** Every line from this question's anchor to the next one's (its picture's own key lines too). */
+function ownLines(parts: QuestionParts, index: number): string[] {
+  const from = parts.frames[index]?.stemAt ?? 0;
+  const to = parts.frames[index + 1]?.stemAt ?? parts.text.lines.length;
+  return parts.text.lines.slice(Math.max(0, from), to).map((virtual) => virtual.line.text);
+}
+
 const lineTags = (parts: QuestionParts, index: number): QuestionTags[] =>
   freeLines(parts, index)
     .filter(isTagLine)
@@ -156,7 +163,7 @@ export function buildQuestions(parts: QuestionParts): PipelineQuestion[] {
   const seen = new Map<string, number>();
   return parts.parsed.map((question, index) => {
     // A key printed with doubt decides nothing, whatever else the rules found.
-    const doubt = freeLines(parts, index).some(isDoubtfulKey);
+    const doubt = ownLines(parts, index).some(isDoubtfulKey);
     const decided = doubt ? undefined : parts.decided[index];
     const base = `${question.page}-${question.number}`;
     const occurrence = seen.get(base) ?? 0;

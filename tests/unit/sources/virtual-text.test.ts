@@ -265,6 +265,35 @@ describe('pictures that are not the file’s questions', () => {
     expect(reading.keys.map((k) => k.key)).toEqual([['A'], null]);
     expect([...reading.free].sort()).toEqual([2, 7]);
   });
+});
+
+describe('keys printed in screenshots', () => {
+  it('gives a key printed in the answer panel beside a screenshot to that screenshot', () => {
+    const units = [
+      picture('answer', box(320, 90, 560, 140), 6, 'text_picture'),
+      picture('question', box(40, 100, 300, 160), 9, 'text_picture'),
+    ];
+    const answer = [
+      ...rowWords('Correct Answer: B', 322, 92),
+      ...rowWords('Because of blue.', 322, 106),
+    ];
+    const question = [
+      ...rowWords('82. Which colour?', 42, 102),
+      ...rowWords('a) Red', 52, 116),
+      ...rowWords('b) Blue', 52, 130),
+    ];
+    const text = virtualText(
+      [{ size: SIZE, units }],
+      [],
+      [
+        { unitId: 'answer', words: answer },
+        { unitId: 'question', words: question },
+      ],
+    );
+    const reading = readVirtual(text, new Map([[1, 800]]), []);
+    expect(reading.questions.map((q) => q.number)).toEqual([82]);
+    expect(reading.keys[0]?.key).toEqual(['B']);
+  });
 
   it('finds keys printed in pictures for numbers the file has', () => {
     const units = [picture('keys', box(40, 100, 400, 140), 9, 'text_picture')];

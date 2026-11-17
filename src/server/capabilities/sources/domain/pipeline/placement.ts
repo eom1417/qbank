@@ -276,13 +276,17 @@ const letterMarkBox = (letter: Box): Box => {
   return { x0: letter.x0 - h * 1.2, y0: letter.y0 - h, x1: letter.x1 + h, y1: letter.y1 + h };
 };
 
-/** Note blobs closer than this (points) are one note. */
-const NOTE_JOIN = 18;
-const grow = (box: Box, by: number): Box => ({
-  x0: box.x0 - by,
-  y0: box.y0 - by,
-  x1: box.x1 + by,
-  y1: box.y1 + by,
+/**
+ * Strokes of one note: words of a written line lie side by side with wide gaps, its lines
+ * close above each other; a clear blank band between strokes starts another note.
+ */
+const NOTE_JOIN_ACROSS = 36;
+const NOTE_JOIN_DOWN = 14;
+const grow = (box: Box): Box => ({
+  x0: box.x0 - NOTE_JOIN_ACROSS,
+  y0: box.y0 - NOTE_JOIN_DOWN,
+  x1: box.x1 + NOTE_JOIN_ACROSS,
+  y1: box.y1 + NOTE_JOIN_DOWN,
 });
 
 /** Joins boxes that lie close together into one box each. */
@@ -292,7 +296,7 @@ export function joinNear(boxes: readonly Box[]): Box[] {
     let current = box;
     for (let index = joined.length - 1; index >= 0; index--) {
       const other = joined[index] as Box;
-      if (!overlaps(grow(other, NOTE_JOIN), current)) continue;
+      if (!overlaps(grow(other), current)) continue;
       current = unionBox([other, current]);
       joined.splice(index, 1);
     }

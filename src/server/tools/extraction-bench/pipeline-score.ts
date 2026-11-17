@@ -44,29 +44,64 @@ const fullStem = (question: PipelineQuestion) =>
 const stemMatch = (truth: TruthQuestion, question: PipelineQuestion) =>
   Math.max(similarity(truth.stem, question.stem), similarity(truth.stem, fullStem(question)));
 
-/** Pairs truth and read questions: by printed number on the same page, else by stem. */
+/** Share of the truth stem's first words that our stem (with its case) holds, in any order. */
+function wordRecall(truth: TruthQuestion, question: PipelineQuestion): number {
+  const ours = new Set(stemWords(fullStem(question)));
+  const theirs = stemWords(truth.stem).slice(0, RECALL_WORDS);
+  return theirs.length === 0 ? 0 : theirs.filter((word) => ours.has(word)).length / theirs.length;
+}
+
+const stemWords = (text: string) =>
+  text
+    .toLowerCase()
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter((word) => word.length > 1);
+const RECALL_WORDS = 12;
+/** A number match whose stems share less than this is a different question with that number. */
+const MIN_NUMBERED_MATCH = 0.3;
+
+const stemScore = (truth: TruthQuestion, question: PipelineQuestion) =>
+  Math.max(stemMatch(truth, question), wordRecall(truth, question));
+
+const nearPages = (truth: TruthQuestion, question: PipelineQuestion) =>
+  truth.pages.some((page) => question.pages.some((own) => Math.abs(own - page) <= 1));
+
+/**
+ * Pairs truth and read questions: by printed number on the same page when the stems agree
+ * (the best stem among several), then by stem on the same or a neighbouring page, best
+ * pairs first. A screenshot may print another bank's number, so a number alone never decides.
+ */
 export function matchQuestions(
   truth: readonly TruthQuestion[],
   read: readonly PipelineQuestion[],
 ): Pair[] {
   const free = new Set(read);
   const pairs: Pair[] = [];
-  const take = (t: TruthQuestion, q: PipelineQuestion | undefined) => {
-    if (!q) return;
+  const rest: TruthQuestion[] = [];
+  for (const t of truth) {
+    const scored = [...free]
+      .filter((q) => q.number === t.printed && t.pages.includes(q.page))
+      .map((q) => ({ q, score: stemScore(t, q) }))
+      .filter(({ score }) => score >= MIN_NUMBERED_MATCH)
+      .sort((a, b) => b.score - a.score);
+    const best = scored[0]?.q;
+    if (best) {
+      free.delete(best);
+      pairs.push([t, best]);
+    } else rest.push(t);
+  }
+  const candidates = rest
+    .flatMap((t) =>
+      [...free].filter((q) => nearPages(t, q)).map((q) => ({ t, q, s: stemScore(t, q) })),
+    )
+    .filter(({ s }) => s >= MIN_STEM_MATCH)
+    .sort((a, b) => b.s - a.s);
+  const taken = new Set<TruthQuestion>();
+  for (const { t, q } of candidates) {
+    if (taken.has(t) || !free.has(q)) continue;
+    taken.add(t);
     free.delete(q);
     pairs.push([t, q]);
-  };
-  const unnumbered: TruthQuestion[] = [];
-  for (const t of truth) {
-    const byNumber = [...free].find((q) => q.number === t.printed && t.pages.includes(q.page));
-    if (byNumber) take(t, byNumber);
-    else unnumbered.push(t);
-  }
-  for (const t of unnumbered) {
-    const near = [...free].filter((q) => t.pages.some((page) => q.pages.includes(page)));
-    const scored = near.map((q) => ({ q, score: stemMatch(t, q) }));
-    const best = scored.sort((a, b) => b.score - a.score)[0];
-    if (best && best.score >= MIN_STEM_MATCH) take(t, best.q);
   }
   return pairs;
 }
