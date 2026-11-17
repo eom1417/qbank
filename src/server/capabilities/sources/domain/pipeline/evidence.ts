@@ -8,8 +8,6 @@ import type { PipelineEvidence, PipelineQuestion } from './question.js';
 export interface VisionMark {
   letter: string | null;
   eliminated: readonly string[];
-  /** A second, independent reading by the other model named the same letter (R1, Q85). */
-  confirmed?: boolean;
 }
 
 /** The lesson's reply, `review` when no approved model passed its check, or null when not asked. */
@@ -147,18 +145,9 @@ export function combineEvidence(
   if (positives.length === 0)
     return { ...undecided(question, [], [NO_ANSWER, ...unclear]), evidence: ['none'] };
   const widest = positives.reduce((a, b) => (b.letters.length > a.letters.length ? b : a));
-  const single = confirmed(kinds, vision) ? [] : [SINGLE_SIGNAL];
+  // Q85, M35: two different signals must agree. A printed key or a vision mark alone (also read
+  // twice: both readings share the crop) keeps its answer as a suggestion, held for review.
+  const single = kinds.length >= 2 ? [] : [SINGLE_SIGNAL];
   const reviewReasons = unique([...othersOf(question), ...single]);
   return { ...question, answers: [...widest.letters], evidence: kinds, reviewReasons };
-}
-
-/**
- * Q85: two different signals agree, or a printed key the vision lesson looked at without
- * seeing another mark. One signal alone keeps its answer as a suggestion, held for review.
- */
-function confirmed(kinds: readonly string[], vision: VisionVerdict): boolean {
-  if (kinds.length >= 2) return true;
-  const read = vision !== null && vision !== 'review' ? vision.mark : null;
-  if (kinds[0] === 'vision_mark') return read?.confirmed === true;
-  return kinds[0] === 'printed_key' && read !== null;
 }

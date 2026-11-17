@@ -64,6 +64,15 @@ describe('placement in a question (D3.1)', () => {
     expect(placeIn(question, figure, spot(2.5)).optionLetter).toBe('B');
   });
 
+  it('hides a picture lying over the rows of two options (a pasted note) and holds it for review', () => {
+    const over = image('note', at(40, 135, 200, 175), 'handwriting');
+    expect(placeIn(question, over, spot(2.5))).toEqual({
+      placement: 'explanation',
+      optionLetter: null,
+      unsure: true,
+    });
+  });
+
   it('places a picture after the options in the explanation, shown only after the reveal', () => {
     expect(placeIn(question, figure, spot(3.5, false)).placement).toBe('explanation');
   });
