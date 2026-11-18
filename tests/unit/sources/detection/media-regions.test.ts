@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   newRegions,
   regionPicture,
+  withoutPrintedTables,
 } from '../../../../src/server/capabilities/sources/detection/link/media-regions.js';
 import type { MediaRegion } from '../../../../src/server/capabilities/sources/domain/media-regions.js';
 
@@ -49,5 +50,51 @@ describe('regionPicture', () => {
   it('leaves a placed picture the linker moved to another question unsure', () => {
     const moved = regionPicture(link, 0, { picture: placed, stays: false });
     expect(moved).toMatchObject({ placement: 'explanation', certain: false });
+  });
+});
+
+describe('withoutPrintedTables', () => {
+  const line = (id: number, y0: number, source: 'text' | 'ocr' = 'text') => ({
+    id,
+    page: 4,
+    box: { x0: 60, y0, x1: 240, y1: y0 + 10 },
+    text: `row ${id}`,
+    words: [],
+    unitId: `u${id}`,
+    rtl: false,
+    source,
+    confidence: null,
+    deviceNote: false,
+  });
+  const fileOf = (source: 'text' | 'ocr') =>
+    ({
+      lines: [line(0, 110, source), line(1, 130, source)],
+      units: new Map(),
+      pages: [],
+      layout: {},
+    }) as never;
+  const question = {
+    number: 1,
+    numberInferred: false,
+    labelLine: null,
+    stem: [0, 1],
+    options: [],
+    answer: null,
+    conflicts: [],
+    explanation: [],
+    caseLines: [],
+    pictures: [],
+    tags: { exam: null, year: null },
+  };
+  const table = { ...region(4, 50), kind: 'table' as const };
+
+  it('drops a ruled table whose printed words the question already reads', () => {
+    expect(withoutPrintedTables(fileOf('text'), [question], [table])).toEqual([]);
+  });
+
+  it('keeps a table read by OCR, and a figure', () => {
+    const figure = region(4, 50);
+    expect(withoutPrintedTables(fileOf('ocr'), [question], [table])).toEqual([table]);
+    expect(withoutPrintedTables(fileOf('text'), [question], [figure])).toEqual([figure]);
   });
 });

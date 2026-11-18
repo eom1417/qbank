@@ -2,7 +2,7 @@ import { linkMedia, type MediaLink } from '../../domain/media-links.js';
 import { area, intersect, type MediaRegion } from '../../domain/media-regions.js';
 import type { PipelinePicture } from '../../domain/pipeline/question.js';
 import type { DraftQuestion, FileLines } from '../contract.js';
-import { anchorLines, frameOfDraft } from './media-view.js';
+import { anchorLines, frameOfDraft, heldLines } from './media-view.js';
 import { overlaps } from '../../domain/page.js';
 
 /** Table options remain text; data figures/tables are represented by the kept picture. */
@@ -42,6 +42,24 @@ const matches = (picture: PipelinePicture, region: MediaRegion) =>
 /** Rendered regions that are not a picture already read as text (its words are the content). */
 export const newRegions = (regions: readonly MediaRegion[], read: readonly Spot[]) =>
   regions.filter((region) => !read.some((spot) => sameContent(spot, region)));
+
+/**
+ * Ruled tables whose words are printed text a question already reads: the question's own text
+ * (lab values, an option table), not a picture to show beside it.
+ */
+export function withoutPrintedTables(
+  file: FileLines,
+  questions: readonly DraftQuestion[],
+  regions: readonly MediaRegion[],
+): MediaRegion[] {
+  const read = questions.flatMap(heldLines).flatMap((id) => {
+    const line = file.lines[id];
+    return line && line.source === 'text' ? [line] : [];
+  });
+  const printed = (region: MediaRegion) =>
+    read.some((line) => line.page === region.page && overlaps(line.box, region.box));
+  return regions.filter((region) => region.kind !== 'table' || !printed(region));
+}
 
 /** Reuse the source's geometric linker for figures/tables absent from the image-unit list. */
 export function mergeRegions(

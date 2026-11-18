@@ -1,4 +1,4 @@
-import { mergeRegions, newRegions } from './media-regions.js';
+import { mergeRegions, newRegions, withoutPrintedTables } from './media-regions.js';
 import { rasterCache } from '../../use-cases/extract-questions.js';
 import { ownerAt, placePictures, type QuestionFrame } from '../../domain/pipeline/placement.js';
 import type { CaseGroup } from '../../domain/pipeline/case.js';
@@ -95,7 +95,8 @@ async function picturesOf(context: Context, questions: DraftQuestion[], cases: C
   const read = context.file.units.pages
     .flatMap((page) => page.units)
     .filter((unit) => consumed.has(unit.id));
-  return mergeRegions(context.file, questions, pictures, newRegions(regions, read));
+  const shown = withoutPrintedTables(context.file, questions, newRegions(regions, read));
+  return mergeRegions(context.file, questions, pictures, shown);
 }
 
 /** Pen marks, except on questions read from a picture or sharing a matching set's options. */
