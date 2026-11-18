@@ -97,3 +97,29 @@ until the single benchmark has ended.
   real-file parity, 99% AI-assisted measurement and browser acceptance remain open.
 - Neither platform session cancellation nor a container reboot can be prevented by
   this repository. The cause of the earlier agent-session endings is unverified.
+
+## Parity stage (2026-11-18)
+
+Fourteen general rules, each red then green, measured on the cached units after each step
+(new path, no AI; old = develop `ef31b0a` with the same scorer):
+
+| file | found new/old | stem new/old | options new/old | answers ok-wrong new/old |
+| --- | --- | --- | --- | --- |
+| allergy | 140/125 | 0.884/0.902 | 23.6%/21.6% | 48-2 / 36-0 |
+| immuno | 169/145 | 0.902/0.920 | 24.3%/25.5% | 59-3 / 50-2 |
+| infect | 113/109 | 0.972/0.997 | 88.5%/84.4% | 84-0 / 81-1 |
+| hema | 41/41 (extra 0/1) | 1.000/1.000 | 92.7%/87.8% | 24-1 / 26-2 |
+| ethics, research, cardiology, dermatology, trauma, msk | equal or better | | | |
+| nephrology, neonatology, prep, gastro | equal found | 0.95-0.996 / 0.96-1.0 | equal or better | equal |
+
+Leaks: 0 except prep 5 and nephrology 1 (old 0). Thirteen synthetic hard cases: all 100%.
+
+Reference samples in OCR mode (`extraction-benchmark`, failing since the M39 migration):
+endocrinology and cardiology now pass; nephrology misses by 2 wrong answers (0.053 vs 0.05)
+and stem 0.911 vs 0.93. Two tried rules were reverted for losing more than they gained
+(skipping ink on recovered options; backwards numbers). `providers` integration tests fail
+identically on develop (ai-host does not start in this container).
+
+Full suite: 1006 passed, 3 files failing (2 environmental, 1 nephrology OCR threshold).
+Not yet done: nephrology OCR threshold, stem gap on allergy/immuno collage pages, deleting
+the old readers, AI-assisted measurement, browser acceptance.
