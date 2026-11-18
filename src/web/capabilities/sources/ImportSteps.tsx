@@ -1,16 +1,17 @@
 import type { StepReport } from '../../../contracts/sources.js';
-import { Badge, MutedText, Row } from '../../design-system/index.js';
+import { Badge, MutedText, Row, Spinner } from '../../design-system/index.js';
 import { useI18n, type MessageKey } from '../../platform/i18n/i18n.js';
 
 const STEPS = ['inspect', 'read', 'roles', 'link', 'check', 'assist', 'save'] as const;
 const MARK = { done: '✓', failed: '✗', skipped: '–', running: '…', pending: '·' } as const;
 
-function Progress({ report }: { report: StepReport }) {
+function Progress({ report, label }: { report: StepReport; label: string }) {
   if (report.status === 'running') {
     return (
-      <MutedText>
-        <span aria-busy="true">{report.total > 0 ? `${report.done} / ${report.total}` : '…'}</span>
-      </MutedText>
+      <Row>
+        <Spinner label={label} />
+        {report.total > 0 && <MutedText>{`${report.done} / ${report.total}`}</MutedText>}
+      </Row>
     );
   }
   return report.note ? <MutedText>{report.note}</MutedText> : null;
@@ -30,7 +31,7 @@ export function ImportSteps({ steps }: { steps: readonly StepReport[] }) {
             <Row>
               <Badge>{MARK[status]}</Badge>
               <span>{t(`import.step.${id}` as MessageKey)}</span>
-              {report && <Progress report={report} />}
+              {report && <Progress report={report} label={t(`import.step.${id}` as MessageKey)} />}
             </Row>
           </li>
         );

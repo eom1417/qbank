@@ -1,4 +1,5 @@
 import { optionLabel, questionLabel } from '../../domain/labels.js';
+import { explanationStart } from '../../domain/key-lines.js';
 import { unionBox, type Box } from '../../domain/page.js';
 import type { PipelineEvidence, PipelineOption, Spot } from '../../domain/pipeline/question.js';
 import { combineTags, takeTags } from '../../domain/pipeline/tags.js';
@@ -37,7 +38,12 @@ class Reader {
 }
 
 const withoutQuestionLabel = (text: string) => questionLabel(text)?.text ?? text;
-const withoutOptionLabel = (text: string) => optionLabel(text)?.text ?? text;
+const withoutOptionLabel = (text: string, label: string) => {
+  const parsed = optionLabel(text);
+  if (parsed) return parsed.text;
+  const words = text.trim().split(/\s+/);
+  return words[0] === label ? words.slice(1).join(' ') : text;
+};
 
 /** The label line and the stem lines: the question's words before its options. */
 const stemIds = (question: DraftQuestion): number[] => [
@@ -68,14 +74,16 @@ function optionOf(reader: Reader, option: DraftQuestion['options'][number]): Pip
   return {
     letter: option.letter,
     label: option.label,
-    text: takeTags(reader.join(option.lines, withoutOptionLabel)).rest,
+    text: takeTags(reader.join(option.lines, (text) => withoutOptionLabel(text, option.label)))
+      .rest,
     spot: first && box ? { page: first.page, box } : null,
   };
 }
 
 function answerOf(question: DraftQuestion) {
   const answer = question.answer;
-  const evidence: PipelineEvidence = answer?.from === 'pen_mark' ? 'pen_mark' : 'printed_key';
+  const evidence: PipelineEvidence =
+    answer?.from === 'pen_mark' || answer?.from === 'single_option' ? answer.from : 'printed_key';
   return {
     answers: answer?.letters ?? [],
     evidence: answer && answer.letters.length > 0 ? [evidence] : (['none'] as PipelineEvidence[]),
@@ -90,13 +98,17 @@ function reviewReasons(detection: Detection, question: DraftQuestion, index: num
   if (question.options.length < 2) reasons.push('incomplete_options');
   if (!question.answer || question.answer.letters.length === 0) reasons.push('no_answer');
   if (question.conflicts.length > 0) reasons.push('answer_conflict');
+  if (question.pictures.some((picture) => picture.certain === false))
+    reasons.push('picture_place_unsure');
   return reasons;
 }
 
 /** The stem, explanation and case texts without tags, and every tag the question carries. */
 function textOf(reader: Reader, question: DraftQuestion) {
   const stem = takeTags(reader.join(stemIds(question), withoutQuestionLabel));
-  const explanation = takeTags(reader.join(question.explanation));
+  const explanation = takeTags(
+    reader.join(question.explanation, (text) => explanationStart(text) ?? text),
+  );
   const caseText = reader.join(question.caseLines);
   return {
     stem: stem.rest,

@@ -1,3 +1,4 @@
+import { mergeRegions } from './media-regions.js';
 import { rasterCache } from '../../use-cases/extract-questions.js';
 import { ownerAt, placePictures, type QuestionFrame } from '../../domain/pipeline/placement.js';
 import type { CaseGroup } from '../../domain/pipeline/case.js';
@@ -28,7 +29,11 @@ const UNREAD = new Set<Role>(['unknown', 'filler', 'note']);
  * Pictures read as text: one whose words were read into a question or a key. A figure is
  * never one, even with a few words on it (a label, a scale).
  */
-function readPictures(file: FileLines, roles: readonly LineRole[], questions: DraftQuestion[]) {
+export function consumedPictures(
+  file: FileLines,
+  roles: readonly LineRole[],
+  questions: DraftQuestion[],
+) {
   const held = new Set(questions.flatMap(heldLines));
   const role = new Map(roles.map((r) => [r.line, r.role]));
   const read = new Set<string>();
@@ -67,7 +72,7 @@ async function picturesOf(context: Context, questions: DraftQuestion[], cases: C
   const owned = placePictures({
     frames: context.frames,
     text: context.view,
-    consumed: readPictures(context.file, context.roles, questions),
+    consumed: consumedPictures(context.file, context.roles, questions),
     cases,
     namedOwner: () => null,
   });
@@ -76,7 +81,12 @@ async function picturesOf(context: Context, questions: DraftQuestion[], cases: C
     questions,
     printed: printedBoxes(context.file, context.view),
   });
-  return owned.map((slot, index) => [...slot.pictures, ...(notes[index] ?? [])]);
+  const pictures = owned.map((slot, index) => [...slot.pictures, ...(notes[index] ?? [])]);
+  const readRegions = context.render.regions;
+  const regions = readRegions
+    ? await orNothing(readRegions(context.fileName, context.file.pages))
+    : null;
+  return regions ? mergeRegions(context.file, questions, pictures, regions) : pictures;
 }
 
 /** Pen marks, except on questions read from a picture or sharing a matching set's options. */

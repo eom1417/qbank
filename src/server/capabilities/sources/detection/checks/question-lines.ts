@@ -1,9 +1,11 @@
-import type { DraftQuestion, FileLines } from '../contract.js';
+import type { DraftQuestion, FileLines, LineRole } from '../contract.js';
 
-/** What every per-question check reads: the file and the median option length of all questions. */
+/** What every per-question check reads: the file, its line roles, the median option length. */
 export interface CheckContext {
   file: FileLines;
   medianOption: number;
+  /** Line id → its role, as step 3 read it. */
+  roles: ReadonlyMap<number, LineRole>;
 }
 
 export const textOf = (file: FileLines, ids: number[]): string =>

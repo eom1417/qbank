@@ -17,7 +17,7 @@ import type { Actor } from '../../identity/index.js';
 import type { JobRow } from '../adapters/import-repository.js';
 import type { SourcesDeps } from './deps.js';
 import { aiTargetOf } from './verify-with-ai.js';
-import { pipelineReport, tierOf } from './pipeline-report.js';
+import { pipelineReport, tierOf, detectionIssues } from './pipeline-report.js';
 
 /**
  * What a job improves (DEC-34); an old job without the column improves nothing. A pipeline job
@@ -87,6 +87,7 @@ export async function getImport(
     questionsReview: job.questions_review,
     aiOutcome: job.ai_outcome,
     aiDetail: job.ai_detail,
+    detectionIssues: detectionIssues(job),
     steps: StepReport.array()
       .catch([])
       .parse(job.steps ?? []),

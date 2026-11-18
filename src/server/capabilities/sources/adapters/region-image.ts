@@ -1,7 +1,7 @@
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pageLines } from '../domain/lines.js';
-import type { Box, PageWord } from '../domain/page.js';
+import type { Box, PageText, PageWord } from '../domain/page.js';
 import { parsePpm, type RgbImage } from '../domain/pipeline/rgb-image.js';
 import { parseTesseractTsv } from './readers.js';
 import { readBytes, runTool, withTempDir } from './run-tool.js';
@@ -146,3 +146,7 @@ export async function readRegion(
   const better = sharp && second.score(sharp.ocr.words) > second.score(first.ocr.words);
   return better ? { ...first, ocr: sharp.ocr } : first;
 }
+
+/** Whole-page colour rendering shared by detection and picture placement. */
+export const renderColourPage = (file: string, page: PageText, dpi: number) =>
+  renderRegion(file, page.page, { x0: 0, y0: 0, x1: page.width, y1: page.height }, dpi);

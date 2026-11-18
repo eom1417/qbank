@@ -1,4 +1,8 @@
-import { matchQuestions, type PipelineScore } from '../extraction-bench/pipeline-score.js';
+import {
+  matchQuestions,
+  optionsMatch,
+  type PipelineScore,
+} from '../extraction-bench/pipeline-score.js';
 import type { PipelineQuestion } from '../../capabilities/sources/domain/pipeline/question.js';
 import type { TruthFile } from '../extraction-bench/truth.js';
 
@@ -13,18 +17,23 @@ export interface Row {
   silent: number;
 }
 
-const letters = (list: readonly { letter: string }[]) => list.map((o) => o.letter).join('');
+const unreviewed = (question: PipelineQuestion) =>
+  question.reviewReasons.length === 0 && question.conflicts.length === 0;
 
 /** Wrong answer or wrong options, with no review reason and no conflict to flag it. */
 export function silentCount(truth: TruthFile, read: readonly PipelineQuestion[]): number {
-  return matchQuestions(truth.questions, read).filter(([t, q]) => {
-    const decided = t.status === 'valid' || t.status === 'single_option';
-    const wrongAnswer = decided && q.answers.length > 0 && q.answers.join() !== t.answer.join();
-    const wrongOptions = letters(t.options) !== letters(q.options);
-    return (
-      (wrongAnswer || wrongOptions) && q.reviewReasons.length === 0 && q.conflicts.length === 0
-    );
-  }).length;
+  const pairs = matchQuestions(truth.questions, read);
+  const matched = new Set(pairs.map(([, question]) => question));
+  const extras = read.filter((question) => !matched.has(question) && unreviewed(question)).length;
+  return (
+    extras +
+    pairs.filter(([t, q]) => {
+      const decided = t.status === 'valid' || t.status === 'single_option';
+      const wrongAnswer = decided && q.answers.length > 0 && q.answers.join() !== t.answer.join();
+      const wrongOptions = !optionsMatch(t.options, q.options);
+      return (wrongAnswer || wrongOptions) && unreviewed(q);
+    }).length
+  );
 }
 
 const pct = (part: number, whole: number) =>

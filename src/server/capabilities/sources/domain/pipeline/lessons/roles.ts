@@ -68,9 +68,9 @@ export const rolesLesson: LessonCard<RolesInput, RolesOutput> = {
   id: 'D3.roles',
   level: 3,
   needs: 'text',
-  version: 1,
+  version: 2,
   question:
-    'Each item is the lines of one part of an exam file, each starting with its line id. For every ' +
+    'Each item is the lines of one part of an exam file, each starting with its line id. An optional image shows the same region for checking OCR; its cell number matches the text item. For every ' +
     `line give "id" and its "role", one of: ${LINE_ROLES.join(', ')}. "number" = the printed ` +
     'question number of a label line, else null. "letter" = the letter of an option line or the ' +
     'letters an answer line names, else null. "text" = null, except on a line marked [ocr] whose ' +

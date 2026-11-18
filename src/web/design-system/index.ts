@@ -1,5 +1,6 @@
 import './tokens/base.css';
 import './components/components.css';
+import './components/spinner.css';
 import './components/skin-picker.css';
 import './fonts.js';
 
@@ -27,6 +28,7 @@ export {
 export { PageShell } from './components/PageShell.js';
 export { QrCode } from './components/QrCode.js';
 export { SkinPicker } from './components/SkinPicker.js';
+export { Spinner } from './components/Spinner.js';
 export { Meter } from './components/Meter.js';
 export { TextArea } from './components/TextArea.js';
 export { TextField } from './components/TextField.js';

@@ -37,15 +37,28 @@ const deviceWord = (word: PageWord) => !!word.font && fontFamily(word.font).star
 const boxKey = (line: { page: number; box: TextLine['box'] }) =>
   `${line.page}:${line.box.x0}:${line.box.y0}:${line.box.x1}:${line.box.y1}`;
 
-/** The page's own lines: body lines first, then the words left out of them as their own lines. */
+/**
+ * The page's own lines: body lines first, then the words left out of them as their own lines.
+ * A word typed on a device never stays on a printed line (a short one can pass for a label):
+ * it goes with the words left out, so a printed option stays printed.
+ */
 function ownLines(input: PageInput): TextLine[] {
   const { text, units } = input;
   const body = units?.scanned ? null : input.body;
-  const lines = pageLines(text, body);
+  const lines = printedOnly(pageLines(text, body), text);
   if (!body) return lines;
   const used = new Set(lines.flatMap((line) => line.words));
   const rest = text.words.filter((word) => !used.has(word));
   return rest.length > 0 ? [...lines, ...pageLines({ ...text, words: rest }, null)] : lines;
+}
+
+/** The lines with their device words taken out; a line of device words only stays as it is. */
+function printedOnly(lines: readonly TextLine[], text: PageText): TextLine[] {
+  return lines.flatMap((line) => {
+    const printed = line.words.filter((word) => !deviceWord(word));
+    if (printed.length === line.words.length || printed.length === 0) return [line];
+    return pageLines({ ...text, words: printed }, null);
+  });
 }
 
 /** A unit's place: its index in the page flow; a filler line sits before the next flow unit. */

@@ -2,20 +2,24 @@ import type { OptionSystem } from '../../domain/labels.js';
 import type { Line, LineRole } from '../contract.js';
 import { gapBetween } from './geometry.js';
 import type { Signals } from './signals.js';
-import { openQuestion, roleOf, takeOption, type Walk } from './walk.js';
+import { excerpt, openQuestion, takeOption, type Walk } from './walk.js';
 
 // M39 step 3: a question the file printed with no label. An "A." that opens a new set of options
 // (inside an explanation, after a full set, before any question) with "B." soon after starts one;
-// its label is inferred (the number after the last) and left in doubt for the checks.
+// its label carries no printed number (linking infers the one after the last) and stays in doubt.
 
 /** How many lines ahead the second option of a new set is looked for. */
 const LOOKAHEAD = 8;
 const INFERRED = 0.4;
 
 /** Where a first option cannot continue the current question. */
-const opensSet = (walk: Walk) =>
-  ['none', 'explanation', 'after', 'key'].includes(walk.mode) ||
-  (walk.mode === 'option' && walk.options >= 2);
+function opensSet(walk: Walk, line: Line): boolean {
+  if (['none', 'explanation', 'after', 'key'].includes(walk.mode)) return true;
+  if (walk.mode === 'option') return walk.options >= 2;
+  const label = walk.roles.findLast((role) => role.role === 'label');
+  const before = label ? walk.file.lines[label.line] : undefined;
+  return line.source === 'picture' && !!before && before.unitId !== line.unitId;
+}
 
 /** "B." in the same system follows within a few lines, before any other question part. */
 function secondOptionSoon(walk: Walk, from: number, system: OptionSystem): boolean {
@@ -33,6 +37,9 @@ const isFreeText = (role: LineRole) =>
   ['explanation', 'unknown', 'stem'].includes(role.role) ||
   (role.role === 'heading' && role.confidence <= 0.5);
 
+const crossesUnit = (start: Line, line: Line) =>
+  start.source === 'picture' && line.unitId !== start.unitId;
+
 /** The text block right above the first option, on its page: the unlabelled question's stem. */
 function stemBlock(walk: Walk, start: Line): number[] {
   const block: number[] = [];
@@ -42,6 +49,7 @@ function stemBlock(walk: Walk, start: Line): number[] {
     const line = walk.file.lines[id];
     if (!role || !line) break;
     if (role.role === 'filler' || role.role === 'note') continue;
+    if (crossesUnit(start, line)) break;
     const limit = block.length === 0 ? walk.measure.block : walk.measure.paragraph;
     if (!isFreeText(role) || gapBetween(line, below) > limit) break;
     block.unshift(id);
@@ -50,21 +58,23 @@ function stemBlock(walk: Walk, start: Line): number[] {
   return block;
 }
 
+/** An alphabetic list needs a prompt, otherwise it may just be textbook subsections. */
+function hasPrompt(walk: Walk, ids: readonly number[]): boolean {
+  const text = ids.map((id) => walk.file.lines[id]?.text ?? '').join(' ');
+  return /[?؟]|\b(?:which|what|how|why|when|where|following)\b/i.test(text);
+}
+
 /** Starts an unlabelled question at `line` ("A."), or null when the line does not open one. */
 export function unlabelledStart(walk: Walk, line: Line, signals: Signals): LineRole | null {
   const { option } = signals;
-  if (!option || option.index !== 0 || !opensSet(walk)) return null;
+  if (!option || option.index !== 0 || !opensSet(walk, line) || excerpt(walk, line)) return null;
   if (!secondOptionSoon(walk, line.id, option.system)) return null;
   const number = (walk.last ?? 0) + 1;
   const [first, ...rest] = stemBlock(walk, line);
+  if (first === undefined || !hasPrompt(walk, [first, ...rest])) return null;
   openQuestion(walk, number, true);
   walk.system = option.system;
-  if (first === undefined) {
-    // No text above: the option line itself carries the inferred start (and stands for A).
-    takeOption(walk, line, INFERRED);
-    return roleOf(line, 'label', INFERRED, { number });
-  }
-  walk.roles[first] = { line: first, role: 'label', confidence: INFERRED, number };
+  walk.roles[first] = { line: first, role: 'label', confidence: INFERRED };
   for (const id of rest) walk.roles[id] = { line: id, role: 'stem', confidence: 0.5 };
   return takeOption(walk, line, 0.6);
 }

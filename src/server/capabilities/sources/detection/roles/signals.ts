@@ -34,6 +34,8 @@ export interface Signals {
   option: OptionLabel | null;
   /** A table row's first cell: one letter alone, a cell gap after it (as A, B, C…). */
   rowLetter: string | null;
+  /** A capital letter alone or with a comma before more words ("B Call…", "E, Give…"). */
+  looseLetter: string | null;
 }
 
 /** "Chapter 3", "Section B", "الفصل الثاني": a heading in any book. */
@@ -47,10 +49,37 @@ function fillerIds(file: FileLines): Set<number> {
   return new Set(text.flatMap((line, index) => (kept.has(line) ? [] : [index])));
 }
 
+/** A cell separator may be compact, but exceeds the row's ordinary spaces. */
+function rowGap(line: Line, measure: Measure): number {
+  const gaps = line.words
+    .slice(2)
+    .flatMap((word, index) => {
+      const previous = line.words[index + 1];
+      if (!previous) return [];
+      const gap = line.rtl ? previous.box.x0 - word.box.x1 : word.box.x0 - previous.box.x1;
+      return gap > 0 ? [gap] : [];
+    })
+    .sort((a, b) => a - b);
+  const ordinary = gaps[Math.floor(gaps.length / 2)];
+  return ordinary === undefined ? measure.cell : Math.min(measure.cell, ordinary * 2);
+}
+
 function rowLetter(line: Line, measure: Measure): string | null {
   const first = line.words[0]?.text ?? '';
-  if (!/^[A-Ja-j]$/.test(first) || firstWordGap(line) < measure.cell) return null;
+  if (!/^[A-Ja-j]$/.test(first) || firstWordGap(line) < rowGap(line, measure)) return null;
   return first.toUpperCase();
+}
+
+/** A question label; no question is numbered 0 ("Q0)" is OCR noise). */
+function questionNumber(text: string): QuestionLabel | null {
+  const label = questionLabel(text);
+  return label && label.number > 0 ? label : null;
+}
+
+function looseLetter(line: Line): string | null {
+  const [first, second] = line.words;
+  const letter = /^([A-J])[,;:]?$/.exec(first?.text ?? '')?.[1];
+  return letter && second ? letter : null;
 }
 
 function signalOf(line: Line, measure: Measure, filler: boolean): Signals {
@@ -65,9 +94,10 @@ function signalOf(line: Line, measure: Measure, filler: boolean): Signals {
     answer: inlineAnswer(text),
     doubtful: isDoubtfulKey(text),
     explanation: explanationStart(text) !== null,
-    label: questionLabel(text),
+    label: questionNumber(text),
     option: optionLabel(text),
     rowLetter: rowLetter(line, measure),
+    looseLetter: looseLetter(line),
   };
 }
 

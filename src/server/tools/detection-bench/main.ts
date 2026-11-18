@@ -1,3 +1,4 @@
+import { argumentValue as flagValue } from '../arguments.js';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { FileUnits } from '../../capabilities/sources/adapters/pipeline-units.js';
@@ -15,11 +16,7 @@ import { header, line, silentCount, type Row } from './report.js';
 // on the hard-case corpus (tests/fixtures/detection) and on every truth file in .data/truth and
 // .data/truth-holdout (files under .data/corpus and .data/holdout). Numbers only.
 // Run with OMP_THREAD_LIMIT=1. `--cache` keeps units between runs while iterating.
-const flags = process.argv.slice(2);
-const flagValue = (name: string) => {
-  const at = flags.indexOf(name);
-  return at >= 0 ? flags[at + 1] : undefined;
-};
+
 const cacheDir = flagValue('--cache');
 const only = flagValue('--only');
 

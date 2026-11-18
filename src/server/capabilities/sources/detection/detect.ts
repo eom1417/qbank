@@ -1,17 +1,11 @@
-import type { LessonUsage } from '../../../../contracts/sources.js';
+import { runStep as step } from './progress.js';
 import type { AiFailure } from '../../providers/index.js';
-import type { LessonDeps } from '../use-cases/run-lesson.js';
+import type { LessonDeps, LessonUsage } from '../use-cases/run-lesson.js';
 import { assistDoubts } from './assist/assist-doubts.js';
 import { runChecks } from './checks/run-checks.js';
-import type {
-  Detection,
-  DetectedQuestion,
-  FileLines,
-  LineRole,
-  OnStep,
-  StepId,
-} from './contract.js';
+import type { Detection, DetectedQuestion, FileLines, LineRole, OnStep } from './contract.js';
 import { linkQuestions } from './link/link-questions.js';
+import type { MediaRender } from './link/media.js';
 import { toDetectedQuestions } from './link/to-detected.js';
 import { readLines, type LinesReader } from './lines/read-lines.js';
 import { classifyLines } from './roles/classify-lines.js';
@@ -25,6 +19,7 @@ export interface DetectOptions {
   onStep?: OnStep;
   /** The bench may pass cached lines; the import reads the file. */
   reader?: LinesReader;
+  mediaRender?: MediaRender;
 }
 
 export interface DetectResult {
@@ -37,15 +32,14 @@ export interface DetectResult {
 
 const noStep: OnStep = () => Promise.resolve();
 
-async function step<T>(onStep: OnStep, id: StepId, run: () => Promise<T>, note: (r: T) => string) {
-  await onStep({ step: id, status: 'running', done: 0, total: 0, note: null });
-  const result = await run();
-  await onStep({ step: id, status: 'done', done: 1, total: 1, note: note(result) });
-  return result;
-}
-
 /** Steps 3–5 over the lines: roles, questions, doubts; each reported on its own. */
-async function draft(fileName: string, file: FileLines, onStep: OnStep, given?: LineRole[]) {
+async function draft(
+  fileName: string,
+  file: FileLines,
+  onStep: OnStep,
+  given?: LineRole[],
+  render?: MediaRender,
+) {
   const roles = await step(
     onStep,
     'roles',
@@ -55,7 +49,7 @@ async function draft(fileName: string, file: FileLines, onStep: OnStep, given?: 
   const questions = await step(
     onStep,
     'link',
-    () => linkQuestions(fileName, file, roles),
+    () => linkQuestions(fileName, file, roles, render),
     (q) => `${q.length} questions`,
   );
   const doubts = await step(
@@ -76,7 +70,7 @@ export async function detect(fileName: string, options: DetectOptions): Promise<
     () => readLines(fileName, options.reader),
     (read) => `${read.pages.length} pages, ${read.lines.length} lines`,
   );
-  const first = await draft(fileName, file, onStep);
+  const first = await draft(fileName, file, onStep, undefined, options.mediaRender);
   let current = first;
   let usage: LessonUsage[] = [];
   let stopped: DetectResult['stopped'] = null;
@@ -95,7 +89,7 @@ export async function detect(fileName: string, options: DetectOptions): Promise<
     usage = helped.usage;
     corrections = helped.corrections;
     stopped = helped.failure ? { failure: helped.failure, resumeAfter: helped.resumeAfter } : null;
-    current = await draft(fileName, file, noStep, helped.roles);
+    current = await draft(fileName, file, noStep, helped.roles, options.mediaRender);
     await onStep({
       step: 'assist',
       status: helped.failure ? 'failed' : 'done',

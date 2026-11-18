@@ -2,9 +2,9 @@ import type { AiProvider } from '../../providers/index.js';
 import type { JobRow } from '../adapters/import-repository.js';
 import type { SourcesDeps } from './deps.js';
 import { PAUSING } from './manage-imports.js';
+import { sumUsage } from './lesson-usage.js';
 import {
   readWithPipeline,
-  sumUsage,
   type PipelineInput,
   type PipelineReading,
 } from './read-with-pipeline.js';

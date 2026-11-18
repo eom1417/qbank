@@ -32,7 +32,8 @@ const QUESTION_CHECKS = [
 /** M39 step 5: the twelve generic checks (plan §4), none of them tied to a kind of file. */
 export function runChecks(file: FileLines, roles: LineRole[], questions: DraftQuestion[]): Doubt[] {
   const lengths = questions.flatMap((q) => q.options.map((o) => optionText(file, o.lines).length));
-  const ctx: CheckContext = { file, medianOption: median(lengths) };
+  const byLine = new Map(roles.map((role) => [role.line, role]));
+  const ctx: CheckContext = { file, medianOption: median(lengths), roles: byLine };
   const perQuestion = questions.flatMap((q, index) => [
     ...QUESTION_CHECKS.flatMap((check) => check(q, index, ctx)),
     ...pictureCheck(q, index, ctx, questions),

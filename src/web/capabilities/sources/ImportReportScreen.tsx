@@ -1,3 +1,4 @@
+import { DetectionIssues } from './DetectionIssues.js';
 import { useCallback } from 'react';
 import { Link, useParams } from 'react-router';
 import type { ImportResponse } from '../../../contracts/sources.js';
@@ -93,6 +94,7 @@ function Report({ initial }: { initial: ImportResponse }) {
         </MutedText>
         <QueueNote job={job} />
         <ImportSteps steps={job.steps} />
+        <DetectionIssues issues={job.detectionIssues} />
         {FINISHED_STAGES.has(job.stage) && (
           <MutedText>
             {t('source.questions')}: {job.questionsFound} · {t('source.review')}:{' '}

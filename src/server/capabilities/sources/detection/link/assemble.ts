@@ -55,8 +55,24 @@ function carryOn(state: State, line: Line): void {
   if (state.part === 'explanation') question.explanation.push(line.id);
 }
 
+/**
+ * The question whose next option the roles step read past other text (a pasted explanation
+ * between its options); null when the letter does not follow on or the question is answered.
+ */
+function interrupted(state: State, role: LineRole): DraftQuestion | null {
+  const question = state.current;
+  if (!question || question.answer || question.options.length === 0) return null;
+  return role.letter === answerLetter(question.options.length) ? question : null;
+}
+
 function addOption(state: State, line: Line, role: LineRole): void {
-  const question = ongoing(state);
+  const question = interrupted(state, role) ?? ongoing(state);
+  const last = question.options.at(-1);
+  // The roles step marks a wrapped line with its option's letter: more of the same option.
+  if (last && state.part === 'option' && role.letter === last.letter && !optionLabel(line.text)) {
+    last.lines.push(line.id);
+    return;
+  }
   const letter = role.letter ?? answerLetter(question.options.length);
   const label = optionLabel(line.text)?.label ?? letter;
   question.options.push({ letter, label, lines: [line.id] });
@@ -114,6 +130,19 @@ const READ: Record<Role, (state: State, line: Line, role: LineRole) => void> = {
 /** Roles that leave an open key section open (page furniture between two key lines). */
 const KEEPS_KEY: ReadonlySet<Role> = new Set(['key_table', 'filler', 'note', 'tag']);
 
+/**
+ * A question printed with one option and no answer is answered by it, as the file's own text
+ * shows it (an OCR read may have lost the others): evidence `single_option`, kept for review.
+ */
+function answerLoneOptions(file: FileLines, questions: DraftQuestion[]): void {
+  for (const question of questions) {
+    const [only] = question.options;
+    if (question.answer || question.options.length !== 1 || !only) continue;
+    if (file.lines[only.lines[0] ?? -1]?.source !== 'text') continue;
+    question.answer = { letters: [only.letter], lines: [], from: 'single_option' };
+  }
+}
+
 /** Every question of the file as line ids, answers from inline lines and key sections. */
 export function assemble(file: FileLines, roles: readonly LineRole[]): DraftQuestion[] {
   const state: State = { questions: [], current: null, part: 'stem', keys: [], keyOpen: false };
@@ -125,5 +154,6 @@ export function assemble(file: FileLines, roles: readonly LineRole[]): DraftQues
     state.keyOpen = KEEPS_KEY.has(role.role) && (state.keyOpen || role.role === 'key_table');
   }
   applyKeys(state.questions, state.keys);
+  answerLoneOptions(file, state.questions);
   return state.questions;
 }

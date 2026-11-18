@@ -2,11 +2,9 @@
 // only: line ids and their words); the accepted roles replace the rules' roles for those lines.
 // A lesson failure stops the step: what was done so far is returned with the failure.
 import { createHash } from 'node:crypto';
-import type { LessonUsage } from '../../../../../contracts/sources.js';
 import type { AiFailure } from '../../../providers/index.js';
 import { regionText, rolesLesson, type RolesInput } from '../../domain/pipeline/lessons/roles.js';
 import { SHEET_LIMIT } from '../../domain/pipeline/sheet-layout.js';
-import { sumUsage } from '../../use-cases/read-with-pipeline.js';
 import {
   runLesson,
   type LessonDeps,
@@ -15,30 +13,40 @@ import {
 } from '../../use-cases/run-lesson.js';
 import type { Doubt, FileLines, LineRole } from '../contract.js';
 import { acceptAnswer, type Accepted } from './accept.js';
-import { regionOf } from './regions.js';
+import { doubtWindows, regionOf } from './regions.js';
+import { regionImage } from './region-image.js';
 
 export interface Assisted {
   roles: LineRole[];
   corrections: Map<number, string>;
-  usage: LessonUsage[];
+  /** Every call, as made: the job sums them with its earlier runs (`sumUsage`). */
+  usage: CallUsage[];
   failure: AiFailure | null;
   resumeAfter: Date | null;
 }
 
-function itemOf(fileName: string, file: FileLines, region: number[]): LessonItem<RolesInput> {
+async function itemOf(
+  fileName: string,
+  file: FileLines,
+  region: number[],
+): Promise<LessonItem<RolesInput>> {
   const shown = region.flatMap((id) => {
     const line = file.lines[id];
     return line ? [{ id, text: line.text, ocr: line.source !== 'text' }] : [];
   });
   const text = regionText(shown);
-  const fingerprint = createHash('sha256').update(`${fileName}\n${text}`).digest('hex');
-  return { input: { lines: region }, fingerprint, image: null, text };
+  const crop = await regionImage(fileName, file, region);
+  const fingerprint = createHash('sha256')
+    .update(`${fileName}\n${text}\n${crop?.fingerprint ?? ''}`)
+    .digest('hex');
+  return { input: { lines: region }, fingerprint, image: crop?.image ?? null, text };
 }
 
 /** The distinct regions of the doubts, in doubt order. */
 function regionsOf(file: FileLines, roles: readonly LineRole[], doubts: readonly Doubt[]) {
   const seen = new Set<string>();
   return doubts
+    .flatMap(doubtWindows)
     .map((doubt) => regionOf(doubt, roles, file.lines.length))
     .filter((region) => {
       const key = region.join(',');
@@ -71,7 +79,7 @@ export async function assistDoubts(
   const result = (failure: AiFailure | null, resumeAfter: Date | null): Assisted => ({
     roles: merge(roles, found),
     corrections: found.corrections,
-    usage: sumUsage(null, calls),
+    usage: calls,
     failure,
     resumeAfter,
   });
@@ -80,7 +88,7 @@ export async function assistDoubts(
     const run = await runLesson(
       deps,
       rolesLesson,
-      sheet.map((r) => itemOf(fileName, file, r)),
+      await Promise.all(sheet.map((r) => itemOf(fileName, file, r))),
     );
     calls.push(...run.usage);
     run.results.forEach((done, index) => {

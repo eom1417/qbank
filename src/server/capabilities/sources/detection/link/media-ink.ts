@@ -1,5 +1,7 @@
+import { pageRegions } from '../../adapters/page-regions.js';
+import type { MediaRegion } from '../../domain/media-regions.js';
 import { renderPage } from '../../adapters/raster.js';
-import { renderRegion } from '../../adapters/region-image.js';
+import { renderColourPage } from '../../adapters/region-image.js';
 import { inkAround, pickMarked, type Raster } from '../../domain/answer-marks.js';
 import type { Box, PageText } from '../../domain/page.js';
 import { inkNotes, noteZones, type QuestionFrame } from '../../domain/pipeline/placement.js';
@@ -14,6 +16,8 @@ import { letterBox } from './media-view.js';
 // picture, shown after the reveal). The rendering is a parameter: tests pass a fake page.
 
 export interface MediaRender {
+  /** Rendered figures and tables, including scans without embedded figure images. */
+  regions?(file: string, pages: readonly PageText[]): Promise<MediaRegion[]>;
   /** The page in grey, for pen marks at option letters. */
   grey(file: string, page: number): Promise<Raster>;
   /** The page in colour at `dpi`, for handwritten notes. */
@@ -21,9 +25,9 @@ export interface MediaRender {
 }
 
 export const defaultRender: MediaRender = {
+  regions: pageRegions,
   grey: (file, page) => renderPage(file, page),
-  colour: (file, page, dpi) =>
-    renderRegion(file, page.page, { x0: 0, y0: 0, x1: page.width, y1: page.height }, dpi),
+  colour: renderColourPage,
 };
 
 /** Notes are looked for on a coarse colour rendering of the page. */

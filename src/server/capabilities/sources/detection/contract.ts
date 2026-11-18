@@ -83,7 +83,11 @@ export interface DraftQuestion {
   labelLine: number | null;
   stem: number[];
   options: { letter: string; label: string; lines: number[] }[];
-  answer: { letters: string[]; lines: number[]; from: 'inline' | 'key_table' | 'pen_mark' } | null;
+  answer: {
+    letters: string[];
+    lines: number[];
+    from: 'inline' | 'key_table' | 'pen_mark' | 'single_option';
+  } | null;
   /** Signals that disagree about the answer (a key against a pen mark…): review. */
   conflicts: string[];
   explanation: number[];

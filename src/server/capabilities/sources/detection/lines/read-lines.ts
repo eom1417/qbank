@@ -1,7 +1,8 @@
 import { buildUnits, inParallel, scanText, type FileUnits } from '../../adapters/pipeline-units.js';
-import { readTextLayer } from '../../adapters/readers.js';
+import { readByOcr, readTextLayer } from '../../adapters/readers.js';
 import { bodyFontFamilies } from '../../domain/lines.js';
 import type { PageText } from '../../domain/page.js';
+import { hasUnreadableText, repairWithOcr } from '../../domain/repair.js';
 import { virtualText } from '../../domain/pipeline/virtual-text.js';
 import type { FileLines, Line } from '../contract.js';
 import { measureLayout } from './layout.js';
@@ -24,9 +25,10 @@ export const defaultLinesReader: LinesReader = {
   units: buildUnits,
   pages: async (file, units) => {
     const scanned = scannedPages(units);
-    return inParallel(await readTextLayer(file), async (page) =>
-      scanned.has(page.page) ? scanText(file, page) : page,
-    );
+    return inParallel(await readTextLayer(file), async (page) => {
+      if (scanned.has(page.page)) return scanText(file, page);
+      return hasUnreadableText(page) ? repairWithOcr(page, await readByOcr(file, page.page)) : page;
+    });
   },
 };
 

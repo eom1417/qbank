@@ -40,6 +40,7 @@ function noneOfOptions(question: PipelineQuestion): boolean {
 
 /** Reasons a step names, passed on as the saved question's review reason. */
 const PASSED_ON: readonly [string, ReviewReason][] = [
+  ['detection_doubt', 'detection_doubt'],
   [KEY_DOUBT, 'key_doubt'],
   [MARK_UNCLEAR, 'mark_unclear'],
   ['picture_unreadable', 'picture_unreadable'],

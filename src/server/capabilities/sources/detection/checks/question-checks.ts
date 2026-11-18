@@ -1,4 +1,5 @@
-import type { Doubt, DraftQuestion } from '../contract.js';
+import { questionLabel } from '../../domain/labels.js';
+import type { Doubt, DraftQuestion, FileLines } from '../contract.js';
 import { partsInOrder, textOf, type CheckContext } from './question-lines.js';
 
 type QuestionCheck = (q: DraftQuestion, index: number, ctx: CheckContext) => Doubt[];
@@ -17,8 +18,14 @@ export const numberCheck: QuestionCheck = (q, index) =>
       )
     : [];
 
+/** The words after the printed label on the label line, then the stem lines. */
+const stemText = (q: DraftQuestion, file: FileLines): string => {
+  const head = q.labelLine === null ? '' : textOf(file, [q.labelLine]);
+  return `${questionLabel(head)?.text ?? ''} ${textOf(file, q.stem)}`.trim();
+};
+
 export const stemCheck: QuestionCheck = (q, index, { file }) =>
-  textOf(file, q.stem) === '' && q.pictures.length === 0
+  stemText(q, file) === '' && q.pictures.length === 0
     ? one(
         'stem',
         index,

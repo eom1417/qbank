@@ -1,3 +1,4 @@
+import { runStep } from '../detection/progress.js';
 import type { SourceLanguage } from '../../../../contracts/sources.js';
 import type { ImportStage } from '../../../platform/db/schema.js';
 import type { ReviewReason } from '../../questions/index.js';
@@ -14,9 +15,16 @@ import { recheckOutcome, triageImport } from './triage-import.js';
 import { aiTargetOf, verifyWithAi } from './verify-with-ai.js';
 import { readWithAi } from './read-with-ai.js';
 import { linkKeys } from './link-keys.js';
-import { CURRICULUM_VERSION, openLessons, type PipelineReading } from './read-with-pipeline.js';
+import {
+  CURRICULUM_VERSION,
+  openLessons,
+  rulesOnly,
+  type PipelineReading,
+} from './read-with-pipeline.js';
 import { aiFailed, readKeeping } from './pipeline-stops.js';
 import { keepBlocks, tierOf } from './pipeline-report.js';
+import { stepRecorder } from './import-steps.js';
+import { enhanceOf } from './manage-imports.js';
 import { revokedKey } from '../adapters/measurements.js';
 
 /** A page with fewer words than this has no usable text layer: it is read as a scan. */
@@ -214,15 +222,19 @@ async function savePipeline(
   const place = { ownerId: job.owner_id, bankId: source.bank_id, sourceId: source.id };
   await deps.questions.saveImported(place, questions, deps.clock.now());
   await deps.questions.saveImportExtras(place, questions, context.read.extras);
-  const triaged = await triageImport(deps, job, source.id);
+  const triaged = job.ai_provider_id
+    ? await triageImport(deps, job, source.id)
+    : { aiOutcome: 'not_used' };
   await setStage(deps, job, 'matching');
   await storeMedia(deps, place, cropped, questions);
   return { questions, aiOutcome: triaged.aiOutcome };
 }
 
-/** M34: a question source read by the pipeline with the user's AI (Z4, Q16). */
-async function pipelineOutcome(deps: SourcesDeps, job: JobRow, source: SourceRow, file: string) {
-  await setStage(deps, job, 'extracting');
+/** The capture choice of the job (M39, Q135): on unless the upload turned it off. */
+const captureOf = (job: JobRow) => enhanceOf(job).improveCapture !== false;
+
+/** The job's selected provider, or rule-only lessons when no AI was requested. */
+async function lessonsForJob(deps: SourcesDeps, job: JobRow) {
   const owner = {
     ownerId: job.owner_id,
     instanceId: job.ai_provider_id ?? '',
@@ -235,7 +247,19 @@ async function pipelineOutcome(deps: SourcesDeps, job: JobRow, source: SourceRow
     startTier: tierOf(job) ?? 'light',
     approved: (lesson: string, model: string) => !revoked.has(revokedKey(lesson, model)),
   };
-  const lessons = job.ai_provider_id ? await openLessons(deps.ai, owner, rest) : null;
+  // No AI chosen: the same detection with no model (M39). An AI chosen but gone fails (Z4).
+  return job.ai_provider_id ? openLessons(deps.ai, owner, rest) : rulesOnly(job.owner_id, rest);
+}
+
+/** A file with unowned source defects cannot quietly finish as complete. */
+function detectionStage(stage: ImportStage, issues: PipelineReading['issues']): ImportStage {
+  return stage === 'completed' && issues?.length ? 'needs_review' : stage;
+}
+
+/** M34: a question source read by the pipeline with the user's AI (Z4, Q16). */
+async function pipelineOutcome(deps: SourcesDeps, job: JobRow, source: SourceRow, file: string) {
+  await setStage(deps, job, 'extracting');
+  const lessons = await lessonsForJob(deps, job);
   if (!lessons) return aiFailed('ai_not_ready', 'not_ready');
   const rows = await deps.imports.pages(job.id);
   const readings = new Map(
@@ -245,15 +269,29 @@ async function pipelineOutcome(deps: SourcesDeps, job: JobRow, source: SourceRow
     ]),
   );
   const pages = { from: source.page_from, to: source.page_to };
-  const reading = await readKeeping(deps, job, lessons, { file, pages, readings });
+  const captureAi = !!job.ai_provider_id && captureOf(job);
+  const steps = {
+    onStep: stepRecorder(deps, job.id),
+    captureAi,
+    answerAi: !!job.ai_provider_id,
+    sourcePages: contentOf(rows, ['done', 'unreadable']),
+  };
+  const reading = await readKeeping(deps, job, lessons, { file, pages, readings, ...steps });
   if (reading === null) return null;
   if ('failed' in reading) return reading.failed;
   const { read, usage, stoppedBy, detail } = reading;
-  const saved = await savePipeline(deps, job, source, { file, rows, read });
-  const facts = await keepBlocks(deps, job, read);
+  const { saved, facts } = await runStep(
+    steps.onStep,
+    'save',
+    async () => {
+      const saved = await savePipeline(deps, job, source, { file, rows, read });
+      return { saved, facts: await keepBlocks(deps, job, read) };
+    },
+    (result) => `${result.saved.questions.length}`,
+  );
   const counts = await countsOf(deps, job, rows, saved.questions.length);
   const aiOutcome = stoppedBy ?? saved.aiOutcome;
-  const stage = counts.stage(aiOutcome);
+  const stage = detectionStage(counts.stage(aiOutcome), read.issues);
   return {
     stage,
     questions_found: counts.found,

@@ -1,4 +1,4 @@
-import type { TextLine } from '../../domain/lines.js';
+import { toTextLine as textLine } from '../roles/geometry.js';
 import type { Box } from '../../domain/page.js';
 import type { QuestionFrame } from '../../domain/pipeline/placement.js';
 import { pageFlow, virtualText, type VirtualText } from '../../domain/pipeline/virtual-text.js';
@@ -6,15 +6,6 @@ import type { DraftQuestion, FileLines, Line } from '../contract.js';
 
 // M39 step 4 (media): the file's lines and draft questions seen as the M34 placement rules read
 // them (a virtual text and question frames), so those rules are reused as they are.
-
-const textLine = (line: Line): TextLine => ({
-  page: line.page,
-  text: line.text,
-  box: line.box,
-  words: line.words,
-  rtl: line.rtl,
-  start: line.rtl ? line.box.x1 : line.box.x0,
-});
 
 /** Each unit's first and last line ids. */
 function unitSpans(lines: readonly Line[]) {

@@ -13,25 +13,43 @@ export const optionText = (file: FileLines, lines: number[]): string => bare(tex
 const holdsWords = (text: string) =>
   inlineAnswer(text) !== null || explanationStart(text) !== null || isKeyHeading(text);
 
-export const optionSequence: QuestionCheck = (q, index, { file }) => {
+/** The roles read the option's letter in doubt (one OCR lost, taken from its place). */
+const doubtfulLetter = (lines: number[], { roles }: CheckContext) =>
+  (roles.get(lines[0] ?? -1)?.confidence ?? 1) < 0.5;
+
+export const optionSequence: QuestionCheck = (q, index, ctx) => {
   const indexes = q.options.map(
-    (o) => optionLabel(textOf(file, o.lines.slice(0, 1)))?.index ?? o.letter.charCodeAt(0) - 65,
+    (o) => optionLabel(textOf(ctx.file, o.lines.slice(0, 1)))?.index ?? o.letter.charCodeAt(0) - 65,
   );
-  if (indexes.every((value, at) => value === at)) return [];
+  const inOrder = indexes.every((value, at) => value === at);
+  if (inOrder && !q.options.some((o) => doubtfulLetter(o.lines, ctx))) return [];
   const lines = q.options.flatMap((o) => o.lines.slice(0, 1));
   return [
     { check: 'option_sequence', question: index, lines, detail: 'Option labels skip or repeat.' },
   ];
 };
 
-export const optionHoldsOther: QuestionCheck = (q, index, { file, medianOption }) =>
+/** A line after the option's first whose role the roles step left in doubt. */
+const doubtedLine = (lines: number[], { roles }: CheckContext) =>
+  lines.slice(1).some((id) => {
+    const role = roles.get(id);
+    return !!role && (role.role === 'unknown' || role.confidence < 0.5);
+  });
+
+const holdsDetail = (words: boolean, long: boolean) => {
+  if (words) return 'An option holds answer or explanation words.';
+  return long
+    ? 'An option is far longer than the file’s options.'
+    : 'An option holds a line of unclear role.';
+};
+
+export const optionHoldsOther: QuestionCheck = (q, index, ctx) =>
   q.options.flatMap((option): Doubt[] => {
+    const { file, medianOption } = ctx;
     const words = option.lines.some((id) => holdsWords(bare(textOf(file, [id]))));
     const long = medianOption > 0 && optionText(file, option.lines).length > 3 * medianOption;
-    if (!words && !long) return [];
-    const detail = words
-      ? 'An option holds answer or explanation words.'
-      : 'An option is far longer than the file’s options.';
+    if (!words && !long && !doubtedLine(option.lines, ctx)) return [];
+    const detail = holdsDetail(words, long);
     return [{ check: 'option_holds_other', question: index, lines: option.lines, detail }];
   });
 
