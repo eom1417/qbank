@@ -103,6 +103,17 @@ function reviewReasons(detection: Detection, question: DraftQuestion, index: num
   return reasons;
 }
 
+/**
+ * A question with no options asked, then answered in a statement ("…early? Two trials…"): the
+ * question ends at its mark and the statement is its explanation. A stem that ends asking stays.
+ */
+function askedThenAnswered(stem: string, options: number): [string, string] {
+  const mark = stem.indexOf('? ');
+  const rest = mark >= 0 ? stem.slice(mark + 2).trim() : '';
+  if (options > 0 || !rest || rest.endsWith('?')) return [stem, ''];
+  return [stem.slice(0, mark + 1), rest];
+}
+
 /** The stem, explanation and case texts without tags, and every tag the question carries. */
 function textOf(reader: Reader, question: DraftQuestion) {
   const stem = takeTags(reader.join(stemIds(question), withoutQuestionLabel));
@@ -110,9 +121,10 @@ function textOf(reader: Reader, question: DraftQuestion) {
     reader.join(question.explanation, (text) => explanationStart(text) ?? text),
   );
   const caseText = reader.join(question.caseLines);
+  const [asked, answer] = askedThenAnswered(stem.rest, question.options.length);
   return {
-    stem: stem.rest,
-    explanation: explanation.rest || null,
+    stem: asked,
+    explanation: [answer, explanation.rest].filter(Boolean).join(' ') || null,
     caseText: caseText || null,
     tags: combineTags([question.tags, stem.tags, explanation.tags]),
   };

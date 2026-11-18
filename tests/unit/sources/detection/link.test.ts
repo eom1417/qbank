@@ -352,3 +352,24 @@ describe('M39 step 4: a second printed answer after the explanation', () => {
     expect(question?.explanation).toEqual([4]);
   });
 });
+
+describe('M39 step 4: a question with no options and its answer after the question mark', () => {
+  it('ends the question at the mark; the statement after it is the explanation', () => {
+    const { file, roles } = fileOf([
+      label(53, '69. Should we feed infants allergenic foods early?', 69),
+      [53, 'Two landmark trials changed the advice.', 'stem'],
+    ]);
+    const [question] = toDetectedQuestions(detectionOf(file, roles));
+    expect(question?.stem).toBe('Should we feed infants allergenic foods early?');
+    expect(question?.explanation).toBe('Two landmark trials changed the advice.');
+  });
+
+  it('keeps a stem of two questions whole', () => {
+    const { file, roles } = fileOf([
+      label(1, '2. A boy has a rash. What is it?', 2),
+      [1, 'How would you treat it?', 'stem'],
+    ]);
+    const [question] = toDetectedQuestions(detectionOf(file, roles));
+    expect(question?.stem).toBe('A boy has a rash. What is it? How would you treat it?');
+  });
+});
