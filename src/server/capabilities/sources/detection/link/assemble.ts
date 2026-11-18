@@ -80,10 +80,20 @@ function addOption(state: State, line: Line, role: LineRole): void {
   state.part = 'option';
 }
 
+/**
+ * A printed answer after the explanation of a question already answered is the answer of a
+ * question whose label was not read: it, and the text after it, belong to no question here.
+ */
+const answeredBefore = (state: State) =>
+  state.part === 'explanation' && state.current?.answer?.from === 'inline';
+
+const lettersOf = (role: LineRole) => role.letters ?? (role.letter ? [role.letter] : []);
+
 function addAnswer(state: State, line: Line, role: LineRole): void {
+  if (answeredBefore(state)) state.current = null;
   const question = state.current;
   if (!question) return;
-  const letters = role.letters ?? (role.letter ? [role.letter] : []);
+  const letters = lettersOf(role);
   const before = question.answer?.from === 'inline' ? question.answer : null;
   question.answer = {
     letters: [...new Set([...(before?.letters ?? []), ...letters])],

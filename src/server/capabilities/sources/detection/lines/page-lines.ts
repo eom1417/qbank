@@ -1,6 +1,7 @@
 import type { PageUnits } from '../../adapters/pipeline-units.js';
 import { pageLines, type TextLine } from '../../domain/lines.js';
 import { fontFamily, type PageText, type PageWord } from '../../domain/page.js';
+import { area, intersect } from '../../domain/media-regions.js';
 import { pictureLines } from '../../domain/pipeline/picture-lines.js';
 import type { Unit } from '../../domain/pipeline/units.js';
 import { pageFlow, readsAsText } from '../../domain/pipeline/virtual-text.js';
@@ -34,6 +35,19 @@ export interface PageInput {
 /** Typed on a device over the page: its fonts' names start with a dot (".SFUI"). */
 const deviceWord = (word: PageWord) => !!word.font && fontFamily(word.font).startsWith('.');
 
+/**
+ * Words over the print: typed on a device, or in a font outside the body drawn over a body word
+ * (a stamp, an annotation). Printed words never overlap one another.
+ */
+function overPrint(text: PageText, body: ReadonlySet<string> | null): (word: PageWord) => boolean {
+  const inBody = (word: PageWord) => !!word.font && !!body?.has(fontFamily(word.font));
+  const printed = text.words.filter(inBody);
+  const covers = (word: PageWord) =>
+    printed.some((under) => area(intersect(under.box, word.box)) >= area(word.box) / 2);
+  const stamped = (word: PageWord) => !!word.font && !inBody(word) && covers(word);
+  return (word) => deviceWord(word) || stamped(word);
+}
+
 const boxKey = (line: { page: number; box: TextLine['box'] }) =>
   `${line.page}:${line.box.x0}:${line.box.y0}:${line.box.x1}:${line.box.y1}`;
 
@@ -45,7 +59,7 @@ const boxKey = (line: { page: number; box: TextLine['box'] }) =>
 function ownLines(input: PageInput): TextLine[] {
   const { text, units } = input;
   const body = units?.scanned ? null : input.body;
-  const lines = printedOnly(pageLines(text, body), text);
+  const lines = printedOnly(pageLines(text, body), text, body);
   if (!body) return lines;
   const used = new Set(lines.flatMap((line) => line.words));
   const rest = text.words.filter((word) => !used.has(word));
@@ -53,9 +67,10 @@ function ownLines(input: PageInput): TextLine[] {
 }
 
 /** The lines with their device words taken out; a line of device words only stays as it is. */
-function printedOnly(lines: readonly TextLine[], text: PageText): TextLine[] {
+function printedOnly(lines: readonly TextLine[], text: PageText, body: ReadonlySet<string> | null) {
+  const over = overPrint(text, body);
   return lines.flatMap((line) => {
-    const printed = line.words.filter((word) => !deviceWord(word));
+    const printed = line.words.filter((word) => !over(word));
     if (printed.length === line.words.length || printed.length === 0) return [line];
     return pageLines({ ...text, words: printed }, null);
   });
@@ -77,6 +92,7 @@ function textDrafts(input: PageInput, rank: ReturnType<typeof ranker>): DraftLin
   const units = input.units?.units ?? [];
   const byBox = new Map(units.filter((u) => u.kind !== 'image').map((u) => [boxKey(u), u]));
   const source: LineSource = input.units?.scanned ? 'ocr' : 'text';
+  const over = overPrint(input.text, input.units?.scanned ? null : input.body);
   return ownLines(input).map((line, index) => {
     const unit = byBox.get(boxKey(line));
     return {
@@ -84,7 +100,7 @@ function textDrafts(input: PageInput, rank: ReturnType<typeof ranker>): DraftLin
       source,
       unitId: unit?.id ?? `p${line.page}-line${index}`,
       confidence: null,
-      deviceNote: line.words.some(deviceWord),
+      deviceNote: line.words.some(over),
       rank: unit ? rank.unit(unit) : rank.line(line),
       sub: unit ? unit.order : line.box.y0,
     };

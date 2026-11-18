@@ -82,10 +82,13 @@ function looseLetter(line: Line): string | null {
   return letter && second ? letter : null;
 }
 
+/** No letter and no digit: a stray bracket, comma or rule carries no words of the text. */
+const wordless = (text: string) => !/[\p{L}\p{N}]/u.test(text);
+
 function signalOf(line: Line, measure: Measure, filler: boolean): Signals {
   const text = line.text.trim();
   return {
-    filler,
+    filler: filler || wordless(text),
     note: line.deviceNote,
     tag: isTagLine(text),
     heading: isSectionLine(text) || HEADING_WORD.test(text),

@@ -150,3 +150,22 @@ describe('the layout measured in step 2 (M39)', () => {
     expect(layout.margins.get(1)).toBe(Math.round(lines[0]?.box.x1 ?? 0));
   });
 });
+
+describe('a stamp over the print (M39 step 2)', () => {
+  it('takes a word in another font drawn over a printed word off the printed line', () => {
+    // "B. Hyponatremia dehydration" with "Oi" stamped over "Hyponatremia" (another font).
+    const stem = row(
+      '42. A patient was admitted with severe dehydration',
+      36,
+      86,
+      'TimesNewRomanPSMT',
+    );
+    const option = row('B. Hyponatremia dehydration', 36, 100, 'TimesNewRomanPSMT');
+    const stamp = row('Oi', 80, 99, 'Helvetica');
+    const note = row('check', 400, 160, '.SFUI-Regular');
+    const read = linesOf(fileUnits([]), [page([...stem, ...option, ...stamp, ...note])]);
+    const printed = read.lines.filter((l) => !l.deviceNote).map((l) => l.text);
+    expect(printed.slice(1)).toEqual(['B. Hyponatremia dehydration']);
+    expect(read.lines.filter((l) => l.deviceNote).map((l) => l.text)).toEqual(['Oi', 'check']);
+  });
+});

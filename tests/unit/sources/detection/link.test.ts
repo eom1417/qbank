@@ -335,3 +335,20 @@ describe('M39 step 4: an explanation that opens with its question number and ans
     expect(question?.answer).toBeNull();
   });
 });
+
+describe('M39 step 4: a second printed answer after the explanation', () => {
+  it('is not merged into the question that already has its answer', () => {
+    const { file, roles } = fileOf([
+      label(54, 'Q39) Which finding', 39),
+      option(54, 'A. Fever', 'A'),
+      option(54, 'E. Intussusception', 'E'),
+      [54, 'Answer: E', 'answer', { letters: ['E'] }],
+      [54, 'A history of intussusception is a contraindication.', 'explanation'],
+      [55, 'Correct Answer: B', 'answer', { letters: ['B'] }],
+      [55, 'Marked neutrophilia is expected here.', 'explanation'],
+    ]);
+    const [question] = assemble(file, roles);
+    expect(question?.answer?.letters).toEqual(['E']);
+    expect(question?.explanation).toEqual([4]);
+  });
+});
