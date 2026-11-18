@@ -64,6 +64,13 @@ function hasPrompt(walk: Walk, ids: readonly number[]): boolean {
   return /[?؟]|\b(?:which|what|how|why|when|where|following)\b/i.test(text);
 }
 
+/**
+ * A stem that asks something and is the file's own: one read in a pasted picture is another
+ * book's question (an excerpt), wherever its options were read.
+ */
+const ownStem = (walk: Walk, ids: [number, ...number[]]) =>
+  hasPrompt(walk, ids) && !excerpt(walk, walk.file.lines[ids[0]] as Line);
+
 /** Starts an unlabelled question at `line` ("A."), or null when the line does not open one. */
 export function unlabelledStart(walk: Walk, line: Line, signals: Signals): LineRole | null {
   const { option } = signals;
@@ -71,7 +78,7 @@ export function unlabelledStart(walk: Walk, line: Line, signals: Signals): LineR
   if (!secondOptionSoon(walk, line.id, option.system)) return null;
   const number = (walk.last ?? 0) + 1;
   const [first, ...rest] = stemBlock(walk, line);
-  if (first === undefined || !hasPrompt(walk, [first, ...rest])) return null;
+  if (first === undefined || !ownStem(walk, [first, ...rest])) return null;
   openQuestion(walk, number, true);
   walk.system = option.system;
   walk.roles[first] = { line: first, role: 'label', confidence: INFERRED };

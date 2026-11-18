@@ -1,51 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import type {
-  Detection,
-  FileLines,
-  Line,
-  LineRole,
-  Role,
-} from '../../../../src/server/capabilities/sources/detection/contract.js';
+import type { Detection } from '../../../../src/server/capabilities/sources/detection/contract.js';
 import { assemble } from '../../../../src/server/capabilities/sources/detection/link/assemble.js';
 import { toDetectedQuestions } from '../../../../src/server/capabilities/sources/detection/link/to-detected.js';
-
-type Row = [page: number, text: string, role: Role, extra?: Partial<LineRole>];
-
-/** A synthetic file: one line per row, stacked down each page, with its role. */
-function fileOf(rows: Row[]): { file: FileLines; roles: LineRole[] } {
-  const lines: Line[] = rows.map(([page, text], id) => {
-    const box = { x0: 10, y0: id * 20, x1: 300, y1: id * 20 + 12 };
-    const words = text.split(' ').map((word, at) => ({
-      text: word,
-      box: { x0: 10 + at * 30, y0: box.y0, x1: 35 + at * 30, y1: box.y1 },
-      font: 'Body',
-    }));
-    const base = { id, page, box, text, words, unitId: `u${id}`, rtl: false };
-    return { ...base, source: 'text', confidence: null, deviceNote: false };
-  });
-  const roles = rows.map(([, , role, extra], line) => ({ line, role, confidence: 1, ...extra }));
-  const layout = { lineHeight: 12, lineGap: 8, paragraphGap: 16, margins: new Map() };
-  return { file: { lines, units: new Map() as never, pages: [], layout }, roles };
-}
-
-const label = (page: number, text: string, number: number): Row => [
-  page,
-  text,
-  'label',
-  { number },
-];
-const option = (page: number, text: string, letter: string): Row => [
-  page,
-  text,
-  'option',
-  { letter },
-];
-const keys = (text: string, entries: [number, string][]): Row => [
-  9,
-  text,
-  'key_table',
-  { entries: entries.map(([number, letter]) => ({ number, letters: [letter] })) },
-];
+import { detectionOf, fileOf, keys, label, option } from '../../../support/detection-links.js';
 
 describe('M39 step 4: linking questions from line roles', () => {
   it('builds a question with an inline answer and its explanation', () => {
@@ -167,15 +124,6 @@ describe('M39 step 4: questions across pages and without numbers', () => {
     ]);
   });
 });
-
-function detectionOf(
-  file: FileLines,
-  roles: LineRole[],
-  extra: Partial<Detection> = {},
-): Detection {
-  const questions = assemble(file, roles);
-  return { file, roles, questions, doubts: [], corrections: new Map(), ...extra };
-}
 
 describe('M39 step 4: questions as the answers layer takes them', () => {
   const { file, roles } = fileOf([
@@ -385,5 +333,18 @@ describe('M39 step 4: one option circled by hand', () => {
     expect(question?.answers).toEqual(['A']);
     expect(question?.evidence).toEqual(['pen_mark']);
     expect(question?.options[0]?.text).toBe('Tricuspid atresia');
+  });
+});
+
+describe('M39 step 4: a label with nothing of a question after it', () => {
+  it('is no question: no stem, no options, no picture', () => {
+    const { file, roles } = fileOf([
+      label(8, 'Q. 12', 12),
+      label(8, 'Q13) Which drug is first?', 13),
+      option(8, 'A. Aspirin', 'A'),
+      option(8, 'B. Heparin', 'B'),
+    ]);
+    const questions = toDetectedQuestions(detectionOf(file, roles));
+    expect(questions.map((question) => question.number)).toEqual([13]);
   });
 });

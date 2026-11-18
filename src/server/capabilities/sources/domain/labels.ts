@@ -37,8 +37,9 @@ const OPTION_PATTERNS: readonly [RegExp, (label: string) => OptionSystem][] = [
 ];
 
 // How OCR reads a hand-circled letter ("@)Tricuspid atresia", "© Hypothalamic…", "G)GnRH…"),
-// or the circle's left arc before the letter ("(A. Gordon…", "(A-Reassurance").
-const CIRCLED = /^(?:[@©®]\)?|G\)|\([A-H]\s*[.\-–])\s*(.*)$/;
+// the circle's left arc before the letter ("(A. Gordon…", "(A-Reassurance"), or the letter
+// inside the circle read as a digit ("(8) skin biopsy" for a circled D).
+const CIRCLED = /^(?:[@©®]\)?|G\)|\([A-H]\s*[.\-–]|\(\d\))\s*(.*)$/;
 
 /** The option's text when OCR read its circled letter as a symbol, or null. */
 export function circledLabel(line: string): string | null {

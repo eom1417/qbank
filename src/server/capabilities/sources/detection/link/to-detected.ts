@@ -152,6 +152,10 @@ function convert(reader: Reader, question: DraftQuestion, key: (page: number) =>
   };
 }
 
+/** A label with nothing of a question after it ("Q. 12" alone): no stem, options or picture. */
+const emptyQuestion = (q: DetectedQuestion) =>
+  !q.stem.trim() && q.options.length < 2 && q.pictures.length === 0;
+
 /** Every linked question of the file as the answers layer takes it. */
 export function toDetectedQuestions(detection: Detection): DetectedQuestion[] {
   const reader = new Reader(detection);
@@ -162,8 +166,9 @@ export function toDetectedQuestions(detection: Detection): DetectedQuestion[] {
     seen.set(base, occurrence + 1);
     return `${base}-${occurrence}`;
   };
-  return detection.questions.map((question, index) => ({
+  const all = detection.questions.map((question, index) => ({
     ...convert(reader, question, keyOf(question.number)),
     reviewReasons: reviewReasons(detection, question, index),
   }));
+  return all.filter((question) => !emptyQuestion(question));
 }

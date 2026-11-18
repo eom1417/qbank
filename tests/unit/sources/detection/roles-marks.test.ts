@@ -154,3 +154,34 @@ describe('a numbered list inside a question (M39 step 3)', () => {
     expect(roles.filter((role) => role.role === 'label').map((role) => role.number)).toEqual([40]);
   });
 });
+
+describe('a question pasted in a screenshot under a typed one (M39 step 3)', () => {
+  it('stays an excerpt even when its options are read outside the picture', () => {
+    const roles = classifyLines(
+      fileOf([
+        at('49. What is your next step?', 100),
+        at('A. Reassurance', 114),
+        at('B. Surgery', 128),
+        at('Q213) Which abnormality is common in prune belly?', 170, { picture: 'shot' }),
+        at('A. Cryptorchidism', 184),
+        at('B. Hypospadias', 198),
+      ]),
+    );
+    expect(roles.filter((role) => role.role === 'label').map((role) => role.number)).toEqual([49]);
+  });
+});
+
+describe('a circled letter OCR read as a digit in brackets (M39 step 3)', () => {
+  it('is the next option, circled', () => {
+    const roles = classifyLines(
+      fileOf([
+        at('36. Which is correct?', 100),
+        at('A. Intussusception', 114),
+        at('B. Thrombocytopenia', 128),
+        at('C. Low IgA', 142),
+        at('(8) skin biopsy will confirm vasculitis', 156),
+      ]),
+    );
+    expect(roles[4]).toMatchObject({ role: 'option', letter: 'D', circled: true });
+  });
+});
