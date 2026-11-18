@@ -26,12 +26,22 @@ function keepRegionWords(
   }
 }
 
-/** A rendered region and an embedded image covering the same physical content. */
-function matches(picture: PipelinePicture, region: MediaRegion): boolean {
-  if (picture.spot.page !== region.page || picture.imageClass === 'handwriting_ink') return false;
-  const smaller = Math.min(area(picture.spot.box), area(region.box));
-  return smaller > 0 && area(intersect(picture.spot.box, region.box)) >= smaller * 0.7;
+type Spot = PipelinePicture['spot'];
+
+/** Two boxes on one page where most of the smaller one lies inside the other. */
+function sameContent(spot: Spot, region: MediaRegion): boolean {
+  if (spot.page !== region.page) return false;
+  const smaller = Math.min(area(spot.box), area(region.box));
+  return smaller > 0 && area(intersect(spot.box, region.box)) >= smaller * 0.7;
 }
+
+/** A rendered region and an embedded image covering the same physical content. */
+const matches = (picture: PipelinePicture, region: MediaRegion) =>
+  picture.imageClass !== 'handwriting_ink' && sameContent(picture.spot, region);
+
+/** Rendered regions that are not a picture already read as text (its words are the content). */
+export const newRegions = (regions: readonly MediaRegion[], read: readonly Spot[]) =>
+  regions.filter((region) => !read.some((spot) => sameContent(spot, region)));
 
 /** Reuse the source's geometric linker for figures/tables absent from the image-unit list. */
 export function mergeRegions(

@@ -302,3 +302,36 @@ it('removes a bare table-cell label from the option words', () => {
     'Vitamin D',
   ]);
 });
+
+describe('M39 step 4: an explanation that opens with its question number and answer', () => {
+  it('goes to that numbered question and gives its printed answer', () => {
+    const { file, roles } = fileOf([
+      label(2, '545. Which statement', 545),
+      option(2, 'a) Skin testing first', 'A'),
+      option(2, 'b) No testing', 'B'),
+      label(2, 'Q82) The most common eye reaction', 82),
+      option(2, 'a) Contact allergy', 'A'),
+      option(2, 'd) Allergic conjunctivitis', 'D'),
+      [2, '545. a) _ Patients with late rashes need no testing', 'explanation'],
+      [2, 'before penicillin therapy.', 'explanation'],
+      [2, '82. d)__ Allergic conjunctivitis', 'explanation'],
+    ]);
+    const [first, second] = assemble(file, roles);
+    expect(first?.explanation).toEqual([6, 7]);
+    expect(first?.answer).toEqual({ letters: ['A'], lines: [6], from: 'key_table' });
+    expect(second?.explanation).toEqual([8]);
+    expect(second?.answer?.letters).toEqual(['D']);
+  });
+
+  it('stays with the question before when the number names no question', () => {
+    const { file, roles } = fileOf([
+      label(1, '1. Which drug', 1),
+      option(1, 'A. Aspirin', 'A'),
+      option(1, 'B. Heparin', 'B'),
+      [1, '12. a) dose is weight based', 'explanation'],
+    ]);
+    const [question] = assemble(file, roles);
+    expect(question?.explanation).toEqual([3]);
+    expect(question?.answer).toBeNull();
+  });
+});

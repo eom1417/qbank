@@ -1,3 +1,4 @@
+import { answerOpening } from '../../domain/key-lines.js';
 import { answerLetter, optionLabel } from '../../domain/labels.js';
 import type { DraftQuestion, FileLines, Line, LineRole, Role } from '../contract.js';
 import { addKeyLine, applyKeys, type KeySection } from './answer-keys.js';
@@ -92,7 +93,20 @@ function addAnswer(state: State, line: Line, role: LineRole): void {
   state.part = 'answer';
 }
 
+/**
+ * A question read earlier whose number this explanation opens with ("82. d) …"): the
+ * explanation is that question's, and the letter its printed answer.
+ */
+function numberedOwner(state: State, line: Line): DraftQuestion | null {
+  const opening = answerOpening(line.text);
+  const owner = opening && state.questions.findLast((q) => q.number === opening.number);
+  if (!opening || !owner) return null;
+  owner.answer ??= { letters: opening.letters, lines: [line.id], from: 'key_table' };
+  return owner;
+}
+
 function addExplanation(state: State, line: Line): void {
+  state.current = numberedOwner(state, line) ?? state.current;
   if (!state.current) return;
   state.current.explanation.push(line.id);
   state.part = 'explanation';

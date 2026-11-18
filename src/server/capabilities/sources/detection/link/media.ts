@@ -1,4 +1,4 @@
-import { mergeRegions } from './media-regions.js';
+import { mergeRegions, newRegions } from './media-regions.js';
 import { rasterCache } from '../../use-cases/extract-questions.js';
 import { ownerAt, placePictures, type QuestionFrame } from '../../domain/pipeline/placement.js';
 import type { CaseGroup } from '../../domain/pipeline/case.js';
@@ -69,10 +69,11 @@ interface Context {
 
 /** Pictures placed by the D3.1/D3.2/D6.3 rules, with handwritten notes after the reveal. */
 async function picturesOf(context: Context, questions: DraftQuestion[], cases: CaseGroup[]) {
+  const consumed = consumedPictures(context.file, context.roles, questions);
   const owned = placePictures({
     frames: context.frames,
     text: context.view,
-    consumed: consumedPictures(context.file, context.roles, questions),
+    consumed,
     cases,
     namedOwner: () => null,
   });
@@ -86,7 +87,11 @@ async function picturesOf(context: Context, questions: DraftQuestion[], cases: C
   const regions = readRegions
     ? await orNothing(readRegions(context.fileName, context.file.pages))
     : null;
-  return regions ? mergeRegions(context.file, questions, pictures, regions) : pictures;
+  if (!regions) return pictures;
+  const read = context.file.units.pages
+    .flatMap((page) => page.units)
+    .filter((unit) => consumed.has(unit.id));
+  return mergeRegions(context.file, questions, pictures, newRegions(regions, read));
 }
 
 /** Pen marks, except on questions read from a picture or sharing a matching set's options. */

@@ -72,6 +72,17 @@ export function keyEntries(line: string): KeyEntry[] | null {
   return entries.length > 0 && /^[\s|;،,]*$/.test(rest) ? entries : null;
 }
 
+// "545. a) _ Patients with…", "82. d)__ Allergic conjunctivitis": an answer printed with its
+// question's number, the option's letter in a label, then the explanation or option text.
+const OPENING = new RegExp(`^(\\d{1,4})\\s*[.):\\-–]\\s*\\(?(${LETTER})\\s*[).]`, 'u');
+
+/** The question number and answer a line opens with ("82. d) …"), or null. */
+export function answerOpening(line: string): KeyEntry | null {
+  const match = OPENING.exec(latinDigits(line).trim());
+  const letter = match?.[2] ? keyLetter(match[2]) : null;
+  return match && letter ? { number: Number(match[1]), letters: [letter] } : null;
+}
+
 // "Explanation:", "Rationale -", "Discussion", "الشرح:", "التعليل:", "التوضيح".
 // The word must be followed by a colon or dash, or stand alone: "explanation for her cycles?"
 // is part of a stem.
