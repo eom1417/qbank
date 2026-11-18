@@ -65,10 +65,29 @@ describe('runChecks', () => {
     expect(has('stem', [question({ stem: [] })])).toBe(true);
     expect(has('stem', [question()])).toBe(false);
   });
+  it('stem: the text after the printed label is the stem', () => {
+    const texts = ['3) Which colour is the flag?', 'A. red', 'B. blue'];
+    const onLabel = question({ stem: [], options: [opt('A', [1]), opt('B', [2])] });
+    expect(has('stem', [onLabel], texts)).toBe(false);
+  });
   it('option_sequence', () => {
     const skip = question({ options: [opt('A', [2]), opt('C', [3])] });
     expect(has('option_sequence', [skip], ['Q1.', 'S', 'A. one', 'C. two'])).toBe(true);
     expect(has('option_sequence', [question()])).toBe(false);
+  });
+  it('option_sequence: an option whose letter the roles read in doubt (a lost letter)', () => {
+    const texts = ['Q1.', 'S', 'A. one', 'two, its letter lost'];
+    const sure = [role(2, 'option', 0.9), role(3, 'option', 0.9)];
+    const lost = [role(2, 'option', 0.9), role(3, 'option', 0.45)];
+    expect(has('option_sequence', [question()], texts, sure)).toBe(false);
+    expect(has('option_sequence', [question()], texts, lost)).toBe(true);
+  });
+  it('option_holds_other: an option owns a line whose role is in doubt', () => {
+    const q = question({ options: [opt('A', [2]), opt('B', [3, 4])] });
+    const texts = ['Q1.', 'S', 'A. one', 'B. two', 'B. three'];
+    const sure = [role(4, 'option', 0.8)];
+    expect(has('option_holds_other', [q], texts, sure)).toBe(false);
+    expect(has('option_holds_other', [q], texts, [role(4, 'unknown', 0.3)])).toBe(true);
   });
   it('option_holds_other', () => {
     const texts = ['Q1.', 'S', 'A. one', 'B. Correct Answer: A'];

@@ -222,3 +222,83 @@ describe('M39 step 4: questions as the answers layer takes them', () => {
     expect(question).toMatchObject({ fromPicture: true, answers: ['A'], evidence: ['pen_mark'] });
   });
 });
+
+// The roles step marks an option's wrapped line as that option again (same letter): one option.
+describe('M39 step 4: an option over several lines', () => {
+  it('keeps the wrapped lines in their option, not as new options', () => {
+    const { file, roles } = fileOf([
+      label(1, 'Q1) Which test compares two means?', 1),
+      option(1, 'A. t-test', 'A'),
+      option(1, 'B. Chi-square for two', 'B'),
+      option(1, 'categories of one variable', 'B'),
+      option(1, 'C. ANOVA', 'C'),
+    ]);
+    const [question] = assemble(file, roles);
+    expect(question?.options.map((o) => [o.letter, o.lines.length])).toEqual([
+      ['A', 1],
+      ['B', 2],
+      ['C', 1],
+    ]);
+  });
+});
+
+// A question printed with one option and no answer is answered by it (the old single-option rule).
+describe('M39 step 4: a question with one option', () => {
+  it('takes the lone option of a text page as its answer, with its evidence', () => {
+    const { file, roles } = fileOf([label(1, '1. Only one', 1), option(1, 'A. x', 'A')]);
+    const detection = detectionOf(file, roles);
+    expect(detection.questions[0]?.answer).toEqual({
+      letters: ['A'],
+      lines: [],
+      from: 'single_option',
+    });
+    const [question] = toDetectedQuestions(detection);
+    expect(question).toMatchObject({ answers: ['A'], evidence: ['single_option'] });
+  });
+
+  it('leaves a lone option read by OCR, or one with a printed answer, as it is', () => {
+    const ocr = fileOf([label(1, '1. Only one', 1), option(1, 'A. x', 'A')]);
+    const lines = ocr.file.lines.map((line) => ({ ...line, source: 'ocr' as const }));
+    expect(assemble({ ...ocr.file, lines }, ocr.roles)[0]?.answer).toBeNull();
+    const printed = fileOf([
+      label(1, '1. Only one', 1),
+      option(1, 'A. x', 'A'),
+      [1, 'Answer: B', 'answer', { letters: ['B'] }],
+    ]);
+    expect(assemble(printed.file, printed.roles)[0]?.answer?.from).toBe('inline');
+  });
+});
+
+// The roles step decides an option is the next one of the question being read: linking keeps it.
+describe('M39 step 4: an option after text that interrupts the options', () => {
+  it('adds the next option to its question, past a pasted explanation', () => {
+    const { file, roles } = fileOf([
+      label(1, '8. What should he do?', 8),
+      option(1, 'A. Refuse', 'A'),
+      option(1, 'B. Accept', 'B'),
+      [1, 'Article 12: a pasted rule', 'explanation'],
+      option(1, 'C. Disclose', 'C'),
+    ]);
+    const questions = assemble(file, roles);
+    expect(questions.map((q) => q.options.map((o) => o.letter).join(''))).toEqual(['ABC']);
+  });
+});
+
+it('removes a bare table-cell label from the option words', () => {
+  const { file, roles } = fileOf([
+    label(1, '1. Which nutrient?', 1),
+    option(1, 'A Vitamin C', 'A'),
+    option(1, 'B Vitamin D', 'B'),
+  ]);
+  const detection: Detection = {
+    file,
+    roles,
+    questions: assemble(file, roles),
+    doubts: [],
+    corrections: new Map(),
+  };
+  expect(toDetectedQuestions(detection)[0]?.options.map((o) => o.text)).toEqual([
+    'Vitamin C',
+    'Vitamin D',
+  ]);
+});

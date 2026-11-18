@@ -111,6 +111,19 @@ describe('words outside the body text (M39 step 2)', () => {
     expect(wordCount(read.lines)).toBe(body.length + note.length);
   });
 
+  it('keeps a printed option that one handwritten word joins as printed, not a note', () => {
+    // Short words beside body text are kept on its line as fallback-font labels ("Fien" is 4).
+    const option = row('A. Coarctation of the Aorta', 36, 100, 'ABCDEF+TimesNewRomanPSMT');
+    const ink = row('Fien', 205, 100, '.SFUI-Regular');
+    const read = linesOf(fileUnits([]), [page([...option, ...ink])]);
+    const printed = read.lines.filter((l) => l.text.startsWith('A. Coarctation'));
+    expect(printed.map((l) => [l.text, l.deviceNote])).toEqual([
+      ['A. Coarctation of the Aorta', false],
+    ]);
+    expect(read.lines.filter((l) => l.deviceNote).map((l) => l.text)).toEqual(['Fien']);
+    expect(wordCount(read.lines)).toBe(option.length + ink.length);
+  });
+
   it('reads a scanned page as OCR lines with no word lost', () => {
     const words = [...row('12. A boy has a cough', 36, 100), ...row('A. asthma', 36, 114)];
     const read = linesOf(fileUnits([], true), [page(words)]);

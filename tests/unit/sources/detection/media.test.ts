@@ -319,3 +319,81 @@ describe('attachMedia: handwritten notes', () => {
     expect(q2?.pictures).toEqual([]);
   });
 });
+
+it('keeps a scanned table missing from image units with its question and resolution', async () => {
+  const { file, roles } = page([
+    { text: '1. Which table matches?', role: 'label' },
+    { text: 'A. One', role: 'option' },
+    { text: 'B. Two', role: 'option' },
+  ]);
+  const region = { page: 1, box: box(60, 72, 240, 78), kind: 'table' as const, ppi: 90 };
+  const render = { ...fakeRender(), regions: async () => [region] };
+  const [question] = await attachMedia(
+    'scan.pdf',
+    file,
+    roles,
+    [draft(1, 0, [], [[1], [2]])],
+    render,
+  );
+  expect(question?.pictures).toEqual([
+    expect.objectContaining({
+      imageClass: 'table',
+      spot: { page: 1, box: region.box },
+      ppi: 90,
+      certain: true,
+    }),
+  ]);
+});
+
+it('uses a label-line picture reference for an uncertain next-question image', async () => {
+  const { file, roles } = page([
+    { text: '1. Which medicine?', role: 'label' },
+    { text: 'A. Alpha', role: 'option' },
+    { text: 'B. Beta', role: 'option' },
+    { image: 'between', height: 30, cls: 'figure' },
+    { text: '2. What does the photo show?', role: 'label' },
+    { text: 'A. Red', role: 'option' },
+    { text: 'B. Blue', role: 'option' },
+  ]);
+  const region = { page: 1, box: box(60, 120, 260, 150), kind: 'figure' as const, ppi: 45 };
+  const render = { ...fakeRender(), regions: async () => [region] };
+  const found = await attachMedia(
+    'x.pdf',
+    file,
+    roles,
+    [draft(1, 0, [], [[1], [2]]), draft(2, 3, [], [[4], [5]])],
+    render,
+  );
+  expect(found[0]?.pictures).toEqual([]);
+  expect(found[1]?.pictures).toEqual([
+    expect.objectContaining({
+      placement: 'explanation',
+      certain: false,
+      ppi: 45,
+    }),
+  ]);
+});
+
+it('keeps table data as pixels instead of mixing its words into a question stem', async () => {
+  const { file, roles } = page([
+    { text: '1. Which diagnosis fits the table?', role: 'label' },
+    { text: 'Sodium 128 mmol/L', role: 'stem' },
+    { text: 'A. Alpha', role: 'option' },
+    { text: 'B. Beta', role: 'option' },
+  ]);
+  const table = file.lines[1];
+  if (!table) throw new Error('missing sample table row');
+  const render = {
+    ...fakeRender(),
+    regions: async () => [{ page: 1, box: table.box, kind: 'table' as const, ppi: null }],
+  };
+  const [question] = await attachMedia(
+    'x.pdf',
+    file,
+    roles,
+    [draft(1, 0, [1], [[2], [3]])],
+    render,
+  );
+  expect(question?.stem).toEqual([]);
+  expect(question?.pictures.some((picture) => picture.imageClass === 'table')).toBe(true);
+});

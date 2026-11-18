@@ -112,7 +112,7 @@ describe('assist: accepting the model answer (M39 step 6)', () => {
     expect(result.roles[3]).toEqual(ROLES[3]);
     expect(result.roles).toHaveLength(6);
     expect(result.failure).toBeNull();
-    expect(result.usage).toMatchObject([{ lesson: 'D3.roles', model: LIGHT, calls: 1 }]);
+    expect(result.usage).toMatchObject([{ lesson: 'D3.roles', model: LIGHT }]);
     expect(progress).toEqual([[1, 1]]);
     expect(textOf(calls, 0)).toContain('1 [ocr]: Wh1ch synthet1c drug is first?');
     expect(textOf(calls, 0)).toContain('2: A. Drug one');
@@ -163,4 +163,26 @@ describe('assist: a lesson failure stops the step (M39 step 6)', () => {
     expect(result.corrections.size).toBe(10);
     expect(progress).toEqual([10]);
   });
+});
+
+it('keeps the actual doubtful line inside a capped region far from its preceding label', () => {
+  const region = regionOf(doubt([110]), [rule(0, 'label'), rule(129, 'label')], 130);
+  expect(region).toContain(110);
+  expect(region.length).toBeLessThanOrEqual(60);
+});
+
+it('shows every line of a long unknown run instead of silently dropping the tail', async () => {
+  const lines = Array.from({ length: 130 }, (_, id) => line(id, `Source row ${id}`));
+  const replies = [0, 60, 120].map((id, at) => ({ n: at + 1, lines: [answer(id, 'stem')] }));
+  const world = lessonWorld({ [LIGHT]: [recorded({ items: replies })] });
+  await assistDoubts(
+    world.deps,
+    'sample.pdf',
+    fileOf(lines),
+    lines.map((l) => rule(l.id, 'unknown')),
+    [doubt(lines.map((l) => l.id))],
+    async () => {},
+  );
+  const prompt = textOf(world.calls, 0);
+  for (const id of [0, 59, 60, 119, 120, 129]) expect(prompt).toContain(`${id}: Source row ${id}`);
 });

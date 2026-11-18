@@ -15,6 +15,8 @@ interface Spec {
   page?: number;
   x?: number;
   note?: boolean;
+  /** Read by OCR in a picture (a pasted screenshot); the pictures' unit. */
+  picture?: string;
   /** A table row: the first word alone, then the cells `cellGap` points further on. */
   cellGap?: number;
 }
@@ -47,8 +49,10 @@ function fileOf(specs: Spec[], scale = 1): FileLines {
       x1: (words.at(-1)?.box.x1 ?? 0) + 0,
       y1: (spec.y + 12) * scale,
     };
-    const base = { id, page: spec.page ?? 1, box, text: spec.text, words, unitId: `u${id}` };
-    const rest = { rtl: false, source: 'text' as const, confidence: null };
+    const unitId = spec.picture ?? `u${id}`;
+    const base = { id, page: spec.page ?? 1, box, text: spec.text, words, unitId };
+    const source = spec.picture ? ('picture' as const) : ('text' as const);
+    const rest = { rtl: false, source, confidence: null };
     return { ...base, ...rest, deviceNote: spec.note ?? false };
   });
   const pageCount = Math.max(1, ...lines.map((line) => line.page));
@@ -129,9 +133,17 @@ describe('a bank book: label, stem, options, answer, explanation', () => {
 });
 
 describe('option letters continue the sequence', () => {
-  it('does not take a letter out of turn as an option, and flags it', () => {
+  it('takes a letter one out of turn as the next option (one was lost), and flags it', () => {
     const roles = classifyLines(
       fileOf([at('1. Which drug?', 100), at('A. aspirin', 114), at('C. heparin', 128)]),
+    );
+    expect([roles[2]?.role, roles[2]?.letter]).toEqual(['option', 'B']);
+    expect(doubts(roles)).toEqual([2]);
+  });
+
+  it('does not take a letter two out of turn as an option, and flags it', () => {
+    const roles = classifyLines(
+      fileOf([at('1. Which drug?', 100), at('A. aspirin', 114), at('D. heparin', 128)]),
     );
     expect(roles[2]?.role).not.toBe('option');
     expect(doubts(roles)).toEqual([2]);
@@ -160,7 +172,7 @@ describe('option letters continue the sequence', () => {
 });
 
 describe('questions the book printed with no label', () => {
-  it('starts one at the text before "A." inside an explanation, numbered after the last', () => {
+  it('starts one at the text before "A." inside an explanation, with no printed number', () => {
     const roles = classifyLines(
       fileOf([
         at('Question: 4', 100),
@@ -184,7 +196,7 @@ describe('questions the book printed with no label', () => {
       'option',
       'answer',
     ]);
-    expect([roles[6]?.number, roles[6]?.confidence]).toEqual([5, 0.4]);
+    expect([roles[6]?.number, roles[6]?.confidence]).toEqual([undefined, 0.4]);
   });
 
   it('starts one at a second full set of options after the first', () => {
@@ -199,7 +211,7 @@ describe('questions the book printed with no label', () => {
       ]),
     );
     expect(rolesOf(roles)).toEqual(['label', 'option', 'option', 'label', 'option', 'option']);
-    expect([roles[3]?.number, roles[3]?.confidence]).toEqual([8, 0.4]);
+    expect([roles[3]?.number, roles[3]?.confidence]).toEqual([undefined, 0.4]);
   });
 });
 
@@ -262,4 +274,127 @@ describe('answers in doubt and shared cases', () => {
     );
     expect(rolesOf(roles).slice(0, 3)).toEqual(['case', 'case', 'label']);
   });
+});
+
+// A screenshot of another bank pasted under a typed question is its explanation (M34 D6.1).
+describe('questions read in pictures', () => {
+  const typed = [
+    at('Q1) Which drug is first line?', 100),
+    at('A. aspirin', 114),
+    at('B. heparin', 128),
+    at('Answer: B', 142),
+  ];
+  const screenshot = (page: number) => [
+    at('A boy of six has a fever. Which test is first?', 40, { page, picture: 'p' }),
+    at('A. blood count', 54, { page, picture: 'p' }),
+    at('B. chest film', 68, { page, picture: 'p' }),
+  ];
+
+  it('reads an unlabelled picture question near a typed one as its explanation', () => {
+    const roles = classifyLines(fileOf([...typed, ...screenshot(2)]));
+    expect(rolesOf(roles).slice(4)).toEqual(['explanation', 'explanation', 'explanation']);
+  });
+
+  it('keeps picture questions in a file whose questions are all pictures', () => {
+    const roles = classifyLines(fileOf([...screenshot(1)]));
+    expect(rolesOf(roles)).toEqual(['label', 'option', 'option']);
+  });
+});
+
+// Option letters as OCR and hurried typing leave them, and options a reading lost.
+describe('options read with their letter damaged or lost', () => {
+  const letters = (roles: LineRole[]) => roles.map((role) => role.letter ?? '-').join('');
+
+  it('takes the next letter with no dot, or with a comma, as the next option', () => {
+    const roles = classifyLines(
+      fileOf([
+        at('Q4) What should he do next?', 100),
+        at('A. Stop resuscitation', 114),
+        at('B Call the consultant', 128),
+        at('C. Give epinephrine', 142),
+        at('D, Give steroid', 156),
+      ]),
+    );
+    expect(rolesOf(roles)).toEqual(['label', 'option', 'option', 'option', 'option']);
+    expect(letters(roles)).toEqual('-ABCD');
+  });
+
+  it('never reads a stem sentence starting with a capital letter as an option', () => {
+    const roles = classifyLines(
+      fileOf([at('Q4) Which is true?', 100), at('A 15-year-old girl has a rash.', 114)]),
+    );
+    expect(rolesOf(roles)).toEqual(['label', 'stem']);
+  });
+
+  it('reads options whose first letter was lost, in their order', () => {
+    const roles = classifyLines(
+      fileOf([
+        at('Q21) What would you do next?', 100),
+        at('B. CT abdomen', 114),
+        at('C. Surgery', 128),
+      ]),
+    );
+    expect(rolesOf(roles)).toEqual(['label', 'option', 'option']);
+    expect(letters(roles)).toEqual('-AB');
+  });
+
+  it('recovers an option whose letter was lost from the line before the next letter', () => {
+    const roles = classifyLines(
+      fileOf([
+        at('Q2) Which salt?', 100),
+        at('A. sodium', 114),
+        at('B. potassium', 128),
+        at('yperkalemia', 142),
+        at('D. calcium', 156),
+      ]),
+    );
+    expect(letters(roles)).toEqual('-ABCD');
+  });
+});
+
+// A label is the start of a new question only when it can be one.
+describe('labels that do not start a question', () => {
+  it('reads "Q0)" (no question is numbered 0) as text', () => {
+    const roles = classifyLines(fileOf([at('Q0) TABLE 3. Topical steroids', 100)]));
+    expect(rolesOf(roles)).not.toContain('label');
+  });
+
+  it('reads the number of the question being read, printed again before its options, as stem', () => {
+    const roles = classifyLines(
+      fileOf([
+        at('Question 184', 100),
+        at('A boy has ear pain and fever.', 114),
+        at('Q184) The rest of the examination is normal.', 128),
+        at('A. amoxicillin', 142),
+        at('B. cefdinir', 156),
+      ]),
+    );
+    expect(rolesOf(roles)).toEqual(['label', 'stem', 'stem', 'option', 'option']);
+  });
+});
+
+it('keeps a sequential numbered explanation list inside its answer', () => {
+  const roles = classifyLines(
+    fileOf([
+      at('1. Which mechanism?', 100),
+      at('A. transport', 114),
+      at('B. synthesis', 128),
+      at('Answer: A', 142),
+      at('Explanation: mechanisms include:', 156),
+      at('1. Receptor production fails.', 170),
+      at('2. Receptor transport fails.', 184),
+      at('3. Receptor binding fails.', 198),
+      at('2. Which treatment?', 240),
+      at('A. replacement', 254),
+      at('B. observation', 268),
+    ]),
+  );
+  expect(rolesOf(roles).slice(5)).toEqual([
+    'explanation',
+    'explanation',
+    'explanation',
+    'label',
+    'option',
+    'option',
+  ]);
 });
