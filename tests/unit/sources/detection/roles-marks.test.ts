@@ -105,6 +105,23 @@ describe('a first option whose letter a pen circle hid from OCR (M39 step 3)', (
   });
 });
 
+describe('a letter circled by hand, its circle read as "(" (M39 step 3)', () => {
+  it('is the option, marked as circled', () => {
+    const roles = classifyLines(
+      fileOf([
+        at('15. What is the diagnosis?', 100),
+        at('(A. Gordon syndrome', 114),
+        at('B. Liddle syndrome', 128),
+      ]),
+    );
+    expect(roles.map((role) => [role.role, role.letter, role.circled])).toEqual([
+      ['label', undefined, undefined],
+      ['option', 'A', true],
+      ['option', 'B', undefined],
+    ]);
+  });
+});
+
 describe('a letter circled by hand, read by OCR as a symbol (M39 step 3)', () => {
   it('is the next option, marked as circled', () => {
     const roles = classifyLines(

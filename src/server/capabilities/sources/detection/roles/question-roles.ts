@@ -117,6 +117,10 @@ function circledOption(walk: Walk, line: Line, signals: Signals): LineRole | nul
   return placed ? { ...takeOption(walk, line, 0.7), circled: true } : null;
 }
 
+/** A label OCR read with its circle ("(A. Gordon…"): the option is the reader's pen mark. */
+const withCircle = (role: LineRole, signals: Signals): LineRole =>
+  signals.circled === null ? role : { ...role, circled: true };
+
 /** The next option in sequence, one after a lost one, or one printed with no label mark. */
 function optionRole(walk: Walk, line: Line, signals: Signals): LineRole | null {
   if (!optionContext(walk, line)) return null;
@@ -124,7 +128,7 @@ function optionRole(walk: Walk, line: Line, signals: Signals): LineRole | null {
   const ahead = option && sameAlphabet(walk.system, option.system) ? option.index : -1;
   if (option && ahead === walk.options) {
     walk.system = option.system;
-    return takeOption(walk, line, walk.mode === 'after' ? 0.7 : 0.9);
+    return withCircle(takeOption(walk, line, walk.mode === 'after' ? 0.7 : 0.9), signals);
   }
   if (option && ahead === walk.options + 1) return afterLost(walk, line, option.system);
   return unlettered(walk, line, signals);
