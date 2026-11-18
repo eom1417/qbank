@@ -30,7 +30,12 @@ const INLINE = new RegExp(`${KEY_WORD}\\(?(${LETTER_LIST})\\)?\\s*\\.?$`, 'i');
 const DOUBTFUL = new RegExp(`${KEY_WORD}(?:\\(?(?:${LETTER_LIST})\\)?\\s*\\?+|[Xx?]+)\\s*$`, 'i');
 
 /** A printed key with doubt ("D?", "X"): it gives no answer, and the question goes to review. */
-export const isDoubtfulKey = (line: string) => DOUBTFUL.test(line.trim());
+// "Correct answer: Answer will depend…": the book's answer line, naming no option.
+const CORRECT_LINE =
+  /^(?:(?:the\s+)?correct\s+answer|الإجابة\s+الصحيحة|الجواب\s+الصحيح)(?=\s|[:：\-–]|$)/i;
+
+export const isDoubtfulKey = (line: string) =>
+  DOUBTFUL.test(line.trim()) || (CORRECT_LINE.test(line.trim()) && inlineAnswer(line) === null);
 
 const lettersIn = (list: string) =>
   list

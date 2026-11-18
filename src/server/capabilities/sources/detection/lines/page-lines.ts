@@ -48,6 +48,21 @@ function overPrint(text: PageText, body: ReadonlySet<string> | null): (word: Pag
   return (word) => deviceWord(word) || stamped(word);
 }
 
+/** Longest word a PDF maker sets in a fallback font as a label (domain/lines keeps those). */
+const LABEL_CHARS = 4;
+
+/**
+ * A line not printed: a word over the print, or a short line alone in fonts outside the body
+ * (ink converted to text; a fallback-font label stays on the body line beside it).
+ */
+function notPrint(text: PageText, body: ReadonlySet<string> | null): (line: TextLine) => boolean {
+  const over = overPrint(text, body);
+  const outside = (word: PageWord) => !!word.font && !body?.has(fontFamily(word.font));
+  const shortInk = (line: TextLine) =>
+    !!body && line.text.trim().length <= LABEL_CHARS && line.words.every(outside);
+  return (line) => line.words.some(over) || shortInk(line);
+}
+
 const boxKey = (line: { page: number; box: TextLine['box'] }) =>
   `${line.page}:${line.box.x0}:${line.box.y0}:${line.box.x1}:${line.box.y1}`;
 
@@ -92,7 +107,7 @@ function textDrafts(input: PageInput, rank: ReturnType<typeof ranker>): DraftLin
   const units = input.units?.units ?? [];
   const byBox = new Map(units.filter((u) => u.kind !== 'image').map((u) => [boxKey(u), u]));
   const source: LineSource = input.units?.scanned ? 'ocr' : 'text';
-  const over = overPrint(input.text, input.units?.scanned ? null : input.body);
+  const notPrinted = notPrint(input.text, input.units?.scanned ? null : input.body);
   return ownLines(input).map((line, index) => {
     const unit = byBox.get(boxKey(line));
     return {
@@ -100,7 +115,7 @@ function textDrafts(input: PageInput, rank: ReturnType<typeof ranker>): DraftLin
       source,
       unitId: unit?.id ?? `p${line.page}-line${index}`,
       confidence: null,
-      deviceNote: line.words.some(over),
+      deviceNote: notPrinted(line),
       rank: unit ? rank.unit(unit) : rank.line(line),
       sub: unit ? unit.order : line.box.y0,
     };

@@ -22,8 +22,19 @@ const acrossPicture = (above: Line | undefined, line: Line) =>
   above.unitId !== line.unitId &&
   (above.source === 'picture' || line.source === 'picture');
 
+/** A line already read in this question: a table header the page repeats above each row. */
+function repeatsInQuestion(walk: Walk, line: Line): boolean {
+  const text = line.text.trim();
+  for (let id = line.id - 1; id >= 0; id--) {
+    if (walk.file.lines[id]?.text.trim() === text) return true;
+    if (walk.roles[id]?.role === 'label') return false;
+  }
+  return false;
+}
+
 /** An option's wrapped line, or text a block below the options (an unmarked explanation?). */
 function optionText(walk: Walk, line: Line): LineRole {
+  if (repeatsInQuestion(walk, line)) return roleOf(line, 'filler', 0.7);
   if (sameParagraph(walk.measure, walk.above, line) && !acrossPicture(walk.above, line))
     return roleOf(line, 'option', 0.8, walk.letter ? { letter: walk.letter } : {});
   walk.mode = 'after';
