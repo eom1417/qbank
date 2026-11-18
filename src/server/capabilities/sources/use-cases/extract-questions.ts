@@ -11,6 +11,7 @@ import { separateKeys } from '../domain/key-pass.js';
 import { bodyFontFamilies, pageLines } from '../domain/lines.js';
 import { dropRunningLines } from '../domain/running-lines.js';
 import { fontFamily, type PageText } from '../domain/page.js';
+import { labelsQuestions } from '../domain/pipeline/virtual-text.js';
 import { parseQuestions, type ParsedQuestion, type PlacedFigure } from '../domain/questions.js';
 import { renderPage } from '../adapters/raster.js';
 
@@ -118,8 +119,13 @@ export async function questionsFromPages(
   const body = bodyFontFamilies(pages.filter((page) => page.visual));
   const lines = pages.flatMap((page) => pageLines(page, page.visual ? body : null));
   const heights = new Map(pages.map((page) => [page.page, page.height]));
-  const separated = separateKeys(dropRunningLines(lines, heights));
-  const questions = parseQuestions(separated.lines, figures);
+  // A typed file with no device note in it (M36: no body font to filter) is a book: read as the
+  // pipeline reads one (M38, Q136), its explanation after the key, each question to its label.
+  const book = body === null && pages.some((page) => page.visual);
+  const separated = separateKeys(dropRunningLines(lines, heights), { explainAfterKey: book });
+  const questions = parseQuestions(separated.lines, figures, {
+    spanToNextLabel: book && labelsQuestions(separated.lines),
+  });
   const keys = attachKeys(questions, separated);
   // Measured on the option's own page; the printed letter is masked: only added ink counts.
   const inkOf = async (option: ParsedQuestion['options'][number]) => {

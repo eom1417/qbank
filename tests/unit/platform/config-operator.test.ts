@@ -38,13 +38,19 @@ describe('operator and import-worker settings', () => {
   });
 });
 
-describe('imports only with the AI (Q7)', () => {
-  it('requires it on a server and not on a local install, unless set', () => {
-    expect(loadConfig(ACCOUNTS).imports.requiresAi).toBe(true);
+// M38 (Q136): the rules alone read a file on a server too; an operator may still require the AI.
+describe('imports with the AI only when the operator says so (Q7, Q136)', () => {
+  it('does not require it by default, on a server or a local install', () => {
+    expect(loadConfig(ACCOUNTS).imports.requiresAi).toBe(false);
     expect(loadConfig({}).imports.requiresAi).toBe(false);
-    const off = { ...ACCOUNTS, QBANK_IMPORT_REQUIRES_AI: 'false' };
-    expect(loadConfig(off).imports.requiresAi).toBe(false);
+    expect(loadConfig({ ...ACCOUNTS, QBANK_IMPORT_REQUIRES_AI: '' }).imports.requiresAi).toBe(
+      false,
+    );
+  });
+
+  it('requires it where the operator set it', () => {
+    const on = { ...ACCOUNTS, QBANK_IMPORT_REQUIRES_AI: 'true' };
+    expect(loadConfig(on).imports.requiresAi).toBe(true);
     expect(loadConfig({ QBANK_IMPORT_REQUIRES_AI: 'true' }).imports.requiresAi).toBe(true);
-    expect(loadConfig({ ...ACCOUNTS, QBANK_IMPORT_REQUIRES_AI: '' }).imports.requiresAi).toBe(true);
   });
 });

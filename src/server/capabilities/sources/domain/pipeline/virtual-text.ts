@@ -226,7 +226,7 @@ export function pictureKeys(text: VirtualText, numbers: ReadonlySet<number>): Pi
 const LABELLED_SHARE = 0.8;
 const MIN_LABELS = 3;
 
-function labelsQuestions(lines: readonly TextLine[]): boolean {
+export function labelsQuestions(lines: readonly TextLine[]): boolean {
   const labels = lines.flatMap((line) => {
     const label = questionLabel(line.text);
     return label ? [label] : [];
