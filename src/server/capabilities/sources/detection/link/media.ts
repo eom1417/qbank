@@ -82,7 +82,11 @@ async function picturesOf(context: Context, questions: DraftQuestion[], cases: C
     questions,
     printed: printedBoxes(context.file, context.view),
   });
-  const pictures = owned.map((slot, index) => [...slot.pictures, ...(notes[index] ?? [])]);
+  // Q85: a question whose picture the rules placed without certainty holds it for review.
+  const placed = owned.map((slot) =>
+    slot.unsure ? slot.pictures.map((picture) => ({ ...picture, certain: false })) : slot.pictures,
+  );
+  const pictures = placed.map((group, index) => [...group, ...(notes[index] ?? [])]);
   const readRegions = context.render.regions;
   const regions = readRegions
     ? await orNothing(readRegions(context.fileName, context.file.pages))

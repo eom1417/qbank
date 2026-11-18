@@ -65,18 +65,18 @@ export function mergeRegions(
     const previous = pictures.findIndex((group) =>
       group.some((picture) => matches(picture, link.region)),
     );
-    const question =
-      previous >= 0 && questions[previous]?.explanation.length ? previous : link.question;
+    const explained = previous >= 0 && !!questions[previous]?.explanation.length;
+    const question = explained ? previous : link.question;
     const existing = pictures[previous]?.find((picture) => matches(picture, link.region));
-    const placed = existing && { picture: existing, stays: question === previous };
+    const placed = existing && { picture: existing, stays: explained };
     output[question]?.push(regionPicture({ ...link, question }, index, placed));
   }
   return output;
 }
 
 /**
- * A picture the rules placed in its question's own explanation (after the answer), and still
- * with that question, keeps that place and certainty; otherwise the region's certainty decides.
+ * A picture the rules placed in its question's written explanation (after the answer) keeps that
+ * place and certainty; otherwise (no explanation, or moved) the region's certainty decides.
  */
 function placedRegion(
   link: MediaLink,
