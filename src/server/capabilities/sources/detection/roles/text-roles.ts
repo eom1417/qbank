@@ -9,13 +9,14 @@ import { inQuestion, roleOf, type Walk } from './walk.js';
 const TITLE_WORDS = 6;
 
 /**
- * A picture after a printed stem that has asked its question: the figure it shows. Its words
+ * A picture after a printed stem whose sentence is complete ("…management?", "Calculate the
+ * specificity.", "…as follows:"): the figure it shows. Its words
  * are the picture's own (filler to the text; the picture, left unread, is shown as it is).
  */
 const figureAfterQuestion = (walk: Walk, line: Line) =>
   line.source === 'picture' &&
   walk.above?.source !== 'picture' &&
-  /[?؟]\s*$/.test(walk.above?.text ?? '');
+  /[?؟.:]\s*$/.test(walk.above?.text ?? '');
 
 function stemRole(walk: Walk, line: Line): LineRole {
   if (figureAfterQuestion(walk, line)) return roleOf(line, 'filler', 0.5);

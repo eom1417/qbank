@@ -52,6 +52,18 @@ describe('a picture after the stem has asked its question (M39 step 3)', () => {
     ]);
   });
 
+  it('reads a table picture after a stem ending in a full stop as its figure', () => {
+    const roles = classifyLines(
+      fileOf([
+        at('10. A study was done on newborns. Calculate the specificity.', 100),
+        at('Positive Predictive Value', 130, { picture: 'table' }),
+        at('A. 80%', 170),
+        at('B. 90%', 184),
+      ]),
+    );
+    expect(roles[1]?.role).toBe('filler');
+  });
+
   it('keeps a picture that carries on a stem still asking', () => {
     const roles = classifyLines(
       fileOf([
