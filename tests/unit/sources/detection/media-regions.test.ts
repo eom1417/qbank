@@ -77,8 +77,11 @@ describe('withoutPrintedTables', () => {
     number: 1,
     numberInferred: false,
     labelLine: null,
-    stem: [0, 1],
-    options: [],
+    stem: [],
+    options: [
+      { letter: 'A', label: 'A', lines: [0] },
+      { letter: 'B', label: 'B', lines: [1] },
+    ],
     answer: null,
     conflicts: [],
     explanation: [],
@@ -88,7 +91,7 @@ describe('withoutPrintedTables', () => {
   };
   const table = { ...region(4, 50), kind: 'table' as const };
 
-  it('drops a ruled table whose printed words the question already reads', () => {
+  it('drops a ruled table holding the printed options', () => {
     expect(withoutPrintedTables(fileOf('text'), [question], [table])).toEqual([]);
   });
 

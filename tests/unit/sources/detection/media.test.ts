@@ -374,7 +374,7 @@ it('uses a label-line picture reference for an uncertain next-question image', a
   ]);
 });
 
-it('keeps a printed table the stem reads as its text, with no picture of it', async () => {
+it('keeps table data as pixels instead of mixing its words into a question stem', async () => {
   const { file, roles } = page([
     { text: '1. Which diagnosis fits the table?', role: 'label' },
     { text: 'Sodium 128 mmol/L', role: 'stem' },
@@ -394,6 +394,6 @@ it('keeps a printed table the stem reads as its text, with no picture of it', as
     [draft(1, 0, [1], [[2], [3]])],
     render,
   );
-  expect(question?.stem).toEqual([1]);
-  expect(question?.pictures.some((picture) => picture.imageClass === 'table')).toBe(false);
+  expect(question?.stem).toEqual([]);
+  expect(question?.pictures.some((picture) => picture.imageClass === 'table')).toBe(true);
 });

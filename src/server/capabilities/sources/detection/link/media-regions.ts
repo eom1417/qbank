@@ -2,7 +2,7 @@ import { linkMedia, type MediaLink } from '../../domain/media-links.js';
 import { area, intersect, type MediaRegion } from '../../domain/media-regions.js';
 import type { PipelinePicture } from '../../domain/pipeline/question.js';
 import type { DraftQuestion, FileLines } from '../contract.js';
-import { anchorLines, frameOfDraft, heldLines } from './media-view.js';
+import { anchorLines, frameOfDraft } from './media-view.js';
 import { overlaps } from '../../domain/page.js';
 
 /** Table options remain text; data figures/tables are represented by the kept picture. */
@@ -44,15 +44,17 @@ export const newRegions = (regions: readonly MediaRegion[], read: readonly Spot[
   regions.filter((region) => !read.some((spot) => sameContent(spot, region)));
 
 /**
- * Ruled tables whose words are printed text a question already reads: the question's own text
- * (lab values, an option table), not a picture to show beside it.
+ * Ruled tables holding a question's printed options: the options are its text, not a picture
+ * (a data table in the stem stays a picture, FR-05-009).
  */
+const optionLines = (q: DraftQuestion) => q.options.flatMap((option) => option.lines);
+
 export function withoutPrintedTables(
   file: FileLines,
   questions: readonly DraftQuestion[],
   regions: readonly MediaRegion[],
 ): MediaRegion[] {
-  const read = questions.flatMap(heldLines).flatMap((id) => {
+  const read = questions.flatMap(optionLines).flatMap((id) => {
     const line = file.lines[id];
     return line && line.source === 'text' ? [line] : [];
   });
