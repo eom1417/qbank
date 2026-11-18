@@ -1,0 +1,89 @@
+{
+  "file": "numbered-list-in-explanation.pdf",
+  "sha256": "72cb7c61e4afac536ed8b7dfb8d28494c7d4e50b0fee4e2a77a66e2f4994f7af",
+  "pageCount": 1,
+  "family": "exported_bank",
+  "headings": [],
+  "printedTotal": null,
+  "filler": [],
+  "questions": [
+    {
+      "ordinal": 1,
+      "printed": 1,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "Which step of the cycle comes first in glycolysis?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Hexokinase"
+        },
+        {
+          "letter": "B",
+          "text": "Pyruvate kinase"
+        },
+        {
+          "letter": "C",
+          "text": "Enolase"
+        },
+        {
+          "letter": "D",
+          "text": "Aldolase"
+        }
+      ],
+      "answer": ["A"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    },
+    {
+      "ordinal": 2,
+      "printed": 2,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "The second question follows right after the list?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Option 2 one"
+        },
+        {
+          "letter": "B",
+          "text": "Option 2 two"
+        },
+        {
+          "letter": "C",
+          "text": "Option 2 three"
+        },
+        {
+          "letter": "D",
+          "text": "Option 2 four"
+        }
+      ],
+      "answer": ["C"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    }
+  ]
+}

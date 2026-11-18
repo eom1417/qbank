@@ -6,6 +6,7 @@ export type Severity = 'high' | 'medium' | 'low';
 /** A wrong or missing answer, or text that may say something else, comes first. */
 const HIGH: ReadonlySet<string> = new Set([
   'no_answer',
+  'detection_doubt',
   'key_conflict',
   'explanation_conflict',
   'ai_disagrees',

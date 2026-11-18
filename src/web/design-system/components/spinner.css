@@ -1,0 +1,21 @@
+.qb-spinner {
+  display: inline-block;
+  inline-size: var(--space-md);
+  block-size: var(--space-md);
+  border: var(--border-width) solid var(--color-border);
+  border-block-start-color: var(--color-accent);
+  border-radius: var(--radius-pill);
+  animation: qb-spin var(--motion-spin) linear infinite;
+}
+
+@keyframes qb-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qb-spinner {
+    animation: none;
+  }
+}

@@ -23,6 +23,7 @@
     "bench:vision": "node --import tsx src/server/tools/vision-cost/run.ts",
     "bench:units": "node --import tsx src/server/tools/extraction-bench/units-report.ts",
     "bench:pipeline": "node --import tsx src/server/tools/extraction-bench/pipeline-bench.ts",
+    "bench:detection": "node --import tsx src/server/tools/detection-bench/main.ts",
     "bench:evidence": "node --import tsx src/server/tools/extraction-bench/evidence-bench.ts",
     "bench:answers": "node --env-file-if-exists=.env.local --import tsx src/server/tools/answer-bench/main.ts",
     "qbank": "node scripts/qbank.mjs",

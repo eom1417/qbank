@@ -1,0 +1,167 @@
+{
+  "file": "answer-then-explanation.pdf",
+  "sha256": "67b05f698fbe6e99b28187c3786cc9ea2d5bb35eb3791415112a169610d37a68",
+  "pageCount": 1,
+  "family": "exported_bank",
+  "headings": [],
+  "printedTotal": null,
+  "filler": [],
+  "questions": [
+    {
+      "ordinal": 1,
+      "printed": 1,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "Which structure number 1 carries blood away from the heart?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Artery"
+        },
+        {
+          "letter": "B",
+          "text": "Vein"
+        },
+        {
+          "letter": "C",
+          "text": "Nerve"
+        },
+        {
+          "letter": "D",
+          "text": "Lymph duct"
+        }
+      ],
+      "answer": ["A"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    },
+    {
+      "ordinal": 2,
+      "printed": 2,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "Which structure number 2 carries blood away from the heart?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Artery"
+        },
+        {
+          "letter": "B",
+          "text": "Vein"
+        },
+        {
+          "letter": "C",
+          "text": "Nerve"
+        },
+        {
+          "letter": "D",
+          "text": "Lymph duct"
+        }
+      ],
+      "answer": ["A"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    },
+    {
+      "ordinal": 3,
+      "printed": 3,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "Which structure number 3 carries blood away from the heart?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Artery"
+        },
+        {
+          "letter": "B",
+          "text": "Vein"
+        },
+        {
+          "letter": "C",
+          "text": "Nerve"
+        },
+        {
+          "letter": "D",
+          "text": "Lymph duct"
+        }
+      ],
+      "answer": ["A"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    },
+    {
+      "ordinal": 4,
+      "printed": 4,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "Which structure number 4 carries blood away from the heart?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Artery"
+        },
+        {
+          "letter": "B",
+          "text": "Vein"
+        },
+        {
+          "letter": "C",
+          "text": "Nerve"
+        },
+        {
+          "letter": "D",
+          "text": "Lymph duct"
+        }
+      ],
+      "answer": ["A"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    }
+  ]
+}

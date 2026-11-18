@@ -6,6 +6,7 @@ type Switch = Exclude<keyof Enhancements, 'completeOptions'>;
 
 /** Each improvement the owner may switch on or off, in the order they run. */
 const SWITCHES: readonly Switch[] = [
+  'improveCapture',
   'polishText',
   'verifyAnswers',
   'topicReview',
@@ -62,7 +63,7 @@ export function EnhanceFields({ value, onChange, sourceOnly = false }: Props) {
       {switches.map((key) => (
         <div key={key}>
           <Checkbox
-            checked={value[key]}
+            checked={value[key] !== false}
             onChange={(event) => onChange({ ...value, [key]: event.target.checked })}
             label={t(`enhance.${key}` as MessageKey)}
           />

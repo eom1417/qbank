@@ -28,6 +28,9 @@ export const triageAr: Record<keyof typeof triageEn, string> = {
   'enhance.completeOptions': 'إكمال الخيارات',
   'enhance.completeOptions.off': 'لا تضف خيارات',
   'enhance.completeOptions.to': 'حتى هذا العدد من الخيارات:',
+  'enhance.improveCapture': 'تحسين الالتقاط بالذكاء الاصطناعي',
+  'enhance.improveCapture.hint':
+    'للمواضع التي لم تفهمها القراءة المجانية فقط: يحدد أدوار الأسطر ويربط السؤال بخياراته وإجابته وشرحه، ويصحح أخطاء OCR الإملائية. لا يكتب كلمة من عنده.',
   'enhance.polishText': 'تحسين الصياغة',
   'enhance.polishText.hint':
     'الإملاء والقواعد والوضوح. كل رقم ووحدة وكلمة نفي (NOT وEXCEPT) تبقى، وأي صياغة تغيّر الإجابة تُلغى.',

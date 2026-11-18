@@ -1,3 +1,4 @@
+import { DetectionIssue } from '../../../../contracts/detection.js';
 // M34 P6: what a pipeline import keeps for review (its units, 7 days, Q23) and what its report
 // says beyond the counts: the family, pages of unknown shape (Q44), whether the family has been
 // measured (Q59), and the questions in review by reason.
@@ -16,17 +17,22 @@ const MEASURED_FAMILIES: ReadonlySet<string> = new Set(['annotated_notes']);
 const Facts = z.object({
   family: z.string().nullable(),
   unknownPages: z.array(z.number().int()),
+  issues: z.array(DetectionIssue).default([]),
 });
 
 /** Keeps the run's units with their roles; returns the job's facts for its report. */
 export async function keepBlocks(
   deps: SourcesDeps,
   job: Pick<JobRow, 'id' | 'owner_id'>,
-  read: Pick<PipelineReading, 'blocks' | 'family'>,
+  read: Pick<PipelineReading, 'blocks' | 'family' | 'issues'>,
 ): Promise<string> {
   const expiresAt = new Date(deps.clock.now().getTime() + BLOCK_DAYS * 24 * 60 * 60_000);
   await deps.blocks.replace({ ownerId: job.owner_id, jobId: job.id, expiresAt }, read.blocks);
-  const facts = { family: read.family, unknownPages: unknownShapePages(read.blocks) };
+  const facts = {
+    family: read.family,
+    unknownPages: unknownShapePages(read.blocks),
+    issues: read.issues ?? [],
+  };
   return JSON.stringify(facts);
 }
 
@@ -62,4 +68,10 @@ export async function pipelineReport(
     unknownPages: facts.success ? facts.data.unknownPages : [],
     reviewReasons: reasonCounts(saved),
   };
+}
+
+/** Capture issues are source facts, independent of whether an AI provider was selected. */
+export function detectionIssues(job: Pick<JobRow, 'pipeline_facts'>): DetectionIssue[] {
+  const facts = Facts.safeParse(job.pipeline_facts);
+  return facts.success ? facts.data.issues : [];
 }

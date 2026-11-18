@@ -1,25 +1,32 @@
+import type { DetectionIssue } from '../../../../contracts/detection.js';
+import {
+  asExtractedQuestion as extractedOf,
+  asKeptLinks as mediaOf,
+  asDetectionIssues,
+} from './detection-output.js';
 // M34 P5: a file read by the import pipeline: questions with placed pictures (P4a), the answer
 // evidence with the vision lesson (P4b), the value filter (level 5), then each question's
 // review reasons (level 7), its kept pictures with their placement, its case and its tags.
-import { z } from 'zod';
-import { LessonUsage as UsageRow } from '../../../../contracts/sources.js';
 import type { AiFailure, AiProvider, ImportAi } from '../../providers/index.js';
 import type { ImportExtras, ImportedQuestion } from '../../questions/index.js';
 import type { FileUnits } from '../adapters/pipeline-units.js';
+import type { PageText } from '../domain/page.js';
+import { defaultLinesReader } from '../detection/lines/read-lines.js';
 import type { StoredBlock } from '../adapters/import-blocks.js';
 import type { DocumentFamily } from '../domain/pipeline/family.js';
 import { assignRoles } from '../domain/pipeline/roles.js';
 import { approvedModels, type ProviderKind } from '../domain/pipeline/approved-models.js';
 import { markLesson } from '../domain/pipeline/lessons/mark.js';
 import { PROMPT_VERSION } from '../domain/pipeline/prompt-standard.js';
-import type { PipelinePicture, PipelineQuestion } from '../domain/pipeline/question.js';
-import { evidenceOf, pipelineReasons } from '../domain/pipeline/statuses.js';
+import type { PipelineQuestion } from '../domain/pipeline/question.js';
+import { pipelineReasons } from '../domain/pipeline/statuses.js';
+import { combineEvidence } from '../domain/pipeline/evidence.js';
 import { filterValue } from '../domain/pipeline/value-filter.js';
 import { screenQuestions, type PageReading } from '../domain/screening.js';
-import type { ExtractedQuestion } from './extract-questions.js';
-import type { KeptLink, MediaPlace } from './keep-media.js';
+import type { KeptLink } from './keep-media.js';
 import { withEvidence, type EvidenceDeps, type EvidenceOptions } from './pipeline-evidence.js';
-import { pipelineQuestions } from './pipeline-questions.js';
+import { detect } from '../detection/detect.js';
+import type { OnStep } from '../detection/contract.js';
 import { withStructure } from './pipeline-structure.js';
 import type { Leftover } from '../domain/pipeline/leftover.js';
 import type { Spot } from '../domain/pipeline/question.js';
@@ -38,6 +45,14 @@ export interface PipelineInput {
   pages: { from: number; to: number };
   /** How each page was read (stage 1): an OCR or unreadable page is said in review. */
   readings: ReadonlyMap<number, PageReading>;
+  /** The user's AI helps the detection where its checks doubt (M39 step 6, the capture choice). */
+  captureAi?: boolean;
+  /** No provider selected: retain rule evidence without running unavailable vision lessons. */
+  answerAi?: boolean;
+  /** Checkpointed successful pages: do not silently reread failed pages during detection. */
+  sourcePages?: PageText[];
+  /** Each detection step as it runs, for the import card (M39 §5). */
+  onStep?: OnStep;
 }
 
 /** Why the AI stopped: a full subscription pauses until `resumeAfter`, anything else fails. */
@@ -57,31 +72,11 @@ export interface PipelineReading {
   blocks: StoredBlock[];
   /** The document's family (D0.1), or null when the reader gave no units. */
   family: DocumentFamily | null;
+  issues?: DetectionIssue[];
 }
 
 /** What a pipeline job ran with: the prompt standard and its lesson's version. */
 export const CURRICULUM_VERSION = `prompt-${PROMPT_VERSION}/${markLesson.id}-${markLesson.version}`;
-
-/** A job's earlier lesson usage plus this run's, summed per lesson and model, for the report. */
-export function sumUsage(previous: unknown, usage: readonly LessonUsage[]): UsageRow[] {
-  const earlier = z.array(UsageRow).safeParse(previous);
-  const rows = new Map(
-    (earlier.success ? earlier.data : []).map((row) => [`${row.lesson}\n${row.model}`, row]),
-  );
-  for (const call of usage) {
-    const key = `${call.lesson}\n${call.model}`;
-    const row = rows.get(key) ?? { ...call, calls: 0, inputTokens: 0, outputTokens: 0 };
-    rows.set(key, {
-      lesson: call.lesson,
-      model: call.model,
-      calls: row.calls + 1,
-      inputTokens: row.inputTokens + call.inputTokens,
-      outputTokens: row.outputTokens + call.outputTokens,
-      estimated: row.estimated || call.estimated,
-    });
-  }
-  return [...rows.values()];
-}
 
 /** The lessons whose approved models decide which provider kind an instance is. */
 const LESSON = markLesson.id;
@@ -90,6 +85,21 @@ const KINDS: readonly ProviderKind[] = ['claude', 'codex'];
 const unavailable: AiProvider = {
   generate: () => Promise.resolve({ ok: false, failure: 'model_missing' }),
 };
+
+/**
+ * The lessons with no AI (M39): no model approved, so a lesson's items go to review and nothing
+ * is sent anywhere. The detection reads the file exactly as with an AI.
+ */
+export const rulesOnly = (
+  ownerId: string,
+  rest: Pick<LessonDeps, 'cache' | 'now' | 'startTier'>,
+): LessonDeps => ({
+  ownerId,
+  providerKind: 'claude',
+  providerFor: () => unavailable,
+  ...rest,
+  approved: () => false,
+});
 
 /**
  * The user's provider for the lessons, or null when it is missing or not ready (Z4). Its kind
@@ -121,22 +131,6 @@ export async function openLessons(
   return null;
 }
 
-/** The pipeline question as the screening reads it (its lines as one area per page). */
-const extractedOf = (question: PipelineQuestion): ExtractedQuestion => ({
-  number: question.number,
-  page: question.page,
-  stem: question.stem,
-  kind: question.options.length === 0 ? 'essay' : 'mcq',
-  options: question.options.map(({ letter, label, text }) => ({ letter, label, text })),
-  answer: question.answers[0] ?? null,
-  answers: question.answers,
-  evidence: evidenceOf(question),
-  conflicts: [],
-  multiSelect: question.answers.length > 1,
-  explanation: question.explanation,
-  spans: question.area.map((spot) => ({ page: spot.page, box: spot.box })),
-});
-
 /** The screening's reasons (no answer, essay, defects, pages) and the pipeline's own. */
 export function importedQuestions(
   questions: readonly PipelineQuestion[],
@@ -147,29 +141,6 @@ export function importedQuestions(
     ...imported,
     provenance: (questions[index]?.conflicts.length ?? 0) > 0 ? 'conflict' : imported.provenance,
   }));
-}
-
-/** An option picture needs its letter; without one it is shown with the question. */
-const placeOf = (picture: PipelinePicture): MediaPlace =>
-  picture.placement === 'option' && picture.optionLetter
-    ? { placement: 'option', optionLetter: picture.optionLetter }
-    : {
-        placement: picture.placement === 'option' ? 'question' : picture.placement,
-        optionLetter: null,
-      };
-
-/** Every kept picture once: a case's pictures are stored with the first question of the case. */
-function mediaOf(questions: readonly PipelineQuestion[]): KeptLink[] {
-  const seen = new Set<string>();
-  return questions.flatMap((question, index) =>
-    question.pictures.flatMap((picture): KeptLink[] => {
-      if (seen.has(picture.unitId)) return [];
-      seen.add(picture.unitId);
-      const kind = picture.imageClass === 'table' ? 'table' : 'figure';
-      const region = { page: picture.spot.page, box: picture.spot.box, kind, ppi: null } as const;
-      return [{ region, question: index, certain: true, place: placeOf(picture) }];
-    }),
-  );
 }
 
 const tagNames = (question: PipelineQuestion) => [
@@ -256,6 +227,31 @@ function flagUnclear(
 
 type FileRead = Awaited<ReturnType<NonNullable<PipelineDeps['readQuestions']>>>;
 
+/** The file's questions by the one detection path (M39), or by a test's reader. */
+async function detectFile(deps: PipelineDeps, input: PipelineInput) {
+  if (deps.readQuestions) {
+    const read = await deps.readQuestions(input.file);
+    return { read, usage: [] as LessonUsage[], stopped: null, issues: [] as DetectionIssue[] };
+  }
+  const lessons = input.captureAi ? deps : null;
+  const found = await detect(input.file, {
+    lessons,
+    ...(input.sourcePages
+      ? {
+          reader: { ...defaultLinesReader, pages: async () => input.sourcePages ?? [] },
+        }
+      : {}),
+    ...(input.onStep ? { onStep: input.onStep } : {}),
+  });
+  const read: FileRead = { questions: found.questions, units: found.detection.file.units };
+  return {
+    read,
+    usage: found.usage,
+    stopped: found.stopped,
+    issues: asDetectionIssues(found.detection),
+  };
+}
+
 /**
  * The lessons over the range's questions: D6.1 builds questions from leftover pictures, then
  * the answer evidence (D4.mark) with its audit. The first that stops ends the run.
@@ -276,6 +272,14 @@ async function runLessons(
   if (structure.failure) return { ...structure, questions: [] };
   const questions = flagUnclear(structure.questions, leftovers, structure.review);
   const family = read.units?.family.family ?? null;
+  if (input.answerAi === false) {
+    return {
+      ...structure,
+      questions: questions.map((question) =>
+        combineEvidence(question, null, auditFor(family, options)),
+      ),
+    };
+  }
   const run = await withEvidence(deps, input.file, questions, {
     ...auditFor(family, options),
     printedPictures: printedPictures(read.units),
@@ -293,17 +297,25 @@ export async function readWithPipeline(
   input: PipelineInput,
   options: EvidenceOptions = {},
 ): Promise<PipelineReading> {
-  const read = await (deps.readQuestions ?? pipelineQuestions)(input.file);
-  const run = await runLessons(deps, input, read, options);
-  const stopped = run.failure ? { failure: run.failure, resumeAfter: run.resumeAfter } : null;
+  const { read, run, stopped, issues } = await detectThenAnswer(deps, input, options);
   const family = read.units?.family.family ?? null;
   if (stopped) {
     const extras = { cases: [], tags: [] };
-    return { questions: [], media: [], extras, usage: run.usage, stopped, blocks: [], family };
+    return {
+      questions: [],
+      media: [],
+      extras,
+      usage: run.usage,
+      stopped,
+      blocks: [],
+      family,
+      issues,
+    };
   }
   const kept = run.questions.map(filterValue);
   return {
     blocks: blocksOf(read.units, kept, input),
+    issues,
     family,
     questions: importedQuestions(kept, input.readings),
     media: mediaOf(kept),
@@ -311,4 +323,20 @@ export async function readWithPipeline(
     usage: run.usage,
     stopped: null,
   };
+}
+
+/** The detection (M39), then the answers layer's lessons unless the detection's AI stopped. */
+async function detectThenAnswer(
+  deps: PipelineDeps,
+  input: PipelineInput,
+  options: EvidenceOptions,
+) {
+  const found = await detectFile(deps, input);
+  const lessons = found.stopped ? null : await runLessons(deps, input, found.read, options);
+  const usage = [...found.usage, ...(lessons?.usage ?? [])];
+  const run = { questions: lessons?.questions ?? [], usage };
+  const failure = lessons?.failure
+    ? { failure: lessons.failure, resumeAfter: lessons.resumeAfter }
+    : null;
+  return { read: found.read, run, stopped: found.stopped ?? failure, issues: found.issues };
 }

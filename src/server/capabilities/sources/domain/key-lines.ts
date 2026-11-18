@@ -30,7 +30,19 @@ const INLINE = new RegExp(`${KEY_WORD}\\(?(${LETTER_LIST})\\)?\\s*\\.?$`, 'i');
 const DOUBTFUL = new RegExp(`${KEY_WORD}(?:\\(?(?:${LETTER_LIST})\\)?\\s*\\?+|[Xx?]+)\\s*$`, 'i');
 
 /** A printed key with doubt ("D?", "X"): it gives no answer, and the question goes to review. */
-export const isDoubtfulKey = (line: string) => DOUBTFUL.test(line.trim());
+// "Correct answer: Answer will depend…": the book's answer line, naming no option. A bare
+// "The correct answer is:" is not one: its letter follows on the next line.
+const CORRECT_LEAD =
+  /^(?:(?:the\s+)?correct\s+answer|الإجابة\s+الصحيحة|الجواب\s+الصحيح)(?:\s+(?:is|هي|هو))?\s*[:：\-–]?\s*/i;
+
+/** An answer line with words after its lead but no option letter. */
+function namesNoOption(line: string): boolean {
+  const text = line.trim();
+  const lead = CORRECT_LEAD.exec(text);
+  return !!lead && text.length > lead[0].length && inlineAnswer(text) === null;
+}
+
+export const isDoubtfulKey = (line: string) => DOUBTFUL.test(line.trim()) || namesNoOption(line);
 
 const lettersIn = (list: string) =>
   list
@@ -70,6 +82,17 @@ export function keyEntries(line: string): KeyEntry[] | null {
     return ' ';
   });
   return entries.length > 0 && /^[\s|;،,]*$/.test(rest) ? entries : null;
+}
+
+// "545. a) _ Patients with…", "82. d)__ Allergic conjunctivitis": an answer printed with its
+// question's number, the option's letter in a label, then the explanation or option text.
+const OPENING = new RegExp(`^(\\d{1,4})\\s*[.):\\-–]\\s*\\(?(${LETTER})\\s*[).]`, 'u');
+
+/** The question number and answer a line opens with ("82. d) …"), or null. */
+export function answerOpening(line: string): KeyEntry | null {
+  const match = OPENING.exec(latinDigits(line).trim());
+  const letter = match?.[2] ? keyLetter(match[2]) : null;
+  return match && letter ? { number: Number(match[1]), letters: [letter] } : null;
 }
 
 // "Explanation:", "Rationale -", "Discussion", "الشرح:", "التعليل:", "التوضيح".

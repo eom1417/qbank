@@ -78,6 +78,7 @@
   --blur-nav: var(--qb-blur-nav);
   --shadow-card: var(--qb-shadow-1);
   --motion-fast: var(--qb-duration-fast);
+  --motion-spin: var(--qb-duration-spin);
   --layer-nav: var(--qb-layer-nav);
   /* Skins (tokens/skins) remap these; without a skin they follow the theme above. */
   --color-field: var(--color-surface);

@@ -26,6 +26,9 @@ export const triageEn = {
   'enhance.completeOptions': 'Complete the options',
   'enhance.completeOptions.off': 'Do not add options',
   'enhance.completeOptions.to': 'Up to this many options:',
+  'enhance.improveCapture': 'Improve capture with AI',
+  'enhance.improveCapture.hint':
+    'Only where the free reading is unsure: it sets the role of each line and links a question to its options, answer and explanation, and fixes OCR spelling. It writes no words of its own.',
   'enhance.polishText': 'Polish the wording',
   'enhance.polishText.hint':
     'Spelling, grammar and clarity. Every number, unit and negation (NOT, EXCEPT) is kept, and a rewrite that changes the answer is undone.',

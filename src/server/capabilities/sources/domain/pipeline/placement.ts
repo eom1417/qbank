@@ -1,9 +1,7 @@
 // M34 P4, level 3 in code (D3.1, D3.2): every picture belongs to the nearest question anchor
 // before it in reading order, and its place follows from where it sits in that question.
 import { inkBlobs } from '../ink-regions.js';
-import type { TextLine } from '../lines.js';
 import { overlaps, unionBox, type Box } from '../page.js';
-import type { ParsedQuestion } from '../questions.js';
 import type { PicturePlacement, PipelinePicture, Spot } from './question.js';
 import { pixelAt } from './image-class.js';
 import type { RgbImage } from './rgb-image.js';
@@ -28,35 +26,6 @@ export interface QuestionFrame {
   options: FrameOption[];
   /** Its lines, page by page. */
   spans: Spot[];
-}
-
-/** Where every line of the virtual text is in the reading order (by line and by box). */
-export function lineOrder(text: VirtualText): Map<TextLine | Box, number> {
-  const order = new Map<TextLine | Box, number>();
-  text.lines.forEach(({ line }, index) => {
-    order.set(line, index);
-    order.set(line.box, index);
-    if (line.words[0]) order.set(line.words[0].box, index);
-  });
-  return order;
-}
-
-/** The frame of a parsed question: its spans and options located in the reading order. */
-export function frameOf(question: ParsedQuestion, order: ReadonlyMap<TextLine | Box, number>) {
-  const ats = question.spans.map((span) => order.get(span.box) ?? -1).filter((at) => at >= 0);
-  const options = question.options.map((option) => {
-    const at = order.get(option.letterBox) ?? -1;
-    const line = question.spans.find((span) => order.get(span.box) === at);
-    return { letter: option.letter, at, page: option.page, box: line?.box ?? option.letterBox };
-  });
-  return {
-    number: question.number,
-    stem: question.stem,
-    stemAt: ats[0] ?? -1,
-    endAt: Math.max(...ats, -1),
-    options,
-    spans: question.spans.map((span) => ({ page: span.page, box: span.box })),
-  } satisfies QuestionFrame;
 }
 
 /** The closed word list of D3.2: the stem says a picture goes with it. */

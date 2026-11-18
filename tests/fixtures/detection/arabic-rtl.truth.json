@@ -1,0 +1,128 @@
+{
+  "file": "arabic-rtl.pdf",
+  "sha256": "e0acf2cd0434b9866327879322bbf6a83922ddb6ca0298b79bc537a5062a566e",
+  "pageCount": 1,
+  "family": "exported_bank",
+  "headings": [],
+  "printedTotal": null,
+  "filler": [],
+  "questions": [
+    {
+      "ordinal": 1,
+      "printed": 1,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "ما هو العضو المسؤول عن وظيفة رقم 1 في الجسم؟",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "الخيار الأول 1"
+        },
+        {
+          "letter": "B",
+          "text": "الخيار الثاني 1"
+        },
+        {
+          "letter": "C",
+          "text": "الخيار الثالث 1"
+        },
+        {
+          "letter": "D",
+          "text": "الخيار الرابع 1"
+        }
+      ],
+      "answer": ["B"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    },
+    {
+      "ordinal": 2,
+      "printed": 2,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "ما هو العضو المسؤول عن وظيفة رقم 2 في الجسم؟",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "الخيار الأول 2"
+        },
+        {
+          "letter": "B",
+          "text": "الخيار الثاني 2"
+        },
+        {
+          "letter": "C",
+          "text": "الخيار الثالث 2"
+        },
+        {
+          "letter": "D",
+          "text": "الخيار الرابع 2"
+        }
+      ],
+      "answer": ["C"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    },
+    {
+      "ordinal": 3,
+      "printed": 3,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "ما هو العضو المسؤول عن وظيفة رقم 3 في الجسم؟",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "الخيار الأول 3"
+        },
+        {
+          "letter": "B",
+          "text": "الخيار الثاني 3"
+        },
+        {
+          "letter": "C",
+          "text": "الخيار الثالث 3"
+        },
+        {
+          "letter": "D",
+          "text": "الخيار الرابع 3"
+        }
+      ],
+      "answer": ["D"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    }
+  ]
+}

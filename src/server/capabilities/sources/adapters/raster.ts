@@ -33,3 +33,24 @@ export function renderPng(file: string, page: number, dpi = 110): Promise<string
     return (await readBytes(`${root}.png`)).toString('base64');
   });
 }
+
+/** Maximum recent grayscale pages retained by a file reader. */
+const RASTERS_KEPT = 4;
+
+/**
+ * Renders a page once while it is in use: the few most recent stay, older ones are rendered
+ * again if a later step needs them.
+ */
+export function rasterCache(file: string, render = renderPage) {
+  const rasters = new Map<number, Promise<Raster>>();
+  return (page: number) => {
+    const kept = rasters.get(page) ?? render(file, page);
+    rasters.delete(page);
+    rasters.set(page, kept);
+    for (const oldest of rasters.keys()) {
+      if (RASTERS_KEPT >= rasters.size) break;
+      rasters.delete(oldest);
+    }
+    return kept;
+  };
+}

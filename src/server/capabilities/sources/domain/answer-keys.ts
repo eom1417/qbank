@@ -1,12 +1,4 @@
 import type { KeyEntry } from './key-lines.js';
-import type { SeparatedLines } from './key-pass.js';
-import type { Box } from './page.js';
-
-/** What linking needs of a parsed question: its number and where its lines are. */
-interface KeyedQuestion {
-  number: number;
-  spans: readonly { box: Box }[];
-}
 
 /** A key section and where it stands: after the question at `position` (-1: before all). */
 export interface PlacedKey {
@@ -52,49 +44,4 @@ export function matchKeys(
     }
   }
   return answers;
-}
-
-/** The key and the author's explanation each question has in the source. */
-export interface QuestionKeys {
-  key: string[] | null;
-  /** Where the key came from: printed beside the question, or a key section. */
-  keyFrom: 'inline' | 'section' | null;
-  explanation: string | null;
-}
-
-/** Ties the separated keys and explanations back to the parsed questions. */
-export function attachKeys(
-  questions: readonly KeyedQuestion[],
-  separated: Omit<SeparatedLines, 'lines'>,
-): QuestionKeys[] {
-  const owner = (after: { box: Box } | null) =>
-    after ? questions.findLastIndex((q) => q.spans.some((span) => span.box === after.box)) : -1;
-  const result: QuestionKeys[] = questions.map(() => ({
-    key: null,
-    keyFrom: null,
-    explanation: null,
-  }));
-  const sections = separated.keys.map((key) => ({
-    position: owner(key.after),
-    entries: key.entries,
-  }));
-  matchKeys(
-    questions.map((q) => q.number),
-    sections,
-  ).forEach((key, index) => {
-    const slot = result[index];
-    if (key && slot) Object.assign(slot, { key, keyFrom: 'section' });
-  });
-  for (const inline of separated.inline) {
-    const slot = result[owner(inline.after)];
-    if (slot) Object.assign(slot, { key: inline.letters, keyFrom: 'inline' });
-  }
-  for (const explanation of separated.explanations) {
-    const slot = result[owner(explanation.after)];
-    if (slot)
-      slot.explanation = slot.explanation
-        ? `${slot.explanation} ${explanation.text}`
-        : explanation.text;
-  }
-  return result;
 }
