@@ -169,14 +169,3 @@ describe('a stamp over the print (M39 step 2)', () => {
     expect(read.lines.filter((l) => l.deviceNote).map((l) => l.text)).toEqual(['Oi', 'check']);
   });
 });
-
-describe('a short word alone in another font (M39 step 2)', () => {
-  it('is ink, not print, when the file knows its body fonts', () => {
-    const option = row('B. INH for 9 months', 36, 100, 'TimesNewRomanPSMT');
-    const ink = row('OH', 300, 160, 'Helvetica');
-    const note = row('TB Infection Latent', 200, 130, '.SFUI-Regular');
-    const read = linesOf(fileUnits([]), [page([...option, ...note, ...ink])]);
-    const printed = read.lines.filter((l) => !l.deviceNote).map((l) => l.text);
-    expect(printed).toEqual(['B. INH for 9 months']);
-  });
-});

@@ -30,12 +30,19 @@ const INLINE = new RegExp(`${KEY_WORD}\\(?(${LETTER_LIST})\\)?\\s*\\.?$`, 'i');
 const DOUBTFUL = new RegExp(`${KEY_WORD}(?:\\(?(?:${LETTER_LIST})\\)?\\s*\\?+|[Xx?]+)\\s*$`, 'i');
 
 /** A printed key with doubt ("D?", "X"): it gives no answer, and the question goes to review. */
-// "Correct answer: Answer will depend…": the book's answer line, naming no option.
-const CORRECT_LINE =
-  /^(?:(?:the\s+)?correct\s+answer|الإجابة\s+الصحيحة|الجواب\s+الصحيح)(?=\s|[:：\-–]|$)/i;
+// "Correct answer: Answer will depend…": the book's answer line, naming no option. A bare
+// "The correct answer is:" is not one: its letter follows on the next line.
+const CORRECT_LEAD =
+  /^(?:(?:the\s+)?correct\s+answer|الإجابة\s+الصحيحة|الجواب\s+الصحيح)(?:\s+(?:is|هي|هو))?\s*[:：\-–]?\s*/i;
 
-export const isDoubtfulKey = (line: string) =>
-  DOUBTFUL.test(line.trim()) || (CORRECT_LINE.test(line.trim()) && inlineAnswer(line) === null);
+/** An answer line with words after its lead but no option letter. */
+function namesNoOption(line: string): boolean {
+  const text = line.trim();
+  const lead = CORRECT_LEAD.exec(text);
+  return !!lead && text.length > lead[0].length && inlineAnswer(text) === null;
+}
+
+export const isDoubtfulKey = (line: string) => DOUBTFUL.test(line.trim()) || namesNoOption(line);
 
 const lettersIn = (list: string) =>
   list
