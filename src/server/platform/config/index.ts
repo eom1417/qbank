@@ -205,7 +205,11 @@ function googleOf(parsed: z.infer<typeof Env>): GoogleConfig | null {
 
 /** Local defaults: plain http on this computer or its network, and a paired browser stays paired. */
 const LOCAL_DEFAULTS = { cookieSecure: 'false', sessionTtlDays: 400, requiresAi: 'false' } as const;
-const ACCOUNTS_DEFAULTS = { cookieSecure: 'true', sessionTtlDays: 30, requiresAi: 'true' } as const;
+const ACCOUNTS_DEFAULTS = {
+  cookieSecure: 'true',
+  sessionTtlDays: 30,
+  requiresAi: 'false',
+} as const;
 
 /** A comma-separated setting as its non-empty, trimmed entries. */
 const listOf = (value: string) =>

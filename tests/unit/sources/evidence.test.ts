@@ -195,3 +195,17 @@ describe('two agreeing signals before an exam (M34 Q85, M35)', () => {
     expect(keyed).toMatchObject({ answers: ['C'], reviewReasons: ['single_signal'] });
   });
 });
+
+describe('a printed key in a book nobody wrote on (M38)', () => {
+  // M38 (Q137): a book nobody wrote on prints its answer; that key alone decides. Any other
+  // single signal, and every key in annotated notes, still waits for a second one.
+  it('lets a printed key alone decide in a file nobody wrote on', () => {
+    const book = { printedKeySuffices: true };
+    const keyed = combineEvidence(question('ABCD', ['C'], ['printed_key']), null, book);
+    expect(keyed).toMatchObject({ answers: ['C'], reviewReasons: [] });
+    const seen = combineEvidence(question('ABCD'), vision('B'), book);
+    expect(seen.reviewReasons).toEqual([SINGLE_SIGNAL]);
+    const notes = combineEvidence(question('ABCD', ['C'], ['printed_key']), null);
+    expect(notes.reviewReasons).toEqual([SINGLE_SIGNAL]);
+  });
+});

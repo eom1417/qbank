@@ -21,6 +21,7 @@ import {
 } from '../domain/pipeline/placement.js';
 import type { PipelineQuestion } from '../domain/pipeline/question.js';
 import type { RgbImage } from '../domain/pipeline/rgb-image.js';
+import type { Unit } from '../domain/pipeline/units.js';
 import {
   pictureKeys,
   readsAsText,
@@ -143,6 +144,8 @@ interface FileContext {
   /** Printed words of each page: the body text and the words read in pictures. */
   printed: Map<number, Box[]>;
   text: VirtualText;
+  /** Notes a device wrote on (D0.1): their rules stay as measured on the calibration set. */
+  annotated: boolean;
 }
 
 /** Each question's answer: its key, pen ink at its letters on the rendered page, explanation. */
@@ -223,19 +226,29 @@ async function readText(file: string, units: FileUnits, readers: PipelineReaders
     );
   for (const unit of text.units.values())
     if (PRINTED_PICTURES.has(unit.imageClass ?? '')) add(unit.page, [unit.box]);
-  return { file, readers, pages, printed, text } satisfies FileContext;
+  const annotated = units.family.family === 'annotated_notes';
+  return { file, readers, pages, printed, text, annotated } satisfies FileContext;
 }
 
-/** Figures the parser steps over: the pictures not read as text. */
-const figuresOf = (text: VirtualText) =>
-  [...text.units.values()]
-    .filter((unit) => unit.kind === 'image' && !readsAsText(unit))
+/**
+ * Figures the parser steps over: the pictures not read as text and, in a file nobody wrote on,
+ * those read with no line at all (M38).
+ */
+function figuresOf(text: VirtualText, annotated: boolean) {
+  const withLines = new Set(text.lines.map((line) => line.unitId));
+  const blank = (unit: Unit) => !annotated && !withLines.has(unit.id);
+  return [...text.units.values()]
+    .filter((unit) => unit.kind === 'image' && (!readsAsText(unit) || blank(unit)))
     .map((unit) => ({ page: unit.page, box: unit.box }));
+}
 
 async function readFile(context: FileContext): Promise<QuestionParts> {
   const { text } = context;
   const heights = new Map(context.pages.map((page) => [page.page, page.height]));
-  const reading = readVirtual(text, heights, figuresOf(text));
+  const reading = readVirtual(text, heights, figuresOf(text, context.annotated), {
+    explainAfterKey: !context.annotated,
+    picturesClose: context.annotated,
+  });
   const order = lineOrder(text);
   const frames = reading.questions.map((question) => frameOf(question, order));
   const numbers = new Set(frames.map((frame) => frame.number));

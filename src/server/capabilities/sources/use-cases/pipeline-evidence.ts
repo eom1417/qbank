@@ -37,6 +37,8 @@ export interface EvidenceOptions extends LessonOptions {
   auditEvery?: number;
   /** The file's printed pictures (image units that are not handwriting): blanked in the crops. */
   printedPictures?: readonly Spot[];
+  /** A printed key decides alone (M38: a file nobody wrote on). */
+  printedKeySuffices?: boolean;
 }
 
 export interface EvidenceRun {
@@ -171,7 +173,7 @@ export async function withEvidence(
   const updated = questions.map((question) =>
     unfinished.has(question.key)
       ? question
-      : combineEvidence(question, markByKey.get(question.key) ?? null),
+      : combineEvidence(question, markByKey.get(question.key) ?? null, options),
   );
   const audited = new Set(chosen.audited.map((question) => question.key));
   return {
