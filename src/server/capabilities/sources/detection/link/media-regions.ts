@@ -68,24 +68,48 @@ export function mergeRegions(
     const question =
       previous >= 0 && questions[previous]?.explanation.length ? previous : link.question;
     const existing = pictures[previous]?.find((picture) => matches(picture, link.region));
-    output[question]?.push(regionPicture({ ...link, question }, index, existing));
+    const placed = existing && { picture: existing, stays: question === previous };
+    output[question]?.push(regionPicture({ ...link, question }, index, placed));
   }
   return output;
 }
 
-/** Region metadata survives into cropping, quality checks and the review card. */
-function regionPicture(
+/**
+ * A picture the rules placed in its question's own explanation (after the answer), and still
+ * with that question, keeps that place and certainty; otherwise the region's certainty decides.
+ */
+function placedRegion(
+  link: MediaLink,
+  { picture: existing, stays }: { picture: PipelinePicture; stays: boolean },
+  region: Pick<PipelinePicture, 'spot' | 'imageClass' | 'ppi'>,
+): PipelinePicture {
+  const kept = (stays && existing.placement === 'explanation') || link.certain;
+  const placement = kept ? existing.placement : 'explanation';
+  return { ...existing, ...region, placement, certain: kept ? (existing.certain ?? true) : false };
+}
+
+/**
+ * Region metadata survives into cropping, quality checks and the review card; a picture the
+ * placement rules placed adds the region's kind and resolution to its own place.
+ */
+export function regionPicture(
   link: MediaLink,
   index: number,
-  existing?: PipelinePicture,
+  placed?: { picture: PipelinePicture; stays: boolean },
 ): PipelinePicture {
-  return {
-    unitId: existing?.unitId ?? `region:${link.region.page}:${index}`,
+  const imageClass: PipelinePicture['imageClass'] =
+    link.region.kind === 'table' ? 'table' : 'figure';
+  const region = {
     spot: { page: link.region.page, box: link.region.box },
-    placement: link.certain ? (existing?.placement ?? 'question') : 'explanation',
-    optionLetter: existing?.optionLetter ?? null,
-    imageClass: link.region.kind === 'table' ? 'table' : 'figure',
+    imageClass,
     ppi: link.region.ppi,
+  };
+  if (placed) return placedRegion(link, placed, region);
+  return {
+    unitId: `region:${link.region.page}:${index}`,
+    ...region,
+    placement: link.certain ? 'question' : 'explanation',
+    optionLetter: null,
     certain: link.certain,
   };
 }
