@@ -373,3 +373,17 @@ describe('M39 step 4: a question with no options and its answer after the questi
     expect(question?.stem).toBe('A boy has a rash. What is it? How would you treat it?');
   });
 });
+
+describe('M39 step 4: one option circled by hand', () => {
+  it('is the pen-marked answer, its text without the circle', () => {
+    const { file, roles } = fileOf([
+      label(5, '6. What is the most likely cause?', 6),
+      [5, '@)Tricuspid atresia', 'option', { letter: 'A', circled: true }],
+      option(5, 'B. Truncus arteriosus', 'B'),
+    ]);
+    const [question] = toDetectedQuestions(detectionOf(file, roles));
+    expect(question?.answers).toEqual(['A']);
+    expect(question?.evidence).toEqual(['pen_mark']);
+    expect(question?.options[0]?.text).toBe('Tricuspid atresia');
+  });
+});

@@ -7,6 +7,7 @@ import {
 } from '../../domain/key-lines.js';
 import type { KeyEntry } from '../../domain/key-lines.js';
 import {
+  circledLabel,
   optionLabel,
   questionLabel,
   type OptionLabel,
@@ -32,6 +33,8 @@ export interface Signals {
   explanation: boolean;
   label: QuestionLabel | null;
   option: OptionLabel | null;
+  /** The text after a circled letter OCR read as a symbol ("@)Tricuspid"), or null. */
+  circled: string | null;
   /** A table row's first cell: one letter alone, a cell gap after it (as A, B, C…). */
   rowLetter: string | null;
   /** A capital letter alone or with a comma before more words ("B Call…", "E, Give…"). */
@@ -99,6 +102,7 @@ function signalOf(line: Line, measure: Measure, filler: boolean): Signals {
     explanation: explanationStart(text) !== null,
     label: questionNumber(text),
     option: optionLabel(text),
+    circled: circledLabel(text),
     rowLetter: rowLetter(line, measure),
     looseLetter: looseLetter(line),
   };

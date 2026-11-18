@@ -69,6 +69,8 @@ export interface LineRole {
   letters?: string[];
   /** key_table: number → letters, as printed. */
   entries?: { number: number; letters: string[] }[];
+  /** option: OCR read its letter as a circle symbol ("@)"): circled by hand, a pen mark. */
+  circled?: boolean;
   /** 0–1: how sure the rule is; below 0.5 the line is a doubt for step 5. */
   confidence: number;
   /** Set by the AI step: the role came from the model, not the rules. */

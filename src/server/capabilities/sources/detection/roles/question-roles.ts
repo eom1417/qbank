@@ -107,6 +107,16 @@ function repeatedOption(walk: Walk, line: Line, signals: Signals): LineRole | nu
 
 const optionContext = (walk: Walk, line: Line) => inQuestion(walk) && !excerpt(walk, line);
 
+/**
+ * A line whose letter OCR read as a circle symbol ("@)Tricuspid", "© Hypo…"): the next option,
+ * after the stem or beside the options before it. The circle is the reader's pen mark.
+ */
+function circledOption(walk: Walk, line: Line, signals: Signals): LineRole | null {
+  if (signals.circled === null || walk.system === 'arabic') return null;
+  const placed = walk.mode === 'option' ? nearOptionStart(walk, line) : walk.mode === 'stem';
+  return placed ? { ...takeOption(walk, line, 0.7), circled: true } : null;
+}
+
 /** The next option in sequence, one after a lost one, or one printed with no label mark. */
 function optionRole(walk: Walk, line: Line, signals: Signals): LineRole | null {
   if (!optionContext(walk, line)) return null;
@@ -117,8 +127,14 @@ function optionRole(walk: Walk, line: Line, signals: Signals): LineRole | null {
     return takeOption(walk, line, walk.mode === 'after' ? 0.7 : 0.9);
   }
   if (option && ahead === walk.options + 1) return afterLost(walk, line, option.system);
-  return repeatedOption(walk, line, signals) ?? unmarkedOption(walk, line, signals);
+  return unlettered(walk, line, signals);
 }
+
+/** An option with no usable letter: circled by hand, repeated, or printed with no label mark. */
+const unlettered = (walk: Walk, line: Line, signals: Signals) =>
+  circledOption(walk, line, signals) ??
+  repeatedOption(walk, line, signals) ??
+  unmarkedOption(walk, line, signals);
 
 /** A new option set before another numbered item distinguishes a question from a list. */
 function optionsFollow(walk: Walk, line: Line): boolean {

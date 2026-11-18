@@ -1,6 +1,7 @@
 import { boxHeight, type Box, type PageWord } from './page.js';
 import {
   answerLetter,
+  circledLabel,
   optionLabel,
   questionLabel,
   type OptionLabel,
@@ -39,8 +40,6 @@ export interface ParsedQuestion {
   spans: { page: number; box: Box }[];
 }
 
-// How OCR reads a hand-circled letter ("@)Tricuspid atresia", "© Hypothalamic…", "G)GnRH…").
-const CIRCLED = /^(?:[@©®]\)?|G\))\s*(.*)$/;
 // "~*~*~*" rules and "Heart Murmurs (4 Questions)" headings close the current question.
 const SEPARATOR = /^(?:[~*\s]{6,}|.*\(\d+\s+Questions?\))$/i;
 
@@ -105,9 +104,9 @@ function unlabelledOption(
 ): ParsedOption | null {
   const row = tableRows ? tableRow(line, question.options.length) : null;
   if (row !== null) return { ...base, label: base.letter, text: row, circledGlyph: false };
-  const circled = question.system === 'arabic' ? null : CIRCLED.exec(line.text);
-  return circled
-    ? { ...base, label: base.letter, text: circled[1] ?? '', circledGlyph: true }
+  const circled = question.system === 'arabic' ? null : circledLabel(line.text);
+  return circled !== null
+    ? { ...base, label: base.letter, text: circled, circledGlyph: true }
     : null;
 }
 

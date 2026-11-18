@@ -1,4 +1,4 @@
-import { optionLabel, questionLabel } from '../../domain/labels.js';
+import { circledLabel, optionLabel, questionLabel } from '../../domain/labels.js';
 import { explanationStart } from '../../domain/key-lines.js';
 import { unionBox, type Box } from '../../domain/page.js';
 import type { PipelineEvidence, PipelineOption, Spot } from '../../domain/pipeline/question.js';
@@ -74,8 +74,12 @@ function optionOf(reader: Reader, option: DraftQuestion['options'][number]): Pip
   return {
     letter: option.letter,
     label: option.label,
-    text: takeTags(reader.join(option.lines, (text) => withoutOptionLabel(text, option.label)))
-      .rest,
+    text: takeTags(
+      reader.join(
+        option.lines,
+        (text) => circledLabel(text) ?? withoutOptionLabel(text, option.label),
+      ),
+    ).rest,
     spot: first && box ? { page: first.page, box } : null,
   };
 }

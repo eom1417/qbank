@@ -104,3 +104,20 @@ describe('a first option whose letter a pen circle hid from OCR (M39 step 3)', (
     expect(roles[1]?.role).toBe('stem');
   });
 });
+
+describe('a letter circled by hand, read by OCR as a symbol (M39 step 3)', () => {
+  it('is the next option, marked as circled', () => {
+    const roles = classifyLines(
+      fileOf([
+        at('6. What is the most likely cause?', 100),
+        at('@)Tricuspid atresia', 114),
+        at('B. Truncus arteriosus', 128),
+      ]),
+    );
+    expect(roles.map((role) => [role.role, role.letter, role.circled])).toEqual([
+      ['label', undefined, undefined],
+      ['option', 'A', true],
+      ['option', 'B', undefined],
+    ]);
+  });
+});

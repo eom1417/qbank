@@ -167,6 +167,20 @@ function answerLoneOptions(file: FileLines, questions: DraftQuestion[]): void {
   }
 }
 
+/**
+ * One option whose letter OCR read as a circle symbol is the reader's pen-marked answer; one that
+ * names another letter than the printed answer is a conflict. Several circled decide nothing.
+ */
+function answerCircled(byLine: ReadonlyMap<number, LineRole>, questions: DraftQuestion[]): void {
+  for (const question of questions) {
+    const circled = question.options.filter((o) => byLine.get(o.lines[0] ?? -1)?.circled);
+    const letter = circled.length === 1 ? circled[0]?.letter : undefined;
+    if (!letter) continue;
+    if (!question.answer) question.answer = { letters: [letter], lines: [], from: 'pen_mark' };
+    else if (!question.answer.letters.includes(letter)) question.conflicts.push('key_conflict');
+  }
+}
+
 /** Every question of the file as line ids, answers from inline lines and key sections. */
 export function assemble(file: FileLines, roles: readonly LineRole[]): DraftQuestion[] {
   const state: State = { questions: [], current: null, part: 'stem', keys: [], keyOpen: false };
@@ -178,6 +192,7 @@ export function assemble(file: FileLines, roles: readonly LineRole[]): DraftQues
     state.keyOpen = KEEPS_KEY.has(role.role) && (state.keyOpen || role.role === 'key_table');
   }
   applyKeys(state.questions, state.keys);
+  answerCircled(byLine, state.questions);
   answerLoneOptions(file, state.questions);
   return state.questions;
 }
