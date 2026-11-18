@@ -216,6 +216,16 @@ export const LessonUsage = z
   .strict();
 export type LessonUsage = z.infer<typeof LessonUsage>;
 
+/** One detection step as the import card shows it (M39 §5); mirrors the server's `StepReport`. */
+export const StepReport = z.object({
+  step: z.enum(['inspect', 'read', 'roles', 'link', 'check', 'assist', 'save']),
+  status: z.enum(['pending', 'running', 'done', 'skipped', 'failed']),
+  done: z.number().int(),
+  total: z.number().int(),
+  note: z.string().nullable(),
+});
+export type StepReport = z.infer<typeof StepReport>;
+
 /** One file's import and its report (FR-04-011, UI-08, UI-09). Counts are real, never estimated. */
 export const ImportResponse = z
   .object({
@@ -234,6 +244,8 @@ export const ImportResponse = z
     aiOutcome: z.string().nullable(),
     /** The provider's own words when it stopped the import (M36). */
     aiDetail: z.string().nullable(),
+    /** The seven detection steps and where each stands (M39 §5); empty before any ran. */
+    steps: z.array(StepReport),
     errorCode: z.string().nullable(),
     /** The AI the job ran on (DEC-33): instance, its model, improvement and each role's model. */
     ai: z

@@ -5,6 +5,7 @@ import { Alert, Badge, Button, MutedText, Row } from '../../design-system/index.
 import { useI18n } from '../../platform/i18n/i18n.js';
 import { fill } from '../../platform/i18n/fill.js';
 import { useAction } from '../../platform/forms/use-submit.js';
+import { ImportSteps } from './ImportSteps.js';
 import { cancelImport, fetchImport, FINISHED_STAGES, queueMessage, retryImport } from './api.js';
 
 const POLL_MS = 2000;
@@ -99,6 +100,7 @@ export function ImportProgressRow({ initial, onCancel }: RowProps) {
           ` · ${t('source.questions')}: ${job.questionsFound} · ${t('source.review')}: ${job.questionsReview}`}
       </MutedText>
       <QueueNote job={job} />
+      {!done && <ImportSteps steps={job.steps} />}
       <ImportErrorNote job={job} />
       {job.errorCode && <RetryImport job={job} onRetried={setJob} />}
       {job.stage === 'completed' && <Alert tone="success">{t('import.completedNotice')}</Alert>}

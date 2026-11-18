@@ -156,6 +156,8 @@ interface ImportJobTable {
   ai_enhance: ColumnType<unknown, string | null | undefined, string>;
   /** The model of each triage role (`TriageModels`), or null for the instance default. */
   ai_roles: ColumnType<unknown, string | null | undefined, string>;
+  /** The detection steps the import card shows (M39 §5); null before any ran. */
+  steps: ColumnType<unknown, string | null | undefined, string | null>;
   ai_outcome: string | null;
   /** The provider's own words when it stopped the import (M36). */
   ai_detail: string | null;

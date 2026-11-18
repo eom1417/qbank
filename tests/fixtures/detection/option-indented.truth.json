@@ -1,0 +1,128 @@
+{
+  "file": "option-indented.pdf",
+  "sha256": "cafbd7dd73f4ec1bf50734c5e24ff53142377bd4bdec466b7c05defe926bf19c",
+  "pageCount": 1,
+  "family": "exported_bank",
+  "headings": [],
+  "printedTotal": null,
+  "filler": [],
+  "questions": [
+    {
+      "ordinal": 1,
+      "printed": 1,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "Indented-option question 1: which nerve supplies muscle group 1?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Option 1 one"
+        },
+        {
+          "letter": "B",
+          "text": "Option 1 two"
+        },
+        {
+          "letter": "C",
+          "text": "Option 1 three"
+        },
+        {
+          "letter": "D",
+          "text": "Option 1 four"
+        }
+      ],
+      "answer": ["D"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    },
+    {
+      "ordinal": 2,
+      "printed": 2,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "Indented-option question 2: which nerve supplies muscle group 2?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Option 2 one"
+        },
+        {
+          "letter": "B",
+          "text": "Option 2 two"
+        },
+        {
+          "letter": "C",
+          "text": "Option 2 three"
+        },
+        {
+          "letter": "D",
+          "text": "Option 2 four"
+        }
+      ],
+      "answer": ["D"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    },
+    {
+      "ordinal": 3,
+      "printed": 3,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "Indented-option question 3: which nerve supplies muscle group 3?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Option 3 one"
+        },
+        {
+          "letter": "B",
+          "text": "Option 3 two"
+        },
+        {
+          "letter": "C",
+          "text": "Option 3 three"
+        },
+        {
+          "letter": "D",
+          "text": "Option 3 four"
+        }
+      ],
+      "answer": ["D"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    }
+  ]
+}

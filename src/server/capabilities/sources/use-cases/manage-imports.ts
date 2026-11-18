@@ -3,6 +3,7 @@ import {
   Enhancements,
   LessonUsage,
   NO_ENHANCEMENTS,
+  StepReport,
   TriageModels,
   type ImportResponse,
   type RecentImportsResponse,
@@ -86,6 +87,9 @@ export async function getImport(
     questionsReview: job.questions_review,
     aiOutcome: job.ai_outcome,
     aiDetail: job.ai_detail,
+    steps: StepReport.array()
+      .catch([])
+      .parse(job.steps ?? []),
     errorCode: job.error_code,
     ai: await aiOf(deps, job),
     createdAt: job.created_at.toISOString(),

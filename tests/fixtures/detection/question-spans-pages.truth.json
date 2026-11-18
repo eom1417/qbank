@@ -1,0 +1,89 @@
+{
+  "file": "question-spans-pages.pdf",
+  "sha256": "54c9d41192f1293cdfa82799f5f9d34f610c1f6f5fc4176408043e34e856476f",
+  "pageCount": 2,
+  "family": "exported_bank",
+  "headings": [],
+  "printedTotal": null,
+  "filler": [],
+  "questions": [
+    {
+      "ordinal": 1,
+      "printed": 1,
+      "section": "Sample",
+      "pages": [1, 2],
+      "stem": "A long question that begins at the very bottom of the first page about renal physiology?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Option 1 one"
+        },
+        {
+          "letter": "B",
+          "text": "Option 1 two"
+        },
+        {
+          "letter": "C",
+          "text": "Option 1 three"
+        },
+        {
+          "letter": "D",
+          "text": "Option 1 four"
+        }
+      ],
+      "answer": ["C"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    },
+    {
+      "ordinal": 2,
+      "printed": 2,
+      "section": "Sample",
+      "pages": [2],
+      "stem": "A short follow-up question about liver function?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Option 2 one"
+        },
+        {
+          "letter": "B",
+          "text": "Option 2 two"
+        },
+        {
+          "letter": "C",
+          "text": "Option 2 three"
+        },
+        {
+          "letter": "D",
+          "text": "Option 2 four"
+        }
+      ],
+      "answer": ["B"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    }
+  ]
+}

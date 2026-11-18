@@ -1,0 +1,43 @@
+<!doctype html>
+<html dir="ltr">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @page {
+        size: A4;
+        margin: 18mm;
+      }
+      body {
+        font:
+          14px/1.5 Arial,
+          sans-serif;
+      }
+      p {
+        margin: 4px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="c" width="640" height="260"></canvas><img id="i" style="display: none" />
+    <script>
+      const c = document.getElementById('c'),
+        x = c.getContext('2d');
+      x.fillStyle = '#fff';
+      x.fillRect(0, 0, 640, 260);
+      x.fillStyle = '#000';
+      x.font = '20px Arial';
+      const L = [
+        '12. What is the most common cause of community acquired pneumonia?',
+        'A. Streptococcus pneumoniae',
+        'B. Klebsiella',
+        'C. Staphylococcus aureus',
+        'D. Legionella',
+      ];
+      L.forEach((t, i) => x.fillText(t, 16, 36 + i * 40));
+      const i = document.getElementById('i');
+      i.src = c.toDataURL('image/png');
+      i.style.display = 'block';
+      c.style.display = 'none';
+    </script>
+  </body>
+</html>

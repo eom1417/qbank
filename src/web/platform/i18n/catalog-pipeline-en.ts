@@ -35,4 +35,12 @@ export const pipelineEn = {
     'Where a picture belongs is not certain; it is hidden until the reveal',
   'review.reason.unread_question_text':
     'Text shaped like a question after this one was not read; a question may be missing',
+  'import.step.inspect': 'Inspecting the file',
+  'import.step.read': 'Reading the text',
+  'import.step.roles': 'Finding the roles',
+  'import.step.link': 'Linking the questions',
+  'import.step.check': 'Self-check',
+  'import.step.assist': 'AI assistance',
+  'import.step.save': 'Saving',
+  'review.reason.detection_doubt': 'Detection is not sure of this question; check its parts',
 };

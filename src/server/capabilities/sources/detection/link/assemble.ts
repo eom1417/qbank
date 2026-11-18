@@ -1,0 +1,129 @@
+import { answerLetter, optionLabel } from '../../domain/labels.js';
+import type { DraftQuestion, FileLines, Line, LineRole, Role } from '../contract.js';
+import { addKeyLine, applyKeys, type KeySection } from './answer-keys.js';
+
+// M39 step 4 (plan §3): questions put together from the line roles, in reading order and across
+// pages: label → stem → options (with their continuation lines) → answer → explanation. Answer
+// keys printed anywhere later are matched by number and section order. Pictures, cases, tags and
+// pen marks are the media step's (./media.ts).
+
+type Part = 'stem' | 'option' | 'answer' | 'explanation';
+
+interface State {
+  questions: DraftQuestion[];
+  current: DraftQuestion | null;
+  part: Part;
+  keys: KeySection[];
+  /** The last line read was a key line: the next one belongs to the same section. */
+  keyOpen: boolean;
+}
+
+/** Opens a question; with no printed number it follows on from the one before. */
+function open(state: State, number: number | undefined, labelLine: number | null): DraftQuestion {
+  const inferred = number === undefined;
+  const question: DraftQuestion = {
+    number: number ?? (state.questions.at(-1)?.number ?? 0) + 1,
+    numberInferred: inferred,
+    labelLine,
+    stem: [],
+    options: [],
+    answer: null,
+    conflicts: [],
+    explanation: [],
+    caseLines: [],
+    pictures: [],
+    tags: { exam: null, year: null },
+  };
+  state.questions.push(question);
+  state.current = question;
+  state.part = 'stem';
+  return question;
+}
+
+/** The question a new stem or option line belongs to: a finished one gives way to a new one. */
+const ongoing = (state: State): DraftQuestion =>
+  state.current && (state.part === 'stem' || state.part === 'option')
+    ? state.current
+    : open(state, undefined, null);
+
+/** A line that carries on the part being read (a stem, an option or an explanation goes on). */
+function carryOn(state: State, line: Line): void {
+  const question = state.current;
+  if (!question) return;
+  if (state.part === 'stem') question.stem.push(line.id);
+  if (state.part === 'option') question.options.at(-1)?.lines.push(line.id);
+  if (state.part === 'explanation') question.explanation.push(line.id);
+}
+
+function addOption(state: State, line: Line, role: LineRole): void {
+  const question = ongoing(state);
+  const letter = role.letter ?? answerLetter(question.options.length);
+  const label = optionLabel(line.text)?.label ?? letter;
+  question.options.push({ letter, label, lines: [line.id] });
+  state.part = 'option';
+}
+
+function addAnswer(state: State, line: Line, role: LineRole): void {
+  const question = state.current;
+  if (!question) return;
+  const letters = role.letters ?? (role.letter ? [role.letter] : []);
+  const before = question.answer?.from === 'inline' ? question.answer : null;
+  question.answer = {
+    letters: [...new Set([...(before?.letters ?? []), ...letters])],
+    lines: [...(before?.lines ?? []), line.id],
+    from: 'inline',
+  };
+  state.part = 'answer';
+}
+
+function addExplanation(state: State, line: Line): void {
+  if (!state.current) return;
+  state.current.explanation.push(line.id);
+  state.part = 'explanation';
+}
+
+/** A heading, a case text or a key line ends the question before it. */
+function close(state: State): void {
+  state.current = null;
+}
+
+const ignore = (): void => undefined;
+
+const READ: Record<Role, (state: State, line: Line, role: LineRole) => void> = {
+  label: (state, line, role) => void open(state, role.number, line.id),
+  stem: (state, line) => {
+    const question = ongoing(state);
+    if (state.part === 'stem') question.stem.push(line.id);
+    else carryOn(state, line);
+  },
+  option: addOption,
+  answer: addAnswer,
+  explanation: addExplanation,
+  key_table: (state, _line, role) => {
+    addKeyLine(state.keys, state.keyOpen, role, state.questions.length - 1);
+    close(state);
+  },
+  case: close,
+  heading: close,
+  unknown: carryOn,
+  tag: ignore,
+  filler: ignore,
+  note: ignore,
+};
+
+/** Roles that leave an open key section open (page furniture between two key lines). */
+const KEEPS_KEY: ReadonlySet<Role> = new Set(['key_table', 'filler', 'note', 'tag']);
+
+/** Every question of the file as line ids, answers from inline lines and key sections. */
+export function assemble(file: FileLines, roles: readonly LineRole[]): DraftQuestion[] {
+  const state: State = { questions: [], current: null, part: 'stem', keys: [], keyOpen: false };
+  const byLine = new Map(roles.map((role) => [role.line, role]));
+  for (const line of file.lines) {
+    const role = byLine.get(line.id);
+    if (!role || line.deviceNote) continue;
+    READ[role.role](state, line, role);
+    state.keyOpen = KEEPS_KEY.has(role.role) && (state.keyOpen || role.role === 'key_table');
+  }
+  applyKeys(state.questions, state.keys);
+  return state.questions;
+}

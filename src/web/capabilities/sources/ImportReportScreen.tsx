@@ -15,6 +15,7 @@ import { useQuery } from '../../platform/api/use-query.js';
 import { useI18n, type MessageKey } from '../../platform/i18n/i18n.js';
 import { fetchImport, FINISHED_STAGES } from './api.js';
 import { ImportErrorNote, QueueNote, RetryImport, usePolledImport } from './ImportProgress.js';
+import { ImportSteps } from './ImportSteps.js';
 import { MediaCard } from './MediaCard.js';
 import { AiUsed } from './AiUsed.js';
 import { PausedNote, PipelineUse } from './PipelineUse.js';
@@ -91,6 +92,7 @@ function Report({ initial }: { initial: ImportResponse }) {
           {t('import.pagesRead')}: {job.pagesDone} / {job.pagesTotal}
         </MutedText>
         <QueueNote job={job} />
+        <ImportSteps steps={job.steps} />
         {FINISHED_STAGES.has(job.stage) && (
           <MutedText>
             {t('source.questions')}: {job.questionsFound} · {t('source.review')}:{' '}

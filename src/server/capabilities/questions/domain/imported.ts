@@ -39,7 +39,9 @@ export type ReviewReason =
   /** M34 safety (Q85): where a picture belongs is not certain; it is hidden until the reveal. */
   | 'picture_place_unsure'
   /** M36 (Q106): text shaped like a question was left unread after it; one may be missing. */
-  | 'unread_question_text';
+  | 'unread_question_text'
+  /** M39: the detection's own check is not sure of this question; its parts need a look. */
+  | 'detection_doubt';
 
 /** A question's text and answer, as a write sets them (restoring, the AI triage). */
 export interface QuestionContent {

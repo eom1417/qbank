@@ -34,4 +34,12 @@ export const pipelineAr: Record<keyof typeof pipelineEn, string> = {
   'review.reason.picture_place_unsure': 'مكان صورة غير مؤكد؛ أُخفيت حتى الكشف',
   'review.reason.unread_question_text':
     'بعد هذا السؤال نص يشبه سؤالًا لم يُقرأ؛ فقد يكون هناك سؤال ناقص',
+  'import.step.inspect': 'فحص الملف',
+  'import.step.read': 'قراءة الكلام',
+  'import.step.roles': 'تحديد الأدوار',
+  'import.step.link': 'ربط الأسئلة',
+  'import.step.check': 'الفحص الذاتي',
+  'import.step.assist': 'المساعدة بالذكاء الاصطناعي',
+  'import.step.save': 'الحفظ',
+  'review.reason.detection_doubt': 'الالتقاط غير متأكد من هذا السؤال؛ راجع أجزاءه',
 };
