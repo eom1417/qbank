@@ -123,3 +123,15 @@ identically on develop (ai-host does not start in this container).
 Full suite: 1006 passed, 3 files failing (2 environmental, 1 nephrology OCR threshold).
 Not yet done: nephrology OCR threshold, stem gap on allergy/immuno collage pages, deleting
 the old readers, AI-assisted measurement, browser acceptance.
+
+## Old readers removed (2026-11-18, later)
+
+Deleted with their tests (about 2,000 lines): the M3 parser `parseQuestions`, the old key pass,
+`readVirtual`, `buildQuestions`, `keysByPlace`, the old region/crop helpers and the whole-page
+AI reader (`read-with-ai`, `domain/page-reading`). An import with `aiMode: 'read'` is read by
+the detection with the AI on its doubts (API value kept). knip shows no new dead code.
+Printed ruled tables a question reads stay text (PREP leaks 5 -> 1, stem 0.951 -> 0.962).
+
+Open: nephrology OCR threshold (2 wrong vs 1 allowed, stem 0.911 vs 0.93); one leak each in
+PREP and nephrology; AI measurement blocked: the container's ANTHROPIC_API_KEY is refused
+(`invalid_key`; the run kept the rules, 0 silent); browser acceptance not run (no dev server).
