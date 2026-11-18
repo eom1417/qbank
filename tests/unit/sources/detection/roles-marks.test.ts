@@ -76,3 +76,31 @@ describe('a picture after the stem has asked its question (M39 step 3)', () => {
     expect(roles[1]?.role).toBe('stem');
   });
 });
+
+describe('a first option whose letter a pen circle hid from OCR (M39 step 3)', () => {
+  it('is option A when "B." follows starting where it starts', () => {
+    const roles = classifyLines(
+      fileOf([
+        at('2. What is the most likely cause of this lesion?', 100),
+        at('(. Aortic stenosis', 114),
+        at('B. Pulmonary stenosis', 128),
+      ]),
+    );
+    expect(roles.map((role) => [role.role, role.letter])).toEqual([
+      ['label', undefined],
+      ['option', 'A'],
+      ['option', 'B'],
+    ]);
+  });
+
+  it('leaves the stem whole when its last line asks the question', () => {
+    const roles = classifyLines(
+      fileOf([
+        at('2. A boy has a murmur at the left', 100),
+        at('sternal border. What is the cause?', 114),
+        at('B. Pulmonary stenosis', 128),
+      ]),
+    );
+    expect(roles[1]?.role).toBe('stem');
+  });
+});

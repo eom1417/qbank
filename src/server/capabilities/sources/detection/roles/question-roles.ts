@@ -54,7 +54,7 @@ const nearOptionStart = (walk: Walk, line: Line) => {
  * The line above the option that skips one letter, when it is the previous option's last line and
  * starts where that option does: OCR lost its letter (a circled one), so it is the lost option.
  */
-function lostAbove(walk: Walk): Line | null {
+function lostBetween(walk: Walk): Line | null {
   const above = walk.above;
   if (!above || walk.mode !== 'option' || walk.optionStart === null) return null;
   const role = walk.roles[above.id];
@@ -63,10 +63,21 @@ function lostAbove(walk: Walk): Line | null {
   return nearOptionStart(walk, above) ? above : null;
 }
 
+/**
+ * Before any option, the stem line right above "B." that starts where it starts and does not
+ * ask the question: OCR lost the first option's letter (a pen circle over it), so it is "A".
+ */
+function lostFirst(walk: Walk, above: Line, line: Line): Line | null {
+  if (walk.roles[above.id]?.role !== 'stem' || /[?؟:]\s*$/.test(above.text)) return null;
+  return Math.abs(startOf(above) - startOf(line)) <= walk.measure.margin ? above : null;
+}
+
 /** An option one letter on from the expected one: the lost option, then this one, in order. */
 function afterLost(walk: Walk, line: Line, system: OptionSystem): LineRole {
   walk.system = system;
-  const lost = lostAbove(walk);
+  const above = walk.above;
+  const first = above && walk.mode === 'stem' && walk.options === 0;
+  const lost = first ? lostFirst(walk, above, line) : lostBetween(walk);
   if (lost) walk.roles[lost.id] = takeOption(walk, lost, LOST);
   return takeOption(walk, line, LOST);
 }
