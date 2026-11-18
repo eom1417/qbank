@@ -10,7 +10,7 @@ import type { DetectedQuestion, Detection, DraftQuestion, Line } from '../contra
 // reasons a question goes to review.
 
 /** Review reason: the self-check found a doubt in this question. */
-export const DETECTION_DOUBT = 'detection_doubt';
+const DETECTION_DOUBT = 'detection_doubt';
 
 class Reader {
   constructor(private readonly detection: Detection) {}

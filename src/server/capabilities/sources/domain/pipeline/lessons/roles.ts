@@ -5,7 +5,7 @@ import { z } from 'zod';
 import type { Role } from '../../../detection/contract.js';
 import type { LessonCard } from '../lesson.js';
 
-export const LINE_ROLES = [
+const LINE_ROLES = [
   'label',
   'stem',
   'option',

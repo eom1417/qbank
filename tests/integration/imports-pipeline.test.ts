@@ -262,3 +262,15 @@ describe('no word that is not in the file (Z2)', () => {
     expect(prompts.filter((prompt) => prompt.includes('You organize exam questions'))).toEqual([]);
   });
 });
+
+describe('an import asking the AI to read whole pages (M39)', () => {
+  it('is read by the same detection, the AI helping where it doubts', async () => {
+    const { job, report } = await startPipeline({ aiMode: 'read' });
+    await runImports(app());
+    const done = await report();
+    expect(done.errorCode).toBeNull();
+    expect(done.questionsFound).toBe(3);
+    const questions = await questionsOf(job.sourceId);
+    expect(questions.map((q) => q.source_number)).toEqual([1, 2, 3]);
+  });
+});

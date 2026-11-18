@@ -27,8 +27,6 @@ async function readPages(file: string, mode: ReadingMode): Promise<PageText[]> {
   return pages;
 }
 
-export { pageRegions } from '../adapters/page-regions.js';
-
 export interface SourceReading {
   questions: ExtractedQuestion[];
   /** Figures and tables with the question each belongs to (M5.2). */

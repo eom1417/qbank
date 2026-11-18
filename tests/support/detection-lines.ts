@@ -1,7 +1,4 @@
-import type {
-  FileLines,
-  Line,
-} from '../../src/server/capabilities/sources/detection/contract.js';
+import type { FileLines, Line } from '../../src/server/capabilities/sources/detection/contract.js';
 import type { PageWord } from '../../src/server/capabilities/sources/domain/page.js';
 
 // M39 step 3 fixtures: synthetic lines stacked down a page, every distance scalable.

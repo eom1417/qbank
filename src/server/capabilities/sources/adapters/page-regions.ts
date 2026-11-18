@@ -15,7 +15,7 @@ import type { PageText } from '../domain/page.js';
  * Tables on every page, and pictures: the images a text page embeds, or dense ink on a scan
  * (M5.1). Vector drawings on text pages are not detected yet.
  */
-export async function findRegions(
+async function findRegions(
   file: string,
   pages: readonly PageText[],
   raster: (page: number) => Promise<Raster>,

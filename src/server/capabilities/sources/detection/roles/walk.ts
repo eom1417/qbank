@@ -9,7 +9,7 @@ import type { Signals } from './signals.js';
  * Where the reading is: before any question, in a stem, in its options, in text after its
  * options at a block's distance, in an explanation (after a printed answer), or in a key.
  */
-export type Mode = 'none' | 'stem' | 'option' | 'after' | 'explanation' | 'key';
+type Mode = 'none' | 'stem' | 'option' | 'after' | 'explanation' | 'key';
 
 export interface Walk {
   file: FileLines;

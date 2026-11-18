@@ -84,19 +84,3 @@ export function figuresFromImages(
       ppi: Math.round((image.pixelWidth / (image.box.x1 - image.box.x0)) * 72),
     }));
 }
-
-/**
- * Pages without the words inside tables and pictures: a table is kept as an image (FR-05-009)
- * and words OCR read inside an X-ray are not question text.
- */
-export function withoutRegionWords(
-  pages: readonly PageText[],
-  regions: readonly MediaRegion[],
-): PageText[] {
-  return pages.map((page) => {
-    const boxes = regions.filter((region) => region.page === page.page).map((r) => r.box);
-    if (boxes.length === 0) return page;
-    const words = page.words.filter((word) => !boxes.some((box) => centerInside(word.box, box)));
-    return { ...page, words };
-  });
-}

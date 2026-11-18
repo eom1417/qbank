@@ -2,7 +2,7 @@ import type { OnStep, StepId, StepReport } from '../detection/contract.js';
 import type { SourcesDeps } from './deps.js';
 
 /** The seven steps in the order the card lists them (M39 §5). */
-export const STEP_ORDER: readonly StepId[] = [
+const STEP_ORDER: readonly StepId[] = [
   'inspect',
   'read',
   'roles',
@@ -13,7 +13,7 @@ export const STEP_ORDER: readonly StepId[] = [
 ];
 
 /** Keeps one report per step in step order, whatever order the steps report in. */
-export function upsertStep(steps: readonly StepReport[], report: StepReport): StepReport[] {
+function upsertStep(steps: readonly StepReport[], report: StepReport): StepReport[] {
   const rest = steps.filter((step) => step.step !== report.step);
   return [...rest, report].sort((a, b) => STEP_ORDER.indexOf(a.step) - STEP_ORDER.indexOf(b.step));
 }

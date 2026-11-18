@@ -6,7 +6,7 @@ import type { FileLines, LineRole } from '../contract.js';
 import { isSpellingFix } from './closeness.js';
 
 /** How sure a role the model gave is. */
-export const MODEL_CONFIDENCE = 0.9;
+const MODEL_CONFIDENCE = 0.9;
 
 export interface Accepted {
   roles: LineRole[];

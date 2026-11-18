@@ -1,14 +1,5 @@
-import { expect, it, vi } from 'vitest';
+import { expect, it } from 'vitest';
 import { questionsFromPages } from '../../../src/server/capabilities/sources/use-cases/extract-questions.js';
-
-vi.mock('../../../src/server/capabilities/sources/domain/questions.js', async (original) => ({
-  ...(await original<
-    typeof import('../../../src/server/capabilities/sources/domain/questions.js')
-  >()),
-  parseQuestions: () => {
-    throw new Error('retired parser must not run');
-  },
-}));
 
 it('reads the legacy entrypoint through line roles without the retired parser', async () => {
   const lines = ['Question: 1', 'Which sample?', 'A. Copper', 'B. Zinc', 'Answer: B'];

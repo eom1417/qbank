@@ -131,7 +131,7 @@ export interface Detection {
 }
 
 export type StepId = 'inspect' | 'read' | 'roles' | 'link' | 'check' | 'assist' | 'save';
-export type StepStatus = 'pending' | 'running' | 'done' | 'skipped' | 'failed';
+type StepStatus = 'pending' | 'running' | 'done' | 'skipped' | 'failed';
 
 /** What the import card shows for one step (M39 §5). */
 export interface StepReport {

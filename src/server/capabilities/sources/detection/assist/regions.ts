@@ -3,7 +3,7 @@
 import type { Doubt, LineRole } from '../contract.js';
 
 /** The most lines one region shows the model. */
-export const REGION_CAP = 60;
+const REGION_CAP = 60;
 
 /** Split long or separated doubt runs so every target line appears in a bounded request. */
 export function doubtWindows(doubt: Doubt): Doubt[] {

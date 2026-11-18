@@ -11,7 +11,7 @@ import { anchorLines, heldLines } from './media-view.js';
 const CASE_ROLES = new Set<Role>(['case', 'unknown']);
 
 /** Lines no question holds whose role leaves them free to be a case. */
-export function freeLines(roles: readonly LineRole[], questions: readonly DraftQuestion[]) {
+function freeLines(roles: readonly LineRole[], questions: readonly DraftQuestion[]) {
   const held = new Set(questions.flatMap(heldLines));
   return new Set(
     roles.filter((r) => CASE_ROLES.has(r.role) && !held.has(r.line)).map((r) => r.line),
