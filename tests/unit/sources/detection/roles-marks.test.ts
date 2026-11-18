@@ -31,3 +31,36 @@ describe('a table header the page repeats above each option row (M39 step 3)', (
     expect(roles.map((role) => role.role)).toEqual(['label', 'stem', 'option', 'filler', 'option']);
   });
 });
+
+describe('a picture after the stem has asked its question (M39 step 3)', () => {
+  it('is the figure the question shows, not more of its stem', () => {
+    const roles = classifyLines(
+      fileOf([
+        at('14. His blood pressure is high. What is your management?', 100),
+        at('Acute severe elevation of BP confirmed', 130, { picture: 'flowchart' }),
+        at('Support airway and breathing', 144, { picture: 'flowchart' }),
+        at('A. Labetalol', 180),
+        at('B. Nifedipine', 194),
+      ]),
+    );
+    expect(roles.map((role) => role.role)).toEqual([
+      'label',
+      'filler',
+      'filler',
+      'option',
+      'option',
+    ]);
+  });
+
+  it('keeps a picture that carries on a stem still asking', () => {
+    const roles = classifyLines(
+      fileOf([
+        at('15. A boy has a rash on his', 100),
+        at('arms. Which drug is best?', 114, { picture: 'shot' }),
+        at('A. Aspirin', 140),
+        at('B. Heparin', 154),
+      ]),
+    );
+    expect(roles[1]?.role).toBe('stem');
+  });
+});
