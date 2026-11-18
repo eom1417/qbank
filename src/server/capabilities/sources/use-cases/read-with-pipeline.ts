@@ -227,8 +227,11 @@ const printedPictures = (units: FileUnits | undefined): Spot[] =>
   );
 
 /** Hand-corrected notes: every keyed question is audited against the hand mark (a 10% sample else). */
+/** Notes are audited in full; elsewhere the printed key decides alone (M38, Q137). */
 const auditFor = (family: string | null, options: EvidenceOptions): EvidenceOptions =>
-  family === 'annotated_notes' ? { ...options, auditEvery: 1 } : options;
+  family === 'annotated_notes'
+    ? { ...options, auditEvery: 1 }
+    : { ...options, printedKeySuffices: true };
 
 /**
  * A leftover picture the structure lesson could not settle sends the question before it to review

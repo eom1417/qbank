@@ -58,6 +58,14 @@ const MAX_FIRST_OPTION_GAP_LINES = 8;
 const atQuestionStart = (line: TextLine, question: ParsedQuestion) =>
   Math.abs((question.rtl ? line.box.x1 : line.box.x0) - question.start) <= INDENT_TOLERANCE;
 
+/** The line starts near where the question's last option started (M38: one set a bit in). */
+const besidePrevious = (line: TextLine, question: ParsedQuestion) => {
+  const last = question.options.at(-1);
+  if (!last) return false;
+  const at = question.rtl ? line.box.x1 : line.box.x0;
+  return Math.abs(at - (question.rtl ? last.letterBox.x1 : last.letterBox.x0)) <= INDENT_TOLERANCE;
+};
+
 type Element =
   { kind: 'stem'; question: ParsedQuestion } | { kind: 'option'; option: ParsedOption };
 
@@ -70,9 +78,13 @@ const continuesOptions = (question: ParsedQuestion, label: OptionLabel) =>
  * An option line: printed near the question's start, with the next label in sequence (a label
  * out of sequence is a pasted screenshot or a note, not an option).
  */
-function optionFrom(line: TextLine, question: ParsedQuestion): ParsedOption | null {
+function optionFrom(
+  line: TextLine,
+  question: ParsedQuestion,
+  tableRows = false,
+): ParsedOption | null {
   const first: PageWord | undefined = line.words[0];
-  if (!first || !atQuestionStart(line, question)) return null;
+  if (!first || !(atQuestionStart(line, question) || besidePrevious(line, question))) return null;
   const index = question.options.length;
   const base = { letterBox: first.box, page: line.page, letter: answerLetter(index) };
   const label = optionLabel(line.text);
@@ -81,11 +93,39 @@ function optionFrom(line: TextLine, question: ParsedQuestion): ParsedOption | nu
     question.system = label.system;
     return { ...base, label: label.label, text: label.text, circledGlyph: false };
   }
+  return unlabelledOption(line, question, base, tableRows);
+}
+
+/** An option with no typed label: a table row (M38) or a circled letter OCR misread. */
+function unlabelledOption(
+  line: TextLine,
+  question: ParsedQuestion,
+  base: Pick<ParsedOption, 'letterBox' | 'page' | 'letter'>,
+  tableRows: boolean,
+): ParsedOption | null {
+  const row = tableRows ? tableRow(line, question.options.length) : null;
+  if (row !== null) return { ...base, label: base.letter, text: row, circledGlyph: false };
   const circled = question.system === 'arabic' ? null : CIRCLED.exec(line.text);
   return circled
-    ? { ...base, label: answerLetter(index), text: circled[1] ?? '', circledGlyph: true }
+    ? { ...base, label: base.letter, text: circled[1] ?? '', circledGlyph: true }
     : null;
 }
+
+/**
+ * An option printed as a table row (M38): the row's first cell is the next letter alone
+ * ("A 95 (5.3) 200 (5.2)"); the rest of the row is the option. Only in a spanning file.
+ */
+function tableRow(line: TextLine, index: number): string | null {
+  const [first, ...rest] = line.words;
+  const next = rest[0];
+  if (!first || !next || first.text !== answerLetter(index)) return null;
+  // A cell, not a sentence ("A 15-year-old girl"): the row leaves a wide gap after the letter.
+  if (next.box.x0 - first.box.x1 < boxHeight(first.box) * CELL_GAP_LINES) return null;
+  return rest.map((word) => word.text).join(' ');
+}
+
+/** The gap after a row's letter, in line heights, that marks a table cell. */
+const CELL_GAP_LINES = 2;
 
 /**
  * A question line. Prefixed numbers ("Q3)", "س3)") always start one; a bare "3." only when it
@@ -163,6 +203,16 @@ interface ParseState {
   /** A page was skipped (not read): numbering may resume at any number. */
   afterSkippedPage: boolean;
   figures: readonly PlacedFigure[];
+  /** A question runs to the next label, whatever the distance (M38, `ParseOptions`). */
+  span: boolean;
+}
+
+export interface ParseOptions {
+  /**
+   * In a file that labels every question ("Question: 2") and that nobody wrote on, what lies
+   * between two labels is the first one's: figures, tables and options far below (M38).
+   */
+  spanToNextLabel?: boolean;
 }
 
 const elementText = (element: Element) =>
@@ -212,8 +262,8 @@ function appendContinuation(state: ParseState, open: Element, line: TextLine) {
 /** The line as the question's next option, when it is one and close enough to the question. */
 function acceptOption(state: ParseState, line: TextLine, question: ParsedQuestion): Element | null {
   const gap = question.options.length ? MAX_OPTION_GAP_LINES : MAX_FIRST_OPTION_GAP_LINES;
-  const near = within(state.lastOfQuestion, line, gap, state.figures);
-  const option = near ? optionFrom(line, question) : null;
+  const near = state.span || within(state.lastOfQuestion, line, gap, state.figures);
+  const option = near ? optionFrom(line, question, state.span) : null;
   if (!option) return null;
   question.options.push(option);
   question.spans.push({ page: line.page, box: line.box });
@@ -233,6 +283,24 @@ function startQuestion(state: ParseState, line: TextLine): Element | null {
   return { kind: 'stem', question };
 }
 
+/** Minimum length of a line taken as a repeated table header, not a short word. */
+const MIN_REPEATED = 10;
+
+const repeatsStem = (state: ParseState, open: Element, line: TextLine) =>
+  open.kind === 'option' &&
+  line.text.length >= MIN_REPEATED &&
+  (state.questions.at(-1)?.stem ?? '').includes(line.text);
+
+/** The line is close enough to go on with the open element (always, in a spanning file). */
+function continues(state: ParseState, open: Element, line: TextLine): boolean {
+  // A table's header printed again over each row is not more of the option (M38).
+  if (state.span) return !repeatsStem(state, open, line);
+  // A number alone on its line ("Question: 1") has its stem a paragraph below (M36).
+  const gap =
+    open.kind === 'stem' && open.question.stem === '' ? MAX_OPTION_GAP_LINES : MAX_GAP_LINES;
+  return within(state.previous, line, gap, state.figures);
+}
+
 /** Applies one reading line: a new question, a new option, more text, or the end of an element. */
 function step(state: ParseState, line: TextLine): Element | null {
   const continuation = state.continuation;
@@ -248,11 +316,7 @@ function step(state: ParseState, line: TextLine): Element | null {
   const option = current ? acceptOption(state, line, current) : null;
   if (option) return option;
   const { open } = state;
-  if (!open || SEPARATOR.test(line.text)) return null;
-  // A number alone on its line ("Question: 1") has its stem a paragraph below (M36).
-  const gap =
-    open.kind === 'stem' && open.question.stem === '' ? MAX_OPTION_GAP_LINES : MAX_GAP_LINES;
-  if (!within(state.previous, line, gap, state.figures)) return null;
+  if (!open || SEPARATOR.test(line.text) || !continues(state, open, line)) return null;
   appendContinuation(state, open, line);
   state.lastOfQuestion = line;
   return open;
@@ -265,8 +329,10 @@ function step(state: ParseState, line: TextLine): Element | null {
 export function parseQuestions(
   lines: readonly TextLine[],
   figures: readonly PlacedFigure[] = [],
+  options: ParseOptions = {},
 ): ParsedQuestion[] {
   const state: ParseState = {
+    span: options.spanToNextLabel ?? false,
     questions: [],
     open: null,
     previous: null,

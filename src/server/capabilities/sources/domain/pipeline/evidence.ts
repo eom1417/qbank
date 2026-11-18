@@ -125,6 +125,15 @@ function undecided(question: PipelineQuestion, conflicts: string[], reasons: str
   };
 }
 
+export interface CombineOptions {
+  /**
+   * M38 (Q137): in a file nobody wrote on, the printed key is the book's own answer and decides
+   * alone. Two signals stay required in annotated notes, where a key was once read off the
+   * question next to it (M35).
+   */
+  printedKeySuffices?: boolean;
+}
+
 /**
  * The question with its answer decided from every signal. A printed key marked doubtful, an
  * earlier conflict, two different positives, or a positive struck out leave it without an
@@ -133,6 +142,7 @@ function undecided(question: PipelineQuestion, conflicts: string[], reasons: str
 export function combineEvidence(
   question: PipelineQuestion,
   vision: VisionVerdict,
+  options: CombineOptions = {},
 ): PipelineQuestion {
   const positives = positivesOf(question, vision);
   const kinds = unique(positives.map((positive) => positive.kind));
@@ -147,7 +157,8 @@ export function combineEvidence(
   const widest = positives.reduce((a, b) => (b.letters.length > a.letters.length ? b : a));
   // Q85, M35: two different signals must agree. A printed key or a vision mark alone (also read
   // twice: both readings share the crop) keeps its answer as a suggestion, held for review.
-  const single = kinds.length >= 2 ? [] : [SINGLE_SIGNAL];
+  const keyDecides = options.printedKeySuffices === true && kinds.includes('printed_key');
+  const single = kinds.length >= 2 || keyDecides ? [] : [SINGLE_SIGNAL];
   const reviewReasons = unique([...othersOf(question), ...single]);
   return { ...question, answers: [...widest.letters], evidence: kinds, reviewReasons };
 }

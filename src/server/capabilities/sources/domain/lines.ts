@@ -77,6 +77,15 @@ function groupLines(words: readonly PageWord[]): PageWord[][] {
 }
 
 /**
+ * A left-to-right line whose full stop a right-to-left document set first (". idiopathic
+ * syndrome", ".A.Elevated levels"): the stop goes back to the end of its sentence (M38).
+ */
+function withFullStopBack(text: readonly string[]): string {
+  if (text.length < 2 || text[0] !== '.') return text.join(' ');
+  return `${text.slice(1).join(' ')}.`;
+}
+
+/**
  * One reading line. A PDF text layer stores right-to-left words in visual order (`visual`), so
  * they are turned back into reading order; OCR already reads them in order.
  */
@@ -87,7 +96,8 @@ function toLine(page: PageText, words: PageWord[]): TextLine {
   const box = unionBox(ordered.map((word) => word.box));
   return {
     page: page.page,
-    text: text.join(' '),
+    // Only a typed stop (it names its font): an OCR'd "." is a speck, not a sentence's end.
+    text: rtl || !ordered[0]?.font ? text.join(' ') : withFullStopBack(text),
     box,
     words: ordered,
     rtl,

@@ -3,7 +3,7 @@
 // read as a page inside the page (D6.1). No AI.
 import { attachKeys, type QuestionKeys } from '../answer-keys.js';
 import { isDoubtfulKey } from '../key-lines.js';
-import { separateKeys } from '../key-pass.js';
+import { separateKeys, type SeparateOptions } from '../key-pass.js';
 import { optionLabel, questionLabel } from '../labels.js';
 import type { TextLine } from '../lines.js';
 import type { Box, PageWord } from '../page.js';
@@ -174,18 +174,25 @@ const closer = (line: TextLine): TextLine => ({
   start: line.start,
 });
 
+/** Two lines on either side of a picture's edge: different units, one of them a picture. */
+const pictureEdge = (here: VirtualLine | undefined, last: VirtualLine | undefined) =>
+  !!here && !!last && here.unitId !== last.unitId && (here.fromPicture || last.fromPicture);
+
 /**
  * Lines for `parseQuestions`: a picture's edge closes the open stem or option, so text read in
  * one picture never runs on into the next picture or the page (each is a page inside the page).
  */
-export function parserLines(text: VirtualText, kept: readonly TextLine[]): TextLine[] {
+export function parserLines(
+  text: VirtualText,
+  kept: readonly TextLine[],
+  picturesClose = true,
+): TextLine[] {
   const origin = new Map(text.lines.map((virtual) => [virtual.line, virtual]));
   const result: TextLine[] = [];
   let last: VirtualLine | undefined;
   for (const line of kept) {
     const here = origin.get(line);
-    const crosses = here && last && here.unitId !== last.unitId;
-    if (crosses && (here.fromPicture || last?.fromPicture)) result.push(closer(line));
+    if (picturesClose && pictureEdge(here, last)) result.push(closer(line));
     result.push(line);
     last = here ?? last;
   }
@@ -213,6 +220,27 @@ export function pictureKeys(text: VirtualText, numbers: ReadonlySet<number>): Pi
     } else if (open) open.text = `${open.text} ${line.text}`.trim();
   }
   return keys;
+}
+
+/** Most question numbers carry a word ("Question: 2"), so each label surely starts one (M38). */
+const LABELLED_SHARE = 0.8;
+const MIN_LABELS = 3;
+
+function labelsQuestions(lines: readonly TextLine[]): boolean {
+  const labels = lines.flatMap((line) => {
+    const label = questionLabel(line.text);
+    return label ? [label] : [];
+  });
+  const prefixed = labels.filter((label) => label.prefixed).length;
+  return prefixed >= MIN_LABELS && prefixed >= labels.length * LABELLED_SHARE;
+}
+
+export interface ReadOptions extends SeparateOptions {
+  /**
+   * A picture's edge closes the open stem or option (pasted screenshots in notes). Off for a
+   * file nobody wrote on (M38): its tables and figures sit inside the question they belong to.
+   */
+  picturesClose?: boolean;
 }
 
 export interface VirtualReading {
@@ -278,15 +306,21 @@ export function readVirtual(
   text: VirtualText,
   heights: ReadonlyMap<number, number>,
   figures: readonly PlacedFigure[],
+  options: ReadOptions = {},
 ): VirtualReading {
   const all = text.lines.map((virtual) => virtual.line);
   const kept = dropRunningLines(all, heights);
   // Exam tags and doubtful keys stand between a question and its key: read apart (Q53, D4.1).
   const asides = kept.filter((line) => isAside(line.text));
-  const separated = separateKeys(kept.filter((line) => !isAside(line.text)));
+  const separated = separateKeys(
+    kept.filter((line) => !isAside(line.text)),
+    options,
+  );
   const origin = new Map(text.lines.map((virtual) => [virtual.line.box, virtual]));
   const questions = dropExcerpts(
-    parseQuestions(parserLines(text, separated.lines), figures),
+    parseQuestions(parserLines(text, separated.lines, options.picturesClose ?? true), figures, {
+      spanToNextLabel: options.picturesClose === false && labelsQuestions(separated.lines),
+    }),
     origin,
   );
   trimStrayOptions(questions, text);
