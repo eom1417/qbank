@@ -174,7 +174,8 @@ function bareConfidence(walk: Walk, line: Line, label: QuestionLabel): number | 
   if (walk.last === null) return 0.7;
   const expected = walk.last + 1;
   if (label.number === expected) return 0.9;
-  if (label.number === 1) return 0.6;
+  // Numbering starts again after a section, never inside a question (a numbered list there).
+  if (label.number === 1) return walk.mode === 'none' ? 0.6 : null;
   const skip = label.number > expected && label.number <= expected + SKIP;
   return skip && atMargin(walk.file, walk.measure, line) ? 0.5 : null;
 }

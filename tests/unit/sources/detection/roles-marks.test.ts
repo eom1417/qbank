@@ -138,3 +138,19 @@ describe('a letter circled by hand, read by OCR as a symbol (M39 step 3)', () =>
     ]);
   });
 });
+
+describe('a numbered list inside a question (M39 step 3)', () => {
+  it('does not restart the numbering: "1." under question 40 is not a question', () => {
+    const roles = classifyLines(
+      fileOf([
+        at('40. What is the next step?', 100),
+        at('A. Reassurance', 114),
+        at('B. Repeat urine culture', 128),
+        at('1. Nitrite test:', 142),
+        at('a. Detects products of reduction', 156),
+        at('b. False negatives occur', 170),
+      ]),
+    );
+    expect(roles.filter((role) => role.role === 'label').map((role) => role.number)).toEqual([40]);
+  });
+});
