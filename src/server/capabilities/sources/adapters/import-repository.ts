@@ -34,11 +34,13 @@ type JobChanges = Partial<
     | 'ai_enhance'
     | 'ai_usage'
     | 'pipeline_facts'
+    | 'steps'
   > & {
     ai_roles: string;
     ai_enhance: string;
     ai_usage: string;
     pipeline_facts: string;
+    steps: string;
   }
 >;
 type NewPage = Omit<PageRow, 'content'> & { content: string };

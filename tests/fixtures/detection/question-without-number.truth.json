@@ -1,0 +1,167 @@
+{
+  "file": "question-without-number.pdf",
+  "sha256": "c17e865aa854fea8e5e741e9dc9620bcc3ea5d06572d34ecb957e1638d8d88b1",
+  "pageCount": 1,
+  "family": "exported_bank",
+  "headings": [],
+  "printedTotal": null,
+  "filler": [],
+  "questions": [
+    {
+      "ordinal": 1,
+      "printed": 1,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "Unnumbered-case question 1: which hormone regulates blood calcium?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Option 1 one"
+        },
+        {
+          "letter": "B",
+          "text": "Option 1 two"
+        },
+        {
+          "letter": "C",
+          "text": "Option 1 three"
+        },
+        {
+          "letter": "D",
+          "text": "Option 1 four"
+        }
+      ],
+      "answer": ["A"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    },
+    {
+      "ordinal": 2,
+      "printed": 2,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "Unnumbered-case question 2: which hormone regulates blood calcium?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Option 2 one"
+        },
+        {
+          "letter": "B",
+          "text": "Option 2 two"
+        },
+        {
+          "letter": "C",
+          "text": "Option 2 three"
+        },
+        {
+          "letter": "D",
+          "text": "Option 2 four"
+        }
+      ],
+      "answer": ["A"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    },
+    {
+      "ordinal": 3,
+      "printed": null,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "Unnumbered-case question 3: which hormone regulates blood calcium?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Option 3 one"
+        },
+        {
+          "letter": "B",
+          "text": "Option 3 two"
+        },
+        {
+          "letter": "C",
+          "text": "Option 3 three"
+        },
+        {
+          "letter": "D",
+          "text": "Option 3 four"
+        }
+      ],
+      "answer": ["A"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    },
+    {
+      "ordinal": 4,
+      "printed": 4,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "Unnumbered-case question 4: which hormone regulates blood calcium?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Option 4 one"
+        },
+        {
+          "letter": "B",
+          "text": "Option 4 two"
+        },
+        {
+          "letter": "C",
+          "text": "Option 4 three"
+        },
+        {
+          "letter": "D",
+          "text": "Option 4 four"
+        }
+      ],
+      "answer": ["A"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    }
+  ]
+}

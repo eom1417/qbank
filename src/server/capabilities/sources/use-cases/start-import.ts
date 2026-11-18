@@ -94,7 +94,8 @@ async function checkConsent(deps: SourcesDeps, actor: Actor, fields: StartImport
 const aiColumns = (deps: SourcesDeps, aiProviderId: string | null, fields: StartImportFields) => ({
   ai_provider_id: aiProviderId,
   ai_model: aiProviderId ? (fields.aiModel ?? null) : null,
-  ai_mode: aiProviderId ? aiModeOf(deps, fields) : ('verify' as const),
+  // The new detector is the default; explicit existing API modes retain their contract.
+  ai_mode: fields.aiMode ?? ('pipeline' as const),
   ai_enhance: aiProviderId ? JSON.stringify(enhancementsOf(fields.aiEnhance)) : null,
   ai_roles: aiProviderId ? JSON.stringify(roleModels(fields)) : null,
   // The pipeline's starting tier (Q14): light unless the owner chose strong.

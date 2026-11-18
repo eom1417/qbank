@@ -34,7 +34,7 @@ const padded = (box: Box): Box => ({
 });
 
 /** One resolution for all of a question's spots, so its parts keep the same scale. */
-export function cropDpi(spots: readonly Spot[]): number {
+function cropDpi(spots: readonly Spot[]): number {
   const widest = Math.max(1, ...spots.map((spot) => spot.box.x1 - spot.box.x0 + 2 * PAD_POINTS));
   return Math.max(MIN_DPI, Math.min(MAX_DPI, Math.floor((CROP_WIDTH * 72) / widest)));
 }
@@ -55,7 +55,7 @@ export function stackImages(images: readonly RgbImage[]): RgbImage {
   return { width, height: Math.max(1, height), data };
 }
 
-export function cropFingerprint(image: RgbImage): string {
+function cropFingerprint(image: RgbImage): string {
   const hash = createHash('sha256').update(`${image.width}x${image.height}:`);
   return hash.update(image.data).digest('hex');
 }
@@ -89,7 +89,7 @@ export function blank(image: RgbImage, box: Box, origin: Box, dpi: number): void
 }
 
 /** One question's crop, or null when it has no area. */
-export async function cropQuestion(
+async function cropQuestion(
   file: string,
   question: Croppable,
   pictures: readonly Spot[] = [],

@@ -107,14 +107,16 @@ function requestFor<I, O>(
   tier: ModelTier,
   corrections: readonly string[],
 ): SheetRequest<O> {
-  const vision = card.needs === 'vision';
-  const texts = vision ? null : items.map((item) => item.text ?? '');
+  const vision = card.needs === 'vision' || items.some((item) => item.image !== null);
+  const texts = card.needs === 'vision' ? null : items.map((item) => item.text ?? '');
   const prompt = buildPrompt(card, { count: items.length, texts }, corrections);
   const base = { name: `lesson_${card.id.replace(/\W/g, '_')}`, system: prompt.system };
   const schema = replySchema(card);
   const textPart = { type: 'text' as const, text: prompt.text };
   if (!vision) return { request: { ...base, schema, parts: [textPart] }, pixels: 0 };
   const images = items.map((item) => {
+    if (!item.image && card.needs === 'text')
+      return { width: 1, height: 1, data: Buffer.alloc(3, 255) };
     if (!item.image) throw new Error(`lesson ${card.id} needs a picture for every item`);
     return item.image;
   });

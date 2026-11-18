@@ -74,7 +74,7 @@
 | FR-07-008 | أجوبة متعددة                  | مقترح  | M6.7   | done    | `tests/integration/acceptance-study.test.ts`     |
 | FR-07-009 | شروحات المؤلف                 | مقترح  | M6.8   | done    | `tests/integration/answers.test.ts`              |
 | FR-07-010 | عدم كشف الحل مبكراً           | مقترح  | M10.2  | done    | `tests/integration/study-exam.test.ts`           |
-| FR-08-001 | القراءة والاستخراج بمساعدة AI | سابق   | M6.10  | done    | `tests/integration/imports-ai-read.test.ts`      |
+| FR-08-001 | القراءة والاستخراج بمساعدة AI | سابق   | M6.10  | done    | `tests/integration/imports-pipeline.test.ts`     |
 | FR-08-002 | تصنيف موضوع السؤال            | سابق   | M6.9   | done    | `tests/integration/answers.test.ts`              |
 | FR-08-003 | كشف خلل المحتوى               | سابق   | M6.10  | done    | `tests/unit/sources/answers.test.ts`             |
 | FR-08-004 | إصلاح اختياري مقيد            | سابق   | M7.4   | done    | `tests/integration/question-fix.test.ts`         |

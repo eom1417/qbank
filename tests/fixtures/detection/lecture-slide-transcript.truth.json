@@ -1,0 +1,50 @@
+{
+  "file": "lecture-slide-transcript.pdf",
+  "sha256": "88401c5d8673f3c924452420415dc20b20f1a2dcc1e32bc01dd42f1783e498f6",
+  "pageCount": 1,
+  "family": "annotated_notes",
+  "headings": [],
+  "printedTotal": null,
+  "filler": [],
+  "questions": [
+    {
+      "ordinal": 1,
+      "printed": 1,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "Which receptor does the drug from this lecture block?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Beta-1"
+        },
+        {
+          "letter": "B",
+          "text": "Alpha-1"
+        },
+        {
+          "letter": "C",
+          "text": "Muscarinic"
+        },
+        {
+          "letter": "D",
+          "text": "Nicotinic"
+        }
+      ],
+      "answer": ["C"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    }
+  ]
+}

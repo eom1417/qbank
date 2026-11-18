@@ -42,5 +42,8 @@ describe('keys printed with doubt (M34 D4.1)', () => {
     }
     expect(k.isDoubtfulKey('Correct answer: A')).toBe(false);
     expect(k.isDoubtfulKey('Answer: X-ray of the chest')).toBe(false);
+    expect(k.isDoubtfulKey('Correct answer: Answer will depend on the data')).toBe(true);
+    expect(k.isDoubtfulKey('الإجابة الصحيحة: تعتمد على البيانات')).toBe(true);
+    expect(k.isDoubtfulKey('The correct answer is:')).toBe(false);
   });
 });

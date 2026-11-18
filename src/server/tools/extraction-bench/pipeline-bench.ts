@@ -1,3 +1,4 @@
+import { argumentValue as flagValue } from '../arguments.js';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { FileUnits } from '../../capabilities/sources/adapters/pipeline-units.js';
@@ -16,10 +17,7 @@ import { TruthFile } from './truth.js';
 // (text mode) find; `--cache` keeps units (with their OCR words) between runs while iterating.
 // Run with OMP_THREAD_LIMIT=1 (see units-report).
 const flags = process.argv.slice(2);
-const flagValue = (name: string) => {
-  const at = flags.indexOf(name);
-  return at >= 0 ? flags[at + 1] : undefined;
-};
+
 const cacheDir = flagValue('--cache');
 const valued = new Set(['--cache', '--only']);
 const positional = flags.filter(

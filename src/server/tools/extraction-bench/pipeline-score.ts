@@ -223,7 +223,20 @@ function explanationsOf(truth: TruthFile, pairs: readonly Pair[]) {
   };
 }
 
-const letters = (options: readonly { letter: string }[]) => options.map((o) => o.letter).join('');
+/** Match option content as well as letters; whitespace and Unicode presentation are formatting. */
+export function optionsMatch(
+  expected: readonly { letter: string; text: string }[],
+  actual: readonly { letter: string; text: string }[],
+): boolean {
+  const normalized = (text: string) => text.normalize('NFKC').replace(/\s+/g, ' ').trim();
+  return (
+    expected.length === actual.length &&
+    expected.every((option, index) => {
+      const read = actual[index];
+      return read?.letter === option.letter && normalized(read.text) === normalized(option.text);
+    })
+  );
+}
 
 export function scorePipeline(
   truth: TruthFile,
@@ -241,7 +254,7 @@ export function scorePipeline(
     found: pairs.length,
     extra: read.length - pairs.length,
     stemSimilarity: stems.length > 0 ? stems.reduce((a, b) => a + b, 0) / stems.length : 0,
-    optionsExact: count(pairs, ([t, q]) => letters(t.options) === letters(q.options)),
+    optionsExact: count(pairs, ([t, q]) => optionsMatch(t.options, q.options)),
     explanationImages: count(images, (image) => image.placement === 'explanation'),
     explanationPlaced: placement.placed,
     textPictures: text.total,

@@ -1,0 +1,167 @@
+{
+  "file": "two-columns.pdf",
+  "sha256": "11ee680af070e944e18a6813e5bf7fa20829ed8cb3494d11f9a0bde4322949e1",
+  "pageCount": 1,
+  "family": "exported_bank",
+  "headings": [],
+  "printedTotal": null,
+  "filler": [],
+  "questions": [
+    {
+      "ordinal": 1,
+      "printed": 1,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "Two-column question 1: what is the normal range for value 1?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Option 1 one"
+        },
+        {
+          "letter": "B",
+          "text": "Option 1 two"
+        },
+        {
+          "letter": "C",
+          "text": "Option 1 three"
+        },
+        {
+          "letter": "D",
+          "text": "Option 1 four"
+        }
+      ],
+      "answer": ["B"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    },
+    {
+      "ordinal": 2,
+      "printed": 2,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "Two-column question 2: what is the normal range for value 2?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Option 2 one"
+        },
+        {
+          "letter": "B",
+          "text": "Option 2 two"
+        },
+        {
+          "letter": "C",
+          "text": "Option 2 three"
+        },
+        {
+          "letter": "D",
+          "text": "Option 2 four"
+        }
+      ],
+      "answer": ["B"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    },
+    {
+      "ordinal": 3,
+      "printed": 3,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "Two-column question 3: what is the normal range for value 3?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Option 3 one"
+        },
+        {
+          "letter": "B",
+          "text": "Option 3 two"
+        },
+        {
+          "letter": "C",
+          "text": "Option 3 three"
+        },
+        {
+          "letter": "D",
+          "text": "Option 3 four"
+        }
+      ],
+      "answer": ["B"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    },
+    {
+      "ordinal": 4,
+      "printed": 4,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "Two-column question 4: what is the normal range for value 4?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Option 4 one"
+        },
+        {
+          "letter": "B",
+          "text": "Option 4 two"
+        },
+        {
+          "letter": "C",
+          "text": "Option 4 three"
+        },
+        {
+          "letter": "D",
+          "text": "Option 4 four"
+        }
+      ],
+      "answer": ["B"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    }
+  ]
+}

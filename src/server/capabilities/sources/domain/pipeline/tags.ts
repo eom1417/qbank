@@ -11,11 +11,10 @@ const YEARS = `${YEAR}(?:\\s*(?:,|&|and|/)\\s*${YEAR})*`;
 /** A small closed list of exam names: a part of a board exam, a board, a promotion exam. */
 const EXAM = '(?:part\\s+(?:I{1,3}|IV|[1-4])|(?:[A-Z][a-z]+\\s+)?board|promotion)';
 const TAG = new RegExp(`\\(?\\b(${EXAM})\\s*[-–:,]?\\s*(${YEARS})\\b\\)?`, 'gi');
-/** A line that is only a tag (maybe in brackets). */
-const TAG_LINE = new RegExp(
-  `^\\s*\\(?\\s*${EXAM}\\s*[-–:,]?\\s*${YEARS}\\s*\\)?\\s*\\.?\\s*$`,
-  'i',
-);
+/** One tag, maybe in brackets. */
+const ONE_TAG = `\\(?\\s*${EXAM}\\s*[-–:,]?\\s*${YEARS}\\s*\\)?`;
+/** A line that is only tags ("Part II 2019", "Part II 2023, Part II 2019"). */
+const TAG_LINE = new RegExp(`^\\s*${ONE_TAG}(?:\\s*[,;/&]\\s*${ONE_TAG})*\\s*\\.?\\s*$`, 'i');
 
 const tidy = (text: string) => text.replace(/\s{2,}/g, ' ').trim();
 

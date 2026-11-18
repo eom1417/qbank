@@ -4,9 +4,11 @@
 import type { ReviewReason } from '../../../questions/index.js';
 import type { AnswerEvidence } from '../answer-decision.js';
 import { KEY_DOUBT, MARK_UNCLEAR, SINGLE_SIGNAL } from './evidence.js';
-import { UNREAD_QUESTION_TEXT } from './build-questions.js';
 import { PLACE_UNSURE } from './placement.js';
 import type { PipelineEvidence, PipelineQuestion } from './question.js';
+
+/** Review reason: text shaped like a question was left unread after this one (M36 Q106). */
+const UNREAD_QUESTION_TEXT = 'unread_question_text';
 
 /** Upstream steps may name this themselves (D4.1 trap: «none of them», Q54). */
 const NONE_OF_OPTIONS = 'none_of_options';
@@ -40,6 +42,7 @@ function noneOfOptions(question: PipelineQuestion): boolean {
 
 /** Reasons a step names, passed on as the saved question's review reason. */
 const PASSED_ON: readonly [string, ReviewReason][] = [
+  ['detection_doubt', 'detection_doubt'],
   [KEY_DOUBT, 'key_doubt'],
   [MARK_UNCLEAR, 'mark_unclear'],
   ['picture_unreadable', 'picture_unreadable'],

@@ -28,6 +28,10 @@ export interface PipelinePicture {
   placement: PicturePlacement;
   optionLetter: string | null;
   imageClass: ImageClass | 'handwriting_ink';
+  /** Original embedded resolution, used by the shared quality check. */
+  ppi?: number | null;
+  /** Whether the region is bracketed by its question's own lines. */
+  certain?: boolean;
 }
 
 export type PipelineEvidence =

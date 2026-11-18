@@ -1,0 +1,50 @@
+{
+  "file": "table-between-stem-and-options.pdf",
+  "sha256": "4ee6850aa2788b296254d016cb01ab81e769ac710981304504b2e9ee50189627",
+  "pageCount": 1,
+  "family": "exported_bank",
+  "headings": [],
+  "printedTotal": null,
+  "filler": [],
+  "questions": [
+    {
+      "ordinal": 1,
+      "printed": 1,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "Study the laboratory values in the table and choose the most likely diagnosis?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Anemia"
+        },
+        {
+          "letter": "B",
+          "text": "Polycythemia"
+        },
+        {
+          "letter": "C",
+          "text": "Leukemia"
+        },
+        {
+          "letter": "D",
+          "text": "Thrombocytosis"
+        }
+      ],
+      "answer": ["A"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    }
+  ]
+}

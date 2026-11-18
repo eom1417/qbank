@@ -10,6 +10,8 @@ describe('exam tags', () => {
   it('reads a tag line with one year or several', () => {
     expect(isTagLine('Part II 2019')).toBe(true);
     expect(isTagLine('(Part I 2017, 2022)')).toBe(true);
+    expect(isTagLine('Part II 2023, Part II 2019')).toBe(true);
+    expect(isTagLine('Part II 2023, the year it changed')).toBe(false);
     expect(takeTags('Part I 2017, 2022').tags).toEqual({ exam: 'Part I', year: '2017, 2022' });
   });
 

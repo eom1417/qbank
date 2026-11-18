@@ -1,0 +1,50 @@
+{
+  "file": "exam-screenshot.pdf",
+  "sha256": "17c11f671a9bd00074dcb0da3d477c62610031071850ce4b9b7163988a8c2d8f",
+  "pageCount": 1,
+  "family": "scan",
+  "headings": [],
+  "printedTotal": null,
+  "filler": [],
+  "questions": [
+    {
+      "ordinal": 1,
+      "printed": 12,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "What is the most common cause of community acquired pneumonia?",
+      "stemInImage": true,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Streptococcus pneumoniae"
+        },
+        {
+          "letter": "B",
+          "text": "Klebsiella"
+        },
+        {
+          "letter": "C",
+          "text": "Staphylococcus aureus"
+        },
+        {
+          "letter": "D",
+          "text": "Legionella"
+        }
+      ],
+      "answer": [],
+      "evidence": ["none"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "incomplete",
+      "statusReason": null
+    }
+  ]
+}

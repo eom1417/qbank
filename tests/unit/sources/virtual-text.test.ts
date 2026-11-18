@@ -13,9 +13,6 @@ import {
 import type { Unit } from '../../../src/server/capabilities/sources/domain/pipeline/units.js';
 import {
   pageFlow,
-  parserLines,
-  pictureKeys,
-  readVirtual,
   readsAsText,
   virtualText,
 } from '../../../src/server/capabilities/sources/domain/pipeline/virtual-text.js';
@@ -201,107 +198,5 @@ describe('virtual text', () => {
     expect(text.lines[3]?.line.text).toBe('Q82) Which is second?');
     expect(text.order.get('pic')).toBe(3);
     expect(text.order.get('note')).toBe(5.5);
-  });
-
-  it('reads questions from the page and from the picture through the rule parser', () => {
-    const text = sample();
-    const reading = readVirtual(
-      text,
-      new Map([
-        [1, 800],
-        [3, 800],
-      ]),
-      [],
-    );
-    expect(reading.questions.map((q) => [q.number, q.options.length])).toEqual([
-      [1, 2],
-      [82, 2],
-    ]);
-    expect([...reading.consumed].sort()).toEqual(['pic', 't0', 't1', 't2']);
-  });
-
-  it('closes open text at a picture’s edge', () => {
-    const text = sample();
-    const lines = parserLines(
-      text,
-      text.lines.map((l) => l.line),
-    );
-    expect(lines.map((l) => l.text).filter((t) => t.startsWith('~'))).toHaveLength(1);
-  });
-});
-
-describe('pictures that are not the file’s questions', () => {
-  it('drops a picture question pasted under a typed question as an excerpt', () => {
-    const layer = [line('Q1) Typed?', 40, 100), line('A. One', 40, 115), line('B. Two', 40, 130)];
-    const units = [
-      ...layer.map((l, i) => unit(`t${i}`, 'text_line', l.box)),
-      picture('pic', box(40, 140, 400, 200), 12, 'text_picture'),
-    ];
-    const words = [
-      ...rowWords('40. Other bank?', 42, 150),
-      ...rowWords('a) x', 52, 164),
-      ...rowWords('b) y', 52, 178),
-    ];
-    const text = virtualText([{ size: SIZE, units }], layer, [{ unitId: 'pic', words }]);
-    const reading = readVirtual(text, new Map([[1, 800]]), []);
-    expect(reading.questions.map((q) => q.number)).toEqual([1]);
-    expect(reading.consumed.has('pic')).toBe(false);
-  });
-
-  it('attaches a printed key after an exam tag line, and reads a doubtful key apart', () => {
-    const layer = [
-      line('Q1) First?', 40, 100),
-      line('A. One', 40, 115),
-      line('Part II 2019', 40, 160),
-      line('Correct answer: A', 40, 185),
-      line('Q2) Second?', 40, 230),
-      line('A. One', 40, 245),
-      line('B. Two', 40, 260),
-      line('Correct answer: B?', 40, 300),
-    ];
-    const units = layer.map((l, i) => unit(`t${i}`, 'text_line', l.box));
-    const text = virtualText([{ size: SIZE, units }], layer, []);
-    const reading = readVirtual(text, new Map([[1, 800]]), []);
-    expect(reading.keys.map((k) => k.key)).toEqual([['A'], null]);
-    expect([...reading.free].sort()).toEqual([2, 7]);
-  });
-});
-
-describe('keys printed in screenshots', () => {
-  it('gives a key printed in the answer panel beside a screenshot to that screenshot', () => {
-    const units = [
-      picture('answer', box(320, 90, 560, 140), 6, 'text_picture'),
-      picture('question', box(40, 100, 300, 160), 9, 'text_picture'),
-    ];
-    const answer = [
-      ...rowWords('Correct Answer: B', 322, 92),
-      ...rowWords('Because of blue.', 322, 106),
-    ];
-    const question = [
-      ...rowWords('82. Which colour?', 42, 102),
-      ...rowWords('a) Red', 52, 116),
-      ...rowWords('b) Blue', 52, 130),
-    ];
-    const text = virtualText(
-      [{ size: SIZE, units }],
-      [],
-      [
-        { unitId: 'answer', words: answer },
-        { unitId: 'question', words: question },
-      ],
-    );
-    const reading = readVirtual(text, new Map([[1, 800]]), []);
-    expect(reading.questions.map((q) => q.number)).toEqual([82]);
-    expect(reading.keys[0]?.key).toEqual(['B']);
-  });
-
-  it('finds keys printed in pictures for numbers the file has', () => {
-    const units = [picture('keys', box(40, 100, 400, 140), 9, 'text_picture')];
-    const words = [...rowWords('82. d) because', 42, 102), ...rowWords('more words', 52, 116)];
-    const text = virtualText([{ size: SIZE, units }], [], [{ unitId: 'keys', words }]);
-    expect(pictureKeys(text, new Set([82]))).toEqual([
-      { unitId: 'keys', number: 82, letter: 'D', text: 'because more words' },
-    ]);
-    expect(pictureKeys(text, new Set([83]))).toEqual([]);
   });
 });

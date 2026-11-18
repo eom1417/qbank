@@ -1,0 +1,50 @@
+{
+  "file": "options-as-table-rows.pdf",
+  "sha256": "b096f54088f88510adeb8ee575563cfd136ed1605cf324288cbc6ca8a6e83d07",
+  "pageCount": 1,
+  "family": "exported_bank",
+  "headings": [],
+  "printedTotal": null,
+  "filler": [],
+  "questions": [
+    {
+      "ordinal": 1,
+      "printed": 1,
+      "section": "Sample",
+      "pages": [1],
+      "stem": "Match the vitamin with its deficiency disease in the table below?",
+      "stemInImage": false,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Vitamin C scurvy"
+        },
+        {
+          "letter": "B",
+          "text": "Vitamin D rickets"
+        },
+        {
+          "letter": "C",
+          "text": "Vitamin A night blindness"
+        },
+        {
+          "letter": "D",
+          "text": "Vitamin K bleeding"
+        }
+      ],
+      "answer": ["B"],
+      "evidence": ["printed_key"],
+      "conflict": null,
+      "caseGroup": null,
+      "tags": {
+        "exam": null,
+        "year": null
+      },
+      "images": [],
+      "kept": [],
+      "dropped": [],
+      "status": "valid",
+      "statusReason": null
+    }
+  ]
+}
