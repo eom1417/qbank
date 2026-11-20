@@ -58,6 +58,18 @@ export function outputSchema(schema: z.ZodType): Record<string, unknown> {
   return json;
 }
 
+/** The request's parts as Anthropic message content: text blocks and base64 images. */
+export function messageContent<T>(request: StructuredRequest<T>): Record<string, unknown>[] {
+  return request.parts.map((part) =>
+    part.type === 'text'
+      ? { type: 'text', text: part.text }
+      : {
+          type: 'image',
+          source: { type: 'base64', media_type: part.mediaType, data: part.base64 },
+        },
+  );
+}
+
 /** Model text with any surrounding ```json fence removed. */
 export function stripFence(raw: string): string {
   const text = raw.trim();
@@ -113,14 +125,7 @@ export class AnthropicProvider implements AiProvider {
   }
 
   #body<T>(request: StructuredRequest<T>): Record<string, unknown> {
-    const content = request.parts.map((part) =>
-      part.type === 'text'
-        ? { type: 'text', text: part.text }
-        : {
-            type: 'image',
-            source: { type: 'base64', media_type: part.mediaType, data: part.base64 },
-          },
-    );
+    const content = messageContent(request);
     const outputConfig: Record<string, unknown> = { effort: this.#options.effort ?? 'low' };
     if (this.#options.structuredOutput !== false) {
       outputConfig['format'] = { type: 'json_schema', schema: outputSchema(request.schema) };

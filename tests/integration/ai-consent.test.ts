@@ -6,7 +6,7 @@ import {
   registeredBrowser,
 } from '../support/client.js';
 import { FAKE_INSTANCES, useFakeAiHost } from '../support/fake-ai-host.js';
-import { uploadFile, usePdfFixtures } from '../support/imports.js';
+import { pageRangeReply, uploadFile, usePdfFixtures } from '../support/imports.js';
 import { usePipelineFile } from '../support/pipeline-import.js';
 import { useTestApp } from '../support/test-app.js';
 
@@ -77,11 +77,9 @@ describe('starting a pipeline import', () => {
     const { owner, bankId } = await ownerWithBank(app());
     const text = await uploadFile(app(), owner.cookie(), bankId, fixtures().text);
     expect([text.statusCode, text.json().error.code]).toEqual([415, 'file_unsupported']);
-    const range = await uploadFile(app(), owner.cookie(), bankId, pipelineFile(), {
-      pageFrom: '1',
-      pageTo: '999',
-    });
-    expect([range.statusCode, range.json().error.fields]).toEqual([400, { pageTo: 'too_big' }]);
+    const upload = { cookie: owner.cookie(), bankId, file: pipelineFile() };
+    const range = await pageRangeReply(app(), upload, '1', '999');
+    expect(range).toEqual([400, { pageTo: 'too_big' }]);
   });
 });
 

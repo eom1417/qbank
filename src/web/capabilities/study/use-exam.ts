@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router';
 import type { ExamStateResponse, ItemResponse } from '../../../contracts/study.js';
 import { ApiError } from '../../platform/api/client.js';
 import type { SaveStatus } from '../exam-ui/SaveState.js';
+import { useOpenAhead } from '../exam-ui/use-open-ahead.js';
 import { fetchExamState, flagExamItem, openExamItem, saveChoice } from './api.js';
 import { useStudyAhead } from './use-study-ahead.js';
 
@@ -32,21 +33,8 @@ export function useExam(sessionId: string, startAt: number | null) {
   const [item, setItem] = useState<ItemResponse | null>(null);
   const [saving, setSaving] = useState<SaveStatus>('idle');
   const ahead = useStudyAhead(sessionId, item);
-  const wanted = useRef<number | null>(null);
-  // A question fetched ahead shows at once; opening it on the server then confirms it (M34 U3).
-  const go = useCallback(
-    async (position: number) => {
-      wanted.current = position;
-      const early = ahead.ready(position);
-      if (early) setItem(early);
-      setSaving('idle');
-      const opened = await openExamItem(sessionId, position);
-      if (wanted.current !== position) return;
-      setItem(opened);
-      await refresh();
-    },
-    [sessionId, ahead, refresh],
-  );
+  const open = useCallback((position: number) => openExamItem(sessionId, position), [sessionId]);
+  const go = useOpenAhead({ open, ahead, show: setItem, setSaving, refresh });
   useEffect(() => {
     refresh()
       .then(async (first) => {

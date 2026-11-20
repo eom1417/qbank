@@ -34,12 +34,7 @@ const rest: Transport = {
 };
 
 async function tool(key: string, name: string, args: object): Promise<Outcome> {
-  const response = await app().inject({
-    method: 'POST',
-    url: '/api/channel/v1/mcp',
-    headers: { authorization: `Bearer ${key}` },
-    payload: { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name, arguments: args } },
-  });
+  const response = await agentOf(app(), key).tool(name, args);
   if (response.statusCode !== 200) return fromHttp(response);
   const result = response.json().result;
   const text = result.content[0].text as string;

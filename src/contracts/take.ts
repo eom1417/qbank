@@ -136,10 +136,7 @@ export const TakeResultResponse = z
             position: z.number().int(),
             stem: z.string(),
             chosen: z.array(Letter),
-            correct: z.boolean(),
-            answers: z.array(Letter),
-            explanation: z.string().nullable(),
-            pictureIds: z.array(z.uuid()),
+            ...Feedback.shape,
           })
           .strict(),
       )

@@ -25,12 +25,7 @@ const statusOf = async (agent: ReturnType<typeof agentOf>, id: string) =>
 
 /** The MCP transport: one tool call, its JSON answer. */
 async function mcpCall(key: string, name: string, args: object) {
-  const response = await app().inject({
-    method: 'POST',
-    url: '/api/channel/v1/mcp',
-    headers: { authorization: `Bearer ${key}` },
-    payload: { jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name, arguments: args } },
-  });
+  const response = await agentOf(app(), key).tool(name, args);
   return JSON.parse(response.json().result.content[0].text);
 }
 

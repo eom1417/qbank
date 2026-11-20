@@ -9,22 +9,17 @@ import {
   type OperatorAi,
 } from '../../src/server/capabilities/sources/use-cases/weekly-measure.js';
 import { newId } from '../../src/server/platform/ids.js';
-import { FAKE_INSTANCES, useFakeAiHost } from '../support/fake-ai-host.js';
+import { FAKE_INSTANCES } from '../support/fake-ai-host.js';
 import { runImports, uploadFile } from '../support/imports.js';
 import { signedInOperator } from '../support/operator.js';
-import { usePipelineFile } from '../support/pipeline-import.js';
-import { useTestApp } from '../support/test-app.js';
+import { usePipelineWorld } from '../support/pipeline-import.js';
 
 // M34 P6 (Q15): the weekly measurement of the approved models on the built-in reference set,
 // with a fake provider (in process) and through the app with the fake AI host.
 
 const LIGHT = 'claude-haiku-5-5';
 const STRONG = 'claude-opus-5-5';
-let now = new Date('2026-11-17T10:00:00Z');
-const clock = { now: () => now };
-const fake = useFakeAiHost();
-const app = useTestApp({ aiHost: () => fake().settings, clock });
-const pipelineFile = usePipelineFile();
+const { app, clock, pipelineFile } = usePipelineWorld();
 
 /** What the reference set expects, per lesson, in cell order. */
 const expected = () => {
@@ -64,13 +59,13 @@ function world(ai: OperatorAi | null) {
     measurements,
     operatorAi: () => Promise.resolve(ai),
     alert: async (message) => void alerts.push(message),
-    now: () => now,
+    now: () => clock.now(),
   };
   return { deps, alerts, measurements };
 }
 
 beforeEach(async () => {
-  now = new Date('2026-11-17T10:00:00Z');
+  clock.set(new Date('2026-11-17T10:00:00Z'));
   await app.db().deleteFrom('model_measurement').execute();
 });
 // The table belongs to no account: other suites must not inherit an unapproved model.
@@ -93,9 +88,9 @@ describe('the weekly measurement (Q15)', () => {
     ]);
     expect(alerts).toEqual([]);
     expect(await measurements.revoked()).toEqual(new Set());
-    now = new Date(now.getTime() + MEASURE_EVERY_MS - 1);
+    clock.advance(MEASURE_EVERY_MS - 1);
     expect(await measureDue(deps)).toBe('not_due');
-    now = new Date(now.getTime() + 1);
+    clock.advance(1);
     expect(await measureDue(deps)).toBe('measured');
   });
 
@@ -113,7 +108,7 @@ describe('the weekly measurement (Q15)', () => {
     const users = await app().inject({ method: 'GET', url: '/api/ai/approved-models' });
     expect(users.statusCode).toBe(401);
 
-    now = new Date(now.getTime() + MEASURE_EVERY_MS);
+    clock.advance(MEASURE_EVERY_MS);
     const passing = world(operatorAi({ [LIGHT]: truthful, [STRONG]: truthful }));
     expect(await measureDue(passing.deps)).toBe('measured');
     expect(await passing.measurements.revoked()).toEqual(new Set());

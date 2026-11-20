@@ -2,26 +2,17 @@ import { sql } from 'kysely';
 import { describe, expect, it } from 'vitest';
 import type { PageReadingResponse } from '../../src/contracts/review.js';
 import { ownerWithBank } from '../support/client.js';
-import { FAKE_INSTANCES, useFakeAiHost } from '../support/fake-ai-host.js';
-import { runImports, uploadFile } from '../support/imports.js';
-import { usePipelineFile } from '../support/pipeline-import.js';
-import { useTestApp } from '../support/test-app.js';
+import { runImports } from '../support/imports.js';
+import { usePipelineWorld } from '../support/pipeline-import.js';
 
 // M34 P6 (Q26): the review editor: a question's page as the import read it, roles changed by the
 // owner, and the question re-assembled from its units as a new version. Owner only; the POST
 // needs the app's Origin. Synthetic file, fake AI host.
 
-const fake = useFakeAiHost();
-const app = useTestApp({ aiHost: () => fake().settings });
-const db = () => app.db();
-const pipelineFile = usePipelineFile();
+const { app, db, startImport } = usePipelineWorld();
 
 async function firstQuestion() {
-  const { owner, bankId } = await ownerWithBank(app());
-  await owner.post('/api/account/ai-consent', {});
-  const started = await uploadFile(app(), owner.cookie(), bankId, pipelineFile(), {
-    aiProviderId: FAKE_INSTANCES.lesson,
-  });
+  const { owner, started } = await startImport();
   const job = started.json() as { id: string; sourceId: string };
   await runImports(app());
   const question = await db()
@@ -35,6 +26,32 @@ async function firstQuestion() {
 }
 
 const unitsOf = (reading: PageReadingResponse) => reading.pages.flatMap((page) => page.units);
+
+type Unit = ReturnType<typeof unitsOf>[number];
+type Owner = Awaited<ReturnType<typeof ownerWithBank>>['owner'];
+
+/** The fixture's editable explanation line and its explanation picture. */
+function explanationParts(units: Unit[]) {
+  const explanation = units.find((unit) => unit.role === 'explanation' && unit.editable);
+  const picture = units.find((unit) => unit.role === 'picture:explanation');
+  if (!explanation || !picture) throw new Error('the fixture lost its explanation');
+  return { explanation, picture };
+}
+
+/** Moves the explanation line into the stem and its picture onto option B. */
+const moveExplanation = (
+  owner: Owner,
+  questionId: string,
+  version: number,
+  { explanation, picture }: ReturnType<typeof explanationParts>,
+) =>
+  owner.post(`/api/questions/${questionId}/reassemble`, {
+    expectedVersion: version,
+    roles: [
+      { unitId: explanation.unitId, role: 'stem' },
+      { unitId: picture.unitId, role: 'picture:option:B' },
+    ],
+  });
 
 const placementOf = (questionId: string) =>
   db()
@@ -91,16 +108,9 @@ describe('re-assembly (Q26)', () => {
   it('rebuilds the question from its units as a new version and moves its picture', async () => {
     const { owner, question, reading } = await firstQuestion();
     const units = unitsOf(reading);
-    const explanation = units.find((unit) => unit.role === 'explanation' && unit.editable);
-    const picture = units.find((unit) => unit.role === 'picture:explanation');
-    if (!explanation || !picture) throw new Error('the fixture lost its explanation');
-    const saved = await owner.post(`/api/questions/${question.id}/reassemble`, {
-      expectedVersion: reading.version,
-      roles: [
-        { unitId: explanation.unitId, role: 'stem' },
-        { unitId: picture.unitId, role: 'picture:option:B' },
-      ],
-    });
+    const parts = explanationParts(units);
+    const { explanation } = parts;
+    const saved = await moveExplanation(owner, question.id, reading.version, parts);
     expect(saved.statusCode).toBe(200);
     const body = saved.json();
     expect(body.version).toBe(reading.version + 1);
@@ -170,18 +180,10 @@ describe('re-assembly is one change (Q26)', () => {
   it('leaves the question, the roles and the pictures as they were when a step fails', async () => {
     const { owner, question, reading } = await firstQuestion();
     const units = unitsOf(reading);
-    const explanation = units.find((unit) => unit.role === 'explanation' && unit.editable);
-    const picture = units.find((unit) => unit.role === 'picture:explanation');
-    if (!explanation || !picture) throw new Error('the fixture lost its explanation');
+    const parts = explanationParts(units);
     const placed = await placementOf(question.id);
     await withFailingPictures(async () => {
-      const failed = await owner.post(`/api/questions/${question.id}/reassemble`, {
-        expectedVersion: reading.version,
-        roles: [
-          { unitId: explanation.unitId, role: 'stem' },
-          { unitId: picture.unitId, role: 'picture:option:B' },
-        ],
-      });
+      const failed = await moveExplanation(owner, question.id, reading.version, parts);
       expect(failed.statusCode).toBe(500);
     });
     const now = (await owner.get(`/api/questions/${question.id}`)).json();

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { newDraft } from '../../../../src/server/capabilities/sources/detection/link/assemble.js';
 import {
   newRegions,
   regionPicture,
@@ -74,20 +75,11 @@ describe('withoutPrintedTables', () => {
       layout: {},
     }) as never;
   const question = {
-    number: 1,
-    numberInferred: false,
-    labelLine: null,
-    stem: [],
+    ...newDraft(1, null),
     options: [
       { letter: 'A', label: 'A', lines: [0] },
       { letter: 'B', label: 'B', lines: [1] },
     ],
-    answer: null,
-    conflicts: [],
-    explanation: [],
-    caseLines: [],
-    pictures: [],
-    tags: { exam: null, year: null },
   };
   const table = { ...region(4, 50), kind: 'table' as const };
 

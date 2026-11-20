@@ -19,22 +19,29 @@ interface State {
   keyOpen: boolean;
 }
 
+/** A question with nothing read into it yet. */
+export const newDraft = (
+  number: number,
+  labelLine: number | null,
+  numberInferred = false,
+): DraftQuestion => ({
+  number,
+  numberInferred,
+  labelLine,
+  stem: [],
+  options: [],
+  answer: null,
+  conflicts: [],
+  explanation: [],
+  caseLines: [],
+  pictures: [],
+  tags: { exam: null, year: null },
+});
+
 /** Opens a question; with no printed number it follows on from the one before. */
 function open(state: State, number: number | undefined, labelLine: number | null): DraftQuestion {
-  const inferred = number === undefined;
-  const question: DraftQuestion = {
-    number: number ?? (state.questions.at(-1)?.number ?? 0) + 1,
-    numberInferred: inferred,
-    labelLine,
-    stem: [],
-    options: [],
-    answer: null,
-    conflicts: [],
-    explanation: [],
-    caseLines: [],
-    pictures: [],
-    tags: { exam: null, year: null },
-  };
+  const next = number ?? (state.questions.at(-1)?.number ?? 0) + 1;
+  const question = newDraft(next, labelLine, number === undefined);
   state.questions.push(question);
   state.current = question;
   state.part = 'stem';
