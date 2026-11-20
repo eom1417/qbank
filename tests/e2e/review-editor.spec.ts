@@ -118,7 +118,12 @@ test('review: the page as read, a unit given a new role, the question re-assembl
 test('review: a question without a kept reading says why (Q23)', async ({ page }) => {
   test.setTimeout(120_000);
   await openFirstQuestion(page);
-  // A rules import keeps no units: the real server says so.
+  // Every import keeps its reading since M39; one past its 7 days is no longer there.
+  await page.route('**/api/questions/*/page-reading', async (route) => {
+    const response = await route.fetch();
+    const json = { ...(await response.json()), available: false, pages: [] };
+    await route.fulfill({ response, json });
+  });
   await page.getByRole('button', { name: 'اعرض الصفحة كما قُرئت' }).click();
   await expect(
     page.getByText('تبقى الصفحة كما قُرئت 7 أيام بعد الاستيراد بخط الإنتاج', { exact: false }),
@@ -186,6 +191,10 @@ function pipelineJob() {
     questionsFound: 4,
     questionsReview: 2,
     aiOutcome: 'done',
+    // The steps the import ran (M39): none shown for a mocked job.
+    steps: [],
+    aiDetail: null,
+    detectionIssues: [],
     errorCode: null,
     ai: {
       instanceId: 'claudeAgent',

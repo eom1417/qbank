@@ -16,6 +16,10 @@ const stopped = {
   questionsFound: 8,
   questionsReview: 8,
   aiOutcome: 'no_quota',
+  // The steps the import ran (M39): none shown for a mocked job.
+  steps: [],
+  aiDetail: null,
+  detectionIssues: [],
   errorCode: null,
   ai: null,
   createdAt: '2026-11-06T10:00:00.000Z',
@@ -44,5 +48,6 @@ test('choosing an AI says roughly what it uses of the subscription (M27)', async
     .getByLabel('استخدم الذكاء الاصطناعي الخاص بي', { exact: false })
     .selectOption({ label: 'Claude' });
   await expect(page.getByText('3 إلى 4 طلبات لكل 8 أسئلة', { exact: false })).toBeVisible();
-  await expect(page.getByText('طلب لكل صفحة من اشتراكك', { exact: false })).toBeVisible();
+  // Whole-page reading, and its cost of a request per page, is a local install's (M34).
+  await expect(page.getByText('طلب لكل صفحة من اشتراكك', { exact: false })).toHaveCount(0);
 });
