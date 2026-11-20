@@ -27,8 +27,7 @@ export const portabilityAr: Record<keyof typeof portabilityEn, string> = {
   'restore.missing': 'صور مذكورة لكنها ليست في الملف:',
   'restore.open': 'افتح البنك',
   'deleteBank.title': 'احذف هذا البنك',
-  'deleteBank.lead':
-    'الأرشفة تخفي البنك وتُبقي كل شيء؛ الحذف يزيله نهائياً. بنوكك الأخرى لا تتأثر.',
+  'deleteBank.lead': 'الأرشفة تخفي البنك وتُبقي كل شيء؛ الحذف يزيله نهائياً. بنوكك الأخرى لا تتأثر.',
   'deleteBank.impact': 'سيُحذف:',
   'deleteBank.sessions': 'جلسة تفقد هذه الأسئلة',
   'deleteBank.active': 'منها ما زالت مفتوحة',

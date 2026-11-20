@@ -168,9 +168,7 @@ test('import: light or strong among the approved models, and the pipeline report
   await page.goto(`/imports/${job.id}`);
   await expect(page.getByText('بدأ بـ: قوي (الأكثر دقة)')).toBeVisible();
   await expect(page.getByText('نوع المستند: أسئلة بمفتاح مطبوع')).toBeVisible();
-  await expect(
-    page.getByText('هذا النوع من المستندات لم يُقس بعد', { exact: false }),
-  ).toBeVisible();
+  await expect(page.getByText('هذا النوع من المستندات لم يُقس بعد', { exact: false })).toBeVisible();
   await expect(page.getByText('صفحات بشكل مجهول: 3')).toBeVisible();
   await expect(page.getByRole('list', { name: 'ما ذهب للمراجعة حسب السبب' })).toContainText(
     'تعذّرت قراءة الخيار المعلَّم: 2',
