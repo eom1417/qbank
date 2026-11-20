@@ -54,8 +54,7 @@ export const operatorAr: Record<keyof typeof operatorEn, string> = {
   'import.queue.ahead.many': 'في الطابور: قبلك {n} ملفاً، ويبدأ ملفك تلقائياً بعدها.',
   'import.queue.ahead.other': 'في الطابور: قبلك {n} ملف، ويبدأ ملفك تلقائياً بعدها.',
   'auth.google.continue': 'متابعة بحساب Google',
-  'auth.google.signUpHint':
-    'يُنشأ حسابك هنا ببريد حسابك في Google، ولا نرى كلمة مرور Google أبداً.',
+  'auth.google.signUpHint': 'يُنشأ حسابك هنا ببريد حسابك في Google، ولا نرى كلمة مرور Google أبداً.',
   'auth.google.error.google': 'تعذّر الدخول بحساب Google. حاول مرة أخرى.',
   'auth.google.error.terms': 'وافق على الشروط أولاً لإنشاء حسابك.',
   'auth.google.error.too_many_attempts':
