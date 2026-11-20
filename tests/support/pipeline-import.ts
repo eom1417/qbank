@@ -38,7 +38,7 @@ export function usePipelineFile(): () => string {
 }
 
 /** A clock the test moves: it reads `startAt` until set or advanced. */
-export function testClock(startAt: Date) {
+function testClock(startAt: Date) {
   let current = startAt;
   return {
     now: () => current,

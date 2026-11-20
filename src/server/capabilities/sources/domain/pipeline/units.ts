@@ -11,7 +11,7 @@ export type UnitKind = 'text_line' | 'image' | 'filler';
  * Where a unit's text came from: the PDF text layer, OCR of a scanned page, words the text
  * layer holds in a font other than the body's (device handwriting), or OCR of an image.
  */
-export type UnitSource = 'text_layer' | 'ocr' | 'off_body_font' | 'image';
+type UnitSource = 'text_layer' | 'ocr' | 'off_body_font' | 'image';
 
 export interface Unit {
   /** "p3-u12": stable for a file. */

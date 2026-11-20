@@ -1,7 +1,7 @@
 // M34 P3: a lesson card (curriculum §4) and how one sheet's reply is judged item by item.
 import { z } from 'zod';
 
-export type LessonNeeds = 'text' | 'vision';
+type LessonNeeds = 'text' | 'vision';
 
 /**
  * One skill, one closed question (curriculum §2). `schema` is ONE item's answer; `check` returns

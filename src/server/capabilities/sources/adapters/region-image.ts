@@ -19,7 +19,7 @@ const MIN_OCR_PIXELS = 12;
 const SECOND_DPI = 400;
 const SINGLE_BLOCK = 6;
 
-export interface RegionOcr {
+interface RegionOcr {
   /** Words in PDF points of the page (not of the region). */
   words: PageWord[];
   /** Mean Tesseract word confidence, 0–100; 0 without words. */
@@ -29,7 +29,7 @@ export interface RegionOcr {
 }
 
 /** The resolution a region is rendered at: sharp, but never a huge bitmap. */
-export function regionDpi(box: Box, ceiling = REGION_DPI): number {
+function regionDpi(box: Box, ceiling = REGION_DPI): number {
   const longest = Math.max(1, box.x1 - box.x0, box.y1 - box.y0);
   return Math.max(24, Math.min(ceiling, Math.floor((MAX_SIDE * 72) / longest)));
 }
@@ -63,7 +63,7 @@ const ppm = (image: RgbImage) =>
  * Reads a rendered region with Tesseract (English and Arabic). `box` is where the region sits
  * on the page and `dpi` the resolution it was rendered at.
  */
-export function ocrImage(
+function ocrImage(
   image: RgbImage,
   page: number,
   box: Box,

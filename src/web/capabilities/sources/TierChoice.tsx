@@ -9,7 +9,7 @@ import { fetchApprovedModels } from './api.js';
 const TIERS: readonly ModelTier[] = ['light', 'strong'];
 
 /** The tiers this instance can run: those with an approved model it offers (Q14). */
-export function offeredTiers(
+function offeredTiers(
   approved: ApprovedModelsResponse,
   provider: ProviderView | undefined,
 ): ModelTier[] {
