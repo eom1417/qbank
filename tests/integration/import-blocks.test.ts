@@ -1,28 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { ownerWithBank } from '../support/client.js';
-import { FAKE_INSTANCES, useFakeAiHost } from '../support/fake-ai-host.js';
-import { runImports, uploadFile } from '../support/imports.js';
-import { usePipelineFile } from '../support/pipeline-import.js';
-import { useTestApp } from '../support/test-app.js';
+import { runImports } from '../support/imports.js';
+import { usePipelineWorld } from '../support/pipeline-import.js';
 
 // M34 P6: a pipeline import keeps every unit of its pages with what it became (import_block),
 // for 7 days and never past its original (Q23); its report names the family, the pages of
 // unknown shape and the review reasons (Q59). Synthetic file, fake AI host.
 
-let now = new Date('2026-11-17T10:00:00Z');
-const clock = { now: () => now };
-const fake = useFakeAiHost();
-const app = useTestApp({ aiHost: () => fake().settings, clock });
-const db = () => app.db();
-const pipelineFile = usePipelineFile();
+const { app, clock, db, startImport } = usePipelineWorld();
 
 async function imported() {
-  now = new Date('2026-11-17T10:00:00Z');
-  const { owner, bankId } = await ownerWithBank(app());
-  await owner.post('/api/account/ai-consent', {});
-  const started = await uploadFile(app(), owner.cookie(), bankId, pipelineFile(), {
-    aiProviderId: FAKE_INSTANCES.lesson,
-  });
+  clock.set(new Date('2026-11-17T10:00:00Z'));
+  const { owner, started } = await startImport();
   expect(started.statusCode).toBe(201);
   const job = started.json() as { id: string; sourceId: string };
   await runImports(app());
@@ -50,7 +39,7 @@ describe('the units a pipeline import keeps (Q26)', () => {
     for (const block of blocks) {
       const ofQuestion = !['filler', 'dropped'].includes(block.role ?? '');
       expect(block.question_seq !== null).toBe(ofQuestion);
-      expect(block.expires_at.getTime()).toBe(now.getTime() + 7 * 24 * 60 * 60_000);
+      expect(block.expires_at.getTime()).toBe(clock.now().getTime() + 7 * 24 * 60 * 60_000);
     }
     const seqs = new Set(blocks.flatMap((b) => (b.question_seq === null ? [] : [b.question_seq])));
     expect([...seqs].sort()).toEqual([0, 1, 2]);
@@ -84,7 +73,7 @@ describe('the units kept for review go (Q23)', () => {
 
   it('forgets them after 7 days, and with the source itself', async () => {
     const { job } = await imported();
-    now = new Date(now.getTime() + 8 * 24 * 60 * 60_000);
+    clock.advance(8 * 24 * 60 * 60_000);
     await runImports(app());
     expect(await blocksOf(job.id)).toEqual([]);
     const other = await imported();

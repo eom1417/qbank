@@ -14,6 +14,7 @@ import {
   type LessonDeps,
   type LessonItem,
 } from '../../../src/server/capabilities/sources/use-cases/run-lesson.js';
+import { textOf } from '../../support/lesson-world.js';
 
 // M34 P3: the lesson engine on RECORDED replies only (a fake provider, an in-memory cache).
 
@@ -79,12 +80,6 @@ function fakeWorld(recorded: Record<string, Reply[]>) {
   };
   return { deps, calls, store };
 }
-
-/** The text sent in call `index`. */
-const textOf = (calls: readonly { request: StructuredRequest<unknown> }[], index: number) =>
-  (calls[index]?.request.parts ?? [])
-    .map((part) => (part.type === 'text' ? part.text : ''))
-    .join('');
 
 describe('running a lesson (M34 P3)', () => {
   it('answers a sheet with one light call over one image, recording its usage', async () => {

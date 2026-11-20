@@ -1,7 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { FAKE_INSTANCES, useFakeAiHost } from '../support/fake-ai-host.js';
 import { ownerWithBank, registeredBrowser, type createClient } from '../support/client.js';
-import { blobCount, runImports, uploadFile, useImportSuite } from '../support/imports.js';
+import {
+  blobCount,
+  pageRangeReply,
+  runImports,
+  uploadFile,
+  useImportSuite,
+} from '../support/imports.js';
 import { seedQuestions } from '../support/questions.js';
 import { NO_ENHANCEMENTS } from '../../src/contracts/sources.js';
 
@@ -32,11 +38,8 @@ describe('files that cannot be imported are refused clearly (FR-23-001, UAT-019)
         })
       ).statusCode,
     ).toBe(400);
-    const range = await uploadFile(app(), owner.cookie(), bankId, fixtures().english, {
-      pageFrom: '2',
-      pageTo: '9',
-    });
-    expect([range.statusCode, range.json().error.fields]).toEqual([400, { pageTo: 'too_big' }]);
+    const upload = { cookie: owner.cookie(), bankId, file: fixtures().english };
+    expect(await pageRangeReply(app(), upload, '2', '9')).toEqual([400, { pageTo: 'too_big' }]);
   });
 });
 

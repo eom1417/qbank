@@ -44,6 +44,21 @@ const step = (ownerId: string, key: string, option = 'A') => ({
   outputTokens: 30,
 });
 
+/** Two steps of a new owner, the first already past its 7 days. */
+async function oneExpired(names: [string, string]) {
+  const owner = await newOwner();
+  const [old, fresh] = [keyFor(owner, [names[0]]), keyFor(owner, [names[1]])];
+  await cache().put(step(owner, old));
+  await cache().put(step(owner, fresh));
+  await app
+    .db()
+    .updateTable('ai_step_cache')
+    .set({ expires_at: sql<Date>`now() - interval '1 minute'` })
+    .where('key', '=', old)
+    .execute();
+  return { owner, old, fresh };
+}
+
 describe('the AI step cache (M34 P3)', () => {
   it('returns a saved step to its owner only, and refreshes it on a second save', async () => {
     const [owner, other] = [await newOwner(), await newOwner()];
@@ -63,16 +78,7 @@ describe('the AI step cache (M34 P3)', () => {
   });
 
   it('expires after 7 days and purges only expired steps', async () => {
-    const owner = await newOwner();
-    const [old, fresh] = [keyFor(owner, ['old']), keyFor(owner, ['fresh'])];
-    await cache().put(step(owner, old));
-    await cache().put(step(owner, fresh));
-    await app
-      .db()
-      .updateTable('ai_step_cache')
-      .set({ expires_at: sql<Date>`now() - interval '1 minute'` })
-      .where('key', '=', old)
-      .execute();
+    const { owner, old, fresh } = await oneExpired(['old', 'fresh']);
     expect(await cache().get(owner, old, new Date())).toBeNull();
     const inEightDays = new Date(Date.now() + 8 * 86_400_000);
     expect(await cache().get(owner, fresh, inEightDays)).toBeNull();
@@ -83,16 +89,7 @@ describe('the AI step cache (M34 P3)', () => {
 
 describe('the AI step cache and the import worker (Q23)', () => {
   it('is purged by the import worker once expired, with nothing else of the owner (Q23)', async () => {
-    const owner = await newOwner();
-    const [old, fresh] = [keyFor(owner, ['worker-old']), keyFor(owner, ['worker-fresh'])];
-    await cache().put(step(owner, old));
-    await cache().put(step(owner, fresh));
-    await app
-      .db()
-      .updateTable('ai_step_cache')
-      .set({ expires_at: sql<Date>`now() - interval '1 minute'` })
-      .where('key', '=', old)
-      .execute();
+    const { owner, fresh } = await oneExpired(['worker-old', 'worker-fresh']);
     await app().importWorker.drain();
     const kept = await app
       .db()
