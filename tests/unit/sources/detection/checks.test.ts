@@ -102,6 +102,14 @@ describe('runChecks', () => {
   });
 });
 
+describe('a long term among short options', () => {
+  it('option_holds_other: is no doubt', () => {
+    const texts = ['Q1.', 'S', 'A. MCD', 'B. Post-streptococcal glomerulonephritis', 'C. IgA'];
+    const q = question({ options: [opt('A', [2]), opt('B', [3]), opt('C', [4])] });
+    expect(has('option_holds_other', [q], texts)).toBe(false);
+  });
+});
+
 describe('runChecks, answers and file level', () => {
   it('answer_in_options', () => {
     const bad = question({ answer: { letters: ['E'], lines: [3], from: 'inline' } });
