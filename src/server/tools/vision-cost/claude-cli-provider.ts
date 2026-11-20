@@ -9,7 +9,7 @@ import {
   type StructuredRequest,
   type StructuredResult,
 } from '../../capabilities/providers/domain/ai-provider.js';
-import { outputSchema, stripFence } from './anthropic-provider.js';
+import { messageContent, outputSchema, stripFence } from './anthropic-provider.js';
 
 /**
  * Bench `AiProvider` over the logged-in `claude` CLI (the subscription path): one print-mode turn
@@ -81,14 +81,7 @@ export function cliSystem<T>(request: StructuredRequest<T>): string {
 
 /** The single stream-json user message carrying the request's parts. */
 export function cliInput<T>(request: StructuredRequest<T>): string {
-  const content = request.parts.map((part) =>
-    part.type === 'text'
-      ? { type: 'text', text: part.text }
-      : {
-          type: 'image',
-          source: { type: 'base64', media_type: part.mediaType, data: part.base64 },
-        },
-  );
+  const content = messageContent(request);
   return `${JSON.stringify({ type: 'user', message: { role: 'user', content } })}\n`;
 }
 

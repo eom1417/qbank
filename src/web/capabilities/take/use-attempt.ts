@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
   TakeItemResponse,
   TakeResultResponse,
@@ -7,6 +7,7 @@ import type {
 import { errorMessageKey } from '../../platform/api/messages.js';
 import type { MessageKey } from '../../platform/i18n/i18n.js';
 import type { SaveStatus } from '../exam-ui/SaveState.js';
+import { useOpenAhead } from '../exam-ui/use-open-ahead.js';
 import { attemptApi, type AttemptApi } from './api.js';
 import { saveChoice } from './take-flow.js';
 import { useAttemptAhead } from './use-attempt-ahead.js';
@@ -55,21 +56,8 @@ function useItem(api: AttemptApi, server: ReturnType<typeof useServerState>, gua
   const [item, setItem] = useState<TakeItemResponse | null>(null);
   const [saving, setSaving] = useState<SaveStatus>('idle');
   const { ahead, pictures } = useAttemptAhead(api, item);
-  const wanted = useRef<number | null>(null);
-  // A question read ahead shows at once; opening it on the server then confirms it (M34 U3).
-  const go = useCallback(
-    async (position: number) => {
-      wanted.current = position;
-      const early = ahead.ready(position);
-      if (early) setItem(early);
-      setSaving('idle');
-      const opened = await api.open(position);
-      if (wanted.current !== position) return;
-      setItem(opened);
-      await refresh();
-    },
-    [api, ahead, refresh],
-  );
+  const open = useCallback((position: number) => api.open(position), [api]);
+  const go = useOpenAhead({ open, ahead, show: setItem, setSaving, refresh });
   const choose = async (chosen: string[]) => {
     if (!item) return;
     setItem({ ...item, saved: chosen });

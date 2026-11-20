@@ -40,6 +40,20 @@ export async function uploadFile(
   });
 }
 
+/** The status and field errors of an upload asking for pages `pageFrom`–`pageTo`. */
+export async function pageRangeReply(
+  app: FastifyInstance,
+  upload: { cookie: string; bankId: string; file: string },
+  pageFrom: string,
+  pageTo: string,
+) {
+  const reply = await uploadFile(app, upload.cookie, upload.bankId, upload.file, {
+    pageFrom,
+    pageTo,
+  });
+  return [reply.statusCode, reply.json().error.fields];
+}
+
 /** Runs every queued import now (the app's worker is off in tests). */
 export const runImports = (app: FastifyInstance) => app.importWorker.drain();
 

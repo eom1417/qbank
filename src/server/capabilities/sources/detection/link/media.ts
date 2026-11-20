@@ -1,5 +1,5 @@
 import { mergeRegions, newRegions, withoutPrintedTables } from './media-regions.js';
-import { rasterCache } from '../../use-cases/extract-questions.js';
+import { rasterCache } from '../../adapters/raster.js';
 import { ownerAt, placePictures, type QuestionFrame } from '../../domain/pipeline/placement.js';
 import type { CaseGroup } from '../../domain/pipeline/case.js';
 import { combineTags, takeTags, type QuestionTags } from '../../domain/pipeline/tags.js';

@@ -1,33 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { ownerWithBank } from '../support/client.js';
-import { FAKE_INSTANCES, useFakeAiHost } from '../support/fake-ai-host.js';
-import { runImports, uploadFile } from '../support/imports.js';
-import { usePipelineFile } from '../support/pipeline-import.js';
+import { FAKE_INSTANCES } from '../support/fake-ai-host.js';
+import { runImports } from '../support/imports.js';
+import { usePipelineWorld } from '../support/pipeline-import.js';
 import { answer, itemAt, startTutor } from '../support/study.js';
-import { useTestApp } from '../support/test-app.js';
 
 // M34 P5 end to end on a synthetic PDF and the fake AI host: the pipeline saves questions with
 // their pictures' places, the case and the tags; explanation pictures wait for the reveal; no
 // AI means no import (Z4); a full subscription pauses and resumes from the step cache (Q16).
 
-let now = new Date('2026-11-17T10:00:00Z');
-const clock = { now: () => now };
-const fake = useFakeAiHost();
-const app = useTestApp({ aiHost: () => fake().settings, clock });
-const db = () => app.db();
-const pipelineFile = usePipelineFile();
+const { fake, app, clock, db, startImport } = usePipelineWorld();
 
 /** The lesson sheets the fake host was asked (D4.mark), whatever their answer. */
 const lessonAsks = () =>
   fake().asks.filter((ask) => /The image has \d+ cells/.test(ask.body.prompt ?? '')).length;
 
 async function startPipeline(fields: Record<string, string> = {}) {
-  const { owner, bankId } = await ownerWithBank(app());
-  await owner.post('/api/account/ai-consent', {});
-  const started = await uploadFile(app(), owner.cookie(), bankId, pipelineFile(), {
-    aiProviderId: FAKE_INSTANCES.lesson,
-    ...fields,
-  });
+  const { owner, bankId, started } = await startImport(fields);
   expect(started.statusCode).toBe(201);
   const job = started.json() as { id: string; sourceId: string };
   const report = async () => (await owner.get(`/api/imports/${job.id}`)).json();
@@ -165,13 +154,13 @@ describe('a full subscription (Q16)', () => {
     const paused = await report();
     expect(paused.stage).toBe('extracting');
     expect(paused.aiOutcome).toBe('no_quota');
-    expect(Date.parse(paused.ai.resumesAt)).toBe(now.getTime() + 60 * 60_000);
+    expect(Date.parse(paused.ai.resumesAt)).toBe(clock.now().getTime() + 60 * 60_000);
     expect(await questionsOf(job.sourceId)).toEqual([]);
     expect(lessonAsks() - asked).toBe(1);
 
     await runImports(app());
     expect((await report()).stage).toBe('extracting');
-    now = new Date(now.getTime() + 61 * 60_000);
+    clock.advance(61 * 60_000);
     await runImports(app());
     const resumed = await report();
     expect(resumed.stage).toBe('needs_review');
@@ -210,7 +199,7 @@ describe('a long pause (Q16)', () => {
       .set({ paused_ms: 7 * 24 * 60 * 60_000 - 30 * 60_000 })
       .where('id', '=', job.id)
       .execute();
-    now = new Date(now.getTime() + 61 * 60_000);
+    clock.advance(61 * 60_000);
     await runExhausted();
     const failed = await report();
     expect(failed).toMatchObject({ stage: 'failed', errorCode: 'no_quota', aiOutcome: 'no_quota' });

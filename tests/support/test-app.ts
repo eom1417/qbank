@@ -43,7 +43,7 @@ const SINGLE_AI_HOST: AiHostsConfig = {
 /** The pairing code of a local-mode test app (fixed, not a secret). */
 export const TEST_PAIRING_TOKEN = 'test-pairing-code-not-a-secret-0001';
 
-interface TestAppOptions {
+export interface TestAppOptions {
   clock?: Clock;
   /** Local mode (DEC-31) instead of accounts mode. */
   local?: boolean;

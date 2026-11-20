@@ -89,6 +89,14 @@ export function agentOf(app: FastifyInstance, key: string) {
     answer: (payload: object) => call('POST', '/api/channel/v1/answers', payload),
     stats: () => call('GET', '/api/channel/v1/stats'),
     picture: (id: string) => call('GET', `/api/channel/v1/pictures/${id}`),
+    /** One MCP tool call over the channel's JSON-RPC transport. */
+    tool: (name: string, args: object) =>
+      call('POST', '/api/channel/v1/mcp', {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'tools/call',
+        params: { name, arguments: args },
+      }),
   };
 }
 

@@ -7,53 +7,39 @@ import { drawFigures } from './figures.js';
 // Synthetic pictures for the M34 pipeline fixtures (no owner file content, no binary in git).
 // Each function runs inside Chromium and returns a PNG data URL.
 
-interface Lines {
-  width: number;
-  height: number;
-  lines: string[];
-  font: string;
-  rtl: boolean;
-}
+type Card =
+  | { kind: 'typed'; width: number; height: number; lines: string[]; font: string; rtl: boolean }
+  | { kind: 'pen'; width: number; height: number; color: string; words: string };
 
-/** Typed text on a white card, as a screenshot of another question bank looks. */
-function typedCard({ width, height, lines, font, rtl }: Lines) {
+/**
+ * A white card: typed text, as a screenshot of another question bank looks, or a pen note in a
+ * slanted script. One function, as Chromium runs it on its own.
+ */
+function whiteCard(card: Card) {
   const canvas = document.createElement('canvas');
-  [canvas.width, canvas.height] = [width, height];
+  [canvas.width, canvas.height] = [card.width, card.height];
   const c = canvas.getContext('2d') as CanvasRenderingContext2D;
   c.fillStyle = '#fff';
-  c.fillRect(0, 0, width, height);
-  c.fillStyle = '#111';
-  c.font = font;
-  c.direction = rtl ? 'rtl' : 'ltr';
-  c.textAlign = rtl ? 'right' : 'left';
-  lines.forEach((line, row) => c.fillText(line, rtl ? width - 20 : 20, 40 + row * 38));
-  return canvas.toDataURL('image/png');
-}
-
-interface Pen {
-  width: number;
-  height: number;
-  color: string;
-  words: string;
-}
-
-/** A pen note in a slanted script on white paper. */
-function penNote({ width, height, color, words }: Pen) {
-  const canvas = document.createElement('canvas');
-  [canvas.width, canvas.height] = [width, height];
-  const c = canvas.getContext('2d') as CanvasRenderingContext2D;
-  c.fillStyle = '#fff';
-  c.fillRect(0, 0, width, height);
-  c.strokeStyle = color;
-  c.fillStyle = color;
+  c.fillRect(0, 0, card.width, card.height);
+  if (card.kind === 'typed') {
+    c.fillStyle = '#111';
+    c.font = card.font;
+    c.direction = card.rtl ? 'rtl' : 'ltr';
+    c.textAlign = card.rtl ? 'right' : 'left';
+    const x = card.rtl ? card.width - 20 : 20;
+    card.lines.forEach((line, row) => c.fillText(line, x, 40 + row * 38));
+    return canvas.toDataURL('image/png');
+  }
+  c.strokeStyle = card.color;
+  c.fillStyle = card.color;
   c.lineWidth = 3;
-  c.translate(12, height * 0.7);
+  c.translate(12, card.height * 0.7);
   c.rotate(-0.06);
   c.font = 'italic 34px "DejaVu Serif", cursive';
-  c.fillText(words, 0, 0);
+  c.fillText(card.words, 0, 0);
   c.beginPath();
   c.moveTo(0, 12);
-  c.bezierCurveTo(width * 0.3, 22, width * 0.6, 4, width * 0.85, 16);
+  c.bezierCurveTo(card.width * 0.3, 22, card.width * 0.6, 4, card.width * 0.85, 16);
   c.stroke();
   return canvas.toDataURL('image/png');
 }
@@ -173,7 +159,8 @@ async function drawPictures(page: Page): Promise<Record<string, string>> {
   const figures = await drawFigures(page);
   const font = '30px "Liberation Sans"';
   const card = (lines: string[], rtl: boolean, card = font) =>
-    page.evaluate(typedCard, {
+    page.evaluate(whiteCard, {
+      kind: 'typed' as const,
       width: 960,
       height: 60 + lines.length * 38,
       lines,
@@ -187,13 +174,15 @@ async function drawPictures(page: Page): Promise<Record<string, string>> {
     strip: figures['echo'] ?? '',
     typed: await card(ENGLISH_CARD, false),
     arabicTyped: await card(ARABIC_CARD, true, '32px "Noto Naskh Arabic"'),
-    note: await page.evaluate(penNote, {
+    note: await page.evaluate(whiteCard, {
+      kind: 'pen' as const,
       width: 520,
       height: 140,
       color: '#c81e1e',
       words: 'see dose',
     }),
-    blueNote: await page.evaluate(penNote, {
+    blueNote: await page.evaluate(whiteCard, {
+      kind: 'pen' as const,
       width: 480,
       height: 140,
       color: '#1e3cc8',
