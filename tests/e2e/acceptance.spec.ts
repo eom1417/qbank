@@ -89,19 +89,16 @@ test('choosing an AI for an import says what it sends first (FR-20-003, UAT-077)
   await expect(page.getByText('تسري شروط ذلك المزوّد', { exact: false })).toHaveCount(0);
   await ai.selectOption({ label: 'Claude' });
   await expect(page.getByText('تسري شروط ذلك المزوّد', { exact: false })).toBeVisible();
-  await expect(page.getByLabel('دع الذكاء الاصطناعي يقرأ الصفحات كاملة')).toBeVisible();
-  // How thorough, each role's model, and improvement mode on by default (DEC-33, DEC-04).
+  // A server reads with the pipeline (M34): whole-page reading is a local install's choice.
+  await expect(page.getByLabel('دع الذكاء الاصطناعي يقرأ الصفحات كاملة')).toHaveCount(0);
+  // How thorough, and improvement mode on by default (DEC-33, DEC-04).
   await expect(page.getByLabel('مستوى التدقيق')).toHaveValue('balanced');
-  // Organizing only, unless the owner chooses improvements; the defaults are on (DEC-34).
+  // The AI helps the detection where it doubts (M39), and the defaults are on (DEC-34).
   await expect(page.getByText('تحسين الأسئلة بمساعدة AI')).toBeVisible();
+  await expect(page.getByLabel('تحسين الالتقاط بالذكاء الاصطناعي')).toBeChecked();
   await expect(page.getByLabel('مراجعة الإجابات والتحقق منها')).toBeChecked();
   await expect(page.getByLabel('ملخص الموضوع للأسئلة الناقصة')).toBeChecked();
   await expect(page.getByLabel('كشف الأسئلة المتشابهة في المعنى')).not.toBeChecked();
-  await expect(page.getByLabel('إكمال الخيارات')).toHaveValue('4');
-  await page.getByLabel('إكمال الخيارات').selectOption('5');
-  await page.getByLabel('مستوى التدقيق').selectOption('custom');
-  await page.getByLabel('الحَكَم').selectOption({ label: 'Model One' });
-  await expect(page.getByText('الحَكَم: Model One')).toBeVisible();
 });
 
 test('a scanned book: read by OCR, reviewed, studied, original deleted (JY-01)', async ({
