@@ -43,11 +43,20 @@ const holdsDetail = (words: boolean, long: boolean) => {
     : 'An option holds a line of unclear role.';
 };
 
+/** Below this many words an option is a term, however long its words: it holds nothing else. */
+const SENTENCE_WORDS = 12;
+
+/** Far longer than the file's options, and as long as a sentence: other text may be in it. */
+const tooLong = (text: string, medianOption: number) =>
+  medianOption > 0 &&
+  text.length > 3 * medianOption &&
+  text.split(/\s+/).filter(Boolean).length > SENTENCE_WORDS;
+
 export const optionHoldsOther: QuestionCheck = (q, index, ctx) =>
   q.options.flatMap((option): Doubt[] => {
     const { file, medianOption } = ctx;
     const words = option.lines.some((id) => holdsWords(bare(textOf(file, [id]))));
-    const long = medianOption > 0 && optionText(file, option.lines).length > 3 * medianOption;
+    const long = tooLong(optionText(file, option.lines), medianOption);
     if (!words && !long && !doubtedLine(option.lines, ctx)) return [];
     const detail = holdsDetail(words, long);
     return [{ check: 'option_holds_other', question: index, lines: option.lines, detail }];

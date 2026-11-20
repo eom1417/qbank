@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { LessonCard } from '../lesson.js';
 
 export const IMAGE_KINDS = ['printed_words', 'handwriting', 'picture', 'table', 'mixed'] as const;
-export type ImageKind = (typeof IMAGE_KINDS)[number];
+type ImageKind = (typeof IMAGE_KINDS)[number];
 
 /** One unsure image: the unit it came from (the crop itself is the item's picture). */
 export interface ImageKindInput {

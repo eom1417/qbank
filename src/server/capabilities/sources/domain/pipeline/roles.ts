@@ -162,7 +162,7 @@ export interface RoleBlock {
   role: BlockRole;
 }
 
-export interface PicturePlace {
+interface PicturePlace {
   unitId: string;
   placement: 'question' | 'option' | 'explanation' | 'case';
   optionLetter: string | null;

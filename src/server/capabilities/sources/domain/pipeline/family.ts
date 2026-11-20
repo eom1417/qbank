@@ -48,7 +48,7 @@ function lineCounts(units: readonly Unit[]) {
   };
 }
 
-export function familySignals(sizes: readonly PageSize[], units: readonly Unit[]): FamilySignals {
+function familySignals(sizes: readonly PageSize[], units: readonly Unit[]): FamilySignals {
   const pages = sizes.length;
   const pageArea = sizes.reduce((sum, size) => sum + size.width * size.height, 0);
   const imageArea = units

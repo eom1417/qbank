@@ -79,12 +79,17 @@ test('see the pictures an import kept and enlarge one (M5.7)', async ({ page }) 
   await page.getByRole('button', { name: 'كبّر الصورة: تخطيط قلب — السؤال 1' }).click();
   const viewer = page.getByRole('dialog', { name: 'تخطيط قلب — السؤال 1' });
   await expect(viewer.getByRole('img', { name: 'تخطيط قلب — السؤال 1' })).toBeVisible();
+  // At its own size it is never stretched past the frame (M34 U4); enlarged, it takes twice
+  // the frame's width, without distortion (FR-06-005).
+  const frame = viewer.locator('.qb-zoom');
   const before = await viewer.getByRole('img').boundingBox();
   await viewer.getByRole('button', { name: 'تكبير' }).click();
   await viewer.getByRole('button', { name: 'تكبير' }).click();
   const after = await viewer.getByRole('img').boundingBox();
   if (!before || !after) throw new Error('the picture is not on screen');
-  expect(after.width / before.width).toBeCloseTo(2, 1);
+  const inner = await frame.evaluate((element) => element.clientWidth);
+  expect(before.width).toBeLessThanOrEqual(inner + 1);
+  expect(after.width / inner).toBeCloseTo(2, 1);
   expect(after.width / after.height).toBeCloseTo(before.width / before.height, 1);
   await viewer.getByRole('button', { name: 'إغلاق' }).click();
   await expect(viewer).toBeHidden();
