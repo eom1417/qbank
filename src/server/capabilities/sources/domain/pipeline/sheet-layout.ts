@@ -11,7 +11,7 @@ export interface Box extends Size {
   y: number;
 }
 
-export interface SheetCell {
+interface SheetCell {
   /** The cell's number, 1…N, in input order. */
   n: number;
   frame: Box;

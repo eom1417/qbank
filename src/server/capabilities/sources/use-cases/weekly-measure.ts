@@ -111,7 +111,7 @@ function probes(): LessonProbe[] {
 const TIERS: readonly ModelTier[] = ['light', 'strong'];
 
 /** Every approved model of every lesson for the operator's provider kind, measured once. */
-export async function measureModels(deps: MeasureDeps, ai: OperatorAi): Promise<Measurement[]> {
+async function measureModels(deps: MeasureDeps, ai: OperatorAi): Promise<Measurement[]> {
   const done: Measurement[] = [];
   const now = deps.now();
   for (const probe of probes()) {

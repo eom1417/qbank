@@ -58,5 +58,3 @@ export function itemsAhead<T extends Placed>(
     },
   };
 }
-
-export type ItemsAhead<T extends Placed> = ReturnType<typeof itemsAhead<T>>;

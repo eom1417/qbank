@@ -149,7 +149,7 @@ export interface ReferenceSet {
 }
 
 /** The reference set's version: a changed drawing is a new set (its replies are not compared). */
-export const REFERENCE_VERSION = 1;
+const REFERENCE_VERSION = 1;
 
 /** The whole reference set, drawn afresh (the same pixels every time). */
 export function referenceSet(): ReferenceSet {

@@ -5,7 +5,7 @@ import { markLesson } from './lessons/mark.js';
 import type { PipelineEvidence, PipelineQuestion } from './question.js';
 
 /** The vision lesson's reading of one question, in positional letters. */
-export interface VisionMark {
+interface VisionMark {
   letter: string | null;
   eliminated: readonly string[];
 }
